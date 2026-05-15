@@ -18,7 +18,7 @@ import {
 import type { Player, TrainingState } from '@/lib/fm/types';
 import { calculateMarketValue, formatCurrency } from '@/lib/fm/valuation';
 import { toTitleCase, fmStatColor } from '@/lib/fm/ui-helpers';
-import { localizePos, getPosColor } from '@/lib/fm/helpers';
+import { localizePos, getPosColor } from '@/lib/fm/ui-helpers';
 import PlayerRow from './PlayerRow';
 
 interface MyTeamTabProps {

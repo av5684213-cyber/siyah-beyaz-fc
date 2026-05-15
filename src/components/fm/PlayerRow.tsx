@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Star, ChevronRight } from 'lucide-react';
 import { calculateMarketValue, formatCurrency } from '@/lib/fm/valuation';
-import { getPosColor, localizePos } from '@/lib/fm/helpers';
+import { getPosColor, localizePos } from '@/lib/fm/ui-helpers';
 import { getTraitInfo, getPlayStyleInfo, getTraitColor, getTraitBgColor } from '@/lib/fm/traits';
 import { fmStatColor, fmStatBg, toTitleCase } from '@/lib/fm/ui-helpers';
 import type { Player, TrainingState, TrainingAssignment, TrainingProgramId } from '@/lib/fm/types';
@@ -39,38 +39,44 @@ export default function PlayerRow({
   const rating = player?.rating || 65;
   const marketValue = player ? calculateMarketValue(player) : 0;
 
+  // Extract values before memoization to avoid optional chaining in deps
+  const playerId = player?.id;
+  const playerTraits = player?.traits;
+  const playerNegTraits = player?.negTraits;
+  const assignments = trainingState?.assignments;
+
   const assignment = useMemo(() => {
-    if (!player) return null;
-    return trainingState?.assignments?.find(a => a.playerId === player.id);
-  }, [trainingState?.assignments, player?.id]);
+    if (!player || !playerId) return null;
+    return assignments?.find(a => a.playerId === playerId);
+  }, [assignments, playerId]);
 
   const allTraits = useMemo(() => {
     if (!player) return { pos: [], neg: [] };
-    const list = [...(player.traits || [])];
-    const negs = [...(player.negTraits || [])];
+    const list = [...(playerTraits || [])];
+    const negs = [...(playerNegTraits || [])];
     return { pos: list, neg: negs };
-  }, [player?.traits, player?.negTraits]);
+  }, [playerTraits, playerNegTraits]);
 
   const setPlayerFocus = useCallback((stat: string | null) => {
     if (!player || !onTrainingStateChange || !trainingState) return;
-    const assignments = trainingState.assignments || [];
-    const exists = assignments.some(a => a.playerId === player.id);
+    const currentAssignments = trainingState.assignments || [];
+    const exists = currentAssignments.some(a => a.playerId === playerId);
     
     let newAssignments;
     if (exists) {
-      newAssignments = assignments.map(a => {
-        if (a.playerId === player.id) return { ...a, focusedStat: stat as keyof Player || undefined };
+      newAssignments = currentAssignments.map(a => {
+        if (a.playerId === playerId) return { ...a, focusedStat: stat as keyof Player || undefined };
         return a;
       });
     } else {
-      newAssignments = [...assignments, { 
-        playerId: player.id, 
+      newAssignments = [...currentAssignments, { 
+        playerId: playerId, 
         programId: 'fiziksel_yukleme' as TrainingProgramId, 
         focusedStat: stat as keyof Player || undefined 
       }];
     }
     onTrainingStateChange({ ...trainingState, assignments: newAssignments });
-  }, [trainingState, onTrainingStateChange, player?.id]);
+  }, [player, trainingState, onTrainingStateChange, playerId]);
 
   if (!player) return null;
 

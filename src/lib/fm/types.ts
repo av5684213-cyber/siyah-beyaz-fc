@@ -154,6 +154,7 @@ export interface Profile {
   id: string;
   manager_name: string;
   team_name: string;
+  league_name?: string;
   level: number;
   xp: number;
   money: number;
@@ -175,6 +176,8 @@ export interface Profile {
   sponsors?: Sponsor[];
   philosophy?: string;
   primary_color?: string;
+  secondary_color?: string;
+  created_at?: string;
 }
 
 export interface MatchEvent {
@@ -257,7 +260,7 @@ export interface ActiveTactic {
   defensiveLine?: string;
 }
 
-export interface GameTactics extends ActiveTactic {}
+export type GameTactics = ActiveTactic;
 
 export type TrainingProgramId = 'fiziksel_yukleme' | 'teknik_driller' | 'savunma_okulu' | 'bitiricilik_kampi';
 

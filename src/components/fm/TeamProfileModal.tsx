@@ -75,6 +75,26 @@ const FORM_CONFIG: Record<string, { color: string; bg: string; label: string }> 
   L: { color: 'text-white', bg: 'bg-red-500', label: 'Kaybetti' },
 };
 
+// Moved outside parent component to avoid creating components during render
+function SortHeader({ label, sortKey, sortBy, sortDirection, onToggle }: { 
+  label: string; 
+  sortKey: string; 
+  sortBy: string;
+  sortDirection: 'asc' | 'desc';
+  onToggle: (key: string) => void;
+  className?: string;
+}) {
+  return (
+    <th 
+      onClick={() => onToggle(sortKey)}
+      className={`pb-3 cursor-pointer hover:text-emerald-400 transition-colors select-none flex items-center justify-center gap-0.5 ${sortBy === sortKey ? 'text-emerald-400' : ''}`}
+    >
+      {label}
+      {sortBy === sortKey && (sortDirection === 'desc' ? <ChevronDown size={8} /> : <ChevronUp size={8} />)}
+    </th>
+  );
+}
+
 export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer }: TeamProfileModalProps) {
   const { profile, setProfile } = useFM();
   const [teamData, setTeamData] = useState<any>(null);
@@ -224,16 +244,6 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
     return '';
   };
 
-  const SortHeader = ({ label, sortKey, className = '' }: { label: string; sortKey: string; className?: string }) => (
-    <th 
-      onClick={() => toggleSort(sortKey)}
-      className={`pb-3 cursor-pointer hover:text-emerald-400 transition-colors select-none flex items-center justify-center gap-0.5 ${sortBy === sortKey ? 'text-emerald-400' : ''} ${className}`}
-    >
-      {label}
-      {sortBy === sortKey && (sortDirection === 'desc' ? <ChevronDown size={8} /> : <ChevronUp size={8} />)}
-    </th>
-  );
-
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <motion.div 
@@ -380,12 +390,12 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
           <div className="min-w-[900px]">
             {/* Table Header */}
             <div className="grid gap-px text-[8px] font-black uppercase tracking-wider text-white/30 px-3 py-2.5 bg-black/30 rounded-t-xl border border-white/5 border-b-0" style={{ gridTemplateColumns: '56px 1fr repeat(11, 52px) 52px' }}>
-              <SortHeader label="Poz" sortKey="Poz" />
-              <SortHeader label="Oyuncu" sortKey="Oyuncu" className="justify-start" />
+              <SortHeader label="Poz" sortKey="Poz" sortBy={sortBy} sortDirection={sortDirection} onToggle={toggleSort} />
+              <SortHeader label="Oyuncu" sortKey="Oyuncu" sortBy={sortBy} sortDirection={sortDirection} onToggle={toggleSort} className="justify-start" />
               {STAT_KEYS.map(s => (
-                <SortHeader key={s.key} label={s.key} sortKey={s.key} />
+                <SortHeader key={s.key} label={s.key} sortKey={s.key} sortBy={sortBy} sortDirection={sortDirection} onToggle={toggleSort} />
               ))}
-              <SortHeader label="Tplm" sortKey="Tplm" />
+              <SortHeader label="Tplm" sortKey="Tplm" sortBy={sortBy} sortDirection={sortDirection} onToggle={toggleSort} />
               <div className="pb-3 text-center text-white/10">İşlem</div>
             </div>
 

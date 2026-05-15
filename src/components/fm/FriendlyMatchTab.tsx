@@ -93,12 +93,28 @@ export function FriendlyMatchTab() {
     await supabase.from('friendly_queue').delete().lt('expires_at', now);
   }, []);
 
+  const fetchHistory = useCallback(async () => {
+    if (!isSupabaseConfigured() || !profile) return;
+    const supabase = getSupabase();
+    if (!supabase) return;
+    const { data } = await supabase
+      .from('friendly_matches')
+      .select('*')
+      .or(`home_team_id.eq.${profile.id},away_team_id.eq.${profile.id}`)
+      .order('played_at', { ascending: false })
+      .limit(10);
+    if (data) setHistory(data);
+  }, [profile]);
+
   useEffect(() => {
-    fetchQueue();
-    fetchHistory();
-    checkMyQueueStatus();
-    cleanupExpiredQueue();
-  }, [fetchQueue, checkMyQueueStatus, cleanupExpiredQueue]);
+    // Use setTimeout to avoid calling setState synchronously within an effect
+    setTimeout(() => {
+      fetchQueue();
+      fetchHistory();
+      checkMyQueueStatus();
+      cleanupExpiredQueue();
+    }, 0);
+  }, [fetchQueue, fetchHistory, checkMyQueueStatus, cleanupExpiredQueue]);
 
   // Timer tick
   useEffect(() => {
@@ -132,19 +148,6 @@ export function FriendlyMatchTab() {
     if (data && data[0]?.user_id === profile.id) {
       setIsMyTurn(true);
     }
-  };
-
-  const fetchHistory = async () => {
-    if (!isSupabaseConfigured() || !profile) return;
-    const supabase = getSupabase();
-    if (!supabase) return;
-    const { data } = await supabase
-      .from('friendly_matches')
-      .select('*')
-      .or(`home_team_id.eq.${profile.id},away_team_id.eq.${profile.id}`)
-      .order('played_at', { ascending: false })
-      .limit(10);
-    if (data) setHistory(data);
   };
 
   // ── Generate Opponent ──

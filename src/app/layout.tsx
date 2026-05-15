@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk, Geist, Geist_Mono } from "next/font/google";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
-import dynamic from 'next/dynamic';
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
 import { FMProvider } from "@/lib/fm/GameContext";
-
-const RealTimeLeagueManager = dynamic(() => import("@/components/fm/RealTimeLeagueManager"));
 
 const inter = Inter({
   variable: "--font-inter",
@@ -49,7 +46,6 @@ export default function RootLayout({
         style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}
       >
         <FMProvider>
-          <RealTimeLeagueManager />
           <ErrorBoundary>
             {children}
           </ErrorBoundary>

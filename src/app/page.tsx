@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
-import { assignRandomTraits } from '@/lib/fm/traits';
 import { calculateMarketValue, getTransferCorridor, formatCurrency } from '@/lib/fm/valuation';
 import { INITIAL_TEAM_STATS, INITIAL_SLOTS } from '@/lib/fm/teamStats';
 import { processTacticalGrowth, processTacticalDecay } from '@/lib/fm/tacticsEngine';
@@ -15,8 +14,6 @@ import { NavButton } from '@/components/fm/UIComponents';
 import { UpdatePlayerStats, processDailyUpdates } from '@/lib/fm/evolution';
 import { FitnessManager } from '@/lib/fm/FitnessManager';
 import { isTrainingTime } from '@/lib/fm/schedule';
-import { MOCK_PLAYERS_POOL } from '@/lib/fm/data';
-import { assignRandomPlayStyle } from '@/lib/fm/playStyles';
 import MatchDay from '@/components/fm/MatchDay';
 import LeagueStandings from '@/components/fm/LeagueStandings';
 import type { Player, MatchState, LeagueTeam, ActiveTactic, TrainingState } from '@/lib/fm/types';
@@ -25,7 +22,7 @@ import { runTrainingSession } from '@/lib/fm/trainingEngine';
 import { 
   loadProfile, loadPlayers, loadLeague, loadActiveTactic, loadTrainingState,
   saveProfile, savePlayers, saveLeague, saveActiveTactic,
-  saveMatchResult, debouncedSave, loadLastMatchResult,
+  saveMatchResult, loadLastMatchResult,
   checkConnectionHealth, type ConnectionStatus, resetLeague
 } from '@/lib/fm/persistence';
 import { isSupabaseConfigured, getSupabase } from '@/lib/supabase';
@@ -78,7 +75,6 @@ import {
 
 import { useFM } from '@/lib/fm/GameContext';
 
-import { MatchScheduler } from '@/lib/fm/MatchScheduler';
 import CommunicationPanel from '@/components/fm/CommunicationPanel';
 import TeamProfileModal from '@/components/fm/TeamProfileModal';
 import MatchReportPanel from '@/components/fm/MatchReportPanel';
@@ -812,6 +808,7 @@ export default function Home() {
                             const supabase = getSupabase();
                             supabase.from('friendly_matches').insert({
                               home_team_id: profile.id,
+                              away_team_id: 'cpu',
                               home_score: results.score.home,
                               away_score: results.score.away,
                               match_data: results

@@ -543,11 +543,118 @@ export const initFreeAgentsOnMarket = async () => {
 };
 
 // ---------------------------------------------------------------------------
-// Existing Stubs (unchanged)
+// Team Management & Leaderboard
 // ---------------------------------------------------------------------------
 
-export const moveTeamToMarket = async () => ({ success: true });
-export const listAllSquadOnMarket = async () => ({ success: true, total: 0 });
-export const getGlobalLeaderboard = async () => [];
-export const assignTeamToManager = async () => {};
-export const getTeamSquad = async () => [];
+export const moveTeamToMarket = async (teamId: string, profileId: string, teamName: string) => {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+  const supabase = getSupabase();
+
+  try {
+    // 1. Fetch all players belonging to the team
+    const { data: players, error: fetchError } = await supabase
+      .from('players')
+      .select('*')
+      .eq('profile_id', teamId);
+
+    if (fetchError) return { success: false, error: fetchError.message };
+    if (!players || players.length === 0) return { success: true, moved: 0 };
+
+    // 2. Insert each player into transfer_market
+    let moved = 0;
+    for (const p of players) {
+      const { error: insertError } = await supabase.from('transfer_market').insert({
+        player_id: p.id,
+        player_data: p,
+        seller_id: profileId,
+        seller_name: teamName,
+        price: p.market_value ?? 0,
+        min_price: Math.round((p.market_value ?? 0) * 0.8),
+        max_price: Math.round((p.market_value ?? 0) * 1.5),
+        is_active: true,
+        is_auction: true,
+        starting_price: p.market_value ?? 0,
+        reserve_price: Math.round((p.market_value ?? 0) * 0.8),
+        bid_count: 0,
+        expires_at: auctionExpiry(),
+      });
+      if (!insertError) moved++;
+    }
+
+    // 3. Delete players from players table
+    const { error: deleteError } = await supabase
+      .from('players')
+      .delete()
+      .eq('profile_id', teamId);
+
+    if (deleteError) {
+      console.error('Error deleting players after market move:', deleteError);
+    }
+
+    return { success: true, moved };
+  } catch (err) {
+    console.error('moveTeamToMarket error:', err);
+    return { success: false, error: 'Unexpected error' };
+  }
+};
+
+export const listAllSquadOnMarket = async (players: any[], profileId: string, teamName: string) => {
+  if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured', total: 0 };
+
+  try {
+    const result = await massListPlayers(players, profileId, teamName);
+    return result;
+  } catch (err) {
+    console.error('listAllSquadOnMarket error:', err);
+    return { success: false, error: 'Unexpected error', total: 0 };
+  }
+};
+
+export const getGlobalLeaderboard = async () => {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = getSupabase();
+
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, manager_name, team_name, reputation, level, fans')
+      .order('reputation', { ascending: false })
+      .limit(20);
+
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+};
+
+export const assignTeamToManager = async (managerId: string, teamId: string) => {
+  if (!isSupabaseConfigured()) return;
+  const supabase = getSupabase();
+
+  try {
+    await supabase
+      .from('profiles')
+      .update({ team_id: teamId })
+      .eq('id', managerId);
+  } catch (err) {
+    console.error('assignTeamToManager error:', err);
+  }
+};
+
+export const getTeamSquad = async (teamId: string) => {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = getSupabase();
+
+  try {
+    const { data, error } = await supabase
+      .from('players')
+      .select('*')
+      .eq('profile_id', teamId);
+
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+};

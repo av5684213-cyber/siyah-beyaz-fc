@@ -17,7 +17,7 @@ import { traitDescriptions, getTraitTierLabel } from '@/lib/fm/traits';
 import { TRAIT_LEVELS } from '@/lib/fm/traitsData';
 import { useFM } from '@/lib/fm/GameContext';
 import { getPlayStyleEffect } from '@/lib/fm/playStyles';
-import { localizePos } from '@/lib/fm/helpers';
+import { localizePos } from '@/lib/fm/ui-helpers';
 import { POS_TO_GROUP, POS_LABELS } from '@/lib/fm/playerGenerator';
 import { fmStatColor, fmStatBg, formatMoney, cap99, toTitleCase } from '@/lib/fm/ui-helpers';
 import type { Player, TrainingState } from '@/lib/fm/types';

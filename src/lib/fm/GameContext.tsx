@@ -1,26 +1,64 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { runTrainingSession } from './trainingEngine';
-import { getDefaultGameTactics, getDefaultTrainingState, Player } from './types';
+import { getDefaultGameTactics, getDefaultTrainingState, Player, Profile, ActiveTactic, TrainingState, MatchState } from './types';
 import { 
   loadProfile, loadPlayers, loadActiveTactic, loadTrainingState, loadWatchlist,
   saveProfile, savePlayers, saveActiveTactic, saveTrainingState, saveWatchlist
 } from './persistence';
 import { simulateHistory } from './historySimulator';
-import { MOCK_PLAYERS_POOL, BASAKSEHIR_SQUAD_IDS, BESIKTAS_SQUAD_IDS } from './data';
 import { isSupabaseConfigured, getSupabase } from '@/lib/supabase';
-import { getBrowserLocale, Locale, translations } from './i18n';
+import { getBrowserLocale, Locale } from './i18n';
 import { generateLocalizedPlayer, getRegionConfig } from './region-generator';
 import { getTeamNamesForDepartment } from './constants';
 
-const FMContext = createContext<any>(null);
+interface FMContextValue {
+  userId: string | null;
+  setUserId: React.Dispatch<React.SetStateAction<string | null>>;
+  authEmail: string | null;
+  setAuthEmail: React.Dispatch<React.SetStateAction<string | null>>;
+  isAdmin: boolean;
+  profile: Profile | null;
+  setProfile: (data: Profile | null | ((prev: Profile | null) => Profile | null)) => void;
+  squad: Player[];
+  setSquad: React.Dispatch<React.SetStateAction<Player[]>>;
+  activeTactic: ActiveTactic;
+  setActiveTactic: React.Dispatch<React.SetStateAction<ActiveTactic>>;
+  trainingState: TrainingState;
+  setTrainingState: React.Dispatch<React.SetStateAction<TrainingState>>;
+  league: Player[];
+  setLeague: React.Dispatch<React.SetStateAction<Player[]>>;
+  selectedTeamProfile: string | null;
+  setSelectedTeamProfile: React.Dispatch<React.SetStateAction<string | null>>;
+  directMessageRecipient: any | null;
+  setDirectMessageRecipient: React.Dispatch<React.SetStateAction<any | null>>;
+  loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  refreshData: (id?: string) => Promise<void>;
+  locale: Locale;
+  setLocale: React.Dispatch<React.SetStateAction<Locale>>;
+  sellPlayer: (player: Player) => Promise<{ success: boolean; netRevenue: number; taxAmount: number } | void>;
+  scoutPlayer: (playerId: string, playerObj?: Player) => Promise<{ success: boolean; reason?: string; player?: Player } | { success: boolean; player: Player }>;
+  playFriendlyMatch: (isPaid?: boolean) => Promise<{ success: boolean; reason?: string; homeScore?: number; awayScore?: number; results?: any }>;
+  watchlist: string[];
+  toggleWatchlist: (player: Player) => Promise<void>;
+  negotiatePurchase: (player: Player, offerPrice: number) => Promise<{ success: boolean; reason?: string; totalCost?: number; agentCommission?: number; signingBonus?: number; counterOffer?: number }>;
+  addSponsor: (sponsor: any) => Promise<void>;
+  initTeam: (teamNameInput: string, managerName: string, philosophy: string, color1: string, color2: string) => Promise<void>;
+  matchState: MatchState;
+  setMatchState: React.Dispatch<React.SetStateAction<MatchState>>;
+  activeTab: string;
+  setActiveTab: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const FMContext = createContext<FMContextValue | null>(null);
 
 export const FMProvider = ({ children }: { children: React.ReactNode }) => {
   const [userId, setUserId] = useState<string | null>(null);
   const [authEmail, setAuthEmail] = useState<string | null>(null);
-  const [profile, setProfileState] = useState<any>(null);
+  const [profile, setProfileState] = useState<Profile | null>(null);
 
-  const setProfile = useCallback((newProfileData: any) => {
+  const setProfile = useCallback((newProfileData: Profile | null | ((prev: Profile | null) => Profile | null)) => {
     setProfileState(prev => {
       const updated = typeof newProfileData === 'function' ? newProfileData(prev) : newProfileData;
       return updated;
@@ -32,7 +70,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
     if (!profile) return;
     
     if (profile.active_upgrade_type && profile.current_day >= (profile.active_upgrade_finish_day || 0)) {
-       setProfile((prev: any) => {
+       setProfile((prev: Profile | null) => {
          if (!prev) return prev;
          const finalProfile = { ...prev };
          if (finalProfile.active_upgrade_type === 'academy') {
@@ -86,16 +124,16 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [authEmail]);
   const [squad, setSquad] = useState<Player[]>([]);
-  const [activeTactic, setActiveTactic] = useState<any>(getDefaultGameTactics());
-  const [trainingState, setTrainingState] = useState<any>(getDefaultTrainingState());
+  const [activeTactic, setActiveTactic] = useState<ActiveTactic>(getDefaultGameTactics());
+  const [trainingState, setTrainingState] = useState<TrainingState>(getDefaultTrainingState());
   const [watchlist, setWatchlist] = useState<string[]>([]);
-  const [league, setLeague] = useState([]);
+  const [league, setLeague] = useState<Player[]>([]);
   const [selectedTeamProfile, setSelectedTeamProfile] = useState<string | null>(null);
   const [directMessageRecipient, setDirectMessageRecipient] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [matchState, setMatchState] = useState<any>({
+  const [matchState, setMatchState] = useState<MatchState>({
     minute: 0,
     score: { home: 0, away: 0 },
     result: null,
@@ -581,7 +619,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
   }, [userId, setProfile]);
 
   const processFinancials = useCallback((day: number) => {
-    setProfile((prev: any) => {
+    setProfile((prev: Profile | null) => {
       if (!prev) return prev;
       let newMoney = prev.money || 0;
       const sponsors = prev.sponsors || [];
@@ -623,7 +661,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
   }, [squad, setProfile]);
 
   const processScouting = useCallback((day: number) => {
-    setTrainingState((prev: any) => {
+    setTrainingState((prev: Profile | null) => {
       if (!prev || !prev.scouting) return prev;
       
       const currentScouting = prev.scouting;
@@ -692,7 +730,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
   }, [profile?.current_day, processFinancials, processScouting, profile]);
 
   const addMatchRevenue = useCallback((isHome: boolean) => {
-    setProfile((prev: any) => {
+    setProfile((prev: Profile | null) => {
       if (!prev || !isHome) return prev;
       
       const upgrades = prev.stadium_upgrades || {};
@@ -775,10 +813,10 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
 
         // Bütçeyi güncelle
         const newMoney = currentMoney - totalCost;
-        setProfile((prev: any) => ({ ...prev, money: newMoney }));
+        setProfile((prev: Profile | null) => ({ ...prev, money: newMoney }));
 
         // Oyuncuyu transfer listesinden (league state) kaldır
-        setLeague((prev: any[]) => prev.filter((p: any) => p.id !== player.id));
+        setLeague((prev) => prev.filter((p) => p.id !== player.id));
 
         // Supabase'e kaydet
         if (isSupabaseConfigured()) {
@@ -804,7 +842,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
   }, [profile, setProfile, setSquad, setLeague]);
 
   const addSponsor = useCallback(async (sponsor: any) => {
-    setProfile((prev: any) => ({
+    setProfile((prev: Profile | null) => ({
       ...prev,
       sponsors: [...(prev.sponsors || []), sponsor]
     }));
@@ -886,7 +924,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
     }
     
     // Update profile money
-    setProfile((prev: any) => ({ ...prev, money: newMoney }));
+    setProfile((prev: Profile | null) => ({ ...prev, money: newMoney }));
 
     // Update in Supabase
     if (isSupabaseConfigured()) {
@@ -919,7 +957,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
     const { updatedSquad, results } = runTrainingSession(squad, trainingState, 2.0);
     
     setSquad(updatedSquad);
-    setProfile((prev: any) => ({ ...prev, mg_coins: newMG }));
+    setProfile((prev: Profile | null) => ({ ...prev, mg_coins: newMG }));
     
     if (isSupabaseConfigured()) {
       const supabase = getSupabase();
@@ -927,6 +965,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
       
       await supabase.from('friendly_matches').insert({
         home_team_id: profile.id,
+        away_team_id: 'cpu',
         home_score: homeScore,
         away_score: awayScore,
         match_data: { results, simulated: true }
@@ -1068,6 +1107,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
       selectedTeamProfile, setSelectedTeamProfile,
       directMessageRecipient, setDirectMessageRecipient,
       loading, setLoading, refreshData,
+      locale, setLocale,
       sellPlayer, scoutPlayer, playFriendlyMatch,
       watchlist, toggleWatchlist,
       negotiatePurchase, addSponsor, initTeam,
@@ -1079,4 +1119,8 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export const useFM = () => useContext(FMContext);
+export const useFM = () => {
+  const context = useContext(FMContext);
+  if (!context) throw new Error('useFM must be used within an FMProvider');
+  return context;
+};

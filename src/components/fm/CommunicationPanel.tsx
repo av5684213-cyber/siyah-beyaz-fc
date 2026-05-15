@@ -38,10 +38,13 @@ export default function CommunicationPanel({ userId, userName, teamName }: Commu
   // Listen for direct messages from elsewhere
   useEffect(() => {
     if (directMessageRecipient) {
-      setSelectedRecipient(directMessageRecipient);
-      setActiveTab('inbox');
-      setIsOpen(true);
-      setDirectMessageRecipient(null); // Clear after opening
+      // Use setTimeout to avoid cascading renders from synchronous setState in effect
+      setTimeout(() => {
+        setSelectedRecipient(directMessageRecipient);
+        setActiveTab('inbox');
+        setIsOpen(true);
+        setDirectMessageRecipient(null); // Clear after opening
+      }, 0);
     }
   }, [directMessageRecipient, setDirectMessageRecipient]);
 

@@ -402,4 +402,18 @@ export const resetLeague = async () => {
   return { success: true };
 };
 
-export const getMatchPreparations = async (id: string) => [];
+export const getMatchPreparations = async (id: string) => {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('match_preparations')
+      .select('operation_id')
+      .eq('profile_id', id)
+      .eq('status', 'pending');
+    if (error || !data) return [];
+    return data.map((row: any) => row.operation_id);
+  } catch {
+    return [];
+  }
+};

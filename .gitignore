@@ -52,3 +52,11 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Upload directory (temporary)
+/upload/
+# Z scripts
+/.zscripts/
+# Managerioum backup
+/managerioum-0.5/
+# Mini services build artifacts
+/mini-services/

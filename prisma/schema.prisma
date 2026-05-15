@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,20 +7,229 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ==========================================
+// SIYAH BEYAZ FC - Football Manager Schema
+// ==========================================
+
+model Profile {
+  id                    String   @id
+  manager_name          String   @default("Guest Manager")
+  team_name             String   @default("Siyah Beyaz FC")
+  level                 Int      @default(1)
+  xp                    Int      @default(0)
+  money                 Int      @default(5000000)
+  fans                  Int      @default(1000)
+  reputation            Int      @default(50)
+  mg_coins              Int      @default(0)
+  current_day           Int      @default(1)
+  team_id               String?
+  ticket_price          Int      @default(20)
+  academy_level         Int      @default(0)
+  region                String   @default("Turkey")
+  active_upgrade_type   String?
+  active_upgrade_id     String?
+  active_upgrade_finish_day Int?
+  stadium_upgrades      String   @default("{}") // JSON
+  sponsors              String   @default("[]") // JSON
+  philosophy            String?
+  primary_color         String   @default("#000000")
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  players       Player[]
+  matchHistory  MatchHistory[]
+  careerStats   PlayerCareerStat[]
+  watchlist     Watchlist[]
 }
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Player {
+  id                  String   @id
+  profile_id          String
+  name                String
+  position            String   // GK, DEF, MID, FWD
+  specific_position   String?  // CB, LB, CDM, ST etc.
+  secondary_positions String?  // JSON array
+  rating              Int
+  age                 Int
+  potential           Int
+  height              Int?
+  weight              Int?
+  market_value        Int      @default(0)
+  salary              Int      @default(0)
+  nation              String   @default("TR")
+  preferred_foot      String   @default("Right")
+  
+  // Core stats
+  defending           Int      @default(50)
+  passing             Int      @default(50)
+  shooting            Int      @default(50)
+  speed               Int      @default(50)
+  power               Int      @default(50)
+  vision              Int      @default(50)
+  control             Int      @default(50)
+  stamina             Int      @default(50)
+  heading             Int      @default(50)
+  goalkeeping         Int      @default(10)
+  
+  // Condition
+  cond                Int      @default(100)
+  form                Int      @default(70)
+  morale              Int      @default(70)
+  confidence          Int      @default(70)
+  hidden_potential    Int      @default(0)
+  fitness             Int      @default(100)
+  
+  // Traits & Style
+  traits              String   @default("[]") // JSON
+  neg_traits          String   @default("[]") // JSON
+  play_style          String?
+  archetype           String?
+  special_role        String?
+  
+  // Flags
+  is_legend           Boolean  @default(false)
+  is_for_sale         Boolean  @default(false)
+  sale_price          Int?
+  is_retiring         Boolean  @default(false)
+  scouted             Boolean  @default(false)
+  
+  // Performance
+  match_ratings       String   @default("[]") // JSON
+  
+  profile             Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+}
+
+model MatchHistory {
+  id              String   @id
+  profile_id      String
+  home_team_name  String
+  away_team_name  String
+  home_score      Int      @default(0)
+  away_score      Int      @default(0)
+  match_data      String   @default("{}") // JSON
+  is_friendly     Boolean  @default(false)
+  created_at      DateTime @default(now())
+
+  profile         Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+}
+
+model PlayerCareerStat {
+  id              String   @id
+  player_id       String
+  season_id       String
+  profile_id      String
+  matches         Int      @default(0)
+  goals           Int      @default(0)
+  assists         Int      @default(0)
+  yellow_cards    Int      @default(0)
+  red_cards       Int      @default(0)
+  clean_sheets    Int      @default(0)
+  avg_rating      Float    @default(0)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  profile         Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+}
+
+model Watchlist {
+  id              String   @id
+  profile_id      String
+  player_id       String
+  created_at      DateTime @default(now())
+
+  profile         Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+
+  @@unique([profile_id, player_id])
+}
+
+model ActiveTactic {
+  id                  String   @id
+  profile_id          String   @unique
+  formation           String   @default("4-4-2")
+  mentality           Int      @default(3)
+  pressing            Boolean  @default(false)
+  passing_style       String   @default("Karısık")
+  intensity           String   @default("normal")
+  line_height         Int      @default(50)
+  width               Int      @default(50)
+  aggression          Int      @default(50)
+  passing_intensity   Int      @default(50)
+  screen_keeper       Boolean  @default(false)
+  waste_time          Boolean  @default(false)
+  park_the_bus        Boolean  @default(false)
+  cross_game          Boolean  @default(false)
+  lone_striker_counter Boolean @default(false)
+  offside_trap        Boolean  @default(false)
+  play_style          String   @default("dengeli")
+  tempo               String   @default("normal")
+  defensive_line      String   @default("normal")
+  updated_at          DateTime @updatedAt
+}
+
+model TrainingState {
+  id              String   @id
+  profile_id      String   @unique
+  state_data      String   @default("{}") // JSON - full training state
+  updated_at      DateTime @updatedAt
+}
+
+model TransferMarket {
+  id              String   @id
+  player_data     String   // JSON - full player object
+  seller_id       String
+  seller_team     String
+  price           Int
+  min_price       Int
+  max_price       Int
+  is_auction      Boolean  @default(false)
+  starting_price  Int?
+  reserve_price   Int?
+  current_bid     Int?
+  current_bidder  String?
+  expires_at      DateTime?
+  status          String   @default("active") // active, sold, cancelled, expired
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+}
+
+model AuctionBid {
+  id              String   @id
+  auction_id      String
+  bidder_id       String
+  bidder_team     String
+  amount          Int
+  created_at      DateTime @default(now())
+}
+
+model FriendlyMatch {
+  id              String   @id
+  home_team_id    String
+  away_team_id    String?
+  home_score      Int      @default(0)
+  away_score      Int      @default(0)
+  match_data      String   @default("{}") // JSON
+  created_at      DateTime @default(now())
+}
+
+model MatchPreparation {
+  id              String   @id
+  profile_id      String
+  operation_id    String
+  status          String   @default("pending")
+  result_text     String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+}
+
+model ManagerInventory {
+  id              String   @id
+  profile_id      String
+  item_type       String
+  item_id         String
+  quantity        Int      @default(1)
+  acquired_at     DateTime @default(now())
+
+  @@unique([profile_id, item_type, item_id])
 }

@@ -14,6 +14,10 @@ import { GameCycleManager } from '@/lib/fm/GameCycleManager';
 import { toTitleCase } from '@/lib/fm/ui-helpers';
 import { getDefaultActiveTactic } from '@/lib/fm/types';
 
+// Module-level flag to prevent double-starting match simulation
+// (Cannot use useRef + mutation inside useEffect due to React Compiler immutability rule)
+let _simulationStarted = false;
+
 interface MatchDayProps {
   profile: any;
   homeTeam: Player[];
@@ -171,10 +175,10 @@ const MatchDay = ({
   }, [homeSquad, initialAwayTeam, activeTactic, activeOperations, gameTactics, setMatchState, profile?.team_name, profile?.stadium_upgrades]);
 
   const finalizeMatch = useCallback(() => {
-    if (matchState.isFinished || simulationStartedRef.current === false) return;
+    if (matchState.isFinished || !_simulationStarted) return;
     
     setMatchState(prev => ({ ...prev, isFinished: true, isActive: false }));
-    simulationStartedRef.current = false;
+    _simulationStarted = false;
     
     if (!matchResult || matchState.isReplay) {
       return;
@@ -238,12 +242,10 @@ const MatchDay = ({
     onMatchEnd({ ...matchResult, evolvedPlayers });
   }, [matchResult, homeSquad, playerConditions, onMatchEnd, setMatchState, matchState.isFinished, matchState.isReplay]);
 
-  const simulationStartedRef = useRef(false);
-
   useEffect(() => {
     // Only run if it's Live Match time and we haven't started yet
-    if (cycleStatus.phase === 'LIVE_MATCH' && homeSquad.length > 0 && initialAwayTeam.length > 0 && gameMinute === 0 && !isActive && !simulationStartedRef.current) {
-      simulationStartedRef.current = true;
+    if (cycleStatus.phase === 'LIVE_MATCH' && homeSquad.length > 0 && initialAwayTeam.length > 0 && gameMinute === 0 && !isActive && !_simulationStarted) {
+      _simulationStarted = true;
       runSimulation();
     }
   }, [homeSquad, initialAwayTeam, gameMinute, isActive, gameTactics, runSimulation, cycleStatus.phase]);

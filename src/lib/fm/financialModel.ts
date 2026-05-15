@@ -299,10 +299,64 @@ export function calculateWeeklyRevenue(
   }
 
   // ── Transfer Revenue (weekly amortised) ──────────────────────
-  const transferSources: RevenueSource[] = []; // placeholder – populated externally
+  const transferSources: RevenueSource[] = [];
+
+  // Estimate weekly transfer revenue from profile data
+  const avgTransferIncomePerSale = Math.round(500_000 * (profile.reputation / 50));
+  const estimatedSalesPerSeason = Math.max(1, Math.floor(profile.reputation / 25));
+  const weeklyAmortisedTransfer = Math.round((avgTransferIncomePerSale * estimatedSalesPerSeason) / 42);
+  if (weeklyAmortisedTransfer > 0) {
+    transferSources.push({
+      id: 'transfer_sales_amortised',
+      name: 'Oyuncu Satış Geliri (Amortisman)',
+      nameEn: 'Player Sales Revenue (Amortised)',
+      category: 'transfer',
+      amount: weeklyAmortisedTransfer,
+      frequency: 'weekly',
+      isVariable: true,
+      calculation: `ortalama satış ₺${avgTransferIncomePerSale.toLocaleString('tr-TR')} × sezon başı ${estimatedSalesPerSeason} satış / 42 hafta`,
+    });
+  }
 
   // ── Prize Revenue (weekly amortised) ─────────────────────────
-  const prizeSources: RevenueSource[] = []; // placeholder – populated externally
+  const prizeSources: RevenueSource[] = [];
+
+  // League prize money based on position and tier
+  if (leaguePosition) {
+    const tierPrizePool: Record<number, number> = { 1: 50_000_000, 2: 15_000_000, 3: 5_000_000, 4: 1_500_000 };
+    const pool = tierPrizePool[tier] ?? tierPrizePool[4];
+    const positionShare = Math.max(0.02, (20 - leaguePosition) / 190); // top team ≈ 10%, bottom ≈ 2%
+    const seasonPrize = Math.round(pool * positionShare);
+    const weeklyPrize = Math.round(seasonPrize / 42);
+    if (weeklyPrize > 0) {
+      prizeSources.push({
+        id: 'league_prize',
+        name: 'Lig Ödülü (Amortisman)',
+        nameEn: 'League Prize (Amortised)',
+        category: 'prize',
+        amount: weeklyPrize,
+        frequency: 'weekly',
+        isVariable: true,
+        calculation: `lig ${tier}. seviye havuz ₺${pool.toLocaleString('tr-TR')} × pozisyon payı ${(positionShare * 100).toFixed(1)}% / 42 hafta`,
+      });
+    }
+  }
+
+  // Cup progress bonus (estimated based on reputation)
+  const cupProgressBonus = Math.round(200_000 * (profile.reputation / 50));
+  const weeklyCupPrize = Math.round(cupProgressBonus / 42);
+  if (weeklyCupPrize > 0 && profile.reputation >= 20) {
+    prizeSources.push({
+      id: 'cup_prize',
+      name: 'Kup Ödülü (Amortisman)',
+      nameEn: 'Cup Prize (Amortised)',
+      category: 'prize',
+      amount: weeklyCupPrize,
+      frequency: 'weekly',
+      isVariable: true,
+      calculation: `itibar çarpanı (${(profile.reputation / 50).toFixed(2)}) × temel ₺200.000 / 42 hafta`,
+    });
+  }
 
   // ── Totals ───────────────────────────────────────────────────
   const sum = (arr: RevenueSource[]) => arr.reduce((s, r) => s + r.amount, 0);
@@ -447,7 +501,18 @@ export function calculateWeeklyExpenses(
     frequency: 'weekly',
   });
 
-  // ── Transfer Amortisation (placeholder – populated externally) ─
+  // ── Transfer Amortisation ─────────────────────────────────────
+  const totalSquadValue = squad.reduce((sum, p) => sum + (p.market_value ?? 0), 0);
+  const amortisationWeekly = Math.round(totalSquadValue / (42 * 3)); // spread over 3 seasons (156 weeks)
+  if (amortisationWeekly > 0) {
+    transfer.push({
+      id: 'transfer_amortisation',
+      name: 'Transfer Amortismanı',
+      category: 'transfer',
+      amount: amortisationWeekly,
+      frequency: 'weekly',
+    });
+  }
 
   // ── Totals ───────────────────────────────────────────────────
   const sumExp = (arr: ExpenseType[]) => arr.reduce((s, e) => s + e.amount, 0);
