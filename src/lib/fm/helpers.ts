@@ -12,5 +12,3 @@ export function syncPlayerStats(player: Player): Player {
   };
 }
 
-/** @deprecated Import from '@/lib/fm/ui-helpers' instead */
-export { localizePos, getPosColor } from './ui-helpers';

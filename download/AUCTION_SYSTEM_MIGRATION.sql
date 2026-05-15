@@ -45,9 +45,11 @@ CREATE INDEX IF NOT EXISTS idx_transfer_market_expires ON transfer_market(expire
 -- 7. RLS (Row Level Security) - Herkes okuyabilir, sadece ilgili kullanıcı yazabilir
 ALTER TABLE auction_bids ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "auction_bids_select" ON auction_bids;
 CREATE POLICY "auction_bids_select" ON auction_bids
   FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "auction_bids_insert" ON auction_bids;
 CREATE POLICY "auction_bids_insert" ON auction_bids
   FOR INSERT WITH CHECK (true);
 
@@ -84,11 +86,14 @@ CREATE INDEX IF NOT EXISTS idx_pcs_player_season ON player_career_stats(player_i
 -- 10. RLS for player_career_stats
 ALTER TABLE player_career_stats ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "player_career_stats_select" ON player_career_stats;
 CREATE POLICY "player_career_stats_select" ON player_career_stats
   FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "player_career_stats_insert" ON player_career_stats;
 CREATE POLICY "player_career_stats_insert" ON player_career_stats
   FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "player_career_stats_update" ON player_career_stats;
 CREATE POLICY "player_career_stats_update" ON player_career_stats
   FOR UPDATE USING (true);

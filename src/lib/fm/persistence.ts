@@ -406,13 +406,32 @@ export const getMatchPreparations = async (id: string) => {
   if (!isSupabaseConfigured()) return [];
   try {
     const supabase = getSupabase();
-    const { data, error } = await supabase
+
+    // Try match_preparations table first (backwards compat)
+    const { data: mpData, error: mpError } = await supabase
       .from('match_preparations')
       .select('operation_id')
       .eq('profile_id', id)
       .eq('status', 'pending');
-    if (error || !data) return [];
-    return data.map((row: any) => row.operation_id);
+
+    if (!mpError && mpData && mpData.length > 0) {
+      return mpData.map((row: any) => row.operation_id);
+    }
+
+    // Fallback: read from training_state table
+    const { data: tsData, error: tsError } = await supabase
+      .from('training_state')
+      .select('state')
+      .eq('id', id)
+      .single();
+
+    if (tsError || !tsData?.state) return [];
+
+    const state = typeof tsData.state === 'string' ? JSON.parse(tsData.state) : tsData.state;
+    const activeOps = state?.activeOperations || [];
+    return activeOps
+      .filter((op: any) => op.status === 'pending')
+      .map((op: any) => op.operationId || op.operation_id);
   } catch {
     return [];
   }
