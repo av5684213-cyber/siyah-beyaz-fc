@@ -3,18 +3,7 @@
 -- Manager-to-manager conversations, messages, presence
 -- ============================================================
 
--- DROP existing objects for clean re-run
-DROP POLICY IF EXISTS conv_select ON manager_conversations;
-DROP POLICY IF EXISTS conv_insert ON manager_conversations;
-DROP POLICY IF EXISTS conv_update ON manager_conversations;
-DROP POLICY IF EXISTS conv_delete ON manager_conversations;
-DROP POLICY IF EXISTS msg_select ON manager_messages;
-DROP POLICY IF EXISTS msg_insert ON manager_messages;
-DROP POLICY IF EXISTS msg_update ON manager_messages;
-DROP POLICY IF EXISTS msg_delete ON manager_messages;
-DROP POLICY IF EXISTS presence_select ON manager_presence;
-DROP POLICY IF EXISTS presence_insert ON manager_presence;
-DROP POLICY IF EXISTS presence_update ON manager_presence;
+-- DROP existing tables for clean re-run (CASCADE removes policies too)
 DROP TABLE IF EXISTS manager_messages CASCADE;
 DROP TABLE IF EXISTS manager_conversations CASCADE;
 DROP TABLE IF EXISTS manager_presence CASCADE;
