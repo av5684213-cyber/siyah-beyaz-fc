@@ -1,0 +1,190 @@
+import { Operation } from './types';
+
+export const OPERATIONS: Operation[] = [
+  // Tier 1-3: Perception Management / Defense
+  {
+    id: 'op_bot_army',
+    name: 'Sosyal Medya Bot Ordusu',
+    tier: 1,
+    description: 'Rakip takımı sosyal medyada baskı altına al.',
+    cost: 5000,
+    successRate: 0.9,
+    scandalRisk: 0.05,
+    impactType: 'luck',
+    impactValue: 0.03,
+    type: 'ATTACK',
+    category: 'media'
+  },
+  {
+    id: 'op_media_blackout_def',
+    name: 'Medya Karartması',
+    tier: 2,
+    description: 'Hakkınızda çıkan negatif haberlerin yayılmasını durdurun.',
+    cost: 7500,
+    successRate: 0.95,
+    scandalRisk: 0.02,
+    impactType: 'cleanup',
+    impactValue: 1,
+    type: 'DEFENSE',
+    category: 'media'
+  },
+  {
+    id: 'op_local_leak',
+    name: 'Yerel Basına Fısıltı',
+    tier: 2,
+    description: 'Rakipte kriz haberi sızdırarak huzursuzluk çıkar.',
+    cost: 10000,
+    successRate: 0.85,
+    scandalRisk: 0.1,
+    impactType: 'stamina',
+    impactValue: 3,
+    type: 'ATTACK',
+    category: 'media'
+  },
+  {
+    id: 'op_fan_provocation',
+    name: 'Taraftar Kışkırtma',
+    tier: 3,
+    description: 'Rakip taraftarları kendi yönetimlerine karşı kışkırt.',
+    cost: 15000,
+    successRate: 0.8,
+    scandalRisk: 0.15,
+    impactType: 'error_rate',
+    impactValue: 0.05,
+    type: 'ATTACK',
+    category: 'media'
+  },
+  // Tier 4-6: Corporate Pressure / Cleanup
+  {
+    id: 'op_mole_hunt',
+    name: 'Köstebek Avı',
+    tier: 4,
+    description: 'Tesislerinize sızmış olası sızıntıları temizler.',
+    cost: 40000,
+    successRate: 0.85,
+    scandalRisk: 0.05,
+    impactType: 'defense',
+    impactValue: 0.2,
+    type: 'CLEANUP',
+    category: 'scouting'
+  },
+  {
+    id: 'op_media_blackout',
+    name: 'Ulusal Medya Ambargosu',
+    tier: 4,
+    description: 'Rakibin sesini duyurmasını engelle.',
+    cost: 50000,
+    successRate: 0.7,
+    scandalRisk: 0.2,
+    impactType: 'luck',
+    impactValue: 0.05,
+    type: 'ATTACK',
+    category: 'media'
+  },
+  {
+    id: 'op_cyber_sabotage',
+    name: 'Siber Sabotaj',
+    tier: 5,
+    description: 'Rakip tesislerin dijital altyapısını boz.',
+    cost: 75000,
+    successRate: 0.65,
+    scandalRisk: 0.25,
+    impactType: 'stamina',
+    impactValue: 7,
+    type: 'ATTACK',
+    category: 'physical'
+  },
+  {
+    id: 'op_referee_lobby',
+    name: 'Hakem Odası Kulisleri',
+    tier: 6,
+    description: 'Yarınki maça "doğru" hakemin atanmasını sağla.',
+    cost: 100000,
+    successRate: 0.6,
+    scandalRisk: 0.3,
+    impactType: 'referee',
+    impactValue: 0.1,
+    type: 'ATTACK',
+    category: 'legal'
+  },
+  // Tier 7-9: System Intervention / Legal Shield
+  {
+    id: 'op_legal_shield',
+    name: 'Hukuk Zırhı',
+    tier: 7,
+    description: 'Federasyon nezdinde açılan soruşturmaları yavaşlatır.',
+    cost: 150000,
+    successRate: 0.8,
+    scandalRisk: 0.1,
+    impactType: 'defense',
+    impactValue: 0.4,
+    type: 'DEFENSE',
+    category: 'legal'
+  },
+  {
+    id: 'op_federation_influence',
+    name: 'Federasyon Lobisi',
+    tier: 7,
+    description: 'Kurullarda karar alıcıları "bilgilendir".',
+    cost: 250000,
+    successRate: 0.5,
+    scandalRisk: 0.4,
+    impactType: 'points',
+    impactValue: 2,
+    type: 'ATTACK',
+    category: 'legal'
+  },
+  {
+    id: 'op_ban_cancellation',
+    name: 'Cezaları İptal Ettirme',
+    tier: 8,
+    description: 'Disiplin kurulundan lehte kararlar çıkar.',
+    cost: 500000,
+    successRate: 0.4,
+    scandalRisk: 0.5,
+    impactType: 'error_rate',
+    impactValue: 0.1,
+    type: 'ATTACK',
+    category: 'legal'
+  },
+  {
+    id: 'op_holy_alliance',
+    name: 'Kutsal İttifak',
+    tier: 9,
+    description: 'Diğer kulüplerle rakibi paketle.',
+    cost: 1000000,
+    successRate: 0.3,
+    scandalRisk: 0.6,
+    impactType: 'luck',
+    impactValue: 0.15,
+    type: 'ATTACK',
+    category: 'media'
+  },
+  // Tier 10: Dark Centers / Veto
+  {
+    id: 'op_veto_power',
+    name: 'Veto Yetkisi',
+    tier: 10,
+    description: 'Rakibin en üst düzey saldırısını başlamadan iptal eder.',
+    cost: 2500000,
+    successRate: 0.9,
+    scandalRisk: 0.05,
+    impactType: 'defense',
+    impactValue: 0.7,
+    type: 'DEFENSE',
+    category: 'veto'
+  },
+  {
+    id: 'op_dark_odak',
+    name: 'Karanlık Odaklar',
+    tier: 10,
+    description: 'Ligin kaderine doğrudan müdahale.',
+    cost: 5000000,
+    successRate: 0.2,
+    scandalRisk: 0.8,
+    impactType: 'referee',
+    impactValue: 0.3,
+    type: 'ATTACK',
+    category: 'veto'
+  }
+];
