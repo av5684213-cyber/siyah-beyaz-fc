@@ -15,17 +15,17 @@ DROP POLICY IF EXISTS msg_delete ON manager_messages;
 DROP POLICY IF EXISTS presence_select ON manager_presence;
 DROP POLICY IF EXISTS presence_insert ON manager_presence;
 DROP POLICY IF EXISTS presence_update ON manager_presence;
-DROP TABLE IF EXISTS manager_messages;
-DROP TABLE IF EXISTS manager_conversations;
-DROP TABLE IF EXISTS manager_presence;
+DROP TABLE IF EXISTS manager_messages CASCADE;
+DROP TABLE IF EXISTS manager_conversations CASCADE;
+DROP TABLE IF EXISTS manager_presence CASCADE;
 
 -- ============================================================
 -- 1. MANAGER CONVERSATIONS
 -- ============================================================
 CREATE TABLE manager_conversations (
   id TEXT PRIMARY KEY,
-  participant_1 TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  participant_2 TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  participant_1 TEXT NOT NULL,
+  participant_2 TEXT NOT NULL,
   last_message_at TIMESTAMPTZ DEFAULT NOW(),
   last_message_content TEXT DEFAULT '',
   last_message_sender TEXT DEFAULT '',
@@ -65,8 +65,8 @@ CREATE POLICY conv_delete ON manager_conversations
 -- ============================================================
 CREATE TABLE manager_messages (
   id TEXT PRIMARY KEY,
-  conversation_id TEXT NOT NULL REFERENCES manager_conversations(id) ON DELETE CASCADE,
-  sender_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  conversation_id TEXT NOT NULL,
+  sender_id TEXT NOT NULL,
   content TEXT NOT NULL,
   message_type TEXT NOT NULL DEFAULT 'general',
     -- 'general' | 'trash_talk' | 'transfer' | 'alliance' | 'friendly_invite' | 'season_greeting'
@@ -120,7 +120,7 @@ CREATE POLICY msg_delete ON manager_messages
 -- 3. MANAGER PRESENCE (online status)
 -- ============================================================
 CREATE TABLE manager_presence (
-  profile_id TEXT PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  profile_id TEXT PRIMARY KEY,
   is_online BOOLEAN DEFAULT FALSE,
   last_seen TIMESTAMPTZ DEFAULT NOW(),
   status_text TEXT DEFAULT ''
