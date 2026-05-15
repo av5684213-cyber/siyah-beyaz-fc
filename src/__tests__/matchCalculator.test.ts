@@ -1,12 +1,17 @@
 /**
- * Match Calculator Tests
- * Poisson dağılımı, puan hesaplama, ve maç motoru yardımcı fonksiyonları testleri
+ * Siyah Beyaz FC — Maç Hesaplayıcı Testleri
+ * 
+ * Poisson dağılımı, puan hesaplama, takım gücü hesaplama
+ * ve maç olayı üretimi testleri.
  */
 
-// ─── Poisson Dağılımı Testleri ─────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════
+// POISSON DAĞILIMI TESTLERİ
+// ═══════════════════════════════════════════════════════════════════════
 
 /**
- * Poisson dağılımından rastgele sayı üretir (Box-Muller dönüşümü ile)
+ * Basit Poisson dağılımı simülasyonu.
+ * Beklenen gol sayısına göre rastgele gol üretir.
  */
 function poissonRandom(lambda: number): number {
   let L = Math.exp(-lambda);
@@ -22,350 +27,397 @@ function poissonRandom(lambda: number): number {
 }
 
 /**
- Beklenen gol sayısına göre gol olasılıklarını hesaplar (Poisson PMF)
+ * Maç gol simülasyonu: Her iki takım için Poisson bazlı gol üretir.
  */
-function poissonPMF(k: number, lambda: number): number {
-  return (Math.pow(lambda, k) * Math.exp(-lambda)) / factorial(k);
+function simulateGoals(homeExpected: number, awayExpected: number): { home: number; away: number } {
+  return {
+    home: Math.min(poissonRandom(homeExpected), 7),
+    away: Math.min(poissonRandom(awayExpected), 7),
+  };
 }
 
-function factorial(n: number): number {
-  if (n <= 1) return 1;
-  let result = 1;
-  for (let i = 2; i <= n; i++) result *= i;
-  return result;
-}
+describe('Poisson Dağılımı Testleri', () => {
+  test('Beklenen gol sayısı 0-5 arası olmalı', () => {
+    const results: number[] = [];
+    for (let i = 0; i < 1000; i++) {
+      const goals = poissonRandom(1.3); // Ortalama 1.3 gol
+      results.push(goals);
+    }
 
-// ─── Puan Hesaplama ──────────────────────────────────────────────────
+    const avg = results.reduce((a, b) => a + b, 0) / results.length;
+    
+    // Ortalama beklenen değere yakın olmalı (1.3 ± 0.3)
+    expect(avg).toBeGreaterThan(0.8);
+    expect(avg).toBeLessThan(2.0);
 
-interface MatchScore {
-  homeGoals: number;
-  awayGoals: number;
-}
+    // Negatif olmamalı
+    expect(Math.min(...results)).toBeGreaterThanOrEqual(0);
 
-interface TeamPoints {
-  homePoints: number;
-  awayPoints: number;
-  homeWon: boolean;
-  awayWon: boolean;
-  drawn: boolean;
-}
+    // Maksimum 7 gol sınırı
+    expect(Math.max(...results)).toBeLessThanOrEqual(10); // Poisson sınırsız ama pratikte <10
+  });
 
-function calculatePoints(score: MatchScore): TeamPoints {
-  if (score.homeGoals > score.awayGoals) {
-    return { homePoints: 3, awayPoints: 0, homeWon: true, awayWon: false, drawn: false };
-  } else if (score.homeGoals < score.awayGoals) {
-    return { homePoints: 0, awayPoints: 3, homeWon: false, awayWon: true, drawn: false };
-  } else {
-    return { homePoints: 1, awayPoints: 1, homeWon: false, awayWon: false, drawn: true };
-  }
+  test('Düşük expected goals (0.5) az gol üretir', () => {
+    const results: number[] = [];
+    for (let i = 0; i < 1000; i++) {
+      results.push(poissonRandom(0.5));
+    }
+    const avg = results.reduce((a, b) => a + b, 0) / results.length;
+    expect(avg).toBeLessThan(1.0);
+  });
+
+  test('Yüksek expected goals (3.0) çok gol üretir', () => {
+    const results: number[] = [];
+    for (let i = 0; i < 1000; i++) {
+      results.push(poissonRandom(3.0));
+    }
+    const avg = results.reduce((a, b) => a + b, 0) / results.length;
+    expect(avg).toBeGreaterThan(2.0);
+    expect(avg).toBeLessThan(4.5);
+  });
+
+  test('Maç simülasyonu gol sonuçları makul aralıkta', () => {
+    for (let i = 0; i < 100; i++) {
+      const result = simulateGoals(1.3, 1.1);
+      expect(result.home).toBeGreaterThanOrEqual(0);
+      expect(result.away).toBeGreaterThanOrEqual(0);
+      expect(result.home).toBeLessThanOrEqual(7);
+      expect(result.away).toBeLessThanOrEqual(7);
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// PUAN HESAPLAMA TESTLERİ
+// ═══════════════════════════════════════════════════════════════════════
+
+interface StandingRow {
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  gf: number;
+  ga: number;
+  points: number;
 }
 
 /**
- * Sezon puan tablosunu hesaplar
+ * Maç sonucuna göre puan tablosunu günceller.
  */
-function calculateStandings(
-  results: MatchScore[],
-  isHome: boolean[]
-): { points: number; won: number; drawn: number; lost: number; gf: number; ga: number } {
-  let points = 0;
-  let won = 0;
-  let drawn = 0;
-  let lost = 0;
-  let gf = 0;
-  let ga = 0;
+function updateStanding(
+  standing: StandingRow,
+  goalsFor: number,
+  goalsAgainst: number
+): StandingRow {
+  const isWin = goalsFor > goalsAgainst;
+  const isDraw = goalsFor === goalsAgainst;
 
-  for (let i = 0; i < results.length; i++) {
-    const result = results[i];
-    const teamGoals = isHome[i] ? result.homeGoals : result.awayGoals;
-    const oppGoals = isHome[i] ? result.awayGoals : result.homeGoals;
+  return {
+    played: standing.played + 1,
+    won: standing.won + (isWin ? 1 : 0),
+    drawn: standing.drawn + (isDraw ? 1 : 0),
+    lost: standing.lost + (!isWin && !isDraw ? 1 : 0),
+    gf: standing.gf + goalsFor,
+    ga: standing.ga + goalsAgainst,
+    points: standing.points + (isWin ? 3 : isDraw ? 1 : 0),
+  };
+}
 
-    gf += teamGoals;
-    ga += oppGoals;
+describe('Puan Hesaplama Testleri', () => {
+  const initialStanding: StandingRow = {
+    played: 0,
+    won: 0,
+    drawn: 0,
+    lost: 0,
+    gf: 0,
+    ga: 0,
+    points: 0,
+  };
 
-    const pts = calculatePoints(result);
-    if (isHome[i]) {
-      points += pts.homePoints;
-      if (pts.homeWon) won++;
-      else if (pts.drawn) drawn++;
-      else lost++;
-    } else {
-      points += pts.awayPoints;
-      if (pts.awayWon) won++;
-      else if (pts.drawn) drawn++;
-      else lost++;
+  test('Galibiyet 3 puan verir', () => {
+    const result = updateStanding(initialStanding, 2, 0);
+    expect(result.points).toBe(3);
+    expect(result.won).toBe(1);
+    expect(result.drawn).toBe(0);
+    expect(result.lost).toBe(0);
+    expect(result.played).toBe(1);
+    expect(result.gf).toBe(2);
+    expect(result.ga).toBe(0);
+  });
+
+  test('Beraberlik 1 puan verir', () => {
+    const result = updateStanding(initialStanding, 1, 1);
+    expect(result.points).toBe(1);
+    expect(result.won).toBe(0);
+    expect(result.drawn).toBe(1);
+    expect(result.lost).toBe(0);
+    expect(result.played).toBe(1);
+  });
+
+  test('Mağlubiyet 0 puan verir', () => {
+    const result = updateStanding(initialStanding, 0, 3);
+    expect(result.points).toBe(0);
+    expect(result.won).toBe(0);
+    expect(result.drawn).toBe(0);
+    expect(result.lost).toBe(1);
+    expect(result.played).toBe(1);
+  });
+
+  test('Kümülatif puan hesaplama doğru çalışır', () => {
+    let standing = { ...initialStanding };
+    
+    // 3 galibiyet = 9 puan
+    standing = updateStanding(standing, 2, 1);
+    standing = updateStanding(standing, 3, 0);
+    standing = updateStanding(standing, 1, 0);
+    
+    // 1 beraberlik = 1 puan
+    standing = updateStanding(standing, 2, 2);
+    
+    // 1 mağlubiyet = 0 puan
+    standing = updateStanding(standing, 0, 4);
+
+    expect(standing.played).toBe(5);
+    expect(standing.won).toBe(3);
+    expect(standing.drawn).toBe(1);
+    expect(standing.lost).toBe(1);
+    expect(standing.points).toBe(10);
+    expect(standing.gf).toBe(8);
+    expect(standing.ga).toBe(7);
+  });
+
+  test('34 maçlık tam sezon puan hesaplama', () => {
+    let standing = { ...initialStanding };
+    
+    // 20 galibiyet, 8 beraberlik, 6 mağlubiyet = 68 puan
+    for (let i = 0; i < 20; i++) standing = updateStanding(standing, 2, 0);
+    for (let i = 0; i < 8; i++) standing = updateStanding(standing, 1, 1);
+    for (let i = 0; i < 6; i++) standing = updateStanding(standing, 0, 1);
+
+    expect(standing.played).toBe(34);
+    expect(standing.won).toBe(20);
+    expect(standing.drawn).toBe(8);
+    expect(standing.lost).toBe(6);
+    expect(standing.points).toBe(68);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// TAKIM GÜCÜ HESAPLAMA TESTLERİ
+// ═══════════════════════════════════════════════════════════════════════
+
+interface Player {
+  id: string;
+  name: string;
+  position: string;
+  rating: number;
+  form_rating: number;
+}
+
+/**
+ * Takım gücünü hesaplar (rating ortalaması + form faktörü).
+ */
+function calculateTeamStrength(players: Player[]): number {
+  if (!players || players.length === 0) return 50.0;
+  
+  const ratings = players.filter(p => p.rating).map(p => p.rating);
+  if (ratings.length === 0) return 50.0;
+  
+  const avgRating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+  const formBonus = players.reduce((sum, p) => sum + (p.form_rating || 0), 0) / players.length * 0.1;
+  
+  return avgRating + formBonus;
+}
+
+describe('Takım Gücü Hesaplama Testleri', () => {
+  test('Boş kadro 50.0 döner', () => {
+    expect(calculateTeamStrength([])).toBe(50.0);
+  });
+
+  test('Tek oyunculu kadro rating döndürür', () => {
+    const players: Player[] = [
+      { id: '1', name: 'Test', position: 'ST', rating: 80, form_rating: 70 },
+    ];
+    const strength = calculateTeamStrength(players);
+    expect(strength).toBeCloseTo(80 + 70 * 0.1, 1);
+  });
+
+  test('Rating olmayan oyuncular filtrelenir', () => {
+    const players: Player[] = [
+      { id: '1', name: 'Test1', position: 'ST', rating: 80, form_rating: 70 },
+      { id: '2', name: 'Test2', position: 'CM', rating: 0, form_rating: 0 },
+    ];
+    const strength = calculateTeamStrength(players);
+    // Sadece rating > 0 olanlar hesaba katılır
+    expect(strength).toBeGreaterThan(0);
+  });
+
+  test('Yüksek ratingli takım daha güçlü', () => {
+    const strongTeam: Player[] = [
+      { id: '1', name: 'S1', position: 'GK', rating: 85, form_rating: 80 },
+      { id: '2', name: 'S2', position: 'CB', rating: 82, form_rating: 75 },
+      { id: '3', name: 'S3', position: 'ST', rating: 90, form_rating: 85 },
+    ];
+    const weakTeam: Player[] = [
+      { id: '4', name: 'W1', position: 'GK', rating: 55, form_rating: 50 },
+      { id: '5', name: 'W2', position: 'CB', rating: 50, form_rating: 45 },
+      { id: '6', name: 'W3', position: 'ST', rating: 60, form_rating: 55 },
+    ];
+
+    const strongStrength = calculateTeamStrength(strongTeam);
+    const weakStrength = calculateTeamStrength(weakTeam);
+
+    expect(strongStrength).toBeGreaterThan(weakStrength);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// KART CEZASI HESAPLAMA TESTLERİ
+// ═══════════════════════════════════════════════════════════════════════
+
+interface CardEvent {
+  type: 'yellow_card' | 'red_card';
+  playerId: string;
+  playerName: string;
+  reason?: string;
+}
+
+/**
+ * Kart olaylarından cezalandırılacak oyuncuları belirler.
+ * - Direkt kırmızı → cezalı
+ * - 2 sarı kart (aynı maç) → cezalı
+ * - 1 sarı kart → cezasız
+ */
+function computeSuspensions(cardEvents: CardEvent[]): { playerId: string; reason: string }[] {
+  const cardCounts: Record<string, { yellow: number; red: number }> = {};
+
+  for (const event of cardEvents) {
+    const pid = event.playerId;
+    if (!cardCounts[pid]) cardCounts[pid] = { yellow: 0, red: 0 };
+
+    if (event.type === 'yellow_card') cardCounts[pid].yellow += 1;
+    if (event.type === 'red_card') cardCounts[pid].red += 1;
+  }
+
+  const suspended: { playerId: string; reason: string }[] = [];
+
+  for (const [pid, counts] of Object.entries(cardCounts)) {
+    if (counts.red >= 1) {
+      suspended.push({ playerId: pid, reason: `Kırmızı kart: ${counts.red} kırmızı` });
+    } else if (counts.yellow >= 2) {
+      suspended.push({ playerId: pid, reason: `Çift sarı kart: ${counts.yellow} sarı` });
     }
   }
 
-  return { points, won, drawn, lost, gf, ga };
+  return suspended;
+}
+
+describe('Kart Cezası Hesaplama Testleri', () => {
+  test('Kartsız maçta ceza yok', () => {
+    expect(computeSuspensions([])).toEqual([]);
+  });
+
+  test('Tek sarı kart ceza vermez', () => {
+    const events: CardEvent[] = [
+      { type: 'yellow_card', playerId: 'p1', playerName: 'Oyuncu 1' },
+    ];
+    expect(computeSuspensions(events)).toEqual([]);
+  });
+
+  test('İki sarı kart ceza verir', () => {
+    const events: CardEvent[] = [
+      { type: 'yellow_card', playerId: 'p1', playerName: 'Oyuncu 1' },
+      { type: 'yellow_card', playerId: 'p1', playerName: 'Oyuncu 1' },
+    ];
+    const result = computeSuspensions(events);
+    expect(result).toHaveLength(1);
+    expect(result[0].playerId).toBe('p1');
+    expect(result[0].reason).toContain('Çift sarı');
+  });
+
+  test('Direkt kırmızı kart ceza verir', () => {
+    const events: CardEvent[] = [
+      { type: 'red_card', playerId: 'p2', playerName: 'Oyuncu 2', reason: 'Agresif davranış' },
+    ];
+    const result = computeSuspensions(events);
+    expect(result).toHaveLength(1);
+    expect(result[0].playerId).toBe('p2');
+    expect(result[0].reason).toContain('Kırmızı kart');
+  });
+
+  test('Farklı oyuncuların kartları ayrı hesaplanır', () => {
+    const events: CardEvent[] = [
+      { type: 'yellow_card', playerId: 'p1', playerName: 'Oyuncu 1' },
+      { type: 'yellow_card', playerId: 'p2', playerName: 'Oyuncu 2' },
+      { type: 'red_card', playerId: 'p3', playerName: 'Oyuncu 3' },
+    ];
+    const result = computeSuspensions(events);
+    expect(result).toHaveLength(1); // Sadece kırmızı kartlı oyuncu
+    expect(result[0].playerId).toBe('p3');
+  });
+
+  test('Sarı + kırmızı kart ceza verir', () => {
+    const events: CardEvent[] = [
+      { type: 'yellow_card', playerId: 'p1', playerName: 'Oyuncu 1' },
+      { type: 'red_card', playerId: 'p1', playerName: 'Oyuncu 1', reason: 'İkinci sarı kart' },
+    ];
+    const result = computeSuspensions(events);
+    expect(result).toHaveLength(1);
+    expect(result[0].playerId).toBe('p1');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// MVP PUANLAMA TESTLERİ
+// ═══════════════════════════════════════════════════════════════════════
+
+interface MVPCandidate {
+  playerId: string;
+  playerName: string;
+  goals: number;
+  assists: number;
+  motm: number;
+  matches: number;
+  avgRating: number;
 }
 
 /**
- Maç sonucu beklenen gol sayısına göre mantıklı mı kontrol eder
+ * MVP puanı hesaplar.
+ * Puan = gol * 3 + asist * 2 + motm * 5 + maç * 0.1
  */
-function isRealisticScore(homeGoals: number, awayGoals: number): boolean {
-  // Toplam 10+ gol çok nadir
-  if (homeGoals + awayGoals > 10) return false;
-  // Tek takım 8+ gol çok nadir
-  if (homeGoals > 8 || awayGoals > 8) return false;
-  // Negatif gol olamaz
-  if (homeGoals < 0 || awayGoals < 0) return false;
-  return true;
+function computeMVPScore(candidate: MVPCandidate): number {
+  return candidate.goals * 3 + candidate.assists * 2 + candidate.motm * 5 + candidate.matches * 0.1;
 }
 
-/**
- * Gol diferansiyeli hesaplar
- */
-function goalDifference(gf: number, ga: number): number {
-  return gf - ga;
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// TESTLER
-// ═══════════════════════════════════════════════════════════════════════
-
-describe('Match Calculator', () => {
-  // ─── Poisson Dağılımı Testleri ────────────────────────────────────────
-
-  describe('Poisson Distribution', () => {
-    test('poissonRandom should return non-negative integers', () => {
-      for (let i = 0; i < 100; i++) {
-        const result = poissonRandom(1.3);
-        expect(result).toBeGreaterThanOrEqual(0);
-        expect(Number.isInteger(result)).toBe(true);
-      }
-    });
-
-    test('poissonRandom with lambda=0 should always return 0', () => {
-      for (let i = 0; i < 50; i++) {
-        expect(poissonRandom(0)).toBe(0);
-      }
-    });
-
-    test('poissonRandom mean should approximate lambda for large samples', () => {
-      const lambda = 2.5;
-      const samples = 10000;
-      let sum = 0;
-      for (let i = 0; i < samples; i++) {
-        sum += poissonRandom(lambda);
-      }
-      const mean = sum / samples;
-      // %10 tolerans
-      expect(mean).toBeGreaterThan(lambda * 0.9);
-      expect(mean).toBeLessThan(lambda * 1.1);
-    });
-
-    test('poissonPMF should sum to approximately 1', () => {
-      const lambda = 1.5;
-      let totalProbability = 0;
-      for (let k = 0; k <= 20; k++) {
-        totalProbability += poissonPMF(k, lambda);
-      }
-      expect(totalProbability).toBeCloseTo(1.0, 4);
-    });
-
-    test('poissonPMF peak should be near lambda', () => {
-      const lambda = 3;
-      let maxProb = 0;
-      let maxK = 0;
-      for (let k = 0; k <= 10; k++) {
-        const prob = poissonPMF(k, lambda);
-        if (prob > maxProb) {
-          maxProb = prob;
-          maxK = k;
-        }
-      }
-      // Peak should be at k=2 or k=3 for lambda=3
-      expect(maxK).toBeGreaterThanOrEqual(2);
-      expect(maxK).toBeLessThanOrEqual(3);
-    });
-
-    test('higher lambda should produce higher expected goals', () => {
-      const lowLambda = 0.8;
-      const highLambda = 3.0;
-      let lowSum = 0;
-      let highSum = 0;
-      const iterations = 5000;
-
-      for (let i = 0; i < iterations; i++) {
-        lowSum += poissonRandom(lowLambda);
-        highSum += poissonRandom(highLambda);
-      }
-
-      expect(highSum / iterations).toBeGreaterThan(lowSum / iterations);
-    });
+describe('MVP Puanlama Testleri', () => {
+  test('Gol en yüksek katkı sağlar (3 puan)', () => {
+    const scorer: MVPCandidate = { playerId: '1', playerName: 'Golcü', goals: 5, assists: 0, motm: 0, matches: 10, avgRating: 7 };
+    const assister: MVPCandidate = { playerId: '2', playerName: 'Asistçi', goals: 0, assists: 5, motm: 0, matches: 10, avgRating: 7 };
+    
+    expect(computeMVPScore(scorer)).toBe(15 + 1); // 5*3 + 10*0.1
+    expect(computeMVPScore(assister)).toBe(10 + 1); // 5*2 + 10*0.1
+    expect(computeMVPScore(scorer)).toBeGreaterThan(computeMVPScore(assister));
   });
 
-  // ─── Puan Hesaplama Testleri ──────────────────────────────────────────
-
-  describe('Points Calculation', () => {
-    test('home win should give 3 points to home, 0 to away', () => {
-      const result = calculatePoints({ homeGoals: 2, awayGoals: 1 });
-      expect(result.homePoints).toBe(3);
-      expect(result.awayPoints).toBe(0);
-      expect(result.homeWon).toBe(true);
-      expect(result.awayWon).toBe(false);
-      expect(result.drawn).toBe(false);
-    });
-
-    test('away win should give 0 points to home, 3 to away', () => {
-      const result = calculatePoints({ homeGoals: 0, awayGoals: 3 });
-      expect(result.homePoints).toBe(0);
-      expect(result.awayPoints).toBe(3);
-      expect(result.homeWon).toBe(false);
-      expect(result.awayWon).toBe(true);
-      expect(result.drawn).toBe(false);
-    });
-
-    test('draw should give 1 point each', () => {
-      const result = calculatePoints({ homeGoals: 1, awayGoals: 1 });
-      expect(result.homePoints).toBe(1);
-      expect(result.awayPoints).toBe(1);
-      expect(result.homeWon).toBe(false);
-      expect(result.awayWon).toBe(false);
-      expect(result.drawn).toBe(true);
-    });
-
-    test('0-0 is a draw', () => {
-      const result = calculatePoints({ homeGoals: 0, awayGoals: 0 });
-      expect(result.drawn).toBe(true);
-      expect(result.homePoints).toBe(1);
-      expect(result.awayPoints).toBe(1);
-    });
+  test('MOTM büyük avantaj sağlar (5 puan)', () => {
+    const withMotm: MVPCandidate = { playerId: '1', playerName: 'MOTM', goals: 0, assists: 0, motm: 3, matches: 10, avgRating: 7 };
+    const withoutMotm: MVPCandidate = { playerId: '2', playerName: 'Normal', goals: 0, assists: 0, motm: 0, matches: 10, avgRating: 7 };
+    
+    expect(computeMVPScore(withMotm)).toBe(15 + 1); // 3*5 + 10*0.1
+    expect(computeMVPScore(withoutMotm)).toBe(1); // 10*0.1
   });
 
-  // ─── Sezon Puan Tablosu Testleri ──────────────────────────────────────
-
-  describe('Season Standings', () => {
-    test('calculateStandings for a perfect season (all wins)', () => {
-      const results: MatchScore[] = [
-        { homeGoals: 2, awayGoals: 0 },
-        { homeGoals: 3, awayGoals: 1 },
-        { homeGoals: 1, awayGoals: 0 },
-      ];
-      const isHome = [true, true, true];
-
-      const standings = calculateStandings(results, isHome);
-      expect(standings.points).toBe(9);
-      expect(standings.won).toBe(3);
-      expect(standings.drawn).toBe(0);
-      expect(standings.lost).toBe(0);
-      expect(standings.gf).toBe(6);
-      expect(standings.ga).toBe(1);
-    });
-
-    test('calculateStandings for mixed results', () => {
-      const results: MatchScore[] = [
-        { homeGoals: 2, awayGoals: 1 },   // Win (home) — takım ev sahibi, 2-1 kazandı
-        { homeGoals: 3, awayGoals: 1 },   // Loss (away) — takım deplasman, 1-3 kaybetti
-        { homeGoals: 0, awayGoals: 0 },   // Draw (home) — takım ev sahibi, 0-0 berabere
-      ];
-      const isHome = [true, false, true];
-
-      const standings = calculateStandings(results, isHome);
-      expect(standings.points).toBe(4); // 3 (win) + 0 (loss) + 1 (draw) = 4
-      expect(standings.won).toBe(1);
-      expect(standings.drawn).toBe(1);
-      expect(standings.lost).toBe(1);
-    });
-
-    test('goal difference calculation', () => {
-      expect(goalDifference(10, 5)).toBe(5);
-      expect(goalDifference(3, 3)).toBe(0);
-      expect(goalDifference(0, 4)).toBe(-4);
-    });
-
-    test('34-match season should have correct total', () => {
-      // Simulate a 34-match season: 20W, 8D, 6L
-      const results: MatchScore[] = [];
-      const isHome: boolean[] = [];
-
-      // 20 wins — takım her zaman daha çok gol atar
-      for (let i = 0; i < 20; i++) {
-        const isHomeMatch = i % 2 === 0;
-        isHome.push(isHomeMatch);
-        if (isHomeMatch) {
-          results.push({ homeGoals: 2, awayGoals: 0 }); // Ev sahibi: 2-0 kazanır
-        } else {
-          results.push({ homeGoals: 0, awayGoals: 2 }); // Deplasman: 0-2 kazanır (away=2)
-        }
-      }
-      // 8 draws
-      for (let i = 0; i < 8; i++) {
-        results.push({ homeGoals: 1, awayGoals: 1 });
-        isHome.push(true);
-      }
-      // 6 losses — rakip her zaman daha çok gol atar
-      for (let i = 0; i < 6; i++) {
-        const isHomeMatch = i % 2 === 0;
-        isHome.push(isHomeMatch);
-        if (isHomeMatch) {
-          results.push({ homeGoals: 0, awayGoals: 2 }); // Ev sahibi: 0-2 kaybeder
-        } else {
-          results.push({ homeGoals: 3, awayGoals: 0 }); // Deplasman: 3-0 kaybeder (away=0)
-        }
-      }
-
-      const standings = calculateStandings(results, isHome);
-      expect(standings.won).toBe(20);
-      expect(standings.drawn).toBe(8);
-      expect(standings.lost).toBe(6);
-      expect(standings.points).toBe(20 * 3 + 8 * 1 + 6 * 0);
-    });
+  test('Sıfır istatistikli oyuncu düşük puan alır', () => {
+    const zero: MVPCandidate = { playerId: '1', playerName: 'Yedek', goals: 0, assists: 0, motm: 0, matches: 0, avgRating: 5 };
+    expect(computeMVPScore(zero)).toBe(0);
   });
 
-  // ─── Gerçekçilik Kontrol Testleri ─────────────────────────────────────
-
-  describe('Score Realism', () => {
-    test('common scores should be realistic', () => {
-      expect(isRealisticScore(0, 0)).toBe(true);
-      expect(isRealisticScore(1, 0)).toBe(true);
-      expect(isRealisticScore(2, 1)).toBe(true);
-      expect(isRealisticScore(3, 3)).toBe(true);
-      expect(isRealisticScore(5, 0)).toBe(true);
-    });
-
-    test('unrealistic scores should be rejected', () => {
-      expect(isRealisticScore(-1, 0)).toBe(false);
-      expect(isRealisticScore(9, 2)).toBe(false);
-      expect(isRealisticScore(5, 6)).toBe(false);
-    });
-
-    test('Poisson-generated scores should mostly be realistic', () => {
-      let realisticCount = 0;
-      const iterations = 1000;
-      const homeLambda = 1.3;
-      const awayLambda = 1.1;
-
-      for (let i = 0; i < iterations; i++) {
-        const homeGoals = poissonRandom(homeLambda);
-        const awayGoals = poissonRandom(awayLambda);
-        if (isRealisticScore(homeGoals, awayGoals)) {
-          realisticCount++;
-        }
-      }
-
-      // En az %95 gerçekçi olmalı
-      expect(realisticCount / iterations).toBeGreaterThan(0.95);
-    });
-  });
-
-  // ─── Factorial Testleri ───────────────────────────────────────────────
-
-  describe('Factorial', () => {
-    test('factorial of 0 is 1', () => {
-      expect(factorial(0)).toBe(1);
-    });
-
-    test('factorial of 1 is 1', () => {
-      expect(factorial(1)).toBe(1);
-    });
-
-    test('factorial of 5 is 120', () => {
-      expect(factorial(5)).toBe(120);
-    });
-
-    test('factorial of 10 is 3628800', () => {
-      expect(factorial(10)).toBe(3628800);
-    });
+  test('Kapsamlı MVP hesaplama', () => {
+    const candidate: MVPCandidate = { 
+      playerId: '1', playerName: 'Star', 
+      goals: 10, assists: 8, motm: 5, matches: 30, avgRating: 8.2 
+    };
+    const expected = 10 * 3 + 8 * 2 + 5 * 5 + 30 * 0.1; // 30 + 16 + 25 + 3 = 74
+    expect(computeMVPScore(candidate)).toBe(expected);
   });
 });

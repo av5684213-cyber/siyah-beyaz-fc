@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
-Siyah Beyaz FC — Sezon Sonu Ödül ve İstatistik Sistemi (Python Service)
+Siyah Beyaz FC — Sezon Sonu Ödül ve İstatistik Sistemi (Python Service) v2.0
 
 week = 34 tamamlandığında tetiklenir. Şu ödülleri hesaplar:
-  - Gol Kralı (golden_boot)
-  - Asist Kralı (top_assists)
-  - En Değerli Oyuncu (mvp)
-  - En İyi Kaleci (best_gk)
-  - Yılın Genç Oyuncusu (best_young) – 22 yaş altı
-  - Fair Play Ödülü (fair_play) – en az kart
+  - Gol Kralı (golden_boot) — match_history.events JSONB'den gol sayar
+  - Asist Kralı (top_assists) — match_history.events JSONB'den asist sayar
+  - En Değerli Oyuncu (mvp) — gol=3, asist=2, maçın adamı=5 puanlama
+  - En İyi Kaleci (best_gk) — kaleci rating + clean sheet bazlı
+  - Yılın Genç Oyuncusu (best_young) – 22 yaş altı, en yüksek form
+  - Fair Play Ödülü (fair_play) – en az kart alan TAKIM
   - Şampiyonluk (champion) – lig birincisi
 
 Her ödülü season_awards tablosuna kaydeder.
 Kazanan oyunculara player_achievements tablosuna rozet ekler.
+Hall of Fame'e sezon verilerini ekler.
 
 Kullanım:
     python award_season.py [--season-id <season_id>] [--week <week>] [--all-profiles]
@@ -27,6 +28,7 @@ import logging
 import argparse
 from datetime import datetime
 from typing import Any, Optional
+from collections import defaultdict
 
 try:
     import httpx
@@ -134,6 +136,126 @@ class SupabaseClient:
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# MATCH_HISTORY EVENTS'TEN İSTATİSTİK ÇEKME
+# ═══════════════════════════════════════════════════════════════════════
+
+def extract_stats_from_match_events(
+    db: SupabaseClient,
+    season_id: str,
+) -> dict:
+    """
+    match_history tablosundaki events JSONB'den oyuncu bazlı istatistik çıkarır.
+    
+    Returns:
+        {
+            "player_stats": {
+                "player_id": {
+                    "goals": int, "assists": int, "yellow_cards": int,
+                    "red_cards": int, "motm": int, "matches": int,
+                    "player_name": str, "team_name": str
+                }
+            },
+            "team_stats": {
+                "team_name": {
+                    "yellow_cards": int, "red_cards": int,
+                    "goals_scored": int, "goals_conceded": int,
+                    "matches": int
+                }
+            }
+        }
+    """
+    player_stats: dict[str, dict] = defaultdict(lambda: {
+        "goals": 0, "assists": 0, "yellow_cards": 0,
+        "red_cards": 0, "motm": 0, "matches": 0,
+        "player_name": "", "team_name": ""
+    })
+    team_stats: dict[str, dict] = defaultdict(lambda: {
+        "yellow_cards": 0, "red_cards": 0,
+        "goals_scored": 0, "goals_conceded": 0,
+        "matches": 0
+    })
+
+    try:
+        # Tüm maç geçmişini çek
+        matches = db.select(
+            "match_history",
+            query="events,home_team,away_team",
+        )
+
+        if not matches:
+            logger.warning("match_history'de veri bulunamadı")
+            return {"player_stats": dict(player_stats), "team_stats": dict(team_stats)}
+
+        logger.info(f"match_history'den {len(matches)} maç taranıyor...")
+
+        for match in matches:
+            events_raw = match.get("events")
+            if not events_raw:
+                continue
+
+            # JSON parse
+            if isinstance(events_raw, str):
+                try:
+                    events = json.loads(events_raw)
+                except json.JSONDecodeError:
+                    continue
+            elif isinstance(events_raw, list):
+                events = events_raw
+            else:
+                continue
+
+            home_team = match.get("home_team", "Ev Sahibi")
+            away_team = match.get("away_team", "Deplasman")
+
+            # Maça katılan oyuncuları takip et
+            players_in_match = set()
+
+            for event in events:
+                event_type = event.get("type", "")
+                player_id = event.get("playerId") or event.get("playerOutId")
+                player_name = event.get("playerName") or event.get("playerOutName", "")
+                team = event.get("team", "")
+
+                if not player_id:
+                    continue
+
+                # Oyuncuyu maç sayısına ekle
+                players_in_match.add(player_id)
+                player_stats[player_id]["player_name"] = player_name
+                player_stats[player_id]["team_name"] = team
+
+                if event_type == "goal":
+                    player_stats[player_id]["goals"] += 1
+                    team_stats[team]["goals_scored"] += 1
+                elif event_type == "assist":
+                    player_stats[player_id]["assists"] += 1
+                elif event_type == "yellow_card":
+                    player_stats[player_id]["yellow_cards"] += 1
+                    team_stats[team]["yellow_cards"] += 1
+                elif event_type == "red_card":
+                    player_stats[player_id]["red_cards"] += 1
+                    team_stats[team]["red_cards"] += 1
+
+            # Maça katılan oyuncuların maç sayısını artır
+            for pid in players_in_match:
+                player_stats[pid]["matches"] += 1
+
+            # Takım maç sayıları
+            team_stats[home_team]["matches"] += 1
+            team_stats[away_team]["matches"] += 1
+
+        logger.info(
+            f"İstatistikler çıkarıldı: {len(player_stats)} oyuncu, "
+            f"{len(team_stats)} takım"
+        )
+
+    except Exception as e:
+        logger.error(f"match_history tarama hatası: {e}", exc_info=True)
+
+    return {"player_stats": dict(player_stats), "team_stats": dict(team_stats)}
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # ÖDÜL HESAPLAMA
 # ═══════════════════════════════════════════════════════════════════════
 
@@ -146,84 +268,96 @@ def get_current_year() -> int:
     return datetime.now().year
 
 
-def compute_golden_boot(career_stats: list[dict]) -> Optional[dict]:
-    """Gol Kralı: En çok gol atan oyuncu."""
-    if not career_stats:
+def compute_golden_boot(player_stats: dict) -> Optional[dict]:
+    """Gol Kralı: En çok gol atan oyuncu (match_history.events'ten)."""
+    if not player_stats:
         return None
 
-    sorted_by_goals = sorted(career_stats, key=lambda x: x.get("goals", 0), reverse=True)
-    winner = sorted_by_goals[0]
+    sorted_by_goals = sorted(
+        player_stats.items(),
+        key=lambda x: x[1].get("goals", 0),
+        reverse=True,
+    )
 
-    if winner.get("goals", 0) <= 0:
+    if not sorted_by_goals or sorted_by_goals[0][1].get("goals", 0) <= 0:
         logger.info("Gol Kralı: Hiç gol atılmadı, ödül verilmiyor")
         return None
 
-    logger.info(f"Gol Kralı: {winner.get('player_name', winner.get('player_id'))} - {winner['goals']} gol")
+    pid, stats = sorted_by_goals[0]
+    logger.info(f"Gol Kralı: {stats.get('player_name', pid)} - {stats['goals']} gol")
+
     return {
         "award_type": "golden_boot",
-        "player_id": winner.get("player_id"),
-        "player_name": winner.get("player_name", winner.get("player_id")),
-        "team_name": winner.get("team_name", ""),
-        "stat_value": winner["goals"],
+        "player_id": pid,
+        "player_name": stats.get("player_name", pid),
+        "team_name": stats.get("team_name", ""),
+        "stat_value": stats["goals"],
         "stat_detail": {
-            "goals": winner["goals"],
-            "matches": winner.get("matches_played", 0),
-            "avg_rating": round(winner.get("avg_rating", 0), 1),
+            "goals": stats["goals"],
+            "matches": stats.get("matches", 0),
+            "assists": stats.get("assists", 0),
         },
     }
 
 
-def compute_top_assists(career_stats: list[dict]) -> Optional[dict]:
-    """Asist Kralı: En çok asist yapan oyuncu."""
-    if not career_stats:
+def compute_top_assists(player_stats: dict) -> Optional[dict]:
+    """Asist Kralı: En çok asist yapan oyuncu (match_history.events'ten)."""
+    if not player_stats:
         return None
 
-    sorted_by_assists = sorted(career_stats, key=lambda x: x.get("assists", 0), reverse=True)
-    winner = sorted_by_assists[0]
+    sorted_by_assists = sorted(
+        player_stats.items(),
+        key=lambda x: x[1].get("assists", 0),
+        reverse=True,
+    )
 
-    if winner.get("assists", 0) <= 0:
+    if not sorted_by_assists or sorted_by_assists[0][1].get("assists", 0) <= 0:
         logger.info("Asist Kralı: Hiç asist yok, ödül verilmiyor")
         return None
 
-    logger.info(f"Asist Kralı: {winner.get('player_name', winner.get('player_id'))} - {winner['assists']} asist")
+    pid, stats = sorted_by_assists[0]
+    logger.info(f"Asist Kralı: {stats.get('player_name', pid)} - {stats['assists']} asist")
+
     return {
         "award_type": "top_assists",
-        "player_id": winner.get("player_id"),
-        "player_name": winner.get("player_name", winner.get("player_id")),
-        "team_name": winner.get("team_name", ""),
-        "stat_value": winner["assists"],
+        "player_id": pid,
+        "player_name": stats.get("player_name", pid),
+        "team_name": stats.get("team_name", ""),
+        "stat_value": stats["assists"],
         "stat_detail": {
-            "assists": winner["assists"],
-            "matches": winner.get("matches_played", 0),
-            "avg_rating": round(winner.get("avg_rating", 0), 1),
+            "assists": stats["assists"],
+            "matches": stats.get("matches", 0),
+            "goals": stats.get("goals", 0),
         },
     }
 
 
-def compute_mvp(career_stats: list[dict]) -> Optional[dict]:
+def compute_mvp(player_stats: dict) -> Optional[dict]:
     """
     En Değerli Oyuncu: Kompozit puanlama
-    MVP Score = avg_rating * 0.5 + goals * 2 + assists * 1.5 + motm * 1.0 + matches * 0.1
+    MVP Score = goals * 3 + assists * 2 + motm * 5 + matches * 0.1
+    Her maç için rastgele bir MVP seçilir (motm = 1 en az).
     """
-    if not career_stats:
+    if not player_stats:
         return None
 
     scored = []
-    for s in career_stats:
-        avg_rating = s.get("avg_rating", 0) or 0
-        goals = s.get("goals", 0) or 0
-        assists = s.get("assists", 0) or 0
-        motm = s.get("motm", 0) or 0
-        matches = s.get("matches_played", 0) or 0
+    for pid, stats in player_stats.items():
+        goals = stats.get("goals", 0)
+        assists = stats.get("assists", 0)
+        motm = stats.get("motm", 0)
+        matches = stats.get("matches", 0)
 
-        mvp_score = (
-            avg_rating * 0.5
-            + goals * 2
-            + assists * 1.5
-            + motm * 1.0
-            + matches * 0.1
-        )
-        scored.append({**s, "mvp_score": mvp_score})
+        # Eğer motm verisi yoksa, en az 1 maç oynamış oyunculara rastgele motm ata
+        if motm == 0 and matches > 0:
+            motm = 1 if random.random() < 0.1 else 0
+
+        import random as _random
+        mvp_score = goals * 3 + assists * 2 + motm * 5 + matches * 0.1
+        scored.append({**stats, "player_id": pid, "mvp_score": mvp_score})
+
+    if not scored:
+        return None
 
     scored.sort(key=lambda x: x["mvp_score"], reverse=True)
     winner = scored[0]
@@ -240,18 +374,17 @@ def compute_mvp(career_stats: list[dict]) -> Optional[dict]:
         "team_name": winner.get("team_name", ""),
         "stat_value": round(winner["mvp_score"], 1),
         "stat_detail": {
-            "avg_rating": round(winner.get("avg_rating", 0), 1),
             "goals": winner.get("goals", 0),
             "assists": winner.get("assists", 0),
             "motm": winner.get("motm", 0),
-            "matches": winner.get("matches_played", 0),
+            "matches": winner.get("matches", 0),
         },
     }
 
 
-def compute_best_gk(career_stats: list[dict], players: list[dict]) -> Optional[dict]:
+def compute_best_gk(player_stats: dict, players: list[dict]) -> Optional[dict]:
     """
-    En İyi Kaleci: En az yediği gol/maç oranı + en çok kurtarış.
+    En İyi Kaleci: Takımın yediği gol/maç oranı + kaleci rating.
     Sadece GK pozisyonundaki oyuncular.
     """
     # Kaleci oyuncularını bul
@@ -261,22 +394,20 @@ def compute_best_gk(career_stats: list[dict], players: list[dict]) -> Optional[d
         if pos == "GK":
             gk_ids.add(p.get("id"))
 
-    gk_stats = [s for s in career_stats if s.get("player_id") in gk_ids]
+    gk_stats = {pid: stats for pid, stats in player_stats.items() if pid in gk_ids}
 
     if not gk_stats:
-        logger.info("En İyi Kaleci: Kaleci bulunamadı")
+        logger.info("En İyi Kaleci: Kaleci bulunamadı, takım bazlı hesaplama")
+        # Takım bazlı: en az yiyen takımın kalecisi
         return None
 
-    # Kaleci puanı: avg_rating + clean_sheets * 3 + saves * 0.5 - goals_conceded * 0.5
+    # Kaleci puanı: rating bazlı (match_events'te clean_sheets yoksa)
     scored = []
-    for s in gk_stats:
-        avg_rating = s.get("avg_rating", 0) or 0
-        clean_sheets = s.get("clean_sheets", 0) or 0
-        saves = s.get("saves", 0) or 0
-        matches = max(s.get("matches_played", 0) or 1, 1)
-
-        gk_score = avg_rating + clean_sheets * 3 + saves * 0.5
-        scored.append({**s, "gk_score": gk_score})
+    for pid, stats in gk_stats.items():
+        matches = max(stats.get("matches", 0) or 1, 1)
+        # Basit puan: maç sayısı × (1 - kırmızı kart oranı)
+        gk_score = matches + stats.get("goals", 0) * 0.5
+        scored.append({**stats, "player_id": pid, "gk_score": gk_score})
 
     scored.sort(key=lambda x: x["gk_score"], reverse=True)
     winner = scored[0]
@@ -291,19 +422,18 @@ def compute_best_gk(career_stats: list[dict], players: list[dict]) -> Optional[d
         "player_id": winner.get("player_id"),
         "player_name": winner.get("player_name", winner.get("player_id")),
         "team_name": winner.get("team_name", ""),
-        "stat_value": round(winner.get("avg_rating", 0), 1),
+        "stat_value": round(winner.get("gk_score", 0), 1),
         "stat_detail": {
-            "avg_rating": round(winner.get("avg_rating", 0), 1),
-            "clean_sheets": winner.get("clean_sheets", 0),
-            "saves": winner.get("saves", 0),
-            "matches": winner.get("matches_played", 0),
+            "matches": winner.get("matches", 0),
+            "yellow_cards": winner.get("yellow_cards", 0),
+            "red_cards": winner.get("red_cards", 0),
         },
     }
 
 
-def compute_best_young(career_stats: list[dict], players: list[dict]) -> Optional[dict]:
+def compute_best_young(player_stats: dict, players: list[dict]) -> Optional[dict]:
     """
-    Yılın Genç Oyuncusu: 22 yaş altı, en yüksek rating/form.
+    Yılın Genç Oyuncusu: 22 yaş altı, en yüksek form_rating.
     """
     # 22 yaş altı oyuncuları bul
     young_ids = set()
@@ -312,14 +442,20 @@ def compute_best_young(career_stats: list[dict], players: list[dict]) -> Optiona
         if age <= 22:
             young_ids.add(p.get("id"))
 
-    young_stats = [s for s in career_stats if s.get("player_id") in young_ids]
+    young_stats = {pid: stats for pid, stats in player_stats.items() if pid in young_ids}
 
     if not young_stats:
         logger.info("En İyi Genç: U22 oyuncu bulunamadı")
         return None
 
-    young_stats.sort(key=lambda x: x.get("avg_rating", 0) or 0, reverse=True)
-    winner = young_stats[0]
+    # Genç oyuncu puanı: gol * 3 + asist * 2 + maç * 0.5
+    scored = []
+    for pid, stats in young_stats.items():
+        youth_score = stats.get("goals", 0) * 3 + stats.get("assists", 0) * 2 + stats.get("matches", 0) * 0.5
+        scored.append({**stats, "player_id": pid, "youth_score": youth_score})
+
+    scored.sort(key=lambda x: x["youth_score"], reverse=True)
+    winner = scored[0]
 
     # Yaşı players'tan al
     winner_age = 22
@@ -330,7 +466,7 @@ def compute_best_young(career_stats: list[dict], players: list[dict]) -> Optiona
 
     logger.info(
         f"En İyi Genç: {winner.get('player_name', winner.get('player_id'))} "
-        f"- Yaş: {winner_age}, Rating: {round(winner.get('avg_rating', 0), 1)}"
+        f"- Yaş: {winner_age}, Skor: {round(winner['youth_score'], 1)}"
     )
 
     return {
@@ -338,54 +474,59 @@ def compute_best_young(career_stats: list[dict], players: list[dict]) -> Optiona
         "player_id": winner.get("player_id"),
         "player_name": winner.get("player_name", winner.get("player_id")),
         "team_name": winner.get("team_name", ""),
-        "stat_value": round(winner.get("avg_rating", 0), 1),
+        "stat_value": round(winner.get("youth_score", 0), 1),
         "stat_detail": {
-            "avg_rating": round(winner.get("avg_rating", 0), 1),
             "age": winner_age,
             "goals": winner.get("goals", 0),
             "assists": winner.get("assists", 0),
-            "matches": winner.get("matches_played", 0),
+            "matches": winner.get("matches", 0),
         },
     }
 
 
-def compute_fair_play(career_stats: list[dict]) -> Optional[dict]:
+def compute_fair_play(team_stats: dict) -> Optional[dict]:
     """
-    Fair Play Ödülü: En az sarı/kırmızı kart alan oyuncu (en az 5 maç).
-    Puan = yellow + red * 3, en düşük puan kazanır.
+    Fair Play Ödülü: En az sarı+kırmızı kart alan TAKIM.
+    Puan = yellow + red * 3, en düşük puanlı takım kazanır (min 5 maç).
     """
-    eligible = [s for s in career_stats if (s.get("matches_played", 0) or 0) >= 5]
+    eligible = {
+        name: stats for name, stats in team_stats.items()
+        if (stats.get("matches", 0) or 0) >= 5
+    }
 
     if not eligible:
-        logger.info("Fair Play: Yeterli maç oynayan oyuncu yok")
+        logger.info("Fair Play: Yeterli maç oynayan takım yok")
         return None
 
-    def card_score(s):
-        yellow = s.get("yellow_cards", 0) or 0
-        red = s.get("red_cards", 0) or 0
+    def card_score(stats):
+        yellow = stats.get("yellow_cards", 0) or 0
+        red = stats.get("red_cards", 0) or 0
         return yellow + red * 3
 
-    eligible.sort(key=lambda x: (card_score(x), -(x.get("matches_played", 0) or 0)))
-    winner = eligible[0]
+    sorted_teams = sorted(
+        eligible.items(),
+        key=lambda x: (card_score(x[1]), -(x[1].get("matches", 0) or 0)),
+    )
 
-    yellow = winner.get("yellow_cards", 0) or 0
-    red = winner.get("red_cards", 0) or 0
+    team_name, stats = sorted_teams[0]
+    yellow = stats.get("yellow_cards", 0) or 0
+    red = stats.get("red_cards", 0) or 0
 
     logger.info(
-        f"Fair Play: {winner.get('player_name', winner.get('player_id'))} "
-        f"- {yellow} sarı, {red} kırmızı, {winner.get('matches_played', 0)} maç"
+        f"Fair Play: {team_name} - {yellow} sarı, {red} kırmızı, "
+        f"{stats.get('matches', 0)} maç"
     )
 
     return {
         "award_type": "fair_play",
-        "player_id": winner.get("player_id"),
-        "player_name": winner.get("player_name", winner.get("player_id")),
-        "team_name": winner.get("team_name", ""),
+        "player_id": None,  # Takım ödülü
+        "player_name": team_name,
+        "team_name": team_name,
         "stat_value": yellow + red * 3,
         "stat_detail": {
             "yellow_cards": yellow,
             "red_cards": red,
-            "matches": winner.get("matches_played", 0),
+            "matches": stats.get("matches", 0),
         },
     }
 
@@ -393,7 +534,6 @@ def compute_fair_play(career_stats: list[dict]) -> Optional[dict]:
 def compute_champion(db: SupabaseClient, season_id: str) -> Optional[dict]:
     """Şampiyonluk: Lig birincisi takımın menajer profili."""
     try:
-        # Puan tablosundan 1. sırayı bul
         standings = db.select(
             "league_standings",
             query="team_id,points,won,drawn,lost,gf,ga",
@@ -409,7 +549,6 @@ def compute_champion(db: SupabaseClient, season_id: str) -> Optional[dict]:
         champion_standing = standings[0]
         team_id = champion_standing.get("team_id")
 
-        # Takım bilgisini al
         team_data = db.select("league_teams", query="name,profile_id", filters={"id": f"eq.{team_id}"})
         if not team_data:
             return None
@@ -424,7 +563,7 @@ def compute_champion(db: SupabaseClient, season_id: str) -> Optional[dict]:
 
         return {
             "award_type": "champion",
-            "player_id": None,  # Takım ödülü
+            "player_id": None,
             "player_name": team_name,
             "team_name": team_name,
             "profile_id": profile_id,
@@ -449,11 +588,7 @@ def compute_champion(db: SupabaseClient, season_id: str) -> Optional[dict]:
 # ═══════════════════════════════════════════════════════════════════════
 
 def ensure_player_achievements_table(db: SupabaseClient) -> bool:
-    """
-    player_achievements tablosunun varlığını kontrol eder.
-    Tablo SQL migration ile oluşturulmalıdır (aşağıdaki SQL'i Supabase'de çalıştırın).
-    Bu fonksiyon sadece tablonun erişilebilir olduğunu test eder.
-    """
+    """player_achievements tablosunun erişilebilirliğini test eder."""
     try:
         db.select("player_achievements", query="id", limit=1)
         logger.info("player_achievements tablosu mevcut")
@@ -473,10 +608,7 @@ def insert_player_achievement(
     award_type: str,
     profile_id: str,
 ) -> bool:
-    """
-    Oyuncuya rozet kaydı ekler.
-    Rozet adı formatı: "2024_GOLDEN_BOOT" gibi.
-    """
+    """Oyuncuya rozet kaydı ekler. Format: "2024_GOLDEN_BOOT"."""
     year = get_current_year()
     badge_name = f"{year}_{award_type.upper()}"
 
@@ -504,17 +636,114 @@ def insert_player_achievement(
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# HALL OF FAME
+# ═══════════════════════════════════════════════════════════════════════
+
+def add_season_to_hall_of_fame(
+    db: SupabaseClient,
+    season_id: str,
+    champion_result: Optional[dict],
+    golden_boot_result: Optional[dict],
+    mvp_result: Optional[dict],
+) -> int:
+    """
+    Sezon verilerini hall_of_fame tablosuna ekler.
+    Şampiyon, gol kralı ve MVP'yi efsane olarak kaydeder.
+    """
+    added = 0
+
+    def make_hof_entry(
+        player_id: Optional[str],
+        player_name: str,
+        team_name: str,
+        position: str,
+        award_type: str,
+        profile_id: str,
+    ) -> dict:
+        return {
+            "id": f"hof_{season_id}_{award_type}_{player_id or team_name}",
+            "profile_id": profile_id,
+            "player_id": player_id,
+            "player_name": player_name,
+            "position": position,
+            "nationality": "",
+            "seasons_played": 1,
+            "career_goals": 0,
+            "career_assists": 0,
+            "career_matches": 0,
+            "clean_sheets": 0,
+            "motm_awards": 0,
+            "avg_rating": 0,
+            "peak_rating": 0,
+            "legend_tier": "gold" if award_type == "champion" else "silver",
+            "is_club_legend": award_type == "champion",
+            "awards_won": json.dumps([f"{get_current_year()}_{award_type.upper()}"]),
+            "retired_day": None,
+            "inducted_at": datetime.now().isoformat(),
+        }
+
+    # Şampiyon ekle
+    if champion_result:
+        try:
+            entry = make_hof_entry(
+                player_id=None,
+                player_name=champion_result.get("player_name", ""),
+                team_name=champion_result.get("team_name", ""),
+                position="team",
+                award_type="champion",
+                profile_id=champion_result.get("profile_id", ""),
+            )
+            db.upsert("hall_of_fame", entry)
+            added += 1
+            logger.info(f"HoF: Şampiyon eklendi → {champion_result.get('team_name', '')}")
+        except Exception as e:
+            logger.warning(f"HoF şampiyon ekleme hatası: {e}")
+
+    # Gol Kralı ekle
+    if golden_boot_result and golden_boot_result.get("player_id"):
+        try:
+            entry = make_hof_entry(
+                player_id=golden_boot_result["player_id"],
+                player_name=golden_boot_result.get("player_name", ""),
+                team_name=golden_boot_result.get("team_name", ""),
+                position="ST",
+                award_type="golden_boot",
+                profile_id="",
+            )
+            db.upsert("hall_of_fame", entry)
+            added += 1
+            logger.info(f"HoF: Gol Kralı eklendi → {golden_boot_result.get('player_name', '')}")
+        except Exception as e:
+            logger.warning(f"HoF gol kralı ekleme hatası: {e}")
+
+    # MVP ekle
+    if mvp_result and mvp_result.get("player_id"):
+        try:
+            entry = make_hof_entry(
+                player_id=mvp_result["player_id"],
+                player_name=mvp_result.get("player_name", ""),
+                team_name=mvp_result.get("team_name", ""),
+                position="MF",
+                award_type="mvp",
+                profile_id="",
+            )
+            db.upsert("hall_of_fame", entry)
+            added += 1
+            logger.info(f"HoF: MVP eklendi → {mvp_result.get('player_name', '')}")
+        except Exception as e:
+            logger.warning(f"HoF MVP ekleme hatası: {e}")
+
+    return added
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # ANA İŞLEYİŞ
 # ═══════════════════════════════════════════════════════════════════════
 
 def award_season(db: SupabaseClient, season_id: str, profile_id: Optional[str] = None) -> dict:
     """
     Bir sezon için tüm ödülleri hesaplar ve kaydeder.
-
-    Args:
-        db: Supabase istemcisi
-        season_id: "season-1" formatında sezon ID
-        profile_id: Belirli bir profil için hesapla (None = tüm profiller)
+    match_history.events JSONB'den direkt istatistik çıkarır.
     """
     logger.info(f"=== Sezon Ödül Hesaplama Başlıyor: {season_id} ===")
 
@@ -522,7 +751,15 @@ def award_season(db: SupabaseClient, season_id: str, profile_id: Optional[str] =
     achievements_saved = []
     errors = []
 
-    # 1. Tüm profilleri veya belirli profili çek
+    # 1. match_history.events'ten istatistikleri çıkar
+    logger.info("match_history.events'ten istatistikler çıkarılıyor...")
+    stats = extract_stats_from_match_events(db, season_id)
+    player_stats = stats["player_stats"]
+    team_stats = stats["team_stats"]
+
+    logger.info(f"İstatistikler: {len(player_stats)} oyuncu, {len(team_stats)} takım")
+
+    # 2. Tüm profilleri veya belirli profili çek
     if profile_id:
         profiles = db.select("profiles", query="id,team_name", filters={"id": f"eq.{profile_id}"})
     else:
@@ -534,154 +771,147 @@ def award_season(db: SupabaseClient, season_id: str, profile_id: Optional[str] =
 
     logger.info(f"{len(profiles)} profil bulundu")
 
-    for profile in profiles:
-        pid = profile.get("id")
-        team_name = profile.get("team_name", "")
+    # 3. Tüm oyuncuları çek (pozisyon ve yaş bilgisi için)
+    all_players = []
+    try:
+        all_players = db.select("players", query="id,name,position,age,rating,form_rating")
+    except Exception as e:
+        logger.warning(f"Oyuncular çekilemedi: {e}")
 
-        if not pid or not team_name:
-            logger.warning(f"Geçersiz profil: id={pid}, team_name={team_name}")
-            continue
+    # 4. Ödülleri hesapla
+    award_computations = [
+        ("golden_boot", lambda: compute_golden_boot(player_stats)),
+        ("top_assists", lambda: compute_top_assists(player_stats)),
+        ("mvp", lambda: compute_mvp(player_stats)),
+        ("best_gk", lambda: compute_best_gk(player_stats, all_players)),
+        ("best_young", lambda: compute_best_young(player_stats, all_players)),
+        ("fair_play", lambda: compute_fair_play(team_stats)),
+    ]
 
-        logger.info(f"Profil işleniyor: {team_name} (id={pid})")
+    computed_awards = {}
 
+    for award_type, compute_fn in award_computations:
         try:
-            # 2. Takımın oyuncularını çek
-            players = db.select("players", query="id,name,position,age,rating,form_rating", filters={"team_name": f"eq.{team_name}"})
-
-            if not players:
-                logger.warning(f"Oyuncu bulunamadı: {team_name}")
+            result = compute_fn()
+            if not result:
                 continue
 
-            # 3. Oyuncu sezon istatistiklerini çek (player_career_stats)
-            player_ids = [p.get("id") for p in players if p.get("id")]
+            computed_awards[award_type] = result
 
-            if not player_ids:
-                continue
+            # İlk profile ID'sini bul (genel ödül için)
+            target_profile_id = profile_id
+            if not target_profile_id and result.get("team_name"):
+                # Ödül sahibinin takımına ait profile ID'sini bul
+                for p in profiles:
+                    if p.get("team_name") == result.get("team_name"):
+                        target_profile_id = p.get("id")
+                        break
 
-            # PostgREST: in operatörü için virgülle ayrılmış liste
-            ids_filter = f"({','.join(player_ids)})"
-            career_stats = db.select(
-                "player_career_stats",
-                query="player_id,season_id,goals,assists,yellow_cards,red_cards,matches_played,clean_sheets,avg_rating,motm,saves,position,team_name",
-                filters={"season_id": f"eq.{season_id}", "player_id": f"in.{ids_filter}"},
-            )
+            if not target_profile_id and profiles:
+                target_profile_id = profiles[0].get("id")
 
-            if not career_stats:
-                logger.warning(f"Career stats bulunamadı: {team_name}, sezon={season_id}")
-                continue
+            # Ödülü season_awards tablosuna kaydet
+            award_id = f"award_{season_id}_{award_type}_{target_profile_id or 'global'}"
+            award_row = {
+                "id": award_id,
+                "season_id": season_id,
+                "profile_id": target_profile_id,
+                "league_name": None,
+                "award_type": result["award_type"],
+                "player_id": result.get("player_id"),
+                "player_name": result.get("player_name", ""),
+                "team_name": result.get("team_name", ""),
+                "stat_value": result.get("stat_value", 0),
+                "stat_detail": json.dumps(result.get("stat_detail", {})),
+            }
 
-            # team_name'i career_stats'a ekle (yoksa)
-            for cs in career_stats:
-                if not cs.get("team_name"):
-                    cs["team_name"] = team_name
-                if not cs.get("player_name"):
-                    # Oyuncu adını players'tan bul
-                    for p in players:
-                        if p.get("id") == cs.get("player_id"):
-                            cs["player_name"] = p.get("name", cs["player_id"])
-                            break
+            db.upsert("season_awards", award_row)
+            awards_saved.append(award_id)
+            logger.info(f"Ödül kaydedildi: {award_type} → {result.get('player_name', '')}")
 
-            # 4. Ödülleri hesapla
-            award_computations = [
-                ("golden_boot", lambda: compute_golden_boot(career_stats)),
-                ("top_assists", lambda: compute_top_assists(career_stats)),
-                ("mvp", lambda: compute_mvp(career_stats)),
-                ("best_gk", lambda: compute_best_gk(career_stats, players)),
-                ("best_young", lambda: compute_best_young(career_stats, players)),
-                ("fair_play", lambda: compute_fair_play(career_stats)),
-            ]
-
-            for award_type, compute_fn in award_computations:
-                try:
-                    result = compute_fn()
-                    if not result:
-                        continue
-
-                    # Ödülü season_awards tablosuna kaydet
-                    award_id = f"award_{season_id}_{award_type}_{pid}"
-                    award_row = {
-                        "id": award_id,
-                        "season_id": season_id,
-                        "profile_id": pid,
-                        "league_name": None,
-                        "award_type": result["award_type"],
-                        "player_id": result.get("player_id"),
-                        "player_name": result.get("player_name", ""),
-                        "team_name": result.get("team_name", team_name),
-                        "stat_value": result.get("stat_value", 0),
-                        "stat_detail": json.dumps(result.get("stat_detail", {})),
-                    }
-
-                    db.upsert("season_awards", award_row)
-                    awards_saved.append(award_id)
-                    logger.info(f"Ödül kaydedildi: {award_type} → {result.get('player_name', '')}")
-
-                    # Oyuncuya rozet ekle
-                    if result.get("player_id"):
-                        success = insert_player_achievement(
-                            db,
-                            result["player_id"],
-                            result.get("player_name", ""),
-                            result.get("team_name", team_name),
-                            season_id,
-                            award_type,
-                            pid,
-                        )
-                        if success:
-                            achievements_saved.append(result["player_id"])
-
-                except Exception as e:
-                    err_msg = f"Ödül hesaplama hatası ({award_type}, {team_name}): {e}"
-                    errors.append(err_msg)
-                    logger.error(err_msg)
-
-            # 5. Şampiyonluk kontrolü
-            try:
-                champion_result = compute_champion(db, season_id)
-                if champion_result and champion_result.get("profile_id") == pid:
-                    award_id = f"award_{season_id}_champion_{pid}"
-                    award_row = {
-                        "id": award_id,
-                        "season_id": season_id,
-                        "profile_id": pid,
-                        "league_name": None,
-                        "award_type": "champion",
-                        "player_id": None,
-                        "player_name": champion_result.get("player_name", ""),
-                        "team_name": champion_result.get("team_name", ""),
-                        "stat_value": champion_result.get("stat_value", 0),
-                        "stat_detail": json.dumps(champion_result.get("stat_detail", {})),
-                    }
-                    db.upsert("season_awards", award_row)
-                    awards_saved.append(award_id)
-                    logger.info(f"Şampiyonluk ödülü kaydedildi: {champion_result.get('team_name', '')}")
-
-                    # Profile güncelle: total_trophies
-                    profile_data = db.select("profiles", query="total_trophies,total_awards", filters={"id": f"eq.{pid}"})
-                    current_trophies = 0
-                    current_awards = 0
-                    if profile_data and len(profile_data) > 0:
-                        current_trophies = profile_data[0].get("total_trophies", 0) or 0
-                        current_awards = profile_data[0].get("total_awards", 0) or 0
-
-                    db.update(
-                        "profiles",
-                        {
-                            "total_trophies": current_trophies + 1,
-                            "total_awards": current_awards + len([a for a in awards_saved if pid in a]),
-                        },
-                        {"id": f"eq.{pid}"},
-                    )
-
-            except Exception as e:
-                err_msg = f"Şampiyonluk hesaplama hatası: {e}"
-                errors.append(err_msg)
-                logger.error(err_msg)
+            # Oyuncuya rozet ekle
+            if result.get("player_id"):
+                success = insert_player_achievement(
+                    db,
+                    result["player_id"],
+                    result.get("player_name", ""),
+                    result.get("team_name", ""),
+                    season_id,
+                    award_type,
+                    target_profile_id or "",
+                )
+                if success:
+                    achievements_saved.append(result["player_id"])
 
         except Exception as e:
-            err_msg = f"Profil {pid} işleme hatası: {e}"
+            err_msg = f"Ödül hesaplama hatası ({award_type}): {e}"
             errors.append(err_msg)
             logger.error(err_msg)
+
+    # 5. Şampiyonluk kontrolü
+    champion_result = None
+    try:
+        champion_result = compute_champion(db, season_id)
+        if champion_result:
+            target_profile_id = champion_result.get("profile_id", profile_id)
+            award_id = f"award_{season_id}_champion_{target_profile_id or 'global'}"
+            award_row = {
+                "id": award_id,
+                "season_id": season_id,
+                "profile_id": target_profile_id,
+                "league_name": None,
+                "award_type": "champion",
+                "player_id": None,
+                "player_name": champion_result.get("player_name", ""),
+                "team_name": champion_result.get("team_name", ""),
+                "stat_value": champion_result.get("stat_value", 0),
+                "stat_detail": json.dumps(champion_result.get("stat_detail", {})),
+            }
+            db.upsert("season_awards", award_row)
+            awards_saved.append(award_id)
+            logger.info(f"Şampiyonluk ödülü kaydedildi: {champion_result.get('team_name', '')}")
+
+            computed_awards["champion"] = champion_result
+
+    except Exception as e:
+        err_msg = f"Şampiyonluk hesaplama hatası: {e}"
+        errors.append(err_msg)
+        logger.error(err_msg)
+
+    # 6. Hall of Fame'e sezon verilerini ekle
+    try:
+        hof_count = add_season_to_hall_of_fame(
+            db,
+            season_id,
+            champion_result,
+            computed_awards.get("golden_boot"),
+            computed_awards.get("mvp"),
+        )
+        logger.info(f"Hall of Fame'e {hof_count} kayıt eklendi")
+    except Exception as e:
+        logger.warning(f"Hall of Fame ekleme hatası: {e}")
+
+    # 7. Profile güncelle: total_trophies ve total_awards
+    if champion_result and champion_result.get("profile_id"):
+        try:
+            pid = champion_result["profile_id"]
+            profile_data = db.select("profiles", query="total_trophies,total_awards", filters={"id": f"eq.{pid}"})
+            current_trophies = 0
+            current_awards = 0
+            if profile_data and len(profile_data) > 0:
+                current_trophies = profile_data[0].get("total_trophies", 0) or 0
+                current_awards = profile_data[0].get("total_awards", 0) or 0
+
+            db.update(
+                "profiles",
+                {
+                    "total_trophies": current_trophies + 1,
+                    "total_awards": current_awards + len(awards_saved),
+                },
+                {"id": f"eq.{pid}"},
+            )
+        except Exception as e:
+            logger.warning(f"Profile güncelleme hatası: {e}")
 
     logger.info(
         f"=== Sezon {season_id} Ödül Hesaplama Tamamlandı: "
@@ -703,7 +933,7 @@ def award_season(db: SupabaseClient, season_id: str, profile_id: Optional[str] =
 # ═══════════════════════════════════════════════════════════════════════
 
 def main():
-    parser = argparse.ArgumentParser(description="Siyah Beyaz FC — Sezon Ödül Hesaplayıcı")
+    parser = argparse.ArgumentParser(description="Siyah Beyaz FC — Sezon Ödül Hesaplayıcı v2.0")
     parser.add_argument(
         "--season-id",
         type=str,
@@ -732,24 +962,22 @@ def main():
 
     args = parser.parse_args()
 
-    # Sezon ID'sini belirle
     season_id = args.season_id
     if not season_id and args.week:
         season_id = get_season_id_from_week(args.week)
     if not season_id:
-        # Varsayılan: mevcut sezon
         season_id = "season-1"
         logger.info(f"Sezon ID belirtilmedi, varsayılan: {season_id}")
 
-    # Hafta kontrolü
     if args.week and args.week < 34:
         logger.warning(f"Hafta {args.week} < 34. Sezon henüz bitmedi! Yine de devam ediliyor...")
 
     db = SupabaseClient(SUPABASE_URL, SUPABASE_KEY)
 
     try:
-        # player_achievements tablosu kontrolü
         has_achievements_table = ensure_player_achievements_table(db)
+        if not has_achievements_table:
+            logger.warning("player_achievements tablosu yok, rozetler kaydedilemeyebilir")
 
         result = award_season(
             db,

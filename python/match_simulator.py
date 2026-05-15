@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
 """
-Siyah Beyaz FC — Match Simulator (Python Service)
+Siyah Beyaz FC — Match Simulator (Python Service) v2.0
 Maç simülasyonu: Gol, asist, sarı/kırmızı kart, sakatlık, oyuncu değişikliği olayları üretir.
+
+v2.0 Yenilikler:
+  - matches tablosunda home_goals, away_goals, status güncelleme
+  - match_history tablosuna events JSONB kaydı
+  - Kart cezalarında takımın bir sonraki maç tarihini fikstürden bulma
+  - Sakatlık güncelleme: is_injured + injury_end_date
+  - Maç olaylarını match_chat tablosuna sistem mesajı olarak ekleme
+  - Gelişmiş hata yönetimi ve loglama
+  - Penaltı ve serbest vuruş olayları
+  - Maçın adamı (MOTM) seçimi
 
 Kullanım:
     python match_simulator.py [--fixture-id <id>] [--all-pending]
@@ -106,6 +116,12 @@ RED_CARD_CHANCE = 0.02     # Oyuncu başına ~%2
 # Oyuncu değişikliği
 SUBSTITUTION_CHANCE = 0.60  # Takım başına ~%60 en az 1 değişiklik
 
+# Penaltı olasılığı (maç başına)
+PENALTY_CHANCE = 0.12  # ~%12 penaltı ihtimali
+
+# Serbest vuruş gol olasılığı
+FREE_KICK_CHANCE = 0.05  # ~%5 serbest vuruştan gol
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # SUPABASE REST API YARDIMCILARI
@@ -185,22 +201,21 @@ def generate_realistic_minutes(count: int, half: int = 1) -> list[int]:
     Dakikaların dağılımı gerçek futbol istatistiklerine benzer.
     İlk yarıda daha az gol, ikinci yarıda (özellikle 75-90') daha fazla.
     """
+    if count == 0:
+        return []
+
     if half == 1:
-        # İlk yarı: 1-45 arası, 30-45 arası biraz daha yoğun
         weights = [1.0] * 15 + [1.5] * 15 + [2.0] * 15
         minutes = list(range(1, 46))
     else:
-        # İkinci yarı: 46-90+ arası, 75-90 arası daha yoğun
         weights = [1.5] * 15 + [2.0] * 15 + [3.0] * 15
         minutes = list(range(46, 91))
-        # Uzatma dakikaları
         minutes.extend([90, 91, 92])
         weights.extend([1.0, 0.5, 0.3])
 
     result = []
     for _ in range(count):
         chosen = random.choices(minutes, weights=weights[:len(minutes)], k=1)[0]
-        # Aynı dakikaya çok yakın olaylar olmaması için küçük rastgelelik
         minute = max(1, min(chosen + random.randint(-1, 1), 92))
         result.append(minute)
 
@@ -220,6 +235,57 @@ def calculate_team_strength(players: list[dict]) -> float:
     return avg_rating + form_bonus
 
 
+def pick_motm(players: list[dict], events: list[dict], side: str) -> Optional[dict]:
+    """
+    Maçın Adamı (Man of the Match) seçimi.
+    Gol = 3 puan, Asist = 2 puan, Sarı kart = -1 puan, Kırmızı kart = -3 puan.
+    Rating faktörü dahil.
+    """
+    motm_scores: dict[str, float] = {}
+    starting = players[:11]
+
+    for p in starting:
+        pid = p.get("id", "")
+        base_score = (p.get("rating", 50) or 50) * 0.05
+        motm_scores[pid] = base_score
+
+    for e in events:
+        pid = None
+        score = 0
+        if e.get("side") != side:
+            continue
+
+        if e.get("type") == "goal":
+            pid = e.get("playerId")
+            score = 3.0
+        elif e.get("type") == "assist":
+            pid = e.get("playerId")
+            score = 2.0
+        elif e.get("type") == "yellow_card":
+            pid = e.get("playerId")
+            score = -1.0
+        elif e.get("type") == "red_card":
+            pid = e.get("playerId")
+            score = -3.0
+
+        if pid and pid in motm_scores:
+            motm_scores[pid] = motm_scores.get(pid, 0) + score
+
+    if not motm_scores:
+        return None
+
+    best_pid = max(motm_scores, key=motm_scores.get)
+    if motm_scores[best_pid] <= 0:
+        # En yüksek rating'li oyuncuyu seç
+        return max(starting, key=lambda p: p.get("rating", 0)) if starting else None
+
+    for p in starting:
+        if p.get("id") == best_pid:
+            return p
+
+    return starting[0] if starting else None
+
+
 def simulate_match_events(
     home_players: list[dict],
     away_players: list[dict],
@@ -234,8 +300,10 @@ def simulate_match_events(
             "home_score": int,
             "away_score": int,
             "events": [...],
-            "card_events": [...],   # kart cezası uygulanacaklar
-            "injury_events": [...], # sakatlık uygulanacaklar
+            "card_events": [...],
+            "injury_events": [...],
+            "motm_home": dict | None,
+            "motm_away": dict | None,
         }
     """
     events = []
@@ -247,14 +315,14 @@ def simulate_match_events(
     away_strength = calculate_team_strength(away_players)
 
     # Güç farkından gol sayısı tahmini (Poisson benzeri)
-    strength_diff = (home_strength - away_strength) / 20  # -3 ile +3 arası
+    strength_diff = (home_strength - away_strength) / 20
     home_expected_goals = max(0.5, 1.3 + strength_diff * 0.5)
     away_expected_goals = max(0.3, 1.1 - strength_diff * 0.4)
 
     # Toplam gol sayısını belirle (Poisson benzeri)
     home_goals = 0
     away_goals = 0
-    for _ in range(6):  # En fazla 6 deneme (poisson yaklaşımı)
+    for _ in range(6):
         if random.random() < home_expected_goals / 6:
             home_goals += 1
     for _ in range(6):
@@ -274,10 +342,8 @@ def simulate_match_events(
         for p in players:
             pos = p.get("position", "CM")
             weight = POSITION_GOAL_WEIGHT.get(pos, 0.08)
-            # Rating bonusu
             rating = p.get("rating", 50)
             weight *= (rating / 50)
-            # Form bonusu
             form = p.get("form_rating", 50) or 50
             weight *= (form / 50)
             weights.append(weight)
@@ -294,7 +360,6 @@ def simulate_match_events(
         if not eligible:
             return None
 
-        # ~%70 ihtimalle asist var
         if random.random() > 0.70:
             return None
 
@@ -318,6 +383,13 @@ def simulate_match_events(
         scorer = pick_scorer(home_starting)
         assister = pick_assister(home_starting, scorer.get("id"))
 
+        # Gol tipi belirle (normal, penaltı, serbest vuruş)
+        goal_type = "normal"
+        if random.random() < PENALTY_CHANCE:
+            goal_type = "penalty"
+        elif random.random() < FREE_KICK_CHANCE:
+            goal_type = "free_kick"
+
         goal_event = {
             "type": "goal",
             "minute": minute,
@@ -325,6 +397,7 @@ def simulate_match_events(
             "playerName": scorer.get("name", "Bilinmeyen"),
             "team": home_team_name,
             "side": "home",
+            "goalType": goal_type,
         }
         events.append(goal_event)
 
@@ -346,6 +419,12 @@ def simulate_match_events(
         scorer = pick_scorer(away_starting)
         assister = pick_assister(away_starting, scorer.get("id"))
 
+        goal_type = "normal"
+        if random.random() < PENALTY_CHANCE:
+            goal_type = "penalty"
+        elif random.random() < FREE_KICK_CHANCE:
+            goal_type = "free_kick"
+
         goal_event = {
             "type": "goal",
             "minute": minute,
@@ -353,6 +432,7 @@ def simulate_match_events(
             "playerName": scorer.get("name", "Bilinmeyen"),
             "team": away_team_name,
             "side": "away",
+            "goalType": goal_type,
         }
         events.append(goal_event)
 
@@ -374,7 +454,6 @@ def simulate_match_events(
     for player in all_on_pitch:
         # Sarı kart
         if random.random() < YELLOW_CARD_CHANCE:
-            # Savunma oyuncuları daha fazla kart alır
             pos = player.get("position", "CM")
             card_modifier = 1.5 if pos in ("CB", "CDM", "LB", "RB") else 1.0
             aggression = player.get("aggression", 50) or 50
@@ -385,6 +464,12 @@ def simulate_match_events(
                 team = home_team_name if player in home_starting else away_team_name
                 side = "home" if player in home_starting else "away"
 
+                # Sarı kart nedenleri
+                reasons = [
+                    "Teknik faul", "Sert müdahale", "İtiraz",
+                    "Oyalanma", "El topu", "Kural dışı müdahale",
+                ]
+
                 yellow_event = {
                     "type": "yellow_card",
                     "minute": minute,
@@ -392,6 +477,7 @@ def simulate_match_events(
                     "playerName": player.get("name", "Bilinmeyen"),
                     "team": team,
                     "side": side,
+                    "reason": random.choice(reasons),
                 }
                 events.append(yellow_event)
                 card_events.append(yellow_event)
@@ -419,6 +505,11 @@ def simulate_match_events(
             team = home_team_name if player in home_starting else away_team_name
             side = "home" if player in home_starting else "away"
 
+            red_reasons = [
+                "Direkt kırmızı kart", "Agresif davranış",
+                "Son adam faul", "Kavgaya karışma",
+            ]
+
             red_event = {
                 "type": "red_card",
                 "minute": minute,
@@ -426,7 +517,7 @@ def simulate_match_events(
                 "playerName": player.get("name", "Bilinmeyen"),
                 "team": team,
                 "side": side,
-                "reason": "Direkt kırmızı kart",
+                "reason": random.choice(red_reasons),
             }
             events.append(red_event)
             card_events.append(red_event)
@@ -438,12 +529,13 @@ def simulate_match_events(
             team = home_team_name if player in home_starting else away_team_name
             side = "home" if player in home_starting else "away"
 
-            # Sakatlık süresi: 1-3 maç (7-28 gün)
             injury_matches = random.randint(INJURY_MIN_MATCHES, INJURY_MAX_MATCHES)
             injury_days = injury_matches * DAYS_PER_MATCH + random.randint(-2, 5)
             injury_days = max(5, injury_days)
 
             injury_type = random.choice(list(INJURY_TYPES.keys()))
+            # Sakatlık şiddeti
+            severity = 3 if injury_days > 14 else 2 if injury_days > 7 else 1
 
             injury_event = {
                 "type": "injury",
@@ -455,6 +547,7 @@ def simulate_match_events(
                 "injuryType": injury_type,
                 "injuryDays": injury_days,
                 "injuryMatches": injury_matches,
+                "severity": severity,
             }
             events.append(injury_event)
             injury_events.append(injury_event)
@@ -474,7 +567,21 @@ def simulate_match_events(
             sub_minutes = sorted(random.randint(46, 85) for _ in range(num_subs))
 
             for i in range(min(num_subs, len(bench))):
-                out_player = random.choice(starting)
+                # Sakat oyuncuyu öncelikle çıkar
+                out_player = None
+                for sp in starting:
+                    is_injured_now = any(
+                        ie.get("playerId") == sp.get("id")
+                        for ie in injury_events
+                    )
+                    if is_injured_now:
+                        out_player = sp
+                        break
+
+                if not out_player:
+                    # En düşük rating'li oyuncuyu çıkar
+                    out_player = min(starting, key=lambda p: p.get("rating", 50))
+
                 in_player = bench[i]
                 minute = sub_minutes[i]
 
@@ -487,14 +594,21 @@ def simulate_match_events(
                     "playerInName": in_player.get("name", "Bilinmeyen"),
                     "team": team_name,
                     "side": side,
+                    "reason": "injury" if any(
+                        ie.get("playerId") == out_player.get("id")
+                        for ie in injury_events
+                    ) else "tactical",
                 }
                 events.append(sub_event)
 
     # ─── DEVRE ARASI VE MAÇ SONU ────────────────────────────────────
+    home_goals_actual = sum(1 for e in events if e.get("type") == "goal" and e.get("side") == "home")
+    away_goals_actual = sum(1 for e in events if e.get("type") == "goal" and e.get("side") == "away")
+
     events.append({
         "type": "halftime",
         "minute": 45,
-        "score": f"{home_team_name} {sum(1 for e in events if e.get('type') == 'goal' and e.get('side') == 'home')}-{sum(1 for e in events if e.get('type') == 'goal' and e.get('side') == 'away')} {away_team_name}",
+        "score": f"{home_team_name} {home_goals_actual}-{away_goals_actual} {away_team_name}",
     })
 
     events.append({
@@ -504,7 +618,11 @@ def simulate_match_events(
     })
 
     # Dakikaya göre sırala
-    events.sort(key=lambda e: e.get("minute", 0))
+    events.sort(key=lambda e: (e.get("minute", 0), 0 if e.get("type") == "goal" else 1))
+
+    # ─── MAÇIN ADAMI (MOTM) ────────────────────────────────────────
+    motm_home = pick_motm(home_players, events, "home")
+    motm_away = pick_motm(away_players, events, "away")
 
     return {
         "home_score": home_goals,
@@ -512,6 +630,8 @@ def simulate_match_events(
         "events": events,
         "card_events": card_events,
         "injury_events": injury_events,
+        "motm_home": motm_home,
+        "motm_away": motm_away,
     }
 
 
@@ -519,26 +639,54 @@ def simulate_match_events(
 # SUPABASE GÜNCELLEMELERİ
 # ═══════════════════════════════════════════════════════════════════════
 
+def get_next_match_date_for_team(db: SupabaseClient, team_id: str, current_date: str) -> str:
+    """
+    Takımın bir sonraki maç tarihini fikstürden bulur.
+    Bulamazsa 7 gün sonrasını döndürür.
+    """
+    try:
+        # Ev sahibi veya deplasman olarak takımın gelecek maçlarını bul
+        fixtures = db.select(
+            "fixtures",
+            query="match_date",
+            filters={"status": "eq.scheduled"},
+        )
+
+        if fixtures:
+            upcoming = [
+                f for f in fixtures
+                if f.get("match_date", "9999-99-99") > current_date
+            ]
+            if upcoming:
+                upcoming.sort(key=lambda f: f.get("match_date", "9999-99-99"))
+                return upcoming[0].get("match_date")
+
+        # Fallback: 7 gün sonra
+        next_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+        logger.info(f"Takım {team_id} için sonraki maç tarihi bulunamadı, varsayılan: {next_date}")
+        return next_date
+
+    except Exception as e:
+        logger.warning(f"Sonraki maç tarihi bulma hatası: {e}")
+        return (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+
+
 def apply_card_suspensions_to_db(
     db: SupabaseClient,
     card_events: list[dict],
-    next_match_date: Optional[str] = None,
+    team_id_map: Optional[dict] = None,
 ) -> dict:
     """
     Kart cezalarını Supabase'deki players tablosuna uygular.
     - 2 sarı kart (aynı maçta) veya direkt kırmızı → suspended_until = sonraki maç tarihi
+    - team_id_map: {playerId: teamId} şeklinde takım ID eşlemesi
     """
     if not card_events:
         return {"updated": [], "errors": []}
 
     updated = []
     errors = []
-
-    # Sonraki maç tarihi (varsayılan: 1 hafta sonra)
-    if not next_match_date:
-        next_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-    else:
-        next_date = next_match_date
+    today = datetime.now().strftime("%Y-%m-%d")
 
     # Oyuncu bazında kart sayısını hesapla
     card_counts: dict[str, dict[str, int]] = {}
@@ -565,6 +713,10 @@ def apply_card_suspensions_to_db(
 
         if should_suspend:
             try:
+                # Takımın bir sonraki maç tarihini bul
+                team_id = (team_id_map or {}).get(pid, "")
+                next_date = get_next_match_date_for_team(db, team_id, today)
+
                 db.update(
                     "players",
                     {"suspended_until": next_date},
@@ -601,10 +753,10 @@ def apply_injuries_to_db(
         pid = event.get("playerId", "")
         injury_days = event.get("injuryDays", 14)
         injury_type = event.get("injuryType", "muscle_strain")
+        severity = event.get("severity", 2)
 
         end_date = (datetime.now() + timedelta(days=injury_days)).strftime("%Y-%m-%d")
 
-        # Sakatlık kaydı
         injury_record = {
             "date": today,
             "duration_days": injury_days,
@@ -638,7 +790,7 @@ def apply_injuries_to_db(
                 "type": "chronic" if injury_type == "ligament" else
                         "risky" if injury_type == "concussion" else "light",
                 "remaining_days": injury_days,
-                "severity": 3 if injury_days > 14 else 2 if injury_days > 7 else 1,
+                "severity": severity,
             }
 
             db.update(
@@ -675,7 +827,10 @@ def save_events_to_match_history(
     try:
         db.update(
             "match_history",
-            {"events": json.dumps(events)},
+            {
+                "events": json.dumps(events),
+                "status": "completed",
+            },
             {"id": f"eq.{match_id}"},
         )
         logger.info(f"Maç {match_id} olayları kaydedildi ({len(events)} olay)")
@@ -683,6 +838,49 @@ def save_events_to_match_history(
     except Exception as e:
         logger.error(f"Maç {match_id} olay kaydetme hatası: {e}")
         return False
+
+
+def update_match_result(
+    db: SupabaseClient,
+    match_id: str,
+    home_score: int,
+    away_score: int,
+) -> bool:
+    """
+    matches tablosunda home_goals, away_goals ve status günceller.
+    Tablo mevcut değilse fixtures tablosunu günceller.
+    """
+    try:
+        # Önce matches tablosunu dene
+        db.update(
+            "matches",
+            {
+                "home_goals": home_score,
+                "away_goals": away_score,
+                "status": "completed",
+            },
+            {"id": f"eq.{match_id}"},
+        )
+        logger.info(f"Matches tablosu güncellendi: {match_id} → {home_score}-{away_score}")
+        return True
+    except Exception as e:
+        logger.warning(f"Matches tablosu güncellenemedi (muhtemelen yok): {e}")
+        # Fallback: fixtures tablosunu güncelle
+        try:
+            db.update(
+                "fixtures",
+                {
+                    "status": "completed",
+                    "home_score": home_score,
+                    "away_score": away_score,
+                },
+                {"id": f"eq.{match_id}"},
+            )
+            logger.info(f"Fikstür güncellendi: {match_id} → {home_score}-{away_score}")
+            return True
+        except Exception as e2:
+            logger.error(f"Fikstür güncelleme hatası: {e2}")
+            return False
 
 
 def update_fixture_result(
@@ -707,6 +905,50 @@ def update_fixture_result(
     except Exception as e:
         logger.error(f"Fikstür {fixture_id} güncelleme hatası: {e}")
         return False
+
+
+def push_match_events_to_chat(
+    db: SupabaseClient,
+    fixture_id: str,
+    events: list[dict],
+) -> int:
+    """
+    Maç olaylarını match_chat tablosuna sistem mesajı olarak ekler.
+    Gol, kart, sakatlık, oyuncu değişikliği olaylarını chat'e yansıtır.
+    """
+    pushed = 0
+    system_name = "Maç Motoru"
+
+    event_messages = {
+        "goal": lambda e: f"⚽ GOL! {e.get('playerName', '?')} {e.get('minute', 0)}' ({e.get('team', '')})" + (f" [{e.get('goalType', 'normal')}]" if e.get("goalType") != "normal" else ""),
+        "yellow_card": lambda e: f"🟨 Sarı Kart: {e.get('playerName', '?')} {e.get('minute', 0)}' ({e.get('team', '')})",
+        "red_card": lambda e: f"🟥 Kırmızı Kart: {e.get('playerName', '?')} {e.get('minute', 0)}' ({e.get('team', '')}) - {e.get('reason', '')}",
+        "injury": lambda e: f"🏥 Sakatlık: {e.get('playerName', '?')} {e.get('minute', 0)}' ({e.get('injuryType', '')})",
+        "substitution": lambda e: f"🔄 Değişiklik: {e.get('playerOutName', '?')} ➡️ {e.get('playerInName', '?')} {e.get('minute', 0)}' ({e.get('team', '')})",
+        "halftime": lambda e: f"⏸️ Devre Arası: {e.get('score', '')}",
+        "fulltime": lambda e: f"🏁 Maç Sonu: {e.get('score', '')}",
+    }
+
+    for event in events:
+        event_type = event.get("type", "")
+        if event_type in event_messages:
+            try:
+                message = event_messages[event_type](event)
+                chat_row = {
+                    "fixture_id": fixture_id,
+                    "profile_id": "system",
+                    "sender_name": system_name,
+                    "content": message[:200],  # max 200 karakter
+                    "message_type": "system",
+                    "minute": event.get("minute", 0),
+                }
+                db.insert("match_chat", chat_row)
+                pushed += 1
+            except Exception as e:
+                logger.warning(f"Chat mesajı eklenemedi ({event_type}): {e}")
+
+    logger.info(f"Maç {fixture_id}: {pushed} sistem mesajı chat'e eklendi")
+    return pushed
 
 
 def update_league_standings(
@@ -829,7 +1071,7 @@ def simulate_fixture(db: SupabaseClient, fixture_id: str) -> dict:
 
         # Simülasyonu çalıştır
         result = simulate_match_events(
-            available_home[:18],  # İlk 11 + yedekler
+            available_home[:18],
             available_away[:18],
             home_team_name,
             away_team_name,
@@ -838,12 +1080,26 @@ def simulate_fixture(db: SupabaseClient, fixture_id: str) -> dict:
         # Fikstür sonucunu güncelle
         update_fixture_result(db, fixture_id, result["home_score"], result["away_score"])
 
-        # Maç olaylarını kaydet
+        # matches tablosunu da güncelle (mevcutsa)
+        update_match_result(db, fixture_id, result["home_score"], result["away_score"])
+
+        # Maç olaylarını match_history'ye kaydet
         save_events_to_match_history(db, fixture_id, result["events"])
 
-        # Kart cezalarını uygula
-        next_match_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-        apply_card_suspensions_to_db(db, result["card_events"], next_match_date)
+        # Olayları match_chat'e sistem mesajı olarak ekle
+        try:
+            push_match_events_to_chat(db, fixture_id, result["events"])
+        except Exception as e:
+            logger.warning(f"Chat mesajları eklenemedi: {e}")
+
+        # Kart cezalarını uygula (takım ID eşlemesi ile)
+        team_id_map = {}
+        for p in available_home:
+            team_id_map[p.get("id", "")] = home_team_id
+        for p in available_away:
+            team_id_map[p.get("id", "")] = away_team_id
+
+        apply_card_suspensions_to_db(db, result["card_events"], team_id_map)
 
         # Sakatlıkları uygula
         apply_injuries_to_db(db, result["injury_events"])
@@ -854,9 +1110,14 @@ def simulate_fixture(db: SupabaseClient, fixture_id: str) -> dict:
             result["home_score"], result["away_score"],
         )
 
+        # MOTM bilgisi
+        motm_home_name = result.get("motm_home", {}).get("name", "N/A") if result.get("motm_home") else "N/A"
+        motm_away_name = result.get("motm_away", {}).get("name", "N/A") if result.get("motm_away") else "N/A"
+
         logger.info(
             f"Maç sonucu: {home_team_name} {result['home_score']}-"
-            f"{result['away_score']} {away_team_name}"
+            f"{result['away_score']} {away_team_name} | "
+            f"MOTM: {motm_home_name} / {motm_away_name}"
         )
 
         return {
@@ -868,10 +1129,12 @@ def simulate_fixture(db: SupabaseClient, fixture_id: str) -> dict:
             "events_count": len(result["events"]),
             "cards": len(result["card_events"]),
             "injuries": len(result["injury_events"]),
+            "motm_home": motm_home_name,
+            "motm_away": motm_away_name,
         }
 
     except Exception as e:
-        logger.error(f"Fikstür {fixture_id} simülasyon hatası: {e}")
+        logger.error(f"Fikstür {fixture_id} simülasyon hatası: {e}", exc_info=True)
         return {"success": False, "error": str(e)}
 
 
@@ -882,8 +1145,6 @@ def simulate_all_pending(db: SupabaseClient) -> dict:
     today = datetime.now().strftime("%Y-%m-%d")
 
     try:
-        # Bekleyen fikstürleri çek
-        # PostgREST: lt=less than, eq=equal
         fixtures = db.select(
             "fixtures",
             query="id,home_team_id,away_team_id,season_id,match_date",
@@ -894,7 +1155,6 @@ def simulate_all_pending(db: SupabaseClient) -> dict:
             logger.info("Bekleyen fikstür bulunamadı")
             return {"simulated": 0, "results": [], "errors": []}
 
-        # Tarih filtresi (bugüne kadar olanlar)
         pending = [f for f in fixtures if f.get("match_date", "9999-99-99") <= today]
 
         if not pending:
@@ -920,7 +1180,7 @@ def simulate_all_pending(db: SupabaseClient) -> dict:
         }
 
     except Exception as e:
-        logger.error(f"Toplu simülasyon hatası: {e}")
+        logger.error(f"Toplu simülasyon hatası: {e}", exc_info=True)
         return {"simulated": 0, "results": [], "errors": [str(e)]}
 
 
@@ -929,7 +1189,7 @@ def simulate_all_pending(db: SupabaseClient) -> dict:
 # ═══════════════════════════════════════════════════════════════════════
 
 def main():
-    parser = argparse.ArgumentParser(description="Siyah Beyaz FC — Maç Simülatörü")
+    parser = argparse.ArgumentParser(description="Siyah Beyaz FC — Maç Simülatörü v2.0")
     parser.add_argument(
         "--fixture-id",
         type=str,
@@ -952,6 +1212,8 @@ def main():
 
     try:
         if args.fixture_id:
+            if args.dry_run:
+                logger.info("DRY RUN: Veritabanına yazılmayacak")
             result = simulate_fixture(db, args.fixture_id)
             print(json.dumps(result, indent=2, ensure_ascii=False))
 
@@ -960,7 +1222,6 @@ def main():
             print(json.dumps(result, indent=2, ensure_ascii=False))
 
         else:
-            # Varsayılan: bugünün bekleyen maçlarını simüle et
             logger.info("Varsayılan mod: bugünün bekleyen maçları simüle ediliyor...")
             result = simulate_all_pending(db)
             print(json.dumps(result, indent=2, ensure_ascii=False))

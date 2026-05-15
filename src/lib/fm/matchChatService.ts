@@ -28,10 +28,12 @@ export interface MatchEventPayload {
   fixtureId: string;
   profileId: string;
   senderName: string;
-  eventType: 'goal' | 'yellow' | 'red' | 'injury' | 'halftime' | 'fulltime' | 'save' | 'substitution';
+  eventType: 'goal' | 'yellow' | 'red' | 'injury' | 'halftime' | 'fulltime' | 'save' | 'substitution' | 'penalty_goal' | 'free_kick_goal' | 'second_yellow' | 'motm';
   minute: number;
   player?: string;
   team?: string;
+  assistPlayer?: string;
+  reason?: string;
 }
 
 // ─── Reaksiyon Tipleri ────────────────────────────────────────────────
@@ -136,14 +138,18 @@ export async function sendMatchEvent(
     if (!supabase) return { success: false };
 
     const contentMap: Record<string, string> = {
-      goal: `⚽ GOL! ${event.player || ''} (${event.minute}')`,
-      yellow: `🟨 Sarı Kart ${event.player || ''} (${event.minute}')`,
-      red: `🟥 Kırmızı Kart ${event.player || ''} (${event.minute}')`,
+      goal: `⚽ GOL! ${event.player || ''} (${event.minute}')${event.assistPlayer ? ` | Asist: ${event.assistPlayer}` : ''}`,
+      penalty_goal: `⚽ PENALTI GOLU! ${event.player || ''} (${event.minute}')`,
+      free_kick_goal: `⚽ SERBEST VURUŞ GOLU! ${event.player || ''} (${event.minute}')`,
+      yellow: `🟨 Sarı Kart ${event.player || ''} (${event.minute}')${event.reason ? ` - ${event.reason}` : ''}`,
+      red: `🟥 Kırmızı Kart ${event.player || ''} (${event.minute}')${event.reason ? ` - ${event.reason}` : ''}`,
+      second_yellow: `🟥 2. Sarı→Kırmızı ${event.player || ''} (${event.minute}')`,
       injury: `🏥 Sakatlık ${event.player || ''} (${event.minute}')`,
       halftime: `⏱️ Devre Arası`,
       fulltime: `🏁 Maç Sonu`,
       save: `🧤 Kurtarış ${event.player || ''} (${event.minute}')`,
       substitution: `🔄 Değişiklik ${event.player || ''} (${event.minute}')`,
+      motm: `🏅 Maçın Adamı: ${event.player || ''}`,
     };
 
     const { error } = await supabase

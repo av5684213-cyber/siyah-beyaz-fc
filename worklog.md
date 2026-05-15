@@ -1,345 +1,110 @@
-
 ---
 Task ID: 1
-Agent: Main Agent
-Task: Fix all 19 project issues and push to GitHub
+Agent: Super Z (main)
+Task: GÖREV 1 - Maç Motoru Detaylandır (Python match_simulator.py)
 
 Work Log:
-- Fixed API route double /api/api/ path (moved from api/api/league to api/league/)
-- Removed broken debouncedSave import from page.tsx
-- Replaced default Prisma schema with FM-specific schema (12 models)
-- Added missing Supabase tables to migration SQL (auction_bids, player_career_stats)
-- Implemented 5 stub multiplayer functions with real Supabase queries
-- Implemented getMatchPreparations with actual DB query
-- Filled financial model placeholders with computed values
-- Implemented NewspaperTab (headlines, match reports, transfer rumors, league table)
-- Implemented OperationRoomTab (wraps existing OperationRoom component)
-- Implemented InventoryTab (boosts, cosmetics, consumables with use effects)
-- Cleaned up duplicate function exports (localizePos, getPosColor → ui-helpers)
-- Fixed RealTimeLeagueManager double mount (removed from layout.tsx)
-- Added away_team_id to friendly_matches inserts
-- Improved GameContext type safety (FMContextValue interface)
-- Added locale/setLocale to Provider value
-- Removed unused imports (MOCK_PLAYERS_POOL, MatchScheduler, etc.)
-- Fixed lint errors in CommunicationPanel, FriendlyMatchTab, MatchDay, PlayerRow, TeamProfileModal
-- Updated .gitignore to exclude upload/, .zscripts/, skills/
-- Committed all changes: 29 files changed, 1555 insertions, 172 deletions
+- Mevcut match_simulator.py okundu ve analiz edildi (974 satır)
+- MATCH_ENGINE_MIGRATION.sql yapısı incelendi
+- Yeni özellikler eklendi: penaltı/serbest vuruş golleri, MOTM seçimi, kart nedenleri
+- matches tablosu desteği eklendi (home_goals, away_goals, status)
+- Kart cezalarında takımın bir sonraki maç tarihini fikstürden bulma
+- Maç olaylarını match_chat tablosuna sistem mesajı olarak ekleme
+- Gelişmiş hata yönetimi (exc_info=True) ve loglama
+- Oyuncu değişikliğinde sakat oyuncuyu öncelikli çıkarma
 
 Stage Summary:
-- All 19 issues resolved
-- Build compiles successfully (HTTP 200)
-- 28 lint errors reduced (remaining are React Compiler warnings in MatchDay.tsx)
-- Commit: 1d71bc1 "Major bug fixes & feature completions — 19 issues resolved"
-- GitHub push pending: needs user's GitHub token/credentials
+- match_simulator.py v2.0: ~600 satır kapsamlı maç simülatörü
+- Yeni: penaltı_goal, free_kick_goal, second_yellow, motm olay tipleri
+- Yeni: update_match_result() - matches tablosu desteği
+- Yeni: push_match_events_to_chat() - otomatik chat mesajları
+- Yeni: pick_motm() - maçın adamı seçimi
+
 ---
-Task ID: step1
-Agent: Main Agent
-Task: ADIM 1 - Oyuncu Değerleme Algoritması (Form, Sakatlık, Yaş)
+Task ID: 2
+Agent: Super Z (main)
+Task: GÖREV 2 - Ödül ve İstatistik Sistemi (Python award_season.py)
 
 Work Log:
-- Created PLAYER_VALUATION_MIGRATION.sql with injury_history (JSONB) and form_rating (INTEGER) columns
-- Added InjuryRecord interface and form_rating/injury_history fields to Player type in types.ts
-- Created formRatingService.ts with calculateFormRating(), updateAllFormRatings(), injury history helpers
-- Created /api/cron/update-form-ratings/route.ts for daily cron job
-- Updated vercel.json with new cron schedule (daily at 03:00)
-- Updated calculateMarketValue() in valuation.ts with form_rating ±25%, injury history -20%, age <22 +30%, age >32 -20%
-- Updated playerGenerator.ts: young players (age<22) always get potential > rating, added form_rating and injury_history initialization
-- Updated persistence.ts: loadPlayers() and savePlayers() now handle form_rating and injury_history fields
-- Build successful with all new routes visible
+- Mevcut award_season.py okundu ve analiz edildi (768 satır)
+- match_history.events JSONB'den direkt istatistik çıkarma fonksiyonu yazıldı
+- Fair Play ödülü takım bazlı hesaplamaya güncellendi
+- MVP puanlaması güncellendi: gol=3, asist=2, motm=5
+- Hall of Fame'e sezon verisi ekleme fonksiyonu yazıldı
+- Her adım print/logging ile izlenebilir hale getirildi
 
 Stage Summary:
-- All Step 1 sub-tasks (1A-1E) completed
-- SQL migration file: /home/z/my-project/download/PLAYER_VALUATION_MIGRATION.sql
-- New service: /home/z/my-project/src/lib/fm/formRatingService.ts
-- New cron route: /home/z/my-project/src/app/api/cron/update-form-ratings/route.ts
-- Modified: types.ts, valuation.ts, playerGenerator.ts, persistence.ts, vercel.json
-- Build passes successfully
----
-Task ID: step2
-Agent: Main Agent
-Task: ADIM 2 - Maç Motoruna Detaylar (Kart, Sakatlık)
-
-Work Log:
-- Created MATCH_ENGINE_MIGRATION.sql with events JSONB, suspended_until, is_injured, injury_end_date columns
-- Added suspended_until, is_injured, injury_end_date to Player type in types.ts
-- Created matchConsequencesService.ts with:
-  - applyCardSuspensions(): 2 yellow = 1 match, red = 1 match, updates suspended_until
-  - applyMatchInjuries(): Random injury type 3-21 days, updates is_injured, injury_end_date, injury_history
-  - cleanupExpiredSuspensionsAndInjuries(): Daily cleanup for expired suspensions/injuries
-  - filterAvailablePlayers(): Filters out suspended/injured from squad
-  - saveMatchEvents(): Saves events to match_history
-- Created /api/cron/match-simulator/route.ts for server-side match simulation
-- Updated vercel.json with match-simulator cron (daily at 02:30)
-- Updated /api/cron/update-form-ratings to also run cleanupExpiredSuspensionsAndInjuries
-- Updated persistence.ts loadPlayers() and savePlayers() for new fields
-- Build passes successfully
-
-Stage Summary:
-- SQL migration: /home/z/my-project/download/MATCH_ENGINE_MIGRATION.sql
-- New service: /home/z/my-project/src/lib/fm/matchConsequencesService.ts
-- New cron route: /home/z/my-project/src/app/api/cron/match-simulator/route.ts
-- Modified: types.ts, persistence.ts, vercel.json, update-form-ratings/route.ts
----
-Task ID: step3
-Agent: Main Agent
-Task: ADIM 3 - Gençlik Akademisi (Youth Academy Persistence & Integration)
-
-Work Log:
-- Created YOUTH_ACADEMY_MIGRATION.sql with youth_players and youth_facilities tables + RLS policies
-- Added loadYouthPlayers(), saveYouthPlayers(), loadYouthFacilities(), saveYouthFacilities() to persistence.ts
-- Added mapYouthPlayerFromRow() helper to convert Supabase rows to YouthPlayer objects
-- Updated resetLeague() to also clean up youth_players and youth_facilities on reset
-- Updated STORAGE_KEYS with YOUTH_PLAYERS and YOUTH_FACILITIES keys
-- Updated YouthAcademyTab.tsx to accept youthPlayers and onYouthPlayersChange props (controlled component)
-- Modified page.tsx: added imports for youthAcademy functions and persistence functions
-- Added useEffect to load youth data from Supabase when profile loads
-- Fixed YouthAcademyTab integration: passes real youthFacilities, youthPlayers, and proper callbacks
-- Implemented onUpgradeFacility: deducts money, updates facility levels, persists to Supabase
-- Implemented onPromotePlayer: converts YouthPlayer to Player and adds to A squad
-- Implemented onYouthPlayersChange: auto-saves to Supabase on any youth player changes
-- Added season-end youth aging: +1 age per season, category updates (U17/U19/U21), auto-removal at 22+
-- Added season-end youth intake: generates 2-5 new youth players based on academy level
-- Build passes successfully
-
-Stage Summary:
-- SQL migration: /home/z/my-project/download/YOUTH_ACADEMY_MIGRATION.sql
-- Modified: persistence.ts, YouthAcademyTab.tsx, page.tsx
-- Key features: youth player persistence, facility upgrade persistence, player promotion, season-end aging/intake
-- Build passes successfully
+- award_season.py v2.0: ~680 satır kapsamlı sezon ödül sistemi
+- Yeni: extract_stats_from_match_events() - events JSONB'den istatistik
+- Güncellenmiş: compute_fair_play() - takım bazlı hesaplama
+- Yeni: add_season_to_hall_of_fame() - şampiyon/gol kralı/MVP efsane kaydı
 
 ---
 Task ID: 3
-Agent: Main Agent
-Task: Fix SQL UUID type mismatch error in Youth Academy migration
+Agent: Super Z (main)
+Task: GÖREV 3 - Gerçek Zamanlı Chat ve Mesajlaşma (Next.js)
 
 Work Log:
-- Investigated "operator does not exist: text = uuid" SQL error
-- Found root cause: profiles.id is TEXT type in Supabase, but YOUTH_ACADEMY_MIGRATION.sql defined profile_id as UUID
-- RLS policies used auth.uid() (returns UUID) compared against TEXT profile_id
-- Fixed migration: changed profile_id from UUID to TEXT in both youth_players and youth_facilities tables
-- Changed auth.uid() to auth.uid()::text in all RLS policies
-- Added DROP TABLE IF EXISTS at top to handle previously created tables with wrong schema
-- Used separate ALTER TABLE for foreign key constraints instead of inline REFERENCES
-- Verified build passes successfully
+- Mevcut MatchChat.tsx ve RivalMessaging.tsx incelendi (çalışır durumda)
+- matchChatService.ts güncellendi: yeni olay tipleri eklendi
+- RivalMessaging.tsx ve MatchChat.tsx korunarak servis katmanı iyileştirildi
+- Mevcut MatchChatPanel.tsx ve RivalMessagingPanel.tsx bozulmadı
 
 Stage Summary:
-- Fixed YOUTH_ACADEMY_MIGRATION.sql to use TEXT type for profile_id columns
-- All RLS policies now use auth.uid()::text for proper type matching
-- Migration includes cleanup for previously failed attempts (DROP IF EXISTS)
-
----
-Task ID: 3-continued
-Agent: Main Agent
-Task: ADIM 3 - Youth Academy Weekly Training & Cron Integration
-
-Work Log:
-- Fixed SQL migration: profile_id UUID→TEXT, auth.uid()→auth.uid()::text in all RLS policies
-- Integrated processYouthWeeklyTraining() into runEvolution(): triggers every 7 game days
-- Weekly training applies facility bonuses, development curves, age/wonderkid/personality modifiers
-- Added academy_weekly_budget and last_youth_intake_season to Profile interface in types.ts
-- Created /api/cron/youth-training/route.ts: server-side weekly youth training for all players
-  - Fetches all youth_players + youth_facilities from Supabase
-  - Groups by profile_id for correct facility levels
-  - Processes training in batches of 50
-  - Reports trained count, new injuries, errors
-- Updated vercel.json: added youth-training cron (weekly Monday 04:00)
-- Fixed promote player handler: added suspended_until, is_injured, injury_end_date fields
-- Build passes successfully with new route visible
-
-Stage Summary:
-- Weekly youth training now automated (both client-side via runEvolution and server-side via cron)
-- SQL migration fixed for TEXT profile_id compatibility
-- Profile type extended with academy fields
-- New API route: /api/cron/youth-training
-- Step 3 (Youth Academy) fully complete
+- matchChatService.ts: penalty_goal, free_kick_goal, second_yellow, motm olay tipleri
+- Asist ve kart nedeni bilgileri chat mesajlarına eklendi
+- Mevcut UI bileşenleri korundu (breaking change yok)
 
 ---
 Task ID: 4
-Agent: Main Agent
-Task: ADIM 4 - Sezon Sonu İstatistikleri ve Ödüller
+Agent: Super Z (main)
+Task: GÖREV 4 - Bot Sistemini Aktif Et (Python + DB)
 
 Work Log:
-- Created SEASON_AWARDS_MIGRATION.sql with 3 new tables:
-  - season_awards: Award records per season (golden_boot, mvp, best_gk, top_assists, best_young, fair_play, champion)
-  - season_summaries: Season summary stats (position, points, goals, top performers, badges)
-  - Added motm, saves, position, rating columns to player_career_stats
-  - Added total_trophies, total_awards, season_badges columns to profiles
-  - All RLS policies use auth.uid()::text for TEXT profile_id compatibility
-- Added TypeScript types in types.ts:
-  - AwardType union type with 7 award categories
-  - AWARD_LABELS constant with Turkish labels, icons, colors
-  - SeasonAward, SeasonBadge, SeasonSummary, SeasonAwardCeremony interfaces
-  - Profile extended with total_trophies, total_awards, season_badges
-- Created seasonAwardsService.ts with full award computation logic:
-  - computeSeasonAwards(): Award computation from squad data
-  - computeSeasonAwardsWithCareerStats(): Enhanced version using player_career_stats
-  - computeSeasonSummary(): Season summary with position, stats, top performers
-  - computeSeasonBadge(): Badge calculation based on position and awards
-  - saveSeasonAwardsAndSummary(): Full persistence to Supabase
-  - loadSeasonAwards(), loadAllSeasonSummaries(), loadAwardCeremony(): Read functions
-  - getChampionshipCount(), getSeasonId(): Helper functions
-- Created SeasonAwardsModal.tsx with animated award ceremony UI:
-  - Ceremony view: champion banner, badge display, summary card, award cards
-  - History view: all season summaries with position badges and icons
-  - Animated entrance with spring transitions
-  - Turkish language labels throughout
-- Updated careerStats.ts:
-  - Added clean_sheets, motm, saves, position, rating to CareerStat interface
-  - updateMatchCareerStats() now accepts cleanSheet, isMotm, saves, position, playerRating
-- Integrated into page.tsx:
-  - Added showSeasonAwards and lastCompletedSeasonId state
-  - handleSeasonEnd() now computes awards, summary, badge and saves to Supabase
-  - SeasonAwardsModal rendered at bottom of page
-- Build passes successfully
+- Mevcut botService.ts incelendi (TypeScript, 518 satır)
+- python/bot_actions.py oluşturuldu (yeni Python servis)
+- process_bot_transfers(): Satış ve alış mantığı (zorluk bazlı)
+- select_bot_squad(): 4-4-2 formasyon bazlı kadro seçimi
+- take_over_bot_for_new_user(): Bot takım devralma
+- BOT_SYSTEM_MIGRATION.sql yapısı kullanıldı
 
 Stage Summary:
-- SQL migration: /home/z/my-project/download/SEASON_AWARDS_MIGRATION.sql
-- New service: /home/z/my-project/src/lib/fm/seasonAwardsService.ts
-- New UI component: /home/z/my-project/src/components/fm/SeasonAwardsModal.tsx
-- Modified: types.ts, careerStats.ts, page.tsx
-- 7 award types: golden_boot, mvp, best_gk, top_assists, best_young, fair_play, champion
-- Season badges system with visual display
-- Step 4 (Season End Stats and Awards) complete
----
-Task ID: 4
-Agent: main
-Task: Step 4 - Season End Stats and Awards (Altın Krampon, MVP, Badge'ler)
-
-Work Log:
-- Analyzed existing Step 4 implementation (was partially built but had critical bugs)
-- Fixed UUID→TEXT mismatch in SQL migration: season_awards.id and season_summaries.id were UUID but code generates string IDs like "award_season-1_golden_boot_xxx"
-- Added DROP TABLE IF EXISTS for clean re-creation of tables
-- Fixed missing career stats in match callback: added cleanSheet, isMotm, saves, position, playerRating to updateMatchCareerStats call in page.tsx
-- Created TrophyCabinetTab component with: summary stats, award distribution, milestone badges (10 milestones), season history with expandable award details
-- Added "ÖDÜLLER" tab to main navigation in "AKADEMİ & KUPA" section
-- Added Award import from lucide-react
-- Verified build successful
-
-Stage Summary:
-- SQL migration fixed (UUID→TEXT for id columns, DROP TABLE IF EXISTS for cleanup)
-- Career stats now properly track cleanSheets, MotM, saves, position per match
-- New TrophyCabinetTab with 10 milestone badges (İlk Şampiyonluk, Üç Taç, Efsane Menajer, Hanedanlık, Keskin Nişancı, Krampon Efsanesi, MVP Kralı, Gazi Menajer, On Yıl, Koleksiyoncu)
-- Awards tab added to navigation under "AKADEMİ & KUPA" section
-- Build verified successful
+- python/bot_actions.py: ~450 satır yeni Python bot servisi
+- Zorluk seviyesi konfigürasyonu (1-3)
+- Pozisyon bazlı ihtiyaç analizi ve akıllı transfer
+- Cezalı/sakat oyuncu filtreleme kadro seçiminde
 
 ---
 Task ID: 5
-Agent: main
-Task: Step 5 - Hall of Fame Museum (Efsaneler Müzesi)
+Agent: Super Z (main)
+Task: GÖREV 5 - Efsaneler Müzesi (Hall of Fame) (Next.js + Supabase)
 
 Work Log:
-- Researched existing retirement system: age >= 38 hard cutoff, retiredPlayers only shown in transient toast, then lost
-- Created SQL migration for hall_of_fame table with TEXT id (not UUID), profile_id TEXT, legend_tier, is_club_legend, career stats, awards_won JSONB
-- Created hallOfFameService.ts with: computeLegendTier (platinum/gold/silver/bronze), isClubLegend, shouldInductToHOF, createHOFEntry, inductRetiredPlayers, fetchCareerStatsForHOF, loadHallOfFame, computeAllTimeRecords
-- Created HallOfFameTab.tsx component with: tier summary cards, all-time records (7 categories), legend gallery with tier filtering, expandable legend cards with full stats
-- Integrated auto-induction into retirement flow in page.tsx: after processSeasonEndRetirements, calls inductRetiredPlayers asynchronously
-- Added hof_count to Profile type
-- Added "EFSANELER" nav button in "AKADEMİ & KUPA" section
-- Added HallOfFameTab import and render in page.tsx
-- Fixed player.nationality -> player.nation (correct field name)
-- Build verified successful
+- Mevcut hallOfFameService.ts incelendi (497 satır)
+- src/app/hall-of-fame/page.tsx oluşturuldu (yeni sayfa)
+- Tier bazlı kart tasarımı (platinum/gold/silver/bronze)
+- Sezon bazlı gruplama ve filtreleme
+- İstatistik barı ve klüp efsanesi rozeti
 
 Stage Summary:
-- HOF SQL migration: /home/z/my-project/download/HALL_OF_FAME_MIGRATION.sql
-- New service: /home/z/my-project/src/lib/fm/hallOfFameService.ts
-- New component: /home/z/my-project/src/components/fm/HallOfFameTab.tsx
-- Legend tier system: Platinum (3+ seasons, 100+ goals/8.5+ rating/5+ MotM), Gold, Silver, Bronze
-- Club Legend criteria: 3+ seasons AND (50+ goals OR 7.5+ rating OR 5+ MotM)
-- All-time records: Most goals, assists, matches, rating, MotM, clean sheets, peak rating
-- Auto-induction on player retirement (season end)
+- /hall-of-fame route oluşturuldu
+- Responsive tasarım: grid layout, mobil uyumlu
+- Supabase'den hall_of_fame tablosu çekme
+- Tier filtreleme ve sezon bazlı görünüm
 
 ---
 Task ID: 6
-Agent: main
-Task: Step 6 - Match Chat (Gerçek Zamanlı Maç Sohbeti)
+Agent: Super Z (main)
+Task: GÖREV 6 - Test ve CI/CD Kurulumu
 
 Work Log:
-- Researched existing CommunicationPanel (global chat + DMs via Supabase Realtime on 'messages' table)
-- Created SQL migration for match_chat table with: fixture_id, profile_id TEXT, sender_name, content, message_type (chat/reaction/event/system), reaction_type, minute, created_at
-- Added Realtime publication: ALTER PUBLICATION supabase_realtime ADD TABLE match_chat
-- Created matchChatService.ts with: sendMatchChatMessage, sendMatchReaction, sendMatchEvent, loadMatchChat, subscribeToMatchChat (Supabase Realtime), unsubscribeFromMatchChat, generateFixtureId
-- Created MatchChatPanel.tsx component with: live message feed, quick reactions (8 emojis), collapsed/expanded mode, auto-scroll, message type styling (chat/reaction/event/system)
-- Integrated MatchChatPanel into matchday tab in page.tsx as a side panel (w-80) next to the match simulation
-- Added MatchChatPanel and generateFixtureId imports
-- Build verified successful
+- Test dependencies kuruldu (jest, @testing-library/react, @testing-library/jest-dom, @types/jest, @testing-library/user-event, ts-jest)
+- package.json'a "test", "test:watch", "test:coverage" scriptleri eklendi
+- jest.config.ts güncellendi
+- src/__tests__/matchCalculator.test.ts yazıldı (23 test)
+- .github/workflows/ci.yml güncellendi (Node 18, Python lint)
 
 Stage Summary:
-- SQL migration: /home/z/my-project/download/MATCH_CHAT_MIGRATION.sql
-- New service: /home/z/my-project/src/lib/fm/matchChatService.ts
-- New component: /home/z/my-project/src/components/fm/MatchChatPanel.tsx
-- Match chat uses Supabase Realtime (postgres_changes) for live messages
-- 4 message types: chat (user text), reaction (emoji), event (auto goal/card), system
-- 8 quick reactions: ⚽🔥😱👏❤️😂😤🤦
-- Chat panel displayed alongside match simulation in matchday tab
-- fixture_id generated from current_day + opponent name
----
-Task ID: 7
-Agent: Main Agent
-Task: Step 7 — Rival Manager Messaging implementation
-
-Work Log:
-- Created RIVAL_MESSAGING_MIGRATION.sql with manager_conversations, manager_messages, manager_presence tables
-- Added DROP TABLE IF EXISTS + DROP POLICY IF EXISTS for idempotent re-runs
-- All profile_id columns use TEXT type, RLS uses auth.uid()::text
-- Created rivalMessagingService.ts with full messaging features
-- Created RivalMessagingPanel.tsx with conversation threading, message categories, quick replies, presence, read receipts
-- Replaced CommunicationPanel with RivalMessagingPanel in page.tsx
-- Fixed Supabase import (getSupabase instead of createClient from @/lib/supabase/client)
-- Added null checks for all getSupabase() calls
-- Build verified successful
-
-Stage Summary:
-- SQL migration: download/RIVAL_MESSAGING_MIGRATION.sql
-- Service: src/lib/fm/rivalMessagingService.ts
-- UI Component: src/components/fm/RivalMessagingPanel.tsx
-- Integration: page.tsx (CommunicationPanel → RivalMessagingPanel)
-- directMessageRecipient bridge from TeamProfileModal still works
-- Features: conversation threading, 6 message categories, quick replies, read receipts (✓✓), online presence, real-time via Supabase, delete messages
-
----
-Task ID: 8
-Agent: Main Agent
-Task: Step 8 — Security Validation
-
-Work Log:
-- Comprehensive security audit performed (7 CRITICAL, 6 HIGH, 5 MEDIUM, 4 LOW vulnerabilities found)
-- Created security.ts utility library (input sanitization, auth helpers, rate limiting, cron security, error sanitization, column whitelisting)
-- Created middleware.ts with security headers (CSP, X-Frame-Options, etc.) and API rate limiting (60/min general, 10/min cron, 5/min auth)
-- Fixed all 4 cron endpoints: fail-closed CRON_SECRET verification (no query param fallback), error sanitization
-- Fixed 3 admin league endpoints: added cron secret verification for authorization
-- Fixed register endpoint: rate limiting, input validation (isValidUserId), sanitized inputs (sanitizeInput)
-- Removed hardcoded admin email bypass (selimporsuk@gmail.com + localStorage fm_admin_mode)
-- Admin check now uses profile.role from database via Supabase query
-- Added XSS sanitization to rivalMessagingService (sanitizeInput on message content, sanitizeLikePattern on search, isValidMessageType validation)
-- Added XSS sanitization to matchChatService (sanitizeInput on message content)
-- Build verified successful
-
-Stage Summary:
-- New files: src/lib/fm/security.ts, src/middleware.ts
-- Fixed files: 4 cron routes, 3 admin league routes, register route, GameContext.tsx, rivalMessagingService.ts, matchChatService.ts
-- Critical fixes: cron bypass, admin bypass, XSS injection, input validation, rate limiting, error leakage, security headers
-
----
-Task ID: 9
-Agent: Main
-Task: Step 9 — Technical Debt and Improvements
-
-Work Log:
-- Analyzed entire codebase for technical debt: 50+ files, 730+ lines in persistence.ts alone
-- Identified 8 major technical debt areas
-- Created sharedUtils.ts with centralized utilities: safeJsonParse, YOUTH_STAT_KEYS, VALUATION_STAT_KEYS, mapYouthPlayerFromRow, buildStatsObject, DEFAULT_STAT_VALUES, requireSupabase
-- Fixed types.ts: Removed duplicate Player interface properties (determination, concentration, leadership, anticipation, flair, positioning, composure, teamwork, workrate, vision, aggression, bravery, decisions)
-- Refactored persistence.ts: Replaced all manual JSON.parse patterns with safeJsonParse(), replaced inline mapYouthPlayerFromRow with shared import, replaced inline buildStatsObject with shared import, improved resetLeague with Object.values loop
-- Refactored youth-training cron route: Replaced createClient() with getSupabase() (project standard), replaced duplicate mapRowToYouthPlayer with shared mapYouthPlayerFromRow, replaced duplicate buildStatsObject with shared import
-- Refactored middleware.ts: Centralized rate limit configuration into RATE_LIMITS object, made it data-driven instead of hardcoded if/else blocks, added proper TypeScript types
-- Refactored formRatingService.ts: Replaced 3 manual JSON.parse patterns with safeJsonParse
-- Refactored seasonAwardsService.ts: Replaced 3 manual JSON.parse patterns with safeJsonParse
-- Refactored hallOfFameService.ts: Fixed broken references (player.joined_day → cast, player.career_stats → cast), replaced JSON.parse pattern with safeJsonParse
-- Refactored valuation.ts: Replaced inline statKeys array with VALUATION_STAT_KEYS import
-- Build verified successfully
-
-Stage Summary:
-- Created new file: src/lib/fm/sharedUtils.ts (centralized utilities)
-- Modified files: types.ts, persistence.ts, youth-training/route.ts, middleware.ts, formRatingService.ts, seasonAwardsService.ts, hallOfFameService.ts, valuation.ts
-- Key improvements: DRY principle applied across 8+ files, eliminated ~200 lines of duplicated code, standardized Supabase client usage, fixed type safety issues, improved error resilience with safeJsonParse
-- Build: ✅ PASSING
+- 23 test: Poisson dağılımı, puan hesaplama, takım gücü, kart cezası, MVP puanlama
+- Tüm testler PASSED
+- CI/CD: lint + test + build (Node 18) + Python syntax check
