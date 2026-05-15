@@ -235,6 +235,143 @@ def calculate_team_strength(players: list[dict]) -> float:
     return avg_rating + form_bonus
 
 
+def calculate_tactical_advantage(
+    home_players: list[dict],
+    away_players: list[dict],
+    home_formation: str = "4-4-2",
+    away_formation: str = "4-4-2",
+) -> dict:
+    """
+    Taktiksel avantaj hesaplar:
+    - Rakibin zayıf yönüne oynama
+    - Bireysel yetenek eşleşmeleri
+    - Formasyon avantajı
+
+    Returns:
+        {
+            "home_possession_bonus": float,  # Topa sahip olma bonusu
+            "home_shot_accuracy_bonus": float,  # Şut isabeti bonusu
+            "away_possession_bonus": float,
+            "away_shot_accuracy_bonus": float,
+        }
+    """
+    home_starting = home_players[:11]
+    away_starting = away_players[:11]
+
+    # ── 1. Rakibin zayıf yönüne oynama ──
+    # Her takımın bölgesel güçlerini hesapla
+    def get_area_strength(players: list[dict]) -> dict:
+        areas = {"defence": [], "midfield": [], "attack": []}
+        for p in players:
+            pos = p.get("position", "MID")
+            rating = p.get("rating", 50) or 50
+            if pos in ("GK", "CB", "LB", "RB", "LWB", "RWB"):
+                areas["defence"].append(rating)
+            elif pos in ("CDM", "CM", "CAM", "LM", "RM"):
+                areas["midfield"].append(rating)
+            elif pos in ("LW", "RW", "CF", "ST"):
+                areas["attack"].append(rating)
+        return {
+            k: sum(v) / max(1, len(v)) if v else 50
+            for k, v in areas.items()
+        }
+
+    home_areas = get_area_strength(home_starting)
+    away_areas = get_area_strength(away_starting)
+
+    # Ev sahibinin en güçlü alanı vs rakibin en zayıf alanı
+    home_best_area = max(home_areas, key=home_areas.get)
+    away_weakest_area = min(away_areas, key=away_areas.get)
+    away_best_area = max(away_areas, key=away_areas.get)
+    home_weakest_area = min(home_areas, key=home_areas.get)
+
+    # Avantaj hesaplama
+    home_tactical_bonus = 0.0
+    away_tactical_bonus = 0.0
+
+    # Ev sahibi rakibin zayıf yönüne oynama
+    if home_best_area == "attack" and away_weakest_area == "defence":
+        home_tactical_bonus += 0.05  # +%5 şut isabeti
+    if home_best_area == "midfield" and away_weakest_area == "midfield":
+        home_tactical_bonus += 0.10  # +%10 topa sahip olma
+
+    # Deplasman rakibin zayıf yönüne oynama
+    if away_best_area == "attack" and home_weakest_area == "defence":
+        away_tactical_bonus += 0.05
+    if away_best_area == "midfield" and home_weakest_area == "midfield":
+        away_tactical_bonus += 0.10
+
+    # ── 2. Bireysel yetenek eşleşmeleri ──
+    # Kanat vs bek eşleşmeleri
+    def get_positional_matchup_bonus(attackers: list[dict], defenders: list[dict], stat_attack: str, stat_defend: str) -> float:
+        bonus = 0.0
+        for att in attackers:
+            att_skill = (att.get(stat_attack, 50) or 50)
+            for defn in defenders:
+                def_skill = (defn.get(stat_defend, 50) or 50)
+                if att_skill > def_skill + 10:
+                    bonus += 0.02  # +%2 aksiyon şansı
+        return min(bonus, 0.10)  # Maks +%10
+
+    # Sol kanat vs sağ bek
+    home_lw = [p for p in home_starting if p.get("specific_position") in ("LW", "LM")]
+    away_rb = [p for p in away_starting if p.get("specific_position") in ("RB", "RWB")]
+    home_matchup_1 = get_positional_matchup_bonus(home_lw, away_rb, "dribbling", "tackling")
+
+    # Sağ kanat vs sol bek
+    home_rw = [p for p in home_starting if p.get("specific_position") in ("RW", "RM")]
+    away_lb = [p for p in away_starting if p.get("specific_position") in ("LB", "LWB")]
+    home_matchup_2 = get_positional_matchup_bonus(home_rw, away_lb, "dribbling", "tackling")
+
+    # Deplasman
+    away_lw = [p for p in away_starting if p.get("specific_position") in ("LW", "LM")]
+    home_rb = [p for p in home_starting if p.get("specific_position") in ("RB", "RWB")]
+    away_matchup_1 = get_positional_matchup_bonus(away_lw, home_rb, "dribbling", "tackling")
+
+    away_rw = [p for p in away_starting if p.get("specific_position") in ("RW", "RM")]
+    home_lb = [p for p in home_starting if p.get("specific_position") in ("LB", "LWB")]
+    away_matchup_2 = get_positional_matchup_bonus(away_rw, home_lb, "dribbling", "tackling")
+
+    # ── 3. Formasyon avantajı ──
+    # Basit taktik taş-kağıt-makas
+    formation_advantages = {
+        "4-4-2": {"strong_vs": "4-3-3", "weak_vs": "3-5-2"},
+        "4-3-3": {"strong_vs": "3-5-2", "weak_vs": "4-4-2"},
+        "3-5-2": {"strong_vs": "4-4-2", "weak_vs": "4-3-3"},
+    }
+
+    home_formation_advantage = 0.0
+    away_formation_advantage = 0.0
+
+    home_info = formation_advantages.get(home_formation)
+    away_info = formation_advantages.get(away_formation)
+
+    if home_info:
+        if away_formation == home_info["strong_vs"]:
+            home_formation_advantage = 0.05
+        elif away_formation == home_info["weak_vs"]:
+            home_formation_advantage = -0.03
+
+    if away_info:
+        if home_formation == away_info["strong_vs"]:
+            away_formation_advantage = 0.05
+        elif home_formation == away_info["weak_vs"]:
+            away_formation_advantage = -0.03
+
+    # Toplam
+    total_home_shot_accuracy = home_tactical_bonus + home_matchup_1 + home_matchup_2 + home_formation_advantage
+    total_home_possession = (0.10 if home_tactical_bonus >= 0.10 else 0.0) + home_formation_advantage
+    total_away_shot_accuracy = away_tactical_bonus + away_matchup_1 + away_matchup_2 + away_formation_advantage
+    total_away_possession = (0.10 if away_tactical_bonus >= 0.10 else 0.0) + away_formation_advantage
+
+    return {
+        "home_possession_bonus": total_home_possession,
+        "home_shot_accuracy_bonus": total_home_shot_accuracy,
+        "away_possession_bonus": total_away_possession,
+        "away_shot_accuracy_bonus": total_away_shot_accuracy,
+    }
+
+
 def pick_motm(players: list[dict], events: list[dict], side: str) -> Optional[dict]:
     """
     Maçın Adamı (Man of the Match) seçimi.
@@ -291,9 +428,19 @@ def simulate_match_events(
     away_players: list[dict],
     home_team_name: str = "Ev Sahibi",
     away_team_name: str = "Deplasman",
+    home_formation: str = "4-4-2",
+    away_formation: str = "4-4-2",
 ) -> dict:
     """
     Bir maçın olaylarını simüle eder.
+
+    Args:
+        home_players: Ev sahibi oyuncu listesi
+        away_players: Deplasman oyuncu listesi
+        home_team_name: Ev sahibi takım adı
+        away_team_name: Deplasman takım adı
+        home_formation: Ev sahibi formasyon (örn: "4-4-2")
+        away_formation: Deplasman formasyon (örn: "4-3-3")
 
     Returns:
         {
@@ -304,6 +451,7 @@ def simulate_match_events(
             "injury_events": [...],
             "motm_home": dict | None,
             "motm_away": dict | None,
+            "tactical_advantage": dict,
         }
     """
     events = []
@@ -314,10 +462,19 @@ def simulate_match_events(
     home_strength = calculate_team_strength(home_players)
     away_strength = calculate_team_strength(away_players)
 
+    # ── TAKTİKSEL AVANTAJ HESAPLAMA ──
+    tactical = calculate_tactical_advantage(
+        home_players, away_players, home_formation, away_formation
+    )
+
     # Güç farkından gol sayısı tahmini (Poisson benzeri)
     strength_diff = (home_strength - away_strength) / 20
     home_expected_goals = max(0.5, 1.3 + strength_diff * 0.5)
     away_expected_goals = max(0.3, 1.1 - strength_diff * 0.4)
+
+    # Taktik bonusu gol beklentisine etki etsin
+    home_expected_goals *= (1.0 + tactical["home_shot_accuracy_bonus"])
+    away_expected_goals *= (1.0 + tactical["away_shot_accuracy_bonus"])
 
     # Toplam gol sayısını belirle (Poisson benzeri)
     home_goals = 0
@@ -632,6 +789,7 @@ def simulate_match_events(
         "injury_events": injury_events,
         "motm_home": motm_home,
         "motm_away": motm_away,
+        "tactical_advantage": tactical,
     }
 
 
