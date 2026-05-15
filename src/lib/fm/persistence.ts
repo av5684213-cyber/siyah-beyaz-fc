@@ -407,18 +407,7 @@ export const getMatchPreparations = async (id: string) => {
   try {
     const supabase = getSupabase();
 
-    // Try match_preparations table first (backwards compat)
-    const { data: mpData, error: mpError } = await supabase
-      .from('match_preparations')
-      .select('operation_id')
-      .eq('profile_id', id)
-      .eq('status', 'pending');
-
-    if (!mpError && mpData && mpData.length > 0) {
-      return mpData.map((row: any) => row.operation_id);
-    }
-
-    // Fallback: read from training_state table
+    // Read from training_state table (match_preparations table was never created)
     const { data: tsData, error: tsError } = await supabase
       .from('training_state')
       .select('state')
