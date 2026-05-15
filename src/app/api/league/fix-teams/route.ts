@@ -1,13 +1,19 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { TIER_TEAM_NAMES, getTeamNamesForDepartment } from '@/lib/fm/constants';
+import { verifyCronSecret, sanitizeError } from '@/lib/fm/security';
 
 // Bu API, league_teams tablosundaki bozuk isimleri (NULL, "undefined", "Undefined" vb.)
 // doğru isimlerle değiştirir. Ayrıca league_standings ile league_teams arasındaki kopuk bağları da tamir eder.
 //
 // Kullanım: GET /api/league/fix-teams
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Admin-only: cron secret doğrulama
+  const cronCheck = verifyCronSecret(request);
+  if (!cronCheck.valid) {
+    return NextResponse.json({ error: cronCheck.error }, { status: 401 });
+  }
   const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
@@ -227,6 +233,6 @@ export async function GET() {
 
   } catch (error: any) {
     console.error('[FIX-TEAMS] Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
   }
 }

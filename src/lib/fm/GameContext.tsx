@@ -114,11 +114,6 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (authEmail) {
       localStorage.setItem('fm_auth_email', authEmail);
-      if (authEmail === 'selimporsuk@gmail.com') {
-        localStorage.setItem('fm_admin_mode', 'true');
-      } else {
-        localStorage.removeItem('fm_admin_mode');
-      }
     } else {
       localStorage.removeItem('fm_auth_email');
     }
@@ -145,13 +140,28 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
     playerConditions: {}
   });
 
+  // Admin check: server-side profile role tabanlı (hardcoded email veya localStorage bypass yok)
   useEffect(() => {
-    if (authEmail === 'selimporsuk@gmail.com' || localStorage.getItem('fm_admin_mode') === 'true') {
-      setIsAdmin(true);
-    } else {
-      setIsAdmin(false);
-    }
-  }, [authEmail]);
+    const checkAdminRole = async () => {
+      if (!userId || !isSupabaseConfigured()) {
+        setIsAdmin(false);
+        return;
+      }
+      try {
+        const supabase = getSupabase();
+        if (!supabase) { setIsAdmin(false); return; }
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .maybeSingle();
+        setIsAdmin(profile?.role === 'admin');
+      } catch {
+        setIsAdmin(false);
+      }
+    };
+    checkAdminRole();
+  }, [userId]);
 
   const initTeam = useCallback(async (teamNameInput: string, managerName: string, philosophy: string, color1: string, color2: string) => {
     if (!userId) {

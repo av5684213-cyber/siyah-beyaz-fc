@@ -11,14 +11,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateAllFormRatings } from '@/lib/fm/formRatingService';
 import { cleanupExpiredSuspensionsAndInjuries } from '@/lib/fm/matchConsequencesService';
+import { verifyCronSecret, sanitizeError } from '@/lib/fm/security';
 
 export const maxDuration = 300; // 5 dakika (Vercel limiti)
 
 export async function GET(request: NextRequest) {
-  // Cron secret doğrulama
-  const cronSecret = request.headers.get('x-cron-secret') || request.nextUrl.searchParams.get('secret');
-  if (process.env.CRON_SECRET && cronSecret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Cron secret doğrulama (fail-closed, header-only)
+  const cronCheck = verifyCronSecret(request);
+  if (!cronCheck.valid) {
+    return NextResponse.json({ error: cronCheck.error }, { status: 401 });
   }
 
   try {
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     console.error('[cron/update-form-ratings] Fatal error:', err);
     return NextResponse.json(
-      { error: 'Internal server error', details: String(err) },
+      { error: sanitizeError(err) },
       { status: 500 }
     );
   }

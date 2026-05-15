@@ -6,6 +6,7 @@
 
 import { getSupabase } from '@/lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { sanitizeInput } from '@/lib/fm/security';
 
 // ─── Types ────────────────────────────────────────────────────────────
 
@@ -61,7 +62,7 @@ export async function sendMatchChatMessage(
     const supabase = getSupabase();
     if (!supabase) return { success: false, error: 'Supabase not configured' };
 
-    const trimmed = content.trim().slice(0, 200);
+    const trimmed = sanitizeInput(content, 200);
     if (!trimmed) return { success: false, error: 'Empty message' };
 
     const { error } = await supabase

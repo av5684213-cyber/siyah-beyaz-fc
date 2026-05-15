@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { processBotTransfers, selectMatchSquad, getAllBotProfiles } from '@/lib/fm/botService';
+import { verifyCronSecret, sanitizeError } from '@/lib/fm/security';
 
 export const maxDuration = 300; // 5 minutes max for Vercel
 
 export async function GET(request: NextRequest) {
-  // Auth check: verify cron secret or allow in development
-  const cronSecret = request.headers.get('x-cron-secret') || request.nextUrl.searchParams.get('secret');
-  if (process.env.CRON_SECRET && cronSecret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Cron secret doğrulama (fail-closed, header-only)
+  const cronCheck = verifyCronSecret(request);
+  if (!cronCheck.valid) {
+    return NextResponse.json({ error: cronCheck.error }, { status: 401 });
   }
 
   if (!isSupabaseConfigured()) {
@@ -54,6 +55,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     console.error('[cron/bot-actions] Fatal error:', err);
-    return NextResponse.json({ error: 'Internal server error', details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: sanitizeError(err) }, { status: 500 });
   }
 }

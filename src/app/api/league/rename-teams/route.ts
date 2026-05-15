@@ -1,10 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { TIER_TEAM_NAMES } from '@/lib/fm/constants';
+import { verifyCronSecret, sanitizeError } from '@/lib/fm/security';
 
-// Bu API jenerik isimleri ("4. Lig X. Departman Kulüp Y") gerçek isimlerle değiştirir.
-// GET /api/league/rename-teams?tier=4
-export async function GET(request: Request) {
+// Bu API jenerik isimleri gerçek isimlerle değiştirir.
+// GET /api/league/rename-teams?tier=4 (Admin-only: x-cron-secret header gerekli)
+export async function GET(request: NextRequest) {
+  // Admin-only: cron secret doğrulama
+  const cronCheck = verifyCronSecret(request);
+  if (!cronCheck.valid) {
+    return NextResponse.json({ error: cronCheck.error }, { status: 401 });
+  }
   const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
@@ -70,6 +76,6 @@ export async function GET(request: Request) {
     });
   } catch (error: any) {
     console.error('Rename teams error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
   }
 }

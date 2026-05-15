@@ -4,6 +4,7 @@
  */
 
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { sanitizeInput, isValidMessageType, sanitizeLikePattern, isValidUserId } from '@/lib/fm/security';
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -266,7 +267,14 @@ export async function sendMessage(
     const supabase = getSupabase();
     if (!supabase) return { error: 'Supabase yapılandırılmamış' };
 
-    const trimmed = content.trim().substring(0, 500);
+    // Sanitize message content (XSS protection)
+    const trimmed = sanitizeInput(content, 500);
+    if (!trimmed) return { error: 'Mesaj boş olamaz' };
+
+    // Validate message type
+    if (!isValidMessageType(messageType)) {
+      return { error: 'Geçersiz mesaj türü' };
+    }
     const msgId = generateId();
 
     const { data, error } = await supabase
@@ -616,11 +624,12 @@ export async function searchRivalManagers(
     const supabase = getSupabase();
     if (!supabase) return { error: 'Supabase yapılandırılmamış' };
 
+    const safeQuery = sanitizeLikePattern(query);
     const { data, error } = await supabase
       .from('profiles')
       .select('id, manager_name, team_name')
       .neq('id', myId)
-      .ilike('team_name', `%${query}%`)
+      .ilike('team_name', `%${safeQuery}%`)
       .limit(limit);
 
     if (error) {

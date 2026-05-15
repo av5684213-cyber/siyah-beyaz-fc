@@ -296,3 +296,26 @@ Stage Summary:
 - directMessageRecipient bridge from TeamProfileModal still works
 - Features: conversation threading, 6 message categories, quick replies, read receipts (✓✓), online presence, real-time via Supabase, delete messages
 
+---
+Task ID: 8
+Agent: Main Agent
+Task: Step 8 — Security Validation
+
+Work Log:
+- Comprehensive security audit performed (7 CRITICAL, 6 HIGH, 5 MEDIUM, 4 LOW vulnerabilities found)
+- Created security.ts utility library (input sanitization, auth helpers, rate limiting, cron security, error sanitization, column whitelisting)
+- Created middleware.ts with security headers (CSP, X-Frame-Options, etc.) and API rate limiting (60/min general, 10/min cron, 5/min auth)
+- Fixed all 4 cron endpoints: fail-closed CRON_SECRET verification (no query param fallback), error sanitization
+- Fixed 3 admin league endpoints: added cron secret verification for authorization
+- Fixed register endpoint: rate limiting, input validation (isValidUserId), sanitized inputs (sanitizeInput)
+- Removed hardcoded admin email bypass (selimporsuk@gmail.com + localStorage fm_admin_mode)
+- Admin check now uses profile.role from database via Supabase query
+- Added XSS sanitization to rivalMessagingService (sanitizeInput on message content, sanitizeLikePattern on search, isValidMessageType validation)
+- Added XSS sanitization to matchChatService (sanitizeInput on message content)
+- Build verified successful
+
+Stage Summary:
+- New files: src/lib/fm/security.ts, src/middleware.ts
+- Fixed files: 4 cron routes, 3 admin league routes, register route, GameContext.tsx, rivalMessagingService.ts, matchChatService.ts
+- Critical fixes: cron bypass, admin bypass, XSS injection, input validation, rate limiting, error leakage, security headers
+

@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { getTeamNamesForDepartment } from '@/lib/fm/constants';
+import { verifyCronSecret, sanitizeError } from '@/lib/fm/security';
 
 // Takım ismini güvenli şekilde temizle - NULL/undefined/boş isimleri yakala
 function sanitizeTeamName(raw: any): string {
@@ -12,7 +13,12 @@ function sanitizeTeamName(raw: any): string {
   return cleaned;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Admin-only: cron secret doğrulama (fail-closed)
+  const cronCheck = verifyCronSecret(request);
+  if (!cronCheck.valid) {
+    return NextResponse.json({ error: cronCheck.error }, { status: 401 });
+  }
   const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
@@ -231,6 +237,6 @@ export async function GET() {
     });
   } catch (error: any) {
     console.error('Maintenance error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
   }
 }
