@@ -79,58 +79,64 @@ def calculate_injury_modifier(player: Dict[str, Any]) -> float:
     """
     modifier = 1.0
 
-    # Mevcut sakatlık durumu
-    is_injured = bool(player.get('is_injured', False))
-    injury_end_date = player.get('injury_end_date')
+    try:
+        # Mevcut sakatlık durumu
+        is_injured = bool(player.get('is_injured', False))
+        injury_end_date = player.get('injury_end_date')
 
-    if is_injured:
-        if injury_end_date:
-            try:
-                end = datetime.fromisoformat(str(injury_end_date).replace('Z', '+00:00'))
-                days_remaining = (end - datetime.now(end.tzinfo)).days
-                if days_remaining >= 7:
-                    modifier *= 0.85  # Uzun süreli sakatlık -%15
-                else:
-                    modifier *= 0.95  # Kısa süreli sakatlık -%5
-            except (ValueError, TypeError):
-                modifier *= 0.95
-        else:
-            modifier *= 0.95
-
-    # Sakatlık geçmişi kontrolü
-    injury_history = player.get('injury_history')
-    if injury_history:
-        try:
-            if isinstance(injury_history, str):
-                history = json.loads(injury_history)
+        if is_injured:
+            if injury_end_date:
+                try:
+                    end = datetime.fromisoformat(str(injury_end_date).replace('Z', '+00:00'))
+                    days_remaining = (end - datetime.now(end.tzinfo)).days
+                    if days_remaining >= 7:
+                        modifier *= 0.85  # Uzun süreli sakatlık -%15
+                    else:
+                        modifier *= 0.95  # Kısa süreli sakatlık -%5
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Sakatlık bitiş tarihi parse hatası, varsayılan -%%5 uygulandı: {e}")
+                    modifier *= 0.95
             else:
-                history = injury_history
+                modifier *= 0.95
 
-            if isinstance(history, list):
-                three_months_ago = (datetime.now() - timedelta(days=90)).isoformat()
-                recent_injuries = [
-                    h for h in history
-                    if isinstance(h, dict) and h.get('date', '') >= three_months_ago
-                ]
+        # Sakatlık geçmişi kontrolü
+        injury_history = player.get('injury_history')
+        if injury_history:
+            try:
+                if isinstance(injury_history, str):
+                    history = json.loads(injury_history)
+                else:
+                    history = injury_history
 
-                # Son 3 aydaki toplam sakatlık gün sayısı
-                total_injury_days = 0
-                for inj in recent_injuries:
-                    duration = inj.get('duration_days', 0)
-                    if isinstance(duration, (int, float)):
-                        total_injury_days += int(duration)
+                if isinstance(history, list):
+                    three_months_ago = (datetime.now() - timedelta(days=90)).isoformat()
+                    recent_injuries = [
+                        h for h in history
+                        if isinstance(h, dict) and h.get('date', '') >= three_months_ago
+                    ]
 
-                # Her 5 gün için -%5, max -%30
-                if total_injury_days > 0:
-                    penalty_pct = min(30, (total_injury_days // 5) * 5)
-                    modifier *= (1 - penalty_pct / 100)
-                    logger.debug(
-                        f"Sakatlık geçmişi: {total_injury_days} gün, "
-                        f"-%{penalty_pct} etki"
-                    )
+                    # Son 3 aydaki toplam sakatlık gün sayısı
+                    total_injury_days = 0
+                    for inj in recent_injuries:
+                        duration = inj.get('duration_days', 0)
+                        if isinstance(duration, (int, float)):
+                            total_injury_days += int(duration)
 
-        except (json.JSONDecodeError, TypeError, AttributeError) as e:
-            logger.warning(f"Sakatlık geçmişi parse hatası: {e}")
+                    # Her 5 gün için -%5, max -%30
+                    if total_injury_days > 0:
+                        penalty_pct = min(30, (total_injury_days // 5) * 5)
+                        modifier *= (1 - penalty_pct / 100)
+                        logger.debug(
+                            f"Sakatlık geçmişi: {total_injury_days} gün, "
+                            f"-%{penalty_pct} etki"
+                        )
+
+            except (json.JSONDecodeError, TypeError, AttributeError) as e:
+                logger.warning(f"Sakatlık geçmişi parse hatası, injury_days=0 kabul edildi: {e}")
+
+    except Exception as e:
+        # Genel hata durumunda modifier etkisi uygulanmaz (1.0 kalır)
+        logger.warning(f"Sakatlık modifier hesaplama genel hatası, etkisiz kabul edildi: {e}")
 
     # Modifier asgari 0.70 olsun (-%30 max)
     modifier = max(0.70, modifier)
@@ -185,6 +191,8 @@ def get_season_stats(player_id: str, player: Dict[str, Any]) -> Dict[str, int]:
     Geçen sezonki gol ve asist istatistiklerini çeker.
 
     Önce season_stats tablosundan, yoksa player'ın kendi alanlarından alır.
+    season_stats tablosu yoksa veya sorgu başarısız olursa
+    varsayılan olarak goals=0, assists=0 kabul eder.
 
     Returns:
         {"goals": int, "assists": int}
@@ -200,11 +208,22 @@ def get_season_stats(player_id: str, player: Dict[str, Any]) -> Dict[str, int]:
             assists = result.data[0].get('assists', 0) or 0
             return {"goals": int(goals), "assists": int(assists)}
     except Exception as e:
-        logger.debug(f"season_stats tablosundan veri alınamadı: {e}")
+        logger.warning(
+            f"season_stats tablosundan veri alınamadı (player_id={player_id}), "
+            f"goals=0, assists=0 kabul edildi: {e}"
+        )
 
     # Fallback: player'ın kendi alanlarından al
-    goals = player.get('goals', 0) or 0
-    assists = player.get('assists', 0) or 0
+    try:
+        goals = player.get('goals', 0) or 0
+        assists = player.get('assists', 0) or 0
+    except Exception as e:
+        logger.warning(
+            f"Player fallback istatistik okunamadı (player_id={player_id}), "
+            f"goals=0, assists=0 kabul edildi: {e}"
+        )
+        goals = 0
+        assists = 0
 
     return {"goals": int(goals), "assists": int(assists)}
 
@@ -301,7 +320,23 @@ def update_all_player_values() -> Dict[str, Any]:
     for player in players:
         try:
             old_price = player.get('current_price', 0) or player.get('market_value', 0) or 0
-            new_price = calculate_player_price(player)
+
+            # Fiyat hesaplama — hata durumunda eski fiyatı koru
+            try:
+                new_price = calculate_player_price(player)
+            except (ZeroDivisionError, ValueError, TypeError) as calc_err:
+                logger.error(
+                    f"Fiyat hesaplama hatası (player_id={player.get('id', '?')}), "
+                    f"eski fiyat korunuyor ({old_price}): {calc_err}"
+                )
+                new_price = old_price if old_price > 0 else MIN_PRICE
+            except Exception as calc_err:
+                logger.error(
+                    f"Fiyat hesaplama beklenmeyen hata (player_id={player.get('id', '?')}), "
+                    f"eski fiyat korunuyor ({old_price}): {calc_err}"
+                )
+                new_price = old_price if old_price > 0 else MIN_PRICE
+
             rarity = determine_rarity(player.get('rating', 50) or 50, player.get('potential', 50) or 50)
 
             # current_price alanını güncelle

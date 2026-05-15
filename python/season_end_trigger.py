@@ -39,6 +39,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger('season_end_trigger')
 
+# Gençlik Akademisi entegrasyonu
+# cron_youth_academy.py'yi import etmeye çalış, başarısız olursa yerel fonksiyon kullan
+_youth_academy_available = False
+try:
+    from cron_youth_academy import process_season_intake as _youth_season_intake
+    _youth_academy_available = True
+    logger.info("cron_youth_academy.process_season_intake import edildi")
+except ImportError:
+    logger.info("cron_youth_academy bulunamadı, yerel genç oyuncu üretim fonksiyonu kullanılacak")
+
 SUPABASE_URL = os.environ.get('NEXT_PUBLIC_SUPABASE_URL', 'https://jmxbyaamwbpnvgbnjbmo.supabase.co')
 SUPABASE_KEY = os.environ.get('SUPABASE_SERVICE_ROLE_KEY', os.environ.get('NEXT_PUBLIC_SUPABASE_ANON_KEY', ''))
 
@@ -457,6 +467,127 @@ def start_new_season(league_name: str) -> Dict[str, Any]:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# GENÇ OYUNCU ÜRETİMİ (Yerel fallback — cron_youth_academy import edilemezse)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _generate_youth_players_locally(season_id: str) -> Dict[str, Any]:
+    """
+    Yerel genç oyuncu üretim fonksiyonu (fallback).
+    cron_youth_academy.py import edilemediğinde kullanılır.
+    Her kullanıcının akademi seviyesine göre 1-3 genç oyuncu üretir,
+    players tablosuna ekler.
+    """
+    logger.info(f"Yerel genç oyuncu üretimi başlatılıyor: {season_id}")
+
+    total_created = 0
+    total_profiles = 0
+    errors = []
+
+    try:
+        result = supabase.table('profiles').select('id, academy_level, team_name, region').execute()
+        profiles = result.data or []
+    except Exception as e:
+        logger.error(f"Profiller alınamadı: {e}")
+        return {"success": False, "error": str(e)}
+
+    TURK_FIRST_NAMES = [
+        "Ahmet", "Mehmet", "Ali", "Mustafa", "Hasan", "Emre", "Burak",
+        "Oğuz", "Kerem", "Cem", "Deniz", "Efe", "Arda", "Baran",
+        "Berk", "Can", "Doruk", "Ege", "Furkan", "Mert",
+    ]
+    TURK_LAST_NAMES = [
+        "Yılmaz", "Kaya", "Demir", "Çelik", "Şahin", "Yıldız",
+        "Yıldırım", "Öztürk", "Aydın", "Özdemir", "Arslan", "Doğan",
+    ]
+    POSITIONS = ['GK', 'DEF', 'MID', 'FWD']
+
+    for profile in profiles:
+        profile_id = profile['id']
+        academy_level = profile.get('academy_level', 1) or 1
+        team_name = profile.get('team_name', 'Bilinmeyen')
+
+        try:
+            # Akademi seviyesine göre oyuncu sayısı
+            if academy_level >= 8:
+                num_players = 3
+            elif academy_level >= 4:
+                num_players = 2
+            else:
+                num_players = 1
+
+            for i in range(num_players):
+                position = random.choice(POSITIONS)
+                age = random.randint(15, 19)
+                base_rating = 35 + academy_level * 3
+                rating = max(30, min(75, base_rating + random.randint(-5, 10)))
+                potential = max(55, min(95, 60 + academy_level * 3 + random.randint(-5, 10)))
+
+                name = f"{random.choice(TURK_FIRST_NAMES)} {random.choice(TURK_LAST_NAMES)}"
+                player_id = f"youth_{profile_id[:8]}_{random.randint(1000, 9999)}"
+
+                youth_player = {
+                    'id': player_id,
+                    'profile_id': profile_id,
+                    'name': name,
+                    'age': age,
+                    'position': position,
+                    'rating': rating,
+                    'potential': potential,
+                    'market_value': rating * 1000,
+                    'salary': max(5000, rating * 200),
+                    'cond': 85 + random.randint(-5, 10),
+                    'form': 60 + random.randint(-10, 15),
+                    'morale': 70 + random.randint(-10, 10),
+                    'confidence': 60 + random.randint(-10, 15),
+                    'created_at': datetime.now().isoformat(),
+                }
+
+                try:
+                    supabase.table('players').insert(youth_player).execute()
+                    total_created += 1
+                except Exception as insert_err:
+                    errors.append(f"Player insert {player_id}: {insert_err}")
+                    logger.warning(f"Genç oyuncu ekleme hatası: {insert_err}")
+
+            total_profiles += 1
+            logger.info(f"  {team_name} (Lv.{academy_level}): {num_players} genç oyuncu üretildi")
+
+        except Exception as e:
+            error_msg = f"Profile {profile_id} ({team_name}): {e}"
+            logger.error(error_msg)
+            errors.append(error_msg)
+
+    logger.info(f"Yerel genç oyuncu üretimi tamamlandı: {total_created} oyuncu, {total_profiles} profil")
+    return {
+        "success": True,
+        "profiles_processed": total_profiles,
+        "players_created": total_created,
+        "errors": errors if errors else None,
+    }
+
+
+def trigger_youth_academy(season_id: str) -> Dict[str, Any]:
+    """
+    Gençlik Akademisi sezon alımını tetikler.
+    Önce cron_youth_academy.process_season_intake'i dener,
+    başarısız olursa yerel fallback fonksiyonu kullanır.
+    """
+    logger.info(f"Gençlik Akademisi sezon alımı tetikleniyor: {season_id}")
+
+    if _youth_academy_available:
+        try:
+            result = _youth_season_intake(season_id)
+            logger.info(f"cron_youth_academy.process_season_intake başarılı: {result.get('players_created', 0)} oyuncu")
+            return result
+        except Exception as e:
+            logger.warning(f"cron_youth_academy.process_season_intake hatası, yerel fallback kullanılıyor: {e}")
+            return _generate_youth_players_locally(season_id)
+    else:
+        logger.info("cron_youth_academy mevcut değil, yerel genç oyuncu üretimi kullanılıyor")
+        return _generate_youth_players_locally(season_id)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # ANA SEZON SONU İŞLEMİ
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -519,13 +650,31 @@ def process_season_end(force: bool = False, season_id: Optional[str] = None) -> 
             "new_season": new_season_result,
         })
 
+    # 7. Gençlik Akademisi — Yeni sezon için genç oyuncu üret
+    youth_result = None
+    try:
+        new_season_id = all_results[0]['new_season'].get('new_season', season_id) if all_results else season_id
+        youth_result = trigger_youth_academy(new_season_id)
+        logger.info(
+            f"Gençlik Akademisi: {youth_result.get('players_created', 0)} genç oyuncu "
+            f"üretildi ({youth_result.get('profiles_processed', 0)} profil)"
+        )
+    except Exception as e:
+        logger.error(f"Gençlik Akademisi hatası (devam ediliyor): {e}")
+        youth_result = {"success": False, "error": str(e)}
+
     # Logla
     try:
         supabase.table('error_logs').insert({
             'source': 'python',
             'level': 'info',
-            'message': f'Sezon sonu: {len(all_awards)} ödül, {len(leagues_to_process)} lig işlendi',
-            'context': {"season_id": season_id, "total_awards": len(all_awards), "leagues": leagues_to_process},
+            'message': f'Sezon sonu: {len(all_awards)} ödül, {len(leagues_to_process)} lig, {youth_result.get("players_created", 0)} genç oyuncu işlendi',
+            'context': {
+                "season_id": season_id,
+                "total_awards": len(all_awards),
+                "leagues": leagues_to_process,
+                "youth_academy": youth_result,
+            },
         }).execute()
     except Exception:
         pass
@@ -535,6 +684,7 @@ def process_season_end(force: bool = False, season_id: Optional[str] = None) -> 
         "season_id": season_id,
         "total_awards": len(all_awards),
         "leagues_processed": len(leagues_to_process),
+        "youth_academy": youth_result,
         "awards": all_awards,
         "results": all_results,
         "timestamp": datetime.now().isoformat(),

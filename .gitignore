@@ -59,4 +59,4 @@ server.log
 # Managerioum backup
 /managerioum-0.5/
 # Mini services build artifacts
-/mini-services/
+/mini-services/__pycache__/
