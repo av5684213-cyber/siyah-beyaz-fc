@@ -272,3 +272,27 @@ Stage Summary:
 - 8 quick reactions: ⚽🔥😱👏❤️😂😤🤦
 - Chat panel displayed alongside match simulation in matchday tab
 - fixture_id generated from current_day + opponent name
+---
+Task ID: 7
+Agent: Main Agent
+Task: Step 7 — Rival Manager Messaging implementation
+
+Work Log:
+- Created RIVAL_MESSAGING_MIGRATION.sql with manager_conversations, manager_messages, manager_presence tables
+- Added DROP TABLE IF EXISTS + DROP POLICY IF EXISTS for idempotent re-runs
+- All profile_id columns use TEXT type, RLS uses auth.uid()::text
+- Created rivalMessagingService.ts with full messaging features
+- Created RivalMessagingPanel.tsx with conversation threading, message categories, quick replies, presence, read receipts
+- Replaced CommunicationPanel with RivalMessagingPanel in page.tsx
+- Fixed Supabase import (getSupabase instead of createClient from @/lib/supabase/client)
+- Added null checks for all getSupabase() calls
+- Build verified successful
+
+Stage Summary:
+- SQL migration: download/RIVAL_MESSAGING_MIGRATION.sql
+- Service: src/lib/fm/rivalMessagingService.ts
+- UI Component: src/components/fm/RivalMessagingPanel.tsx
+- Integration: page.tsx (CommunicationPanel → RivalMessagingPanel)
+- directMessageRecipient bridge from TeamProfileModal still works
+- Features: conversation threading, 6 message categories, quick replies, read receipts (✓✓), online presence, real-time via Supabase, delete messages
+

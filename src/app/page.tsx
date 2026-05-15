@@ -81,7 +81,7 @@ import {
 
 import { useFM } from '@/lib/fm/GameContext';
 
-import CommunicationPanel from '@/components/fm/CommunicationPanel';
+import RivalMessagingPanel from '@/components/fm/RivalMessagingPanel';
 import TeamProfileModal from '@/components/fm/TeamProfileModal';
 import MatchReportPanel from '@/components/fm/MatchReportPanel';
 import YouthAcademyTab from '@/components/fm/YouthAcademyTab';
@@ -1272,7 +1272,7 @@ export default function Home() {
       )}
 
       {userId && profile && (
-        <CommunicationPanel 
+        <RivalMessagingPanel 
           userId={userId}
           userName={profile.manager_name || 'Manager'}
           teamName={profile.team_name || 'Siyah Beyaz FC'}
