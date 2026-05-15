@@ -8,6 +8,7 @@
 
 import { Player, InjuryRecord } from './types';
 import { getSupabase, isSupabaseConfigured } from '../supabase';
+import { safeJsonParse } from './sharedUtils';
 
 // ═══════════════════════════════════════════════════════════════
 // FORM RATING HESAPLAMA
@@ -178,21 +179,9 @@ export async function updateAllFormRatings(): Promise<{
           cond: dbPlayer.cond ?? dbPlayer.form ?? 75,
           form: dbPlayer.form ?? 50,
           morale: dbPlayer.morale ?? 60,
-          injury: dbPlayer.injury
-            ? (typeof dbPlayer.injury === 'string'
-                ? JSON.parse(dbPlayer.injury)
-                : dbPlayer.injury)
-            : undefined,
-          match_ratings: dbPlayer.match_ratings
-            ? (typeof dbPlayer.match_ratings === 'string'
-                ? JSON.parse(dbPlayer.match_ratings)
-                : dbPlayer.match_ratings)
-            : [],
-          injury_history: dbPlayer.injury_history
-            ? (typeof dbPlayer.injury_history === 'string'
-                ? JSON.parse(dbPlayer.injury_history)
-                : dbPlayer.injury_history)
-            : [],
+          injury: safeJsonParse(dbPlayer.injury, undefined),
+          match_ratings: safeJsonParse<number[]>(dbPlayer.match_ratings, []),
+          injury_history: safeJsonParse<InjuryRecord[]>(dbPlayer.injury_history, []),
         };
 
         // Career stats'ı al

@@ -136,21 +136,6 @@ export interface Player {
     shot_stopping?: number;
     penalty?: number;
   };
-
-  // Mental attributes
-  determination?: number;
-  concentration?: number;
-  leadership?: number;
-  anticipation?: number;
-  flair?: number;
-  positioning?: number;
-  composure?: number;
-  teamwork?: number;
-  workrate?: number;
-  vision?: number; // Already exists but grouping for clarity if needed
-  aggression?: number;
-  bravery?: number;
-  decisions?: number;
 }
 
 /** Sakatlık geçmişi kaydı (ADIM 1A) */

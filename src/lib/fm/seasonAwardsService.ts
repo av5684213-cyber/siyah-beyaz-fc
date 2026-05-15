@@ -6,6 +6,7 @@
 import { getSupabase } from '@/lib/supabase';
 import type { Player, SeasonAward, SeasonSummary, SeasonBadge, SeasonAwardCeremony, AwardType, LeagueTeam } from './types';
 import { AWARD_LABELS } from './types';
+import { safeJsonParse } from './sharedUtils';
 
 // ─── Sezon ID Yardımcıları ────────────────────────────────────────────
 
@@ -477,11 +478,7 @@ export async function saveSeasonAwardsAndSummary(
         .eq('id', profileId)
         .single();
 
-      const existingBadges = profileData?.season_badges
-        ? (typeof profileData.season_badges === 'string'
-          ? JSON.parse(profileData.season_badges)
-          : profileData.season_badges)
-        : [];
+      const existingBadges = safeJsonParse<SeasonBadge[]>(profileData.season_badges, []);
 
       // Aynı sezonun badge'ini güncelle veya ekle
       const updatedBadges = [
@@ -594,9 +591,7 @@ export async function loadAwardCeremony(profileId: string, seasonId: string): Pr
         .single();
 
       if (data?.season_badges) {
-        const badges: SeasonBadge[] = typeof data.season_badges === 'string'
-          ? JSON.parse(data.season_badges)
-          : data.season_badges;
+        const badges = safeJsonParse<SeasonBadge[]>(data.season_badges, []);
         badge = badges.find(b => b.season_id === seasonId) || null;
       }
     }
@@ -645,9 +640,7 @@ function mapAwardFromRow(row: any): SeasonAward {
     player_name: row.player_name,
     team_name: row.team_name,
     stat_value: row.stat_value,
-    stat_detail: row.stat_detail
-      ? (typeof row.stat_detail === 'string' ? JSON.parse(row.stat_detail) : row.stat_detail)
-      : undefined,
+    stat_detail: safeJsonParse<Record<string, number | string>>(row.stat_detail, undefined),
     created_at: row.created_at,
   };
 }

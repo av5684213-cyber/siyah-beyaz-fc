@@ -6,6 +6,7 @@
 
 import { getSupabase } from '@/lib/supabase';
 import type { Player } from './types';
+import { safeJsonParse } from './sharedUtils';
 
 // ─── Types ────────────────────────────────────────────────────────────
 
@@ -101,8 +102,8 @@ function getTotalGoals(player: Player): number {
 function estimateSeasonsPlayed(player: Player): number {
   // Basit tahmin: (current_age - joined_age) ile sezon sayısı
   // Eğer bu bilgi yoksa, en az 1 sezon oynamış kabul et (emekli olduysa)
-  if (player.career_stats) {
-    return Math.max(1, Math.floor((player.career_stats as any).seasons || 1));
+  if ((player as Record<string, unknown>).career_stats) {
+    return Math.max(1, Math.floor(((player as Record<string, unknown>).career_stats as Record<string, unknown>).seasons as number || 1));
   }
   return 1;
 }
@@ -170,7 +171,7 @@ export function createHOFEntry(
     legend_tier: tier,
     is_club_legend: legend,
     awards_won: careerStats?.awardsWon ?? [],
-    joined_day: player.joined_day,
+    joined_day: (player as Record<string, unknown>).joined_day as number | undefined,
     retired_day: retiredDay,
     retired_season: retiredSeason,
   };
@@ -487,9 +488,7 @@ function mapHofFromRow(row: any): HallOfFameEntry {
     peak_rating: row.peak_rating || 0,
     legend_tier: row.legend_tier as LegendTier || 'bronze',
     is_club_legend: row.is_club_legend || false,
-    awards_won: row.awards_won
-      ? (typeof row.awards_won === 'string' ? JSON.parse(row.awards_won) : row.awards_won)
-      : [],
+    awards_won: safeJsonParse<string[]>(row.awards_won, []),
     joined_day: row.joined_day,
     retired_day: row.retired_day,
     retired_season: row.retired_season,

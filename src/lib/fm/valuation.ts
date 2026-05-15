@@ -11,6 +11,7 @@
 
 import { Player, InjuryRecord } from './types';
 import { countRecentInjuries } from './formRatingService';
+import { VALUATION_STAT_KEYS } from './sharedUtils';
 
 export function formatCurrency(val: number): string {
   if (val >= 1_000_000) {
@@ -158,12 +159,7 @@ export function calculateMarketValue(player: Player): number {
   // ═══════════════════════════════════════════════════════════
   // İSTİSNAİ İSTATİSTİK BONUSU
   // ═══════════════════════════════════════════════════════════
-  const statKeys = [
-    'speed', 'passing', 'shooting', 'finishing', 'dribbling',
-    'defending', 'tackling', 'heading', 'crossing', 'longShots',
-    'technique', 'firstTouch', 'vision', 'anticipation', 'composure',
-    'workRate', 'strength', 'stamina', 'agility',
-  ];
+  const statKeys = VALUATION_STAT_KEYS;
   let exceptional90Count = 0;
   let exceptional95Count = 0;
   for (const key of statKeys) {

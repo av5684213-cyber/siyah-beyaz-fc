@@ -1,4 +1,5 @@
 import { getSupabase, isSupabaseConfigured } from '../supabase';
+import { safeJsonParse, mapYouthPlayerFromRow, buildStatsObject, DEFAULT_STAT_VALUES } from './sharedUtils';
 
 const STORAGE_KEYS = {
   PROFILE: 'fm_profile',
@@ -27,62 +28,59 @@ export const loadPlayers = async (userId: string, teamName?: string) => {
   if (isSupabaseConfigured()) {
     const supabase = getSupabase();
     
-    const mapPlayer = (p: any) => {
-      let extra = {};
-      if (p.personality) {
-        try { extra = typeof p.personality === 'string' ? JSON.parse(p.personality) : p.personality; } catch (e) {}
-      }
+    const mapPlayer = (p: Record<string, unknown>) => {
+      const extra = safeJsonParse<Record<string, unknown>>(p.personality, {});
       
       return {
         ...p,
         ...extra,
-        rating: p.rating ?? p.klt ?? 60,
-        potential: p.potential ?? p.klt ?? p.rating ?? 70,
-        passing: p.passing ?? p.pas ?? 50,
-        shooting: p.shooting ?? p.sut ?? 50,
-        defending: p.defending ?? p.tk ?? 50,
-        speed: p.speed ?? p.hiz ?? 50,
-        power: p.power ?? p.guc ?? 50,
-        vision: p.vision ?? p.alg ?? 50,
-        control: p.control ?? p.top ?? 50,
-        heading: p.heading ?? p.kfa ?? 50,
-        goalkeeping: p.goalkeeping ?? p.klc ?? 10,
+        rating: (p.rating as number) ?? (p.klt as number) ?? 60,
+        potential: (p.potential as number) ?? (p.klt as number) ?? (p.rating as number) ?? 70,
+        passing: (p.passing as number) ?? (p.pas as number) ?? 50,
+        shooting: (p.shooting as number) ?? (p.sut as number) ?? 50,
+        defending: (p.defending as number) ?? (p.tk as number) ?? 50,
+        speed: (p.speed as number) ?? (p.hiz as number) ?? 50,
+        power: (p.power as number) ?? (p.guc as number) ?? 50,
+        vision: (p.vision as number) ?? (p.alg as number) ?? 50,
+        control: (p.control as number) ?? (p.top as number) ?? 50,
+        heading: (p.heading as number) ?? (p.kfa as number) ?? 50,
+        goalkeeping: (p.goalkeeping as number) ?? (p.klc as number) ?? 10,
         
         scouting_stars: p.scouting_stars,
         scouting_count: p.scouting_count,
         preferred_foot: p.preferred_foot,
-        injury: p.injury ? (typeof p.injury === 'string' ? JSON.parse(p.injury) : p.injury) : null,
+        injury: safeJsonParse(p.injury, null),
         // ADIM 1: Form rating ve sakatlık geçmişi
-        form_rating: p.form_rating ?? p.form ?? 50,
-        injury_history: p.injury_history ? (typeof p.injury_history === 'string' ? JSON.parse(p.injury_history) : p.injury_history) : [],
+        form_rating: (p.form_rating as number) ?? (p.form as number) ?? 50,
+        injury_history: safeJsonParse<unknown[]>(p.injury_history, []),
         // ADIM 2: Kart cezaları ve sakatlık
         suspended_until: p.suspended_until || null,
         is_injured: p.is_injured || false,
         injury_end_date: p.injury_end_date || null,
-        traitLevels: p.trait_levels ? (typeof p.trait_levels === 'string' ? JSON.parse(p.trait_levels) : p.trait_levels) : (extra as any).traitLevels || {},
-        styleLevels: p.style_levels ? (typeof p.style_levels === 'string' ? JSON.parse(p.style_levels) : p.style_levels) : (extra as any).styleLevels || {},
-        playStyle: p.play_style || (extra as any).playStyle,
-        special_role: p.special_role || (extra as any).special_role,
+        traitLevels: safeJsonParse<Record<string, string>>(p.trait_levels, (extra as Record<string, unknown>).traitLevels as Record<string, string> || {}),
+        styleLevels: safeJsonParse<Record<string, number>>(p.style_levels, (extra as Record<string, unknown>).styleLevels as Record<string, number> || {}),
+        playStyle: p.play_style || (extra as Record<string, unknown>).playStyle,
+        special_role: p.special_role || (extra as Record<string, unknown>).special_role,
         is_starter: p.is_starter || false,
         squad_no: p.squad_no,
-        fitness: p.cond ?? (p as any).fitness ?? 100,
+        fitness: (p.cond as number) ?? (p as Record<string, unknown>).fitness ?? 100,
         // Detailed attributes
-        finishing: p.finishing ?? p.sut ?? 50,
-        dribbling: p.dribbling ?? p.top ?? 50,
-        firstTouch: p.first_touch ?? p.control ?? 50,
-        crossing: p.crossing ?? p.pas ?? 50,
-        marking: p.marking ?? p.tk ?? 50,
-        tackling: p.tackling_detailed ?? p.tk ?? 50,
-        technique: p.technique ?? p.control ?? 50,
-        longShots: p.long_shots ?? p.sut ?? 50,
-        offTheBall: p.off_the_ball ?? p.vision ?? 50,
-        acceleration: p.acceleration ?? p.hiz ?? 50,
-        agility: p.agility ?? p.hiz ?? 50,
-        balance: p.balance ?? p.guc ?? 50,
-        jumping: p.jumping ?? p.guc ?? 50,
-        leftFoot: p.left_foot_detailed ?? 50,
-        rightFoot: p.right_foot_detailed ?? 50,
-        workRate: p.work_rate ?? p.workrate ?? 50,
+        finishing: (p.finishing as number) ?? (p.sut as number) ?? 50,
+        dribbling: (p.dribbling as number) ?? (p.top as number) ?? 50,
+        firstTouch: (p.first_touch as number) ?? (p.control as number) ?? 50,
+        crossing: (p.crossing as number) ?? (p.pas as number) ?? 50,
+        marking: (p.marking as number) ?? (p.tk as number) ?? 50,
+        tackling: (p.tackling_detailed as number) ?? (p.tk as number) ?? 50,
+        technique: (p.technique as number) ?? (p.control as number) ?? 50,
+        longShots: (p.long_shots as number) ?? (p.sut as number) ?? 50,
+        offTheBall: (p.off_the_ball as number) ?? (p.vision as number) ?? 50,
+        acceleration: (p.acceleration as number) ?? (p.hiz as number) ?? 50,
+        agility: (p.agility as number) ?? (p.hiz as number) ?? 50,
+        balance: (p.balance as number) ?? (p.guc as number) ?? 50,
+        jumping: (p.jumping as number) ?? (p.guc as number) ?? 50,
+        leftFoot: (p.left_foot_detailed as number) ?? 50,
+        rightFoot: (p.right_foot_detailed as number) ?? 50,
+        workRate: (p.work_rate as number) ?? (p as Record<string, unknown>).workrate as number ?? 50,
       };
     };
 
@@ -118,8 +116,6 @@ export const loadLeague = async () => {
 export const loadFixtures = async (teamId: string) => {
   if (isSupabaseConfigured()) {
     const supabase = getSupabase();
-    // Fetch fixtures for the user's team or all fixtures in the league
-    // For now, let's fetch user team's fixtures
     const { data } = await supabase
       .from('fixtures')
       .select('*, home:home_team_id(name), away:away_team_id(name)')
@@ -155,13 +151,13 @@ export const loadWatchlist = async (userId: string) => {
   if (isSupabaseConfigured()) {
     const supabase = getSupabase();
     const { data } = await supabase.from('watchlist').select('player_id').eq('user_id', userId);
-    return data ? data.map((i: any) => i.player_id) : [];
+    return data ? data.map((i: Record<string, unknown>) => i.player_id) : [];
   }
   const local = localStorage.getItem(STORAGE_KEYS.WATCHLIST);
   return local ? JSON.parse(local) : [];
 };
 
-export const saveProfile = async (profile: any) => {
+export const saveProfile = async (profile: Record<string, unknown>) => {
   localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
   if (isSupabaseConfigured()) {
     const supabase = getSupabase();
@@ -169,11 +165,10 @@ export const saveProfile = async (profile: any) => {
   }
 };
 
-export const savePlayers = async (players: any[], userId?: string, teamName?: string) => {
+export const savePlayers = async (players: Record<string, unknown>[], userId?: string, teamName?: string) => {
   localStorage.setItem(STORAGE_KEYS.SQUAD, JSON.stringify(players));
   if (isSupabaseConfigured() && userId) {
     const supabase = getSupabase();
-    // Prepare for batch upsert
     const playersToSave = players.map(p => {
       // Pack extra traits back into personality string
       const personalityObj = {
@@ -186,7 +181,6 @@ export const savePlayers = async (players: any[], userId?: string, teamName?: st
         special_role: p.special_role
       };
 
-      const isUUID = userId.length === 36 && userId.includes('-');
       return {
         id: p.id,
         name: p.name,
@@ -207,8 +201,8 @@ export const savePlayers = async (players: any[], userId?: string, teamName?: st
         guc: p.power || 50,
         alg: p.vision || 50,
         top: p.control || 50,
-        kfa: p.heading || (p as any).heading || 50,
-        klc: p.goalkeeping || (p as any).goalkeeping || 10,
+        kfa: p.heading || (p as Record<string, unknown>).heading || 50,
+        klc: p.goalkeeping || (p as Record<string, unknown>).goalkeeping || 10,
         potential: p.potential,
         hidden_potential: p.hidden_potential || p.potential,
         age: p.age,
@@ -227,10 +221,8 @@ export const savePlayers = async (players: any[], userId?: string, teamName?: st
         is_starter: p.is_starter || false,
         squad_no: p.squad_no || null,
         injury: p.injury ? JSON.stringify(p.injury) : null,
-        // ADIM 1: Form rating ve sakatlık geçmişi
         form_rating: p.form_rating ?? p.form ?? 50,
         injury_history: p.injury_history ? JSON.stringify(p.injury_history) : '[]',
-        // ADIM 2: Kart cezaları ve sakatlık
         suspended_until: p.suspended_until || null,
         is_injured: p.is_injured || false,
         injury_end_date: p.injury_end_date || null,
@@ -246,7 +238,7 @@ export const savePlayers = async (players: any[], userId?: string, teamName?: st
         positioning: p.positioning || 50,
         composure: p.composure || 50,
         teamwork: p.teamwork || 50,
-        workrate: p.workrate || 50,
+        workrate: (p as Record<string, unknown>).workrate || 50,
         aggression: p.aggression || 50,
         bravery: p.bravery || 50,
         decisions: p.decisions || 50,
@@ -261,7 +253,7 @@ export const savePlayers = async (players: any[], userId?: string, teamName?: st
         long_shots: p.longShots || p.shooting || 50,
         off_the_ball: p.offTheBall || p.vision || 50,
         // Mental
-        work_rate: p.workRate || p.workrate || 50,
+        work_rate: p.workRate || (p as Record<string, unknown>).workrate || 50,
         // Physical
         acceleration: p.acceleration || p.speed || 50,
         agility: p.agility || p.speed || 50,
@@ -274,20 +266,19 @@ export const savePlayers = async (players: any[], userId?: string, teamName?: st
       };
     });
     
-    // Remove user_id as it doesn't exist in the schema
     playersToSave.forEach(p => {
-      delete p.user_id;
+      delete (p as Record<string, unknown>).user_id;
     });
 
     await supabase.from('players').upsert(playersToSave);
   }
 };
 
-export const saveLeague = async (league: any) => {
+export const saveLeague = async (league: unknown[]) => {
   localStorage.setItem(STORAGE_KEYS.LEAGUE, JSON.stringify(league));
 };
 
-export const saveActiveTactic = async (userId: string, tactic: any) => {
+export const saveActiveTactic = async (userId: string, tactic: Record<string, unknown>) => {
   localStorage.setItem(STORAGE_KEYS.TACTIC, JSON.stringify(tactic));
   if (isSupabaseConfigured()) {
     const supabase = getSupabase();
@@ -295,7 +286,7 @@ export const saveActiveTactic = async (userId: string, tactic: any) => {
   }
 };
 
-export const saveTrainingState = async (userId: string, state: any) => {
+export const saveTrainingState = async (userId: string, state: Record<string, unknown>) => {
   localStorage.setItem(STORAGE_KEYS.TRAINING, JSON.stringify(state));
   if (isSupabaseConfigured()) {
     const supabase = getSupabase();
@@ -305,11 +296,9 @@ export const saveTrainingState = async (userId: string, state: any) => {
 
 export const saveWatchlist = async (userId: string, watchlist: string[]) => {
   localStorage.setItem(STORAGE_KEYS.WATCHLIST, JSON.stringify(watchlist));
-  // Supabase sync is handled in toggleWatchlist for more atomic control, 
-  // but we can ensure it here too if needed.
 };
 
-export const saveMatchResult = async (userId: string, result: any, homeTeamName: string, awayTeamName: string) => {
+export const saveMatchResult = async (userId: string, result: Record<string, unknown>, homeTeamName: string, awayTeamName: string) => {
   const matchInfo = {
     result,
     homeTeamName,
@@ -320,11 +309,12 @@ export const saveMatchResult = async (userId: string, result: any, homeTeamName:
   
   if (isSupabaseConfigured() && userId) {
     const supabase = getSupabase();
+    const score = result.score as Record<string, number>;
     await supabase.from('match_history').insert({
       user_id: userId,
       home_team: homeTeamName,
       away_team: awayTeamName,
-      score: `${result.score.home}-${result.score.away}`,
+      score: `${score.home}-${score.away}`,
       match_data: JSON.stringify(result)
     });
   }
@@ -354,45 +344,32 @@ export const checkConnectionHealth = async (): Promise<{ status: ConnectionStatu
     const { error } = await supabase.from('profiles').select('count', { count: 'exact', head: true }).limit(1);
     if (error) throw error;
     return { status: 'connected', latency: Date.now() - start };
-  } catch (e) {
+  } catch {
     return { status: 'error' };
   }
 };
 
 export const resetLeague = async () => {
-  // SAVE userId BEFORE clearing localStorage (needed for Supabase cleanup)
   const savedUserId = localStorage.getItem('fm_user_id');
   
   // Clear all localStorage data
-  localStorage.removeItem(STORAGE_KEYS.LEAGUE);
-  localStorage.removeItem(STORAGE_KEYS.SQUAD);
-  localStorage.removeItem(STORAGE_KEYS.PROFILE);
-  localStorage.removeItem(STORAGE_KEYS.TACTIC);
-  localStorage.removeItem(STORAGE_KEYS.TRAINING);
-  localStorage.removeItem(STORAGE_KEYS.WATCHLIST);
-  localStorage.removeItem(STORAGE_KEYS.LAST_MATCH);
+  Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
   localStorage.removeItem('fm_fixtures');
   localStorage.removeItem('fm_user_id');
   localStorage.removeItem('fm_auth_email');
   localStorage.removeItem('fm_match_history');
   localStorage.removeItem('fm_last_processed_day');
-  localStorage.removeItem(STORAGE_KEYS.YOUTH_PLAYERS);
-  localStorage.removeItem(STORAGE_KEYS.YOUTH_FACILITIES);
 
-  // Also clear Supabase data if configured
   if (isSupabaseConfigured()) {
     try {
       const supabase = getSupabase();
       
       if (savedUserId) {
-        // Get team_name from profile before deleting
         const { data: profile } = await supabase.from('profiles').select('team_name, league_name').eq('id', savedUserId).single();
         
         if (profile) {
-          // Delete players for this user
           await supabase.from('players').delete().eq('profile_id', savedUserId);
           
-          // Restore the league_teams entry back to NPC
           if (profile.team_name) {
             await supabase.from('league_teams').update({
               is_npc: true,
@@ -403,15 +380,11 @@ export const resetLeague = async () => {
           }
         }
         
-        // Delete profile
         await supabase.from('profiles').delete().eq('id', savedUserId);
-        
-        // Delete related data
         await supabase.from('active_tactics').delete().eq('id', savedUserId);
         await supabase.from('training_state').delete().eq('id', savedUserId);
         await supabase.from('watchlist').delete().eq('user_id', savedUserId);
         await supabase.from('match_history').delete().eq('user_id', savedUserId);
-        // ADIM 3: Youth Academy verilerini de temizle
         await supabase.from('youth_players').delete().eq('profile_id', savedUserId);
         await supabase.from('youth_facilities').delete().eq('profile_id', savedUserId);
       }
@@ -428,7 +401,6 @@ export const getMatchPreparations = async (id: string) => {
   try {
     const supabase = getSupabase();
 
-    // Read from training_state table (match_preparations table was never created)
     const { data: tsData, error: tsError } = await supabase
       .from('training_state')
       .select('state')
@@ -437,11 +409,11 @@ export const getMatchPreparations = async (id: string) => {
 
     if (tsError || !tsData?.state) return [];
 
-    const state = typeof tsData.state === 'string' ? JSON.parse(tsData.state) : tsData.state;
-    const activeOps = state?.activeOperations || [];
+    const state = safeJsonParse<Record<string, unknown>>(tsData.state, {});
+    const activeOps = (state.activeOperations || []) as Record<string, unknown>[];
     return activeOps
-      .filter((op: any) => op.status === 'pending')
-      .map((op: any) => op.operationId || op.operation_id);
+      .filter((op) => op.status === 'pending')
+      .map((op) => op.operationId || op.operation_id);
   } catch {
     return [];
   }
@@ -454,8 +426,9 @@ export const getMatchPreparations = async (id: string) => {
 /**
  * Genç oyuncuları Supabase'den veya localStorage'dan yükler.
  * Supabase'den gelen veriyi YouthPlayer formatına map eder.
+ * Mapping için sharedUtils.mapYouthPlayerFromRow kullanır.
  */
-export const loadYouthPlayers = async (userId: string): Promise<any[]> => {
+export const loadYouthPlayers = async (userId: string): Promise<Record<string, unknown>[]> => {
   if (isSupabaseConfigured()) {
     try {
       const supabase = getSupabase();
@@ -466,120 +439,23 @@ export const loadYouthPlayers = async (userId: string): Promise<any[]> => {
 
       if (error) {
         console.error('[loadYouthPlayers] Supabase error:', error.message);
-        // Fallback to localStorage
       } else if (data && data.length > 0) {
-        return data.map(mapYouthPlayerFromRow);
+        return data.map((row: Record<string, unknown>) => mapYouthPlayerFromRow(row));
       }
     } catch (err) {
       console.error('[loadYouthPlayers] Exception:', err);
     }
   }
 
-  // localStorage fallback
   const local = localStorage.getItem(STORAGE_KEYS.YOUTH_PLAYERS);
   return local ? JSON.parse(local) : [];
 };
 
 /**
- * Supabase youth_players satırını YouthPlayer objesine dönüştürür.
- */
-function mapYouthPlayerFromRow(row: any): any {
-  const stats = row.stats ? (typeof row.stats === 'string' ? JSON.parse(row.stats) : row.stats) : {};
-  const personalityTraits = row.personality_traits
-    ? (typeof row.personality_traits === 'string' ? JSON.parse(row.personality_traits) : row.personality_traits)
-    : [];
-  const traits = row.traits
-    ? (typeof row.traits === 'string' ? JSON.parse(row.traits) : row.traits)
-    : [];
-  const traitLevels = row.trait_levels
-    ? (typeof row.trait_levels === 'string' ? JSON.parse(row.trait_levels) : row.trait_levels)
-    : {};
-  const scoutReport = row.scout_report
-    ? (typeof row.scout_report === 'string' ? JSON.parse(row.scout_report) : row.scout_report)
-    : null;
-  const statsGained = row.stats_gained_this_season
-    ? (typeof row.stats_gained_this_season === 'string' ? JSON.parse(row.stats_gained_this_season) : row.stats_gained_this_season)
-    : {};
-
-  return {
-    id: row.id,
-    name: row.name,
-    age: row.age,
-    position: row.position,
-    specificPosition: row.specific_position,
-    rating: row.rating,
-    potential: row.potential,
-    hidden_potential: row.hidden_potential,
-    academyLevel: row.academy_level,
-    joinDate: row.join_date,
-    weeklyTrainingHours: row.weekly_training_hours,
-    totalTrainingWeeks: row.total_training_weeks,
-    developmentCurve: row.development_curve,
-    isWonderkid: row.is_wonderkid,
-    category: row.category,
-    scoutReport,
-    personalityTraits,
-    traits,
-    traitLevels: Object.keys(traitLevels).length > 0 ? traitLevels : undefined,
-    // Primary stats from stats JSONB
-    speed: stats.speed ?? 50,
-    passing: stats.passing ?? 50,
-    shooting: stats.shooting ?? 50,
-    defending: stats.defending ?? 50,
-    power: stats.power ?? 50,
-    goalkeeping: stats.goalkeeping ?? 15,
-    // Technical
-    finishing: stats.finishing ?? 50,
-    dribbling: stats.dribbling ?? 50,
-    firstTouch: stats.firstTouch ?? 50,
-    crossing: stats.crossing ?? 50,
-    marking: stats.marking ?? 50,
-    tackling: stats.tackling ?? 50,
-    technique: stats.technique ?? 50,
-    longShots: stats.longShots ?? 50,
-    offTheBall: stats.offTheBall ?? 50,
-    heading: stats.heading ?? 50,
-    // Mental
-    aggression: stats.aggression ?? 50,
-    bravery: stats.bravery ?? 50,
-    workRate: stats.workRate ?? 50,
-    decisions: stats.decisions ?? 50,
-    determination: stats.determination ?? 50,
-    concentration: stats.concentration ?? 50,
-    leadership: stats.leadership ?? 30,
-    anticipation: stats.anticipation ?? 50,
-    flair: stats.flair ?? 20,
-    positioning: stats.positioning ?? 50,
-    composure: stats.composure ?? 50,
-    teamwork: stats.teamwork ?? 50,
-    vision: stats.vision ?? 50,
-    // Physical
-    agility: stats.agility ?? 50,
-    balance: stats.balance ?? 50,
-    strength: stats.strength ?? 50,
-    acceleration: stats.acceleration ?? stats.speed ?? 50,
-    jumping: stats.jumping ?? 50,
-    stamina: stats.stamina ?? 60,
-    control: stats.control ?? 50,
-    // Condition
-    cond: row.cond ?? 85,
-    form: row.form ?? 60,
-    morale: row.morale ?? 70,
-    confidence: row.confidence ?? 60,
-    // Injury
-    injured: row.injured ?? false,
-    injuryWeeksRemaining: row.injury_weeks_remaining ?? 0,
-    // Stats gained
-    statsGainedThisSeason: statsGained,
-  };
-}
-
-/**
  * Genç oyuncuları Supabase'e ve localStorage'a kaydeder.
- * Batch upsert kullanır.
+ * Batch upsert kullanır. Stats oluşturma için sharedUtils.buildStatsObject kullanır.
  */
-export const saveYouthPlayers = async (players: any[], userId: string): Promise<void> => {
-  // Her zaman localStorage'a kaydet
+export const saveYouthPlayers = async (players: Record<string, unknown>[], userId: string): Promise<void> => {
   localStorage.setItem(STORAGE_KEYS.YOUTH_PLAYERS, JSON.stringify(players));
 
   if (isSupabaseConfigured() && userId) {
@@ -587,45 +463,7 @@ export const saveYouthPlayers = async (players: any[], userId: string): Promise<
       const supabase = getSupabase();
 
       const rows = players.map(p => {
-        // Tüm stat'leri tek bir JSONB'de topla
-        const stats: Record<string, number> = {
-          speed: p.speed ?? 50,
-          passing: p.passing ?? 50,
-          shooting: p.shooting ?? 50,
-          defending: p.defending ?? 50,
-          power: p.power ?? 50,
-          goalkeeping: p.goalkeeping ?? 15,
-          finishing: p.finishing ?? 50,
-          dribbling: p.dribbling ?? 50,
-          firstTouch: p.firstTouch ?? 50,
-          crossing: p.crossing ?? 50,
-          marking: p.marking ?? 50,
-          tackling: p.tackling ?? 50,
-          technique: p.technique ?? 50,
-          longShots: p.longShots ?? 50,
-          offTheBall: p.offTheBall ?? 50,
-          heading: p.heading ?? 50,
-          aggression: p.aggression ?? 50,
-          bravery: p.bravery ?? 50,
-          workRate: p.workRate ?? 50,
-          decisions: p.decisions ?? 50,
-          determination: p.determination ?? 50,
-          concentration: p.concentration ?? 50,
-          leadership: p.leadership ?? 30,
-          anticipation: p.anticipation ?? 50,
-          flair: p.flair ?? 20,
-          positioning: p.positioning ?? 50,
-          composure: p.composure ?? 50,
-          teamwork: p.teamwork ?? 50,
-          vision: p.vision ?? 50,
-          agility: p.agility ?? 50,
-          balance: p.balance ?? 50,
-          strength: p.strength ?? 50,
-          acceleration: p.acceleration ?? p.speed ?? 50,
-          jumping: p.jumping ?? 50,
-          stamina: p.stamina ?? 60,
-          control: p.control ?? 50,
-        };
+        const stats = buildStatsObject(p);
 
         return {
           id: p.id,
@@ -660,7 +498,6 @@ export const saveYouthPlayers = async (players: any[], userId: string): Promise<
         };
       });
 
-      // Önce eski oyuncuları sil, sonra yeni listeyi insert et
       await supabase.from('youth_players').delete().eq('profile_id', userId);
       if (rows.length > 0) {
         const { error } = await supabase.from('youth_players').insert(rows);
@@ -676,7 +513,6 @@ export const saveYouthPlayers = async (players: any[], userId: string): Promise<
 
 /**
  * Tesis seviyelerini Supabase'den veya localStorage'dan yükler.
- * Dönüş: { training_pitch: 2, gym: 3, ... } şeklinde Record<string, number>
  */
 export const loadYouthFacilities = async (userId: string): Promise<Record<string, number>> => {
   if (isSupabaseConfigured()) {
@@ -689,17 +525,13 @@ export const loadYouthFacilities = async (userId: string): Promise<Record<string
         .single();
 
       if (!error && data?.facility_levels) {
-        const levels = typeof data.facility_levels === 'string'
-          ? JSON.parse(data.facility_levels)
-          : data.facility_levels;
-        return levels as Record<string, number>;
+        return safeJsonParse<Record<string, number>>(data.facility_levels, {});
       }
     } catch (err) {
       console.error('[loadYouthFacilities] Exception:', err);
     }
   }
 
-  // localStorage fallback
   const local = localStorage.getItem(STORAGE_KEYS.YOUTH_FACILITIES);
   return local ? JSON.parse(local) : {};
 };
@@ -708,7 +540,6 @@ export const loadYouthFacilities = async (userId: string): Promise<Record<string
  * Tesis seviyelerini Supabase'e ve localStorage'a kaydeder.
  */
 export const saveYouthFacilities = async (facilityLevels: Record<string, number>, userId: string): Promise<void> => {
-  // Her zaman localStorage'a kaydet
   localStorage.setItem(STORAGE_KEYS.YOUTH_FACILITIES, JSON.stringify(facilityLevels));
 
   if (isSupabaseConfigured() && userId) {

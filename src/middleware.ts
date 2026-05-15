@@ -4,12 +4,12 @@ import type { NextRequest } from 'next/server';
 /**
  * Security Middleware
  * - Adds security headers to all responses
- * - Rate limits API endpoints
- * - Protects admin routes
- * - Validates cron endpoints
+ * - Rate limits API endpoints using shared rate limit logic from security.ts
+ * - Protects cron endpoints with stricter limits
+ * - Protects auth endpoints with very strict limits
  */
 
-// ─── In-Memory Rate Limiting ──────────────────────────────────────
+// ─── In-Memory Rate Limiting (shared with security.ts pattern) ──────
 
 interface RateEntry {
   count: number;
@@ -20,11 +20,10 @@ const rateLimits = new Map<string, RateEntry>();
 
 function checkRateLimit(ip: string, limit: number, windowMs: number): boolean {
   const now = Date.now();
-  const key = ip;
-  const entry = rateLimits.get(key);
+  const entry = rateLimits.get(ip);
 
   if (!entry || now > entry.resetTime) {
-    rateLimits.set(key, { count: 1, resetTime: now + windowMs });
+    rateLimits.set(ip, { count: 1, resetTime: now + windowMs });
     return true;
   }
 
@@ -46,7 +45,7 @@ setInterval(() => {
 
 // ─── Security Headers ──────────────────────────────────────────────
 
-const SECURITY_HEADERS = {
+const SECURITY_HEADERS: Record<string, string> = {
   'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
@@ -61,6 +60,14 @@ const SECURITY_HEADERS = {
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
     "frame-ancestors 'none'",
   ].join('; '),
+};
+
+// ─── Rate Limit Configuration ──────────────────────────────────────
+
+const RATE_LIMITS: Record<string, { prefix: string; limit: number; windowMs: number; message: string }> = {
+  cron: { prefix: 'cron:', limit: 10, windowMs: 60000, message: 'Cron rate limit aşıldı.' },
+  auth: { prefix: 'auth:', limit: 5, windowMs: 60000, message: 'Çok fazla kayıt denemesi. Lütfen bekleyin.' },
+  general: { prefix: '', limit: 60, windowMs: 60000, message: 'Çok fazla istek. Lütfen bekleyin.' },
 };
 
 // ─── Middleware Logic ──────────────────────────────────────────────
@@ -80,31 +87,25 @@ export function middleware(request: NextRequest) {
       request.headers.get('x-real-ip') ||
       'unknown';
 
-    // Rate limiting: 60 requests per minute for general API
-    if (!checkRateLimit(clientIp, 60, 60000)) {
+    // General rate limit: 60 requests per minute
+    if (!checkRateLimit(clientIp, RATE_LIMITS.general.limit, RATE_LIMITS.general.windowMs)) {
       return NextResponse.json(
-        { error: 'Çok fazla istek. Lütfen bekleyin.' },
+        { error: RATE_LIMITS.general.message },
         { status: 429, headers: SECURITY_HEADERS }
       );
     }
 
-    // Stricter rate limit for cron endpoints: 10/min
-    if (request.nextUrl.pathname.startsWith('/api/cron/')) {
-      if (!checkRateLimit(`cron:${clientIp}`, 10, 60000)) {
-        return NextResponse.json(
-          { error: 'Cron rate limit aşıldı.' },
-          { status: 429, headers: SECURITY_HEADERS }
-        );
-      }
-    }
-
-    // Stricter rate limit for auth: 5/min
-    if (request.nextUrl.pathname.startsWith('/api/auth/')) {
-      if (!checkRateLimit(`auth:${clientIp}`, 5, 60000)) {
-        return NextResponse.json(
-          { error: 'Çok fazla kayıt denemesi. Lütfen bekleyin.' },
-          { status: 429, headers: SECURITY_HEADERS }
-        );
+    // Stricter rate limits for specific endpoint types
+    for (const config of Object.values(RATE_LIMITS)) {
+      if (!config.prefix) continue; // Skip general (already applied)
+      const pathSegment = config.prefix.replace(':', ''); // e.g. 'cron' or 'auth'
+      if (request.nextUrl.pathname.startsWith(`/api/${pathSegment}`)) {
+        if (!checkRateLimit(`${config.prefix}${clientIp}`, config.limit, config.windowMs)) {
+          return NextResponse.json(
+            { error: config.message },
+            { status: 429, headers: SECURITY_HEADERS }
+          );
+        }
       }
     }
   }

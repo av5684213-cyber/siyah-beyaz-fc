@@ -319,3 +319,27 @@ Stage Summary:
 - Fixed files: 4 cron routes, 3 admin league routes, register route, GameContext.tsx, rivalMessagingService.ts, matchChatService.ts
 - Critical fixes: cron bypass, admin bypass, XSS injection, input validation, rate limiting, error leakage, security headers
 
+---
+Task ID: 9
+Agent: Main
+Task: Step 9 — Technical Debt and Improvements
+
+Work Log:
+- Analyzed entire codebase for technical debt: 50+ files, 730+ lines in persistence.ts alone
+- Identified 8 major technical debt areas
+- Created sharedUtils.ts with centralized utilities: safeJsonParse, YOUTH_STAT_KEYS, VALUATION_STAT_KEYS, mapYouthPlayerFromRow, buildStatsObject, DEFAULT_STAT_VALUES, requireSupabase
+- Fixed types.ts: Removed duplicate Player interface properties (determination, concentration, leadership, anticipation, flair, positioning, composure, teamwork, workrate, vision, aggression, bravery, decisions)
+- Refactored persistence.ts: Replaced all manual JSON.parse patterns with safeJsonParse(), replaced inline mapYouthPlayerFromRow with shared import, replaced inline buildStatsObject with shared import, improved resetLeague with Object.values loop
+- Refactored youth-training cron route: Replaced createClient() with getSupabase() (project standard), replaced duplicate mapRowToYouthPlayer with shared mapYouthPlayerFromRow, replaced duplicate buildStatsObject with shared import
+- Refactored middleware.ts: Centralized rate limit configuration into RATE_LIMITS object, made it data-driven instead of hardcoded if/else blocks, added proper TypeScript types
+- Refactored formRatingService.ts: Replaced 3 manual JSON.parse patterns with safeJsonParse
+- Refactored seasonAwardsService.ts: Replaced 3 manual JSON.parse patterns with safeJsonParse
+- Refactored hallOfFameService.ts: Fixed broken references (player.joined_day → cast, player.career_stats → cast), replaced JSON.parse pattern with safeJsonParse
+- Refactored valuation.ts: Replaced inline statKeys array with VALUATION_STAT_KEYS import
+- Build verified successfully
+
+Stage Summary:
+- Created new file: src/lib/fm/sharedUtils.ts (centralized utilities)
+- Modified files: types.ts, persistence.ts, youth-training/route.ts, middleware.ts, formRatingService.ts, seasonAwardsService.ts, hallOfFameService.ts, valuation.ts
+- Key improvements: DRY principle applied across 8+ files, eliminated ~200 lines of duplicated code, standardized Supabase client usage, fixed type safety issues, improved error resilience with safeJsonParse
+- Build: ✅ PASSING
