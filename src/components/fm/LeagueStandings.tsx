@@ -31,7 +31,7 @@ interface StandingRow {
   goals_against: number;
   goal_diff: number;
   points: number;
-  teams?: { name: string; is_user_team: boolean; avg_rating: number };
+  teams?: { name: string; is_user_team: boolean; is_bot: boolean; avg_rating: number };
 }
 
 interface LeagueInfo {
@@ -462,6 +462,7 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
           const isUser = row.teams?.is_user_team || 
                         (profile && (teamName === profile.team_name || teamId === profile.id || teamId === profile.team_id)) ||
                         (teamId === 'Siyahbeyazfc_001');
+          const isBot = row.teams?.is_bot || false;
           const zoneIcon = getZoneIcon(idx, effectiveActiveLeague);
           
           // Safety defaults for goals/points
@@ -489,12 +490,17 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
               <div className="flex items-center gap-2 min-w-0">
                 {isUser ? (
                   <Shield size={12} className="text-white shrink-0" />
+                ) : isBot ? (
+                  <Bot size={12} className="text-cyan-400/60 shrink-0" />
                 ) : (
                   <Bot size={12} className="text-white/20 shrink-0" />
                 )}
                 <span className={`text-xs font-bold tracking-wider truncate ${isUser ? 'text-white' : 'text-white/60 group-hover:text-white'}`}>
                   {toTitleCase(teamName) || teamName || 'Bilinmiyor'}
                 </span>
+                {isBot && !isUser && (
+                  <span className="text-[9px] text-cyan-400/50 font-mono">BOT</span>
+                )}
               </div>
               <span className="text-xs font-mono text-white/30 text-center">{played}</span>
               <span className="text-xs font-mono text-white/30 text-center">{won}</span>

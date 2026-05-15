@@ -195,7 +195,8 @@ async function getStandingsForLeague(supabase: any, leagueId: string) {
       points,
       league_teams (
         name,
-        is_npc
+        is_npc,
+        is_bot
       )
     `)
     .eq('season_id', seasonData.id)
@@ -282,6 +283,7 @@ async function getStandingsForLeague(supabase: any, leagueId: string) {
       teams: {
         name: teamName,
         is_user_team: !s.league_teams?.is_npc,
+        is_bot: s.league_teams?.is_bot || false,
         avg_rating: 70
       }
     };

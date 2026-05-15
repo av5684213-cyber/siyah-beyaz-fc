@@ -177,6 +177,8 @@ export interface Profile {
   philosophy?: string;
   primary_color?: string;
   secondary_color?: string;
+  is_bot?: boolean;
+  bot_difficulty?: number;
   created_at?: string;
 }
 

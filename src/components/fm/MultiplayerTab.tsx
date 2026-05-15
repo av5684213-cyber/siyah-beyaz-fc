@@ -511,7 +511,14 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                                     )}
                                   </div>
                                   <div className="text-[8px] font-black text-white/30 uppercase tracking-widest truncate max-w-[120px]">
-                                    {listing.seller_id === 'free-agent-system' ? 'SERBEST OYUNCU' : toTitleCase(listing.seller_name || '')}
+                                    {listing.seller_id === 'free-agent-system' ? 'SERBEST OYUNCU' : (
+                                      <>
+                                        {toTitleCase(listing.seller_name || '')}
+                                        {listing.seller_name && listing.seller_name !== profile?.team_name && (
+                                          <span className="ml-1 text-cyan-400/50">🤖</span>
+                                        )}
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                               </div>
