@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-update_player_values.py
-Oyuncu Değerleme Algoritması
+update_player_values.py v2
+Oyuncu Değerleme Algoritması — Detaylı Formül
 
 Her hafta (Pazar gecesi) çalışır. Her oyuncu için current_price hesaplar.
 
 Formül:
-  Baz fiyat: overall * 1000
-  Form etkisi: (form_rating - 50) / 2 (% artış/azalış)
-  Sakatlık geçmişi: Son 3 ayda sakatlandıysa -%10, uzun sakatlık (7+ gün) -%20
-  Yaş etkisi: 22 altı +%20 potansiyel bonusu, 30+ yaş -%10
-  Performans: Geçen sezonki goller * 500, asistler * 300
-  Nadirlik bonusu: Common x1, Rare x1.5, Epic x2, Legendary x3
-  Minimum: 100, Maksimum: 10.000.000
+  1. Baz fiyat: overall * 1000
+  2. Form etkisi: (form_rating - 50) / 2 yüzdesel artış/azalış
+  3. Sakatlık geçmişi: Son 3 aydaki sakatlık gün sayısı → her 5 gün -%5, max -%30
+  4. Yaş etkisi: 18-21 → +%20, 22-27 → +%10, 28-31 → 0, 32-35 → -%15, 36+ → -%30
+  5. Performans: Geçen sezonki goller * 500, asistler * 300
+  6. Nadirlik bonusu: Common x1, Rare x1.5, Epic x2, Legendary x3
+  7. Minimum: 100, Maksimum: 10.000.000
 
 Kullanım:
   python update_player_values.py
@@ -67,48 +67,35 @@ def determine_rarity(rating: int, potential: int) -> str:
     return 'Common'
 
 
-def calculate_player_price(player: Dict[str, Any]) -> int:
+def calculate_injury_modifier(player: Dict[str, Any]) -> float:
     """
-    Bir oyuncunun pazar değerini hesapla
+    Sakatlık geçmişi etkisini hesaplar (v2 detaylı).
 
-    Args:
-        player: Oyuncu verisi (Supabase'den)
+    Kural: Son 3 aydaki sakatlık gün sayısı.
+    Her 5 gün sakatlık için -%5, max -%30.
 
     Returns:
-        Hesaplanan fiyat (int)
+        Float modifier (0.70 ile 1.0 arası)
     """
-    overall = player.get('rating', 50) or 50
-    form_rating = player.get('form_rating', 50) or 50
-    age = player.get('age', 25) or 25
-    potential = player.get('potential', overall) or overall
+    modifier = 1.0
+
+    # Mevcut sakatlık durumu
     is_injured = bool(player.get('is_injured', False))
     injury_end_date = player.get('injury_end_date')
 
-    # Son sezon performansı
-    goals = player.get('goals', 0) or 0
-    assists = player.get('assists', 0) or 0
-
-    # 1. Baz fiyat
-    base_price = overall * BASE_MULTIPLIER
-
-    # 2. Form etkisi: (form_rating - 50) / 2 yüzdesel
-    form_modifier = 1.0 + ((form_rating - 50) / 200.0)  # -0.25 ile +0.25 arası
-
-    # 3. Sakatlık geçmişi
-    injury_modifier = 1.0
-    if is_injured and injury_end_date:
-        try:
-            end = datetime.fromisoformat(injury_end_date.replace('Z', '+00:00'))
-            # Uzun sakatlık (7+ gün kaldıysa)
-            days_remaining = (end - datetime.now(end.tzinfo)).days
-            if days_remaining >= 7:
-                injury_modifier = 0.80  # -%20
-            else:
-                injury_modifier = 0.90  # -%10
-        except (ValueError, TypeError):
-            injury_modifier = 0.90
-    elif is_injured:
-        injury_modifier = 0.90  # -%10
+    if is_injured:
+        if injury_end_date:
+            try:
+                end = datetime.fromisoformat(str(injury_end_date).replace('Z', '+00:00'))
+                days_remaining = (end - datetime.now(end.tzinfo)).days
+                if days_remaining >= 7:
+                    modifier *= 0.85  # Uzun süreli sakatlık -%15
+                else:
+                    modifier *= 0.95  # Kısa süreli sakatlık -%5
+            except (ValueError, TypeError):
+                modifier *= 0.95
+        else:
+            modifier *= 0.95
 
     # Sakatlık geçmişi kontrolü
     injury_history = player.get('injury_history')
@@ -119,30 +106,143 @@ def calculate_player_price(player: Dict[str, Any]) -> int:
             else:
                 history = injury_history
 
-            three_months_ago = (datetime.now() - timedelta(days=90)).isoformat()
-            recent_injuries = [h for h in history if h.get('date', '') >= three_months_ago]
+            if isinstance(history, list):
+                three_months_ago = (datetime.now() - timedelta(days=90)).isoformat()
+                recent_injuries = [
+                    h for h in history
+                    if isinstance(h, dict) and h.get('date', '') >= three_months_ago
+                ]
 
-            for inj in recent_injuries:
-                duration = inj.get('duration_days', 0)
-                if duration >= 7:
-                    injury_modifier *= 0.90  # Ek -%10
-                    break
-                else:
-                    injury_modifier *= 0.95  # Ek -%5
-        except (json.JSONDecodeError, TypeError):
-            pass
+                # Son 3 aydaki toplam sakatlık gün sayısı
+                total_injury_days = 0
+                for inj in recent_injuries:
+                    duration = inj.get('duration_days', 0)
+                    if isinstance(duration, (int, float)):
+                        total_injury_days += int(duration)
+
+                # Her 5 gün için -%5, max -%30
+                if total_injury_days > 0:
+                    penalty_pct = min(30, (total_injury_days // 5) * 5)
+                    modifier *= (1 - penalty_pct / 100)
+                    logger.debug(
+                        f"Sakatlık geçmişi: {total_injury_days} gün, "
+                        f"-%{penalty_pct} etki"
+                    )
+
+        except (json.JSONDecodeError, TypeError, AttributeError) as e:
+            logger.warning(f"Sakatlık geçmişi parse hatası: {e}")
+
+    # Modifier asgari 0.70 olsun (-%30 max)
+    modifier = max(0.70, modifier)
+    return modifier
+
+
+def calculate_age_modifier(age: int) -> float:
+    """
+    Yaş etkisini hesaplar (v2 detaylı).
+
+    Kural:
+      18-21 yaş: +%20 (potansiyel bonusu)
+      22-27 yaş: +%10 (prime)
+      28-31 yaş: 0 (sabit)
+      32-35 yaş: -%15
+      36+ yaş: -%30
+
+    Returns:
+        Float modifier
+    """
+    if 18 <= age <= 21:
+        return 1.20  # +%20 potansiyel bonusu
+    elif 22 <= age <= 27:
+        return 1.10  # +%10 prime
+    elif 28 <= age <= 31:
+        return 1.00  # Sabit
+    elif 32 <= age <= 35:
+        return 0.85  # -%15
+    elif age >= 36:
+        return 0.70  # -%30
+    else:
+        # 18 yaş altı (nadir ama olabilir)
+        return 1.25  # +%25 çok genç potansiyel
+
+
+def calculate_form_modifier(form_rating: int) -> float:
+    """
+    Form etkisini hesaplar.
+
+    Kural: (form_rating - 50) / 2 yüzdesel artış/azalış
+    50 referans değer. Form 80 ise +%15, form 20 ise -%15
+
+    Returns:
+        Float modifier
+    """
+    form_pct = (form_rating - 50) / 2.0  # -25 ile +25 arası
+    return 1.0 + (form_pct / 100.0)
+
+
+def get_season_stats(player_id: str, player: Dict[str, Any]) -> Dict[str, int]:
+    """
+    Geçen sezonki gol ve asist istatistiklerini çeker.
+
+    Önce season_stats tablosundan, yoksa player'ın kendi alanlarından alır.
+
+    Returns:
+        {"goals": int, "assists": int}
+    """
+    goals = 0
+    assists = 0
+
+    # season_stats tablosundan çekmeyi dene
+    try:
+        result = supabase.table('season_stats').select('goals,assists').eq('player_id', player_id).limit(1).execute()
+        if result.data and len(result.data) > 0:
+            goals = result.data[0].get('goals', 0) or 0
+            assists = result.data[0].get('assists', 0) or 0
+            return {"goals": int(goals), "assists": int(assists)}
+    except Exception as e:
+        logger.debug(f"season_stats tablosundan veri alınamadı: {e}")
+
+    # Fallback: player'ın kendi alanlarından al
+    goals = player.get('goals', 0) or 0
+    assists = player.get('assists', 0) or 0
+
+    return {"goals": int(goals), "assists": int(assists)}
+
+
+def calculate_player_price(player: Dict[str, Any]) -> int:
+    """
+    Bir oyuncunun pazar değerini hesaplar (v2 — detaylı formül).
+
+    Formül:
+      total = base_price * form_modifier * injury_modifier * age_modifier * rarity_modifier + performance_bonus
+
+    Args:
+        player: Oyuncu verisi (Supabase'den)
+
+    Returns:
+        Hesaplanan fiyat (int), 100 ile 10.000.000 arası
+    """
+    overall = player.get('rating', 50) or 50
+    form_rating = player.get('form_rating', 50) or 50
+    age = player.get('age', 25) or 25
+    potential = player.get('potential', overall) or overall
+    player_id = player.get('id', '')
+
+    # 1. Baz fiyat: overall * 1000
+    base_price = overall * BASE_MULTIPLIER
+
+    # 2. Form etkisi: (form_rating - 50) / 2 yüzdesel
+    form_modifier = calculate_form_modifier(form_rating)
+
+    # 3. Sakatlık geçmişi: her 5 gün -%5, max -%30
+    injury_modifier = calculate_injury_modifier(player)
 
     # 4. Yaş etkisi
-    age_modifier = 1.0
-    if age < 22:
-        age_modifier = 1.20  # +%20 potansiyel bonusu
-    elif age >= 30:
-        age_modifier = 0.90  # -%10
-    elif age >= 33:
-        age_modifier = 0.80  # -%20
+    age_modifier = calculate_age_modifier(age)
 
     # 5. Performans (geçen sezonki goller ve asistler)
-    performance_bonus = goals * 500 + assists * 300
+    stats = get_season_stats(player_id, player)
+    performance_bonus = stats["goals"] * 500 + stats["assists"] * 300
 
     # 6. Nadirlik bonusu
     rarity = determine_rarity(overall, potential)
@@ -155,17 +255,32 @@ def calculate_player_price(player: Dict[str, Any]) -> int:
     rarity_modifier = rarity_multipliers.get(rarity, 1.0)
 
     # Toplam hesaplama
-    total_price = base_price * form_modifier * injury_modifier * age_modifier * rarity_modifier + performance_bonus
+    total_price = (
+        base_price
+        * form_modifier
+        * injury_modifier
+        * age_modifier
+        * rarity_modifier
+        + performance_bonus
+    )
 
-    # Minimum ve maksimum sınırlar
+    # 7. Minimum ve maksimum sınırlar
     total_price = max(MIN_PRICE, min(MAX_PRICE, int(total_price)))
+
+    logger.debug(
+        f"Oyuncu {player.get('name', '?')}: "
+        f"base={base_price:,} form={form_modifier:.2f} "
+        f"injury={injury_modifier:.2f} age={age_modifier:.2f} "
+        f"rarity={rarity_modifier}({rarity}) "
+        f"perf=+{performance_bonus:,} → {total_price:,}"
+    )
 
     return total_price
 
 
 def update_all_player_values() -> Dict[str, Any]:
     """Tüm oyuncuların değerlerini güncelle"""
-    logger.info("Oyuncu değer güncelleme başlatılıyor...")
+    logger.info("Oyuncu değer güncelleme başlatılıyor (v2)...")
 
     try:
         result = supabase.table('players').select('*').execute()
@@ -183,19 +298,27 @@ def update_all_player_values() -> Dict[str, Any]:
     price_changes = []
     errors = []
 
-    # Toplu güncelleme için hazırlık
-    batch_updates = []
-
     for player in players:
         try:
-            old_price = player.get('market_value', 0) or 0
+            old_price = player.get('current_price', 0) or player.get('market_value', 0) or 0
             new_price = calculate_player_price(player)
             rarity = determine_rarity(player.get('rating', 50) or 50, player.get('potential', 50) or 50)
 
-            batch_updates.append({
-                'id': player['id'],
-                'market_value': new_price,
-            })
+            # current_price alanını güncelle
+            try:
+                supabase.table('players').update({
+                    'current_price': new_price,
+                }).eq('id', player['id']).execute()
+            except Exception:
+                # current_price alanı yoksa market_value kullan
+                try:
+                    supabase.table('players').update({
+                        'market_value': new_price,
+                    }).eq('id', player['id']).execute()
+                except Exception as update_err:
+                    total_failed += 1
+                    errors.append(f"Update {player.get('id', 'unknown')}: {update_err}")
+                    continue
 
             if old_price != new_price:
                 price_changes.append({
@@ -211,16 +334,6 @@ def update_all_player_values() -> Dict[str, Any]:
         except Exception as e:
             total_failed += 1
             errors.append(f"Player {player.get('id', 'unknown')}: {e}")
-
-    # Toplu güncelleme (batch)
-    for update in batch_updates:
-        try:
-            supabase.table('players').update({
-                'market_value': update['market_value'],
-            }).eq('id', update['id']).execute()
-        except Exception as e:
-            total_failed += 1
-            errors.append(f"Update {update['id']}: {e}")
 
     # Özet
     avg_old = sum(p['old'] for p in price_changes) / max(1, len(price_changes))
@@ -250,7 +363,7 @@ def update_all_player_values() -> Dict[str, Any]:
         supabase.table('error_logs').insert({
             'source': 'python',
             'level': 'info',
-            'message': f'Oyuncu değer güncelleme: {total_updated} oyuncu işlendi',
+            'message': f'Oyuncu değer güncelleme (v2): {total_updated} oyuncu işlendi',
             'context': result,
         }).execute()
     except Exception:

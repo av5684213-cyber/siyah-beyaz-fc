@@ -136,3 +136,9 @@ CREATE POLICY presence_update ON manager_presence
 ALTER PUBLICATION supabase_realtime ADD TABLE manager_messages;
 ALTER PUBLICATION supabase_realtime ADD TABLE manager_conversations;
 ALTER PUBLICATION supabase_realtime ADD TABLE manager_presence;
+
+-- REPLICA IDENTITY FULL: Realtime olaylarında tüm kolonları gönder
+-- (Aksi takdirde sadece primary key gelir, client tarafında veri eksik kalır)
+ALTER TABLE manager_messages REPLICA IDENTITY FULL;
+ALTER TABLE manager_conversations REPLICA IDENTITY FULL;
+ALTER TABLE manager_presence REPLICA IDENTITY FULL;

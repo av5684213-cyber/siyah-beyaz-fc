@@ -13,7 +13,6 @@ const config: Config = {
       tsconfig: 'tsconfig.json',
     }],
   },
-  setupFilesAfterSetup: undefined,
   transformIgnorePatterns: [
     '/node_modules/(?!(@supabase|uuid)/)',
   ],

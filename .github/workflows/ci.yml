@@ -7,14 +7,15 @@ on:
     branches: [main]
 
 jobs:
-  lint-and-test:
+  lint-test-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -34,17 +35,26 @@ jobs:
   python-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install Python dependencies
-        run: pip install httpx
+        run: |
+          python -m pip install --upgrade pip
+          pip install httpx flake8
+
+      - name: Lint Python files with flake8
+        run: |
+          flake8 python/ --max-line-length=120 --ignore=E501,W503 --count --show-source --statistics
+        continue-on-error: true
 
       - name: Check Python syntax
         run: |
           python -m py_compile python/match_simulator.py
           python -m py_compile python/award_season.py
           python -m py_compile python/bot_actions.py
+          python -m py_compile python/update_player_values.py
+          python -m py_compile python/season_end_trigger.py

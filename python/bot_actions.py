@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 """
-Siyah Beyaz FC — Bot Actions Service (Python)
-Bot AI: Transfer kararları, kadro seçimi, otomatik yönetim
+Siyah Beyaz FC — Bot Actions Service (Python) v2
+Bot AI: Akıllı transfer kararları, kadro seçimi, taktik yönetimi
+
+Geliştirmeler (v2):
+  - Mevki bazlı kadro ihtiyacı analizi (her mevki en az 2 oyuncu)
+  - Bütçe dostu transfer: en yüksek OVR'li uygun fiyatlı oyuncuyu al
+  - Akıllı satış: aynı mevki 3+ fazla → en düşük OVR'li satışa çıkar
+  - Fiyat stratejisi: acil satış (0.8x) veya karlı satış (1.2x) rastgele
+  - Haftalık transfer limiti: maks 2 (1 alım + 1 satım)
+  - Kadro seçiminde kondisyon kontrolü (stamina < 50 → yedek)
+  - Rakip zayıflığına göre formasyon seçimi
+  - 60. dk taktik değişimi (geride → agresif)
+  - 80. dk zamana oynama sinyali (önde/berabere → zaman geçirme)
 
 Kullanım:
-    python bot_actions.py [--bot-id <id>] [--all-bots] [--action transfers|squad|all]
-
-BOT_SYSTEM_MIGRATION.sql ile profiles ve league_teams tablolarında
-is_bot ve bot_difficulty alanları mevcuttur.
+    python bot_actions.py [--bot-id <id>] [--all-bots] [--action transfers|squad|tactics|all]
 
 Ortam değişkenleri: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY
 """
@@ -165,8 +173,17 @@ DIFFICULTY_CONFIG = {
     },
 }
 
+# Her mevkide en az olması gereken oyuncu sayısı (v2)
+MIN_PER_POSITION_GROUP = 2
+
 # İdeal kadro dağılımı
 IDEAL_SQUAD_DISTRIBUTION = {"GK": 2, "DEF": 6, "MID": 6, "FWD": 5}
+
+# Aynı mevkide fazlalık eşiği (3+ ise satış)
+SURPLUS_THRESHOLD = 3
+
+# Haftalık maksimum transfer sayısı
+MAX_WEEKLY_TRANSFERS = 2  # 1 alım + 1 satım
 
 # Pozisyon gruplama
 POSITION_GROUPS = {
@@ -176,6 +193,16 @@ POSITION_GROUPS = {
     "LW": "FWD", "RW": "FWD", "CF": "FWD", "ST": "FWD",
 }
 
+# Formasyon tanımları
+FORMATIONS = {
+    "4-4-2": {"GK": 1, "DEF": 4, "MID": 4, "FWD": 2},
+    "4-3-3": {"GK": 1, "DEF": 4, "MID": 3, "FWD": 3},
+    "4-5-1": {"GK": 1, "DEF": 4, "MID": 5, "FWD": 1},
+    "3-4-3": {"GK": 1, "DEF": 3, "MID": 4, "FWD": 3},
+    "5-4-1": {"GK": 1, "DEF": 5, "MID": 4, "FWD": 1},
+    "4-2-4": {"GK": 1, "DEF": 4, "MID": 2, "FWD": 4},
+}
+
 
 def map_to_group(position: str) -> str:
     """Pozisyonu gruba dönüştürür."""
@@ -183,16 +210,43 @@ def map_to_group(position: str) -> str:
 
 
 def get_position_needs(squad: list[dict]) -> dict[str, int]:
-    """Kadroda eksik pozisyonları belirler."""
+    """
+    Kadroda eksik pozisyonları belirler (v2).
+    Her mevki için en az MIN_PER_POSITION_GROUP oyuncu olmalı.
+    """
     current: dict[str, int] = {"GK": 0, "DEF": 0, "MID": 0, "FWD": 0}
     for p in squad:
         group = map_to_group(p.get("position", "CM"))
         current[group] = current.get(group, 0) + 1
 
     needs: dict[str, int] = {}
-    for pos, ideal_count in IDEAL_SQUAD_DISTRIBUTION.items():
-        needs[pos] = max(0, ideal_count - current.get(pos, 0))
+    for pos in IDEAL_SQUAD_DISTRIBUTION:
+        min_required = max(MIN_PER_POSITION_GROUP, IDEAL_SQUAD_DISTRIBUTION[pos])
+        needs[pos] = max(0, min_required - current.get(pos, 0))
     return needs
+
+
+def get_surplus_positions(squad: list[dict]) -> dict[str, list[dict]]:
+    """
+    Aynı mevkide SURPLUS_THRESHOLD (3) veya daha fazla oyuncu varsa,
+    en düşük OVR'lileri satış adayı olarak döner.
+    """
+    grouped: dict[str, list[dict]] = defaultdict(list)
+    for p in squad:
+        group = map_to_group(p.get("position", "CM"))
+        grouped[group].append(p)
+
+    surplus: dict[str, list[dict]] = {}
+    for group, players in grouped.items():
+        if len(players) >= SURPLUS_THRESHOLD:
+            # OVR'ye göre sırala (düşükten yükseğe)
+            sorted_players = sorted(players, key=lambda p: p.get("rating", 0))
+            # Fazla oyuncuları satış adayı yap
+            excess_count = len(players) - MIN_PER_POSITION_GROUP
+            if excess_count > 0:
+                surplus[group] = sorted_players[:excess_count]
+
+    return surplus
 
 
 def get_random_price(rating: int, difficulty: int) -> int:
@@ -204,20 +258,25 @@ def get_random_price(rating: int, difficulty: int) -> int:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# BOT TRANSFER İŞLEMLERİ
+# BOT TRANSFER İŞLEMLERİ (v2 — Akıllı Transfer ve Kadro Planlaması)
 # ═══════════════════════════════════════════════════════════════════════
 
 def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
     """
-    Botun kredi durumuna göre transfer kararları alır.
-    
-    1. Kadrosundaki en düşük OVR'lu oyuncuyu transfer listesine koy (rastgele fiyat)
-    2. Piyasadan, botun eksik mevkisine veya en yüksek potansiyelli oyuncuyu al
-       (Rastgele 3 oyuncudan en uygun fiyatlıyı seç)
+    Botun kredi durumuna göre akıllı transfer kararları alır (v2).
+
+    Kurallar:
+      1. Her mevkide en az 2 oyuncu olmalı. Eksik mevkileri tespit et.
+      2. Transfer piyasasından eksik mevkide en yüksek OVR'li uygun fiyatlı oyuncuyu al.
+      3. Botun credits bütçesini aşmayacak şekilde alım yap.
+      4. Satış: Aynı mevkide 3+ oyuncu varsa, en düşük OVR'li olanı satışa çıkar.
+         Fiyat = current_price * 0.8 (acil satış) veya * 1.2 (karlı satış) rastgele.
+      5. Haftada maksimum 2 transfer (1 alım + 1 satım).
     """
-    logger.info(f"Bot transfer işlemleri başlıyor: {bot_user_id}")
+    logger.info(f"Bot transfer işlemleri başlıyor (v2): {bot_user_id}")
 
     result = {"bought": False, "sold": False, "details": [], "errors": []}
+    transfer_count = 0  # Haftalık transfer sayacı
 
     try:
         # 1. Bot profilini çek
@@ -234,9 +293,10 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
         difficulty = profile.get("bot_difficulty", 1)
         config = DIFFICULTY_CONFIG.get(difficulty, DIFFICULTY_CONFIG[1])
         team_name = profile.get("team_name", "Bot Takımı")
+        credits = profile.get("credits", 0) or 0
         money = profile.get("money", 0) or 0
 
-        logger.info(f"Bot: {team_name}, Bütçe: ₺{money:,}, Zorluk: {difficulty}")
+        logger.info(f"Bot: {team_name}, Credits: {credits}, Money: ₺{money:,}, Zorluk: {difficulty}")
 
         # 2. Kadroyu çek
         squad = db.select("players", query="*", filters={"profile_id": f"eq.{bot_user_id}"})
@@ -247,20 +307,38 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
 
         logger.info(f"Kadro büyüklüğü: {len(squad)} oyuncu")
 
-        # ─── SATIŞ ──────────────────────────────────────────────
-        if len(squad) > config["min_squad_size"] and random.random() < config["sell_chance"]:
-            # En düşük OVR'lu oyuncuyu bul
-            sorted_squad = sorted(squad, key=lambda p: p.get("rating", 0))
-            worst_player = sorted_squad[0]
+        # ─── SATIŞ (v2: Mevki fazlalığı bazlı) ──────────────────────
+        surplus = get_surplus_positions(squad)
 
-            if (worst_player.get("rating", 0) or 0) < config["sell_threshold_rating"] + 30:
-                sell_price = get_random_price(worst_player.get("rating", 30), difficulty)
+        if surplus and transfer_count < MAX_WEEKLY_TRANSFERS:
+            # Rastgele bir fazlalık mevki seç
+            surplus_group = random.choice(list(surplus.keys()))
+            candidates = surplus[surplus_group]
+
+            if candidates:
+                sell_player = candidates[0]  # En düşük OVR'li
+                player_current_price = sell_player.get("current_price", 0) or sell_player.get("market_value", 0) or 0
+
+                # Fiyat stratejisi: acil satış (0.8x) veya karlı satış (1.2x)
+                if player_current_price > 0:
+                    if random.random() < 0.5:
+                        sell_price = round(player_current_price * 0.8)  # Acil satış
+                        price_strategy = "acil satış (0.8x)"
+                    else:
+                        sell_price = round(player_current_price * 1.2)  # Karlı satış
+                        price_strategy = "karlı satış (1.2x)"
+                else:
+                    sell_price = get_random_price(sell_player.get("rating", 30), difficulty)
+                    price_strategy = "varsayılan fiyat"
+
+                # Minimum fiyat kontrolü
+                sell_price = max(100, sell_price)
 
                 try:
                     # Transfer listesine ekle
                     db.insert("transfer_market", {
-                        "player_id": worst_player.get("id"),
-                        "player_data": json.dumps(worst_player),
+                        "player_id": sell_player.get("id"),
+                        "player_data": json.dumps(sell_player),
                         "seller_id": bot_user_id,
                         "seller_name": team_name,
                         "price": sell_price,
@@ -275,7 +353,7 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
                     })
 
                     # Kadrodan çıkar
-                    db.delete("players", {"id": f"eq.{worst_player.get('id')}"})
+                    db.delete("players", {"id": f"eq.{sell_player.get('id')}"})
 
                     # Parayı ekle
                     db.update(
@@ -284,8 +362,13 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
                         {"id": f"eq.{bot_user_id}"},
                     )
 
+                    transfer_count += 1
                     result["sold"] = True
-                    detail = f"Satıldı: {worst_player.get('name', '?')} (OVR {worst_player.get('rating', 0)}) → ₺{sell_price:,}"
+                    detail = (
+                        f"Satıldı: {sell_player.get('name', '?')} "
+                        f"(OVR {sell_player.get('rating', 0)}, {surplus_group}) → "
+                        f"₺{sell_price:,} [{price_strategy}]"
+                    )
                     result["details"].append(detail)
                     logger.info(f"Bot {team_name}: {detail}")
 
@@ -294,33 +377,35 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
                     result["errors"].append(err_msg)
                     logger.error(err_msg)
 
-        # ─── ALIŞ ──────────────────────────────────────────────
-        if random.random() < config["buy_chance"]:
+        # ─── ALIŞ (v2: Eksik mevki + en yüksek OVR + bütçe dostu) ──
+        if transfer_count < MAX_WEEKLY_TRANSFERS:
             needs = get_position_needs(squad)
             needed_positions = [pos for pos, count in needs.items() if count > 0]
 
             budget = money * config["transfer_budget_ratio"]
 
-            try:
-                # Piyasadaki aktif ilanları çek
-                listings = db.select(
-                    "transfer_market",
-                    query="*",
-                    filters={"is_active": "eq.true"},
-                )
+            if needed_positions:
+                logger.info(f"Eksik mevkiler: {needed_positions}, bütçe: ₺{budget:,}")
 
-                if listings:
-                    # Kendi ilanlarını çıkar
-                    other_listings = [l for l in listings if l.get("seller_id") != bot_user_id]
+                try:
+                    # Piyasadaki aktif ilanları çek
+                    listings = db.select(
+                        "transfer_market",
+                        query="*",
+                        filters={"is_active": "eq.true"},
+                    )
 
-                    # Bütçeye uygun ilanları filtrele
-                    affordable = [l for l in other_listings if (l.get("price", 999999999) or 0) <= budget]
+                    if listings:
+                        # Kendi ilanlarını çıkar
+                        other_listings = [l for l in listings if l.get("seller_id") != bot_user_id]
 
-                    if affordable:
-                        # Eksik mevki öncelikli seçim
-                        target = None
+                        # Bütçeye uygun ilanları filtrele
+                        affordable = [l for l in other_listings if (l.get("price", 999999999) or 0) <= budget]
 
-                        if needed_positions:
+                        if affordable:
+                            # Eksik mevki öncelikli seçim
+                            target = None
+
                             # Eksik mevkideki oyuncuları bul
                             matching = []
                             for l in affordable:
@@ -334,87 +419,138 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
                                     pos = player_data.get("position", "")
                                     group = map_to_group(pos)
                                     if group in needed_positions:
-                                        matching.append(l)
+                                        matching.append((l, player_data))
 
                             if matching:
-                                # Rastgele 3 oyuncudan en uygun fiyatlıyı seç
-                                candidates = random.sample(matching, min(3, len(matching)))
-                                target = min(candidates, key=lambda x: x.get("price", 999999999))
-
-                        if not target:
-                            # Genel olarak en uygun fiyatlıyı seç
-                            candidates = random.sample(affordable, min(3, len(affordable)))
-                            target = min(candidates, key=lambda x: x.get("price", 999999999))
-
-                        buy_price = target.get("price", 0)
-
-                        # Botun parasını güncelle
-                        db.update(
-                            "profiles",
-                            {"money": max(0, money - buy_price)},
-                            {"id": f"eq.{bot_user_id}"},
-                        )
-
-                        # Oyuncunun sahipliğini değiştir
-                        player_data = target.get("player_data", {})
-                        if isinstance(player_data, str):
-                            try:
-                                player_data = json.loads(player_data)
-                            except json.JSONDecodeError:
-                                player_data = {}
-
-                        db.update(
-                            "players",
-                            {
-                                "profile_id": bot_user_id,
-                                "team_name": team_name,
-                            },
-                            {"id": f"eq.{target.get('player_id')}"},
-                        )
-
-                        # İlanı kapat
-                        db.update(
-                            "transfer_market",
-                            {"is_active": False},
-                            {"id": f"eq.{target.get('id')}"},
-                        )
-
-                        # Satıcıya ödeme
-                        seller_id = target.get("seller_id")
-                        if seller_id:
-                            try:
-                                seller_profiles = db.select(
-                                    "profiles",
-                                    query="money",
-                                    filters={"id": f"eq.{seller_id}"},
+                                # v2: En yüksek OVR'li uygun fiyatlı oyuncuyu seç
+                                matching.sort(
+                                    key=lambda x: (
+                                        x[1].get("rating", 0) if isinstance(x[1], dict) else 0
+                                    ),
+                                    reverse=True,
                                 )
-                                if seller_profiles:
-                                    seller_money = seller_profiles[0].get("money", 0) or 0
-                                    tax_rate = 0.025
-                                    seller_revenue = round(buy_price * (1 - tax_rate))
+                                target = matching[0][0]
+                                target_player_data = matching[0][1]
+                            else:
+                                # Genel olarak en yüksek OVR'li olanı seç
+                                all_with_data = []
+                                for l in affordable:
+                                    pd = l.get("player_data")
+                                    if isinstance(pd, str):
+                                        try:
+                                            pd = json.loads(pd)
+                                        except json.JSONDecodeError:
+                                            continue
+                                    if isinstance(pd, dict):
+                                        all_with_data.append((l, pd))
+
+                                if all_with_data:
+                                    all_with_data.sort(
+                                        key=lambda x: x[1].get("rating", 0),
+                                        reverse=True,
+                                    )
+                                    target = all_with_data[0][0]
+                                    target_player_data = all_with_data[0][1]
+
+                            if target:
+                                buy_price = target.get("price", 0)
+
+                                # Bütçe kontrolü
+                                if buy_price <= budget:
+                                    # Botun parasını güncelle
                                     db.update(
                                         "profiles",
-                                        {"money": seller_money + seller_revenue},
-                                        {"id": f"eq.{seller_id}"},
+                                        {"money": max(0, money - buy_price)},
+                                        {"id": f"eq.{bot_user_id}"},
                                     )
-                            except Exception as e:
-                                logger.warning(f"Satıcıya ödeme hatası: {e}")
 
-                        result["bought"] = True
-                        player_name = player_data.get("name", "Bilinmeyen") if isinstance(player_data, dict) else "Bilinmeyen"
-                        detail = f"Alındı: {player_name} → ₺{buy_price:,} (bütçe: ₺{budget:,})"
-                        result["details"].append(detail)
-                        logger.info(f"Bot {team_name}: {detail}")
+                                    # Oyuncunun sahipliğini değiştir
+                                    db.update(
+                                        "players",
+                                        {
+                                            "profile_id": bot_user_id,
+                                            "team_name": team_name,
+                                        },
+                                        {"id": f"eq.{target.get('player_id')}"},
+                                    )
 
+                                    # İlanı kapat
+                                    db.update(
+                                        "transfer_market",
+                                        {"is_active": False},
+                                        {"id": f"eq.{target.get('id')}"},
+                                    )
+
+                                    # Satıcıya ödeme
+                                    seller_id = target.get("seller_id")
+                                    if seller_id:
+                                        try:
+                                            seller_profiles = db.select(
+                                                "profiles",
+                                                query="money",
+                                                filters={"id": f"eq.{seller_id}"},
+                                            )
+                                            if seller_profiles:
+                                                seller_money = seller_profiles[0].get("money", 0) or 0
+                                                tax_rate = 0.025
+                                                seller_revenue = round(buy_price * (1 - tax_rate))
+                                                db.update(
+                                                    "profiles",
+                                                    {"money": seller_money + seller_revenue},
+                                                    {"id": f"eq.{seller_id}"},
+                                                )
+                                        except Exception as e:
+                                            logger.warning(f"Satıcıya ödeme hatası: {e}")
+
+                                    transfer_count += 1
+                                    result["bought"] = True
+                                    player_name = (
+                                        target_player_data.get("name", "Bilinmeyen")
+                                        if isinstance(target_player_data, dict)
+                                        else "Bilinmeyen"
+                                    )
+                                    player_ovr = (
+                                        target_player_data.get("rating", 0)
+                                        if isinstance(target_player_data, dict)
+                                        else 0
+                                    )
+                                    player_pos = (
+                                        target_player_data.get("position", "?")
+                                        if isinstance(target_player_data, dict)
+                                        else "?"
+                                    )
+                                    detail = (
+                                        f"Alındı: {player_name} "
+                                        f"(OVR {player_ovr}, {player_pos}) → "
+                                        f"₺{buy_price:,} (bütçe: ₺{budget:,})"
+                                    )
+                                    result["details"].append(detail)
+                                    logger.info(f"Bot {team_name}: {detail}")
+                                else:
+                                    result["details"].append(
+                                        f"Bütçe yetersiz: ₺{buy_price:,} > ₺{budget:,}"
+                                    )
+                            else:
+                                result["details"].append("Eksik mevkide uygun oyuncu yok")
+                        else:
+                            result["details"].append("Bütçeye uygun oyuncu yok")
                     else:
-                        result["details"].append("Bütçeye uygun oyuncu yok")
-                else:
-                    result["details"].append("Piyasada ilan yok")
+                        result["details"].append("Piyasada ilan yok")
 
-            except Exception as e:
-                err_msg = f"Alış hatası: {e}"
-                result["errors"].append(err_msg)
-                logger.error(err_msg)
+                except Exception as e:
+                    err_msg = f"Alış hatası: {e}"
+                    result["errors"].append(err_msg)
+                    logger.error(err_msg)
+            else:
+                result["details"].append("Eksik mevki yok, alım gerekmiyor")
+
+        # Transfer özeti
+        result["transfer_count"] = transfer_count
+        result["max_weekly"] = MAX_WEEKLY_TRANSFERS
+        logger.info(
+            f"Transfer özeti: {transfer_count}/{MAX_WEEKLY_TRANSFERS} "
+            f"alım={result['bought']}, satım={result['sold']}"
+        )
 
     except Exception as e:
         err_msg = f"Bot transfer genel hata: {e}"
@@ -425,18 +561,22 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# BOT KADRO SEÇİMİ
+# BOT KADRO SEÇİMİ (v2 — Kondisyon + Formasyon Seçimi)
 # ═══════════════════════════════════════════════════════════════════════
 
 def select_bot_squad(db: SupabaseClient, bot_user_id: str, match_id: Optional[str] = None) -> dict:
     """
-    En yüksek OVR'lu 11 oyuncuyu seçer ve kadro düzenler.
-    Formasyon bazlı seçim yapar (4-4-2 varsayılan).
-    
+    En yüksek OVR'li 11 oyuncuyu seçer ve kadro düzenler (v2).
+
+    Geliştirmeler:
+      - Kondisyonu (stamina) 50'nin altındaki oyuncular yedekte
+      - Rakip zayıflığına göre formasyon seçimi
+      - Formasyonlar: 4-4-2, 4-3-3, 4-5-1 (rastgele)
+
     Returns:
         {"starting": [...], "subs": [...], "formation": str}
     """
-    logger.info(f"Bot kadro seçimi: {bot_user_id}")
+    logger.info(f"Bot kadro seçimi (v2): {bot_user_id}")
 
     try:
         # Kadroyu çek (cezalı ve sakatları filtrele)
@@ -469,16 +609,82 @@ def select_bot_squad(db: SupabaseClient, bot_user_id: str, match_id: Optional[st
             logger.warning(f"Uygun oyuncu yetersiz: {len(available)}")
             return {"starting": [], "subs": [], "formation": "4-4-2", "error": "Uygun oyuncu yetersiz"}
 
-        # Rating'e göre sırala
-        available.sort(key=lambda p: p.get("rating", 0), reverse=True)
+        # ─── v2: Kondisyon kontrolü ─────────────────────────────────
+        # Stamina 50'nin altındaki oyuncular yedek adayı
+        high_stamina = [p for p in available if (p.get("stamina", 100) or 100) >= 50]
+        low_stamina = [p for p in available if (p.get("stamina", 100) or 100) < 50]
 
-        # 4-4-2 formasyon slotları
-        formation = "4-4-2"
-        formation_slots = {"GK": 1, "DEF": 4, "MID": 4, "FWD": 2}
+        logger.info(
+            f"Kondisyon dağılımı: yüksek={len(high_stamina)}, düşük={len(low_stamina)}"
+        )
+
+        # Yüksek kondisyonluları önceliklendir, düşük olanları yedek havuzuna
+        if len(high_stamina) >= 11:
+            pool = high_stamina
+            reserve_pool = low_stamina
+        else:
+            # Yeterli yüksek kondisyonlu yoksa düşük olanları da dahil et
+            pool = available
+            reserve_pool = []
+
+        # ─── v2: Rakip zayıflığına göre formasyon seçimi ───────────
+        # Rakip bilgisi varsa zayıf yöne göre, yoksa rastgele
+        formation = random.choice(["4-4-2", "4-3-3", "4-5-1"])
+
+        # Rakip analizi (mevcutsa)
+        try:
+            if match_id:
+                # Maç bilgisinden rakibi bul
+                match_data = db.select("matches", query="*", filters={"id": f"eq.{match_id}"}, limit=1)
+                if match_data:
+                    match_info = match_data[0]
+                    opponent_id = (
+                        match_info.get("away_team_id")
+                        if match_info.get("home_team_id") == bot_user_id
+                        else match_info.get("home_team_id")
+                    )
+                    if opponent_id:
+                        # Rakip kadro analizi
+                        opp_players = db.select("players", query="position,rating", filters={"profile_id": f"eq.{opponent_id}"})
+                        if opp_players:
+                            # Rakibin en zayıf hattını tespit et
+                            opp_group_ratings: dict[str, list[int]] = {"GK": [], "DEF": [], "MID": [], "FWD": []}
+                            for op in opp_players:
+                                group = map_to_group(op.get("position", "CM"))
+                                opp_group_ratings[group].append(op.get("rating", 50))
+
+                            opp_avg = {
+                                g: sum(ratings) / len(ratings) if ratings else 50
+                                for g, ratings in opp_group_ratings.items()
+                            }
+
+                            # Zayıf hatta saldır
+                            weakest_group = min(
+                                ["DEF", "MID"],
+                                key=lambda g: opp_avg.get(g, 50),
+                            )
+
+                            if weakest_group == "DEF":
+                                formation = "4-3-3"  # Rakip defans zayıfsa hücum
+                                logger.info(f"Rakip defans zayıf → 4-3-3 hücum formasyonu")
+                            elif weakest_group == "MID":
+                                formation = "4-5-1"  # Rakip orta saha zayıfsa kontrol
+                                logger.info(f"Rakip orta saha zayıf → 4-5-1 kontrol formasyonu")
+                            else:
+                                formation = "4-4-2"  # Dengeli
+                                logger.info(f"Rakip dengeli → 4-4-2 standart formasyon")
+        except Exception as e:
+            logger.warning(f"Rakip analizi yapılamadı, varsayılan formasyon: {e}")
+
+        # Formasyon slotları
+        formation_slots = FORMATIONS.get(formation, FORMATIONS["4-4-2"])
+
+        # Rating'e göre sırala
+        pool.sort(key=lambda p: p.get("rating", 0), reverse=True)
 
         # Pozisyon bazlı grupla
-        by_position: dict[str, list] = {"GK": [], "DEF": [], "MID": [], "FWD": []}
-        for p in available:
+        by_position: dict[str, list[dict]] = {"GK": [], "DEF": [], "MID": [], "FWD": []}
+        for p in pool:
             group = map_to_group(p.get("position", "CM"))
             by_position[group].append(p)
 
@@ -496,15 +702,18 @@ def select_bot_squad(db: SupabaseClient, bot_user_id: str, match_id: Optional[st
 
         # 11'e tamamlamak için eksik kalan slotları en iyi kalanlardan doldur
         if len(starting) < 11:
-            remaining = [p for p in available if p.get("id") not in used_ids]
+            remaining = [p for p in pool if p.get("id") not in used_ids]
             for p in remaining:
                 if len(starting) >= 11:
                     break
                 starting.append(p)
                 used_ids.add(p.get("id"))
 
-        # Yedekler: kalan en iyi 7 oyuncu
-        subs = [p for p in available if p.get("id") not in used_ids][:7]
+        # Yedekler: kalan en iyi 7 oyuncu (düşük kondisyonlular dahil)
+        subs_pool = [p for p in available if p.get("id") not in used_ids]
+        # Önce yüksek kondisyonluları öne al
+        subs_pool.sort(key=lambda p: (p.get("stamina", 100) or 100), reverse=True)
+        subs = subs_pool[:7]
 
         starting_ids = [p.get("id") for p in starting]
         subs_ids = [p.get("id") for p in subs]
@@ -550,7 +759,7 @@ def select_bot_squad(db: SupabaseClient, bot_user_id: str, match_id: Optional[st
 def get_all_bot_profiles(db: SupabaseClient) -> list[dict]:
     """Tüm bot profillerini çeker."""
     try:
-        return db.select("profiles", query="id,team_name,money,bot_difficulty", filters={"is_bot": "eq.true"})
+        return db.select("profiles", query="id,team_name,money,credits,bot_difficulty", filters={"is_bot": "eq.true"})
     except Exception as e:
         logger.error(f"Bot profilleri çekme hatası: {e}")
         return []
@@ -564,56 +773,100 @@ def make_tactical_decision(
     current_score: Optional[dict] = None,
 ) -> dict:
     """
-    Maç sırasında taktiksel karar alır.
-    
-    60. dakikada skor gerideyse agresif formasyona geç (4-2-4).
-    Skor eşitse veya öndeyse defansif (5-4-1).
-    
+    Maç sırasında taktiksel karar alır (v2).
+
+    Kurallar:
+      - 60. dakikada skor gerideyse agresif formasyona geç (3-4-3).
+      - 80. dakikada beraberlik veya öndeyse zamana oynama sinyali gönder (log).
+      - Skor farkına göre mentality ayarla.
+
     Args:
         db: Supabase client
         bot_user_id: Bot profil ID
         match_id: Maç ID
         minute: Maç dakikası
         current_score: {"home": int, "away": int, "is_home": bool}
-    
+
     Returns:
         {"formation": str, "mentality": str, "changes_made": list}
     """
-    logger.info(f"Bot taktik kararı: bot={bot_user_id}, dakika={minute}")
-    
+    logger.info(f"Bot taktik kararı (v2): bot={bot_user_id}, dakika={minute}")
+
     result = {"formation": "4-4-2", "mentality": "normal", "changes_made": []}
-    
+
     if not current_score:
+        logger.info("Skor bilgisi yok, taktik değişikliği yapılmıyor")
         return result
-    
+
     is_home = current_score.get("is_home", True)
     my_goals = current_score.get("home" if is_home else "away", 0)
     opp_goals = current_score.get("away" if is_home else "home", 0)
-    
+
     goal_diff = my_goals - opp_goals
-    
+
+    logger.info(f"Skor: {my_goals}-{opp_goals} (fark: {goal_diff:+d})")
+
     if minute >= 60:
         if goal_diff < 0:
             # Gerideyiz - agresif
             if minute >= 75:
-                result["formation"] = "4-2-4"
+                result["formation"] = "3-4-3"
                 result["mentality"] = "very_attacking"
-                result["changes_made"].append("Agresif formasyona geçildi (4-2-4)")
+                result["changes_made"].append(
+                    f"{minute}'. dk: Geride ({goal_diff:+d}), agresif formasyon 3-4-3"
+                )
             else:
                 result["formation"] = "4-3-3"
                 result["mentality"] = "attacking"
-                result["changes_made"].append("Hücum formasyonuna geçildi (4-3-3)")
+                result["changes_made"].append(
+                    f"{minute}'. dk: Geride ({goal_diff:+d}), hücum formasyonu 4-3-3"
+                )
         elif goal_diff == 0:
             # Eşit - dengeli
             result["formation"] = "4-5-1"
             result["mentality"] = "balanced"
-            result["changes_made"].append("Denge formasyonu (4-5-1)")
+            result["changes_made"].append(
+                f"{minute}'. dk: Berabere, denge formasyonu 4-5-1"
+            )
         elif goal_diff >= 2:
             # İki+ gol öndeyiz - defansif
             result["formation"] = "5-4-1"
             result["mentality"] = "defensive"
-            result["changes_made"].append("Defansif formasyona geçildi (5-4-1)")
-    
+            result["changes_made"].append(
+                f"{minute}'. dk: Öndeyiz ({goal_diff:+d}), defansif formasyon 5-4-1"
+            )
+        else:
+            # 1 gol öndeyiz - dengeli
+            result["formation"] = "4-4-2"
+            result["mentality"] = "balanced"
+            result["changes_made"].append(
+                f"{minute}'. dk: 1 gol önde, dengeli 4-4-2"
+            )
+
+    # ─── v2: 80. dakika zamana oynama sinyali ─────────────────────
+    if minute >= 80:
+        if goal_diff >= 0:
+            result["mentality"] = "time_wasting"
+            result["changes_made"].append(
+                f"{minute}'. dk: Zamana oynama sinyali aktif "
+                f"(skor: {my_goals}-{opp_goals})"
+            )
+            logger.info(
+                f"⏱️ ZAMANA OYNAMA: Bot {bot_user_id}, {minute}'. dk, "
+                f"skor {my_goals}-{opp_goals}"
+            )
+        else:
+            # Geride ve dakika az - son hamle
+            result["formation"] = "3-4-3"
+            result["mentality"] = "all_out_attack"
+            result["changes_made"].append(
+                f"{minute}'. dk: Son hamle! Herkes hücuma 3-4-3"
+            )
+            logger.info(
+                f"🔥 SON HAMLE: Bot {bot_user_id}, {minute}'. dk, "
+                f"skor {my_goals}-{opp_goals}"
+            )
+
     # match_lineups'a taktik güncellemeyi kaydet
     if result["changes_made"]:
         try:
@@ -624,7 +877,7 @@ def make_tactical_decision(
             )
         except Exception as e:
             logger.warning(f"Taktik güncelleme kaydedilemedi: {e}")
-    
+
     return result
 
 
@@ -729,6 +982,10 @@ def process_all_bots(db: SupabaseClient, action: str = "all") -> dict:
                 squad_result = select_bot_squad(db, bot_id)
                 bot_result["squad"] = squad_result
 
+            if action in ("tactics", "all"):
+                # Taktik için maç bilgisi gerekli, burada sadece log
+                bot_result["tactics"] = {"note": "Taktik kararı maç sırasında alınır"}
+
             results.append(bot_result)
             logger.info(f"Bot işlendi: {bot_name}")
 
@@ -749,7 +1006,7 @@ def process_all_bots(db: SupabaseClient, action: str = "all") -> dict:
 # ═══════════════════════════════════════════════════════════════════════
 
 def main():
-    parser = argparse.ArgumentParser(description="Siyah Beyaz FC — Bot Actions Service")
+    parser = argparse.ArgumentParser(description="Siyah Beyaz FC — Bot Actions Service v2")
     parser.add_argument(
         "--bot-id",
         type=str,
@@ -763,9 +1020,9 @@ def main():
     parser.add_argument(
         "--action",
         type=str,
-        choices=["transfers", "squad", "all"],
+        choices=["transfers", "squad", "tactics", "all"],
         default="all",
-        help="İşlem türü (transfers, squad, all)",
+        help="İşlem türü (transfers, squad, tactics, all)",
     )
     parser.add_argument(
         "--take-over",
@@ -795,6 +1052,9 @@ def main():
             if args.action in ("squad", "all"):
                 result = select_bot_squad(db, args.bot_id)
                 print("Squad:", json.dumps(result, indent=2, ensure_ascii=False))
+
+            if args.action in ("tactics", "all"):
+                print("Tactics: Taktik kararları maç sırasında make_tactical_decision() ile alınır")
 
         elif args.all_bots:
             result = process_all_bots(db, args.action)

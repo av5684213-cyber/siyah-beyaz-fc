@@ -46,3 +46,7 @@ CREATE POLICY match_chat_service ON match_chat
 -- Supabase Realtime'ın çalışması için tablonun yayınlanması gerekir
 -- Bu komut Supabase Dashboard'dan da yapılabilir
 ALTER PUBLICATION supabase_realtime ADD TABLE match_chat;
+
+-- Realtime INSERT/UPDATE/DELETE olaylarının tüm kolonları göndermesi için
+-- REPLICA IDENTITY FULL ayarla (aksi takdirde sadece pk gelir)
+ALTER TABLE match_chat REPLICA IDENTITY FULL;
