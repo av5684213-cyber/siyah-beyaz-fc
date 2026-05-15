@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Users, Star, Zap, Shield, Target, ArrowUp, RefreshCw,
   Eye, TrendingUp, AlertTriangle, ChevronRight, X, GraduationCap,
-  ArrowUpCircle, Clock, Heart
+  ArrowUpCircle, Clock, Heart, Timer, FastForward
 } from 'lucide-react';
 import {
   YouthPlayer,
@@ -34,6 +34,11 @@ interface YouthAcademyTabProps {
   budget: number;
   youthPlayers?: YouthPlayer[];
   onYouthPlayersChange?: (players: YouthPlayer[]) => void;
+  upgradeEndAt?: string | null;
+  speedUpUsed?: boolean;
+  credits?: number;
+  onStartUpgrade?: () => Promise<void>;
+  onSpeedUp?: () => Promise<void>;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────
@@ -144,6 +149,11 @@ export default function YouthAcademyTab({
   budget,
   youthPlayers: externalYouthPlayers,
   onYouthPlayersChange,
+  upgradeEndAt,
+  speedUpUsed: speedUpUsedProp,
+  credits,
+  onStartUpgrade,
+  onSpeedUp,
 }: YouthAcademyTabProps) {
   // ─── State: External (controlled) or Internal ──────────────────────
   // Eğer parent bileşen youthPlayers prop'u veriyorsa, onu kullan; yoksa internal state
@@ -161,6 +171,40 @@ export default function YouthAcademyTab({
   const [selectedPlayer, setSelectedPlayer] = useState<YouthPlayer | null>(null);
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('ALL');
   const [showIntakeConfirm, setShowIntakeConfirm] = useState(false);
+  const [countdownMs, setCountdownMs] = useState<number>(0);
+  const [isUpgradingAcademy, setIsUpgradingAcademy] = useState(false);
+
+  // Geri sayım sayacı
+  useEffect(() => {
+    if (!upgradeEndAt) {
+      setCountdownMs(0);
+      return;
+    }
+
+    const updateCountdown = () => {
+      const remaining = new Date(upgradeEndAt).getTime() - Date.now();
+      setCountdownMs(Math.max(0, remaining));
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [upgradeEndAt]);
+
+  // Format geri sayım
+  const formatCountdown = (ms: number): string => {
+    if (ms <= 0) return 'Tamamlandı!';
+    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+    if (days > 0) return `${days}g ${hours}s ${minutes}dk`;
+    if (hours > 0) return `${hours}s ${minutes}dk ${seconds}sn`;
+    return `${minutes}dk ${seconds}sn`;
+  };
+
+  const isUpgradeActive = !!upgradeEndAt && countdownMs > 0;
+  const canSpeedUp = isUpgradeActive && !speedUpUsedProp && (credits || 0) >= 5;
 
   // Facility levels helper
   const facilityLevels = useMemo(() => getAllFacilityLevels(facilities), [facilities]);
@@ -300,6 +344,68 @@ export default function YouthAcademyTab({
                 {formatCurrency(weeklyUpkeep)}
               </span>
             </div>
+
+            {/* Geri sayım sayacı (yükseltme aktifse) */}
+            {isUpgradeActive && (
+              <div className="px-4 py-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                <span className="text-[9px] font-black text-amber-400/60 uppercase block leading-none mb-1 flex items-center gap-1">
+                  <Timer size={8} /> YÜKSELTME
+                </span>
+                <span className="text-sm font-mono font-bold text-amber-400 leading-none">
+                  {formatCountdown(countdownMs)}
+                </span>
+              </div>
+            )}
+
+            {/* Hızlandırma butonu */}
+            {isUpgradeActive && canSpeedUp && onSpeedUp && (
+              <button
+                onClick={async () => {
+                  setIsUpgradingAcademy(true);
+                  try { await onSpeedUp(); } finally { setIsUpgradingAcademy(false); }
+                }}
+                disabled={isUpgradingAcademy}
+                className="px-4 py-2.5 bg-amber-500 text-black rounded-xl text-[10px] font-black uppercase tracking-wider
+                  hover:bg-amber-400 active:scale-95 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.2)]
+                  disabled:opacity-50"
+              >
+                <FastForward size={12} />
+                Hızlandır (5 KR)
+              </button>
+            )}
+            {isUpgradeActive && !speedUpUsedProp && !canSpeedUp && (
+              <div className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl opacity-50">
+                <span className="text-[9px] font-black text-white/30 uppercase block leading-none mb-1 flex items-center gap-1">
+                  <FastForward size={8} /> HIZLANDIR
+                </span>
+                <span className="text-[10px] font-bold text-white/20">5 Kredi gerekli</span>
+              </div>
+            )}
+            {speedUpUsedProp && isUpgradeActive && (
+              <div className="px-4 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                  <Zap size={10} /> Hızlandırıldı
+                </span>
+              </div>
+            )}
+
+            {/* Yükseltme başlat butonu */}
+            {!isUpgradeActive && academyLevel < 10 && onStartUpgrade && (
+              <button
+                onClick={async () => {
+                  setIsUpgradingAcademy(true);
+                  try { await onStartUpgrade(); } finally { setIsUpgradingAcademy(false); }
+                }}
+                disabled={isUpgradingAcademy}
+                className="px-4 py-2.5 bg-amber-500 text-black rounded-xl text-[10px] font-black uppercase tracking-wider
+                  hover:bg-amber-400 active:scale-95 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.2)]
+                  disabled:opacity-50"
+              >
+                <ArrowUp size={12} />
+                Seviye {academyLevel + 1}
+              </button>
+            )}
+
             <button
               onClick={() => setShowIntakeConfirm(true)}
               className="px-5 py-2.5 bg-amber-500 text-black rounded-xl text-[11px] font-black uppercase tracking-wider
