@@ -82,6 +82,8 @@ import {
 import { useFM } from '@/lib/fm/GameContext';
 
 import RivalMessagingPanel from '@/components/fm/RivalMessagingPanel';
+import MatchChat from '@/components/Chat/MatchChat';
+import RivalMessaging from '@/components/Chat/RivalMessaging';
 import TeamProfileModal from '@/components/fm/TeamProfileModal';
 import MatchReportPanel from '@/components/fm/MatchReportPanel';
 import YouthAcademyTab from '@/components/fm/YouthAcademyTab';

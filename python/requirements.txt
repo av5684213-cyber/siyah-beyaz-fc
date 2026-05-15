@@ -1,0 +1,2 @@
+# Siyah Beyaz FC — Python Servis Gereksinimleri
+httpx>=0.27.0
