@@ -81,6 +81,8 @@ import MatchReportPanel from '@/components/fm/MatchReportPanel';
 import YouthAcademyTab from '@/components/fm/YouthAcademyTab';
 import { generateYouthPlayer, generateScoutReport, YouthPlayer, processYouthWeeklyTraining, YOUTH_FACILITIES, getDefaultFacilityState } from '@/lib/fm/youthAcademy';
 import { loadYouthPlayers, saveYouthPlayers, loadYouthFacilities, saveYouthFacilities } from '@/lib/fm/persistence';
+import { computeSeasonAwardsWithCareerStats, computeSeasonSummary, computeSeasonBadge, saveSeasonAwardsAndSummary, getSeasonId } from '@/lib/fm/seasonAwardsService';
+import SeasonAwardsModal from '@/components/fm/SeasonAwardsModal';
 import CupTab from '@/components/fm/CupTab';
 import FinancialTab from '@/components/fm/FinancialTab';
 import TacticsRolesPanel from '@/components/fm/TacticsRolesPanel';
@@ -127,6 +129,10 @@ export default function Home() {
   const [retiredLog, setRetiredLog] = useState<{ retired: Player[], talents: Player[] } | null>(null);
   const [showTrainingToast, setShowTrainingToast] = useState(false);
   const [transferOffers, setTransferOffers] = useState<Array<{ id: string; fromTeam: string; playerName: string; playerPosition: string; amount: number; status: string; date: string }>>([]);
+
+  // ADIM 4: Sezon sonu ödülleri
+  const [showSeasonAwards, setShowSeasonAwards] = useState(false);
+  const [lastCompletedSeasonId, setLastCompletedSeasonId] = useState<string>('');
 
   // ADIM 3: Youth Academy verilerini profile yüklendiğinde çek
   useEffect(() => {
@@ -579,7 +585,54 @@ export default function Home() {
     }
   }, [squad, profile, setSquad, setProfile, trainingState, setTrainingState]);
 
-  const handleSeasonEnd = useCallback(() => { runEvolution(); }, [runEvolution]);
+  const handleSeasonEnd = useCallback(() => {
+    if (!profile) return;
+    const seasonId = getSeasonId(profile.current_day);
+
+    // Önce sezon evrimini çalıştır
+    runEvolution();
+
+    // Sezon sonu ödüllerini hesapla ve kaydet (asenkron)
+    (async () => {
+      try {
+        // Ödülleri hesapla (career_stats kullanarak)
+        const awards = await computeSeasonAwardsWithCareerStats(
+          profile.id,
+          seasonId,
+          squad,
+          profile.team_name,
+          profile.league_name,
+        );
+
+        // Sezon özetini hesapla
+        const summary = computeSeasonSummary(
+          squad,
+          seasonId,
+          profile.id,
+          profile.team_name,
+          profile.league_name,
+          league || undefined,
+        );
+
+        // Badge hesapla
+        const badge = computeSeasonBadge(
+          summary.final_position || 0,
+          summary.is_champion,
+          awards,
+          league?.length,
+        );
+
+        // Supabase'e kaydet
+        await saveSeasonAwardsAndSummary(awards, summary, badge, profile.id);
+
+        // Ödül modalını aç
+        setLastCompletedSeasonId(seasonId);
+        setShowSeasonAwards(true);
+      } catch (err) {
+        console.error('[handleSeasonEnd] Award computation error:', err);
+      }
+    })();
+  }, [runEvolution, profile, squad, league]);
 
   const runTraining = useCallback((sessionType: 'morning' | 'afternoon') => {
     let updatedSquad = [...squad];
@@ -1135,6 +1188,18 @@ export default function Home() {
            />
         )}
       </AnimatePresence>
+
+      {/* ADIM 4: Sezon Sonu Ödüller Modal */}
+      {profile && lastCompletedSeasonId && (
+        <SeasonAwardsModal
+          isOpen={showSeasonAwards}
+          onClose={() => setShowSeasonAwards(false)}
+          profileId={profile.id}
+          seasonId={lastCompletedSeasonId}
+          teamName={profile.team_name}
+        />
+      )}
+
       {userId && profile && (
         <CommunicationPanel 
           userId={userId}

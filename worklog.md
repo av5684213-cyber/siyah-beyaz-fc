@@ -152,3 +152,51 @@ Stage Summary:
 - Profile type extended with academy fields
 - New API route: /api/cron/youth-training
 - Step 3 (Youth Academy) fully complete
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: ADIM 4 - Sezon Sonu İstatistikleri ve Ödüller
+
+Work Log:
+- Created SEASON_AWARDS_MIGRATION.sql with 3 new tables:
+  - season_awards: Award records per season (golden_boot, mvp, best_gk, top_assists, best_young, fair_play, champion)
+  - season_summaries: Season summary stats (position, points, goals, top performers, badges)
+  - Added motm, saves, position, rating columns to player_career_stats
+  - Added total_trophies, total_awards, season_badges columns to profiles
+  - All RLS policies use auth.uid()::text for TEXT profile_id compatibility
+- Added TypeScript types in types.ts:
+  - AwardType union type with 7 award categories
+  - AWARD_LABELS constant with Turkish labels, icons, colors
+  - SeasonAward, SeasonBadge, SeasonSummary, SeasonAwardCeremony interfaces
+  - Profile extended with total_trophies, total_awards, season_badges
+- Created seasonAwardsService.ts with full award computation logic:
+  - computeSeasonAwards(): Award computation from squad data
+  - computeSeasonAwardsWithCareerStats(): Enhanced version using player_career_stats
+  - computeSeasonSummary(): Season summary with position, stats, top performers
+  - computeSeasonBadge(): Badge calculation based on position and awards
+  - saveSeasonAwardsAndSummary(): Full persistence to Supabase
+  - loadSeasonAwards(), loadAllSeasonSummaries(), loadAwardCeremony(): Read functions
+  - getChampionshipCount(), getSeasonId(): Helper functions
+- Created SeasonAwardsModal.tsx with animated award ceremony UI:
+  - Ceremony view: champion banner, badge display, summary card, award cards
+  - History view: all season summaries with position badges and icons
+  - Animated entrance with spring transitions
+  - Turkish language labels throughout
+- Updated careerStats.ts:
+  - Added clean_sheets, motm, saves, position, rating to CareerStat interface
+  - updateMatchCareerStats() now accepts cleanSheet, isMotm, saves, position, playerRating
+- Integrated into page.tsx:
+  - Added showSeasonAwards and lastCompletedSeasonId state
+  - handleSeasonEnd() now computes awards, summary, badge and saves to Supabase
+  - SeasonAwardsModal rendered at bottom of page
+- Build passes successfully
+
+Stage Summary:
+- SQL migration: /home/z/my-project/download/SEASON_AWARDS_MIGRATION.sql
+- New service: /home/z/my-project/src/lib/fm/seasonAwardsService.ts
+- New UI component: /home/z/my-project/src/components/fm/SeasonAwardsModal.tsx
+- Modified: types.ts, careerStats.ts, page.tsx
+- 7 award types: golden_boot, mvp, best_gk, top_assists, best_young, fair_play, champion
+- Season badges system with visual display
+- Step 4 (Season End Stats and Awards) complete

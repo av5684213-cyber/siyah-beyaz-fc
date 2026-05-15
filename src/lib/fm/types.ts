@@ -201,7 +201,102 @@ export interface Profile {
   bot_difficulty?: number;
   academy_weekly_budget?: number;
   last_youth_intake_season?: string;
+  total_trophies?: number;
+  total_awards?: number;
+  season_badges?: SeasonBadge[];
   created_at?: string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ADIM 4: Sezon Sonu İstatistikleri ve Ödüller
+// ═══════════════════════════════════════════════════════════════════════
+
+/** Sezon ödül tipleri */
+export type AwardType =
+  | 'golden_boot'      // En golcü oyuncu
+  | 'mvp'              // En değerli oyuncu (en yüksek rating)
+  | 'best_gk'          // En iyi kaleci (clean sheets + rating)
+  | 'top_assists'      // En çok asist yapan
+  | 'best_young'       // En iyi genç oyuncu (U21)
+  | 'fair_play'        // En az kart gören
+  | 'champion';        // Şampiyon takım
+
+/** Ödül görüntü etiketleri (Türkçe) */
+export const AWARD_LABELS: Record<AwardType, { title: string; icon: string; color: string }> = {
+  golden_boot:  { title: 'Altın Krampon',     icon: '👢', color: 'text-yellow-400' },
+  mvp:          { title: 'En Değerli Oyuncu',  icon: '⭐', color: 'text-amber-300' },
+  best_gk:      { title: 'En İyi Kaleci',      icon: '🧤', color: 'text-emerald-400' },
+  top_assists:  { title: 'Asist Kralı',        icon: '🎯', color: 'text-blue-400' },
+  best_young:   { title: 'En İyi Genç',        icon: '🌟', color: 'text-purple-400' },
+  fair_play:    { title: 'Fair Play',           icon: '🤝', color: 'text-green-400' },
+  champion:     { title: 'Şampiyon',            icon: '🏆', color: 'text-yellow-300' },
+};
+
+/** Sezon ödülü (DB: season_awards tablosu) */
+export interface SeasonAward {
+  id: string;
+  season_id: string;
+  profile_id: string;
+  league_name?: string;
+  award_type: AwardType;
+  player_id?: string;
+  player_name?: string;
+  team_name?: string;
+  stat_value: number;
+  stat_detail?: Record<string, number | string>;
+  created_at?: string;
+}
+
+/** Sezon badge'i (profile.season_badges dizisinde saklanır) */
+export interface SeasonBadge {
+  season_id: string;
+  type: 'champion_gold' | 'champion_silver' | 'champion_bronze' |
+        'top4' | 'mid_table' | 'relegated' |
+        'golden_boot' | 'mvp' | 'best_gk' | 'top_assists' | 'best_young' | 'fair_play';
+  label: string;
+  icon: string;
+}
+
+/** Sezon özeti (DB: season_summaries tablosu) */
+export interface SeasonSummary {
+  id: string;
+  season_id: string;
+  profile_id: string;
+  team_name?: string;
+  league_name?: string;
+  final_position?: number;
+  points: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goals_for: number;
+  goals_against: number;
+  total_goals: number;
+  total_assists: number;
+  total_yellow: number;
+  total_red: number;
+  total_clean_sheets: number;
+  avg_team_rating: number;
+  top_scorer_name?: string;
+  top_scorer_goals: number;
+  top_assister_name?: string;
+  top_assister_assists: number;
+  best_player_name?: string;
+  best_player_rating: number;
+  is_champion: boolean;
+  is_promoted: boolean;
+  is_relegated: boolean;
+  awards_count: number;
+  badge_earned?: string;
+  created_at?: string;
+}
+
+/** Ödül töreni verisi (UI için sezon sonu modal içeriği) */
+export interface SeasonAwardCeremony {
+  season_id: string;
+  summary: SeasonSummary;
+  awards: SeasonAward[];
+  badge: SeasonBadge | null;
 }
 
 export interface MatchEvent {

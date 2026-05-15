@@ -12,6 +12,11 @@ export interface CareerStat {
   yellow_cards: number;
   red_cards: number;
   fouls: number;
+  clean_sheets: number;
+  motm: number;
+  saves: number;
+  position?: string;
+  rating?: number;
   avg_rating: number;
 }
 
@@ -44,6 +49,11 @@ export async function updateMatchCareerStats(
     redCards: number;
     fouls: number;
     rating: number;
+    cleanSheet?: boolean;
+    isMotm?: boolean;
+    saves?: number;
+    position?: string;
+    playerRating?: number;
   }
 ) {
   if (!isSupabaseConfigured()) return;
@@ -67,32 +77,52 @@ export async function updateMatchCareerStats(
     const newMatches = existing.matches_played + 1;
     const newRating = (existing.avg_rating * existing.matches_played + stats.rating) / newMatches;
 
+    const updateData: Record<string, any> = {
+      matches_played: newMatches,
+      goals: existing.goals + stats.goals,
+      assists: existing.assists + stats.assists,
+      yellow_cards: existing.yellow_cards + stats.yellowCards,
+      red_cards: existing.red_cards + stats.redCards,
+      fouls: existing.fouls + stats.fouls,
+      avg_rating: Number(newRating.toFixed(2)),
+    };
+
+    // ADIM 4: clean_sheets, motm, saves
+    if (stats.cleanSheet) {
+      updateData.clean_sheets = (existing.clean_sheets || 0) + 1;
+    }
+    if (stats.isMotm) {
+      updateData.motm = (existing.motm || 0) + 1;
+    }
+    if (stats.saves && stats.saves > 0) {
+      updateData.saves = (existing.saves || 0) + stats.saves;
+    }
+
     await supabase
       .from('player_career_stats')
-      .update({
-        matches_played: newMatches,
-        goals: existing.goals + stats.goals,
-        assists: existing.assists + stats.assists,
-        yellow_cards: existing.yellow_cards + stats.yellowCards,
-        red_cards: existing.red_cards + stats.redCards,
-        fouls: existing.fouls + stats.fouls,
-        avg_rating: Number(newRating.toFixed(2))
-      })
+      .update(updateData)
       .eq('id', existing.id);
   } else {
+    const insertData: Record<string, any> = {
+      player_id: playerId,
+      season_id: seasonId,
+      team_id: teamId,
+      matches_played: 1,
+      goals: stats.goals,
+      assists: stats.assists,
+      yellow_cards: stats.yellowCards,
+      red_cards: stats.redCards,
+      fouls: stats.fouls,
+      avg_rating: Number(stats.rating.toFixed(2)),
+      clean_sheets: stats.cleanSheet ? 1 : 0,
+      motm: stats.isMotm ? 1 : 0,
+      saves: stats.saves || 0,
+    };
+    if (stats.position) insertData.position = stats.position;
+    if (stats.playerRating) insertData.rating = stats.playerRating;
+
     await supabase
       .from('player_career_stats')
-      .insert([{
-        player_id: playerId,
-        season_id: seasonId,
-        team_id: teamId,
-        matches_played: 1,
-        goals: stats.goals,
-        assists: stats.assists,
-        yellow_cards: stats.yellowCards,
-        red_cards: stats.redCards,
-        fouls: stats.fouls,
-        avg_rating: Number(stats.rating.toFixed(2))
-      }]);
+      .insert([insertData]);
   }
 }
