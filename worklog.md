@@ -247,3 +247,28 @@ Stage Summary:
 - Club Legend criteria: 3+ seasons AND (50+ goals OR 7.5+ rating OR 5+ MotM)
 - All-time records: Most goals, assists, matches, rating, MotM, clean sheets, peak rating
 - Auto-induction on player retirement (season end)
+
+---
+Task ID: 6
+Agent: main
+Task: Step 6 - Match Chat (Gerçek Zamanlı Maç Sohbeti)
+
+Work Log:
+- Researched existing CommunicationPanel (global chat + DMs via Supabase Realtime on 'messages' table)
+- Created SQL migration for match_chat table with: fixture_id, profile_id TEXT, sender_name, content, message_type (chat/reaction/event/system), reaction_type, minute, created_at
+- Added Realtime publication: ALTER PUBLICATION supabase_realtime ADD TABLE match_chat
+- Created matchChatService.ts with: sendMatchChatMessage, sendMatchReaction, sendMatchEvent, loadMatchChat, subscribeToMatchChat (Supabase Realtime), unsubscribeFromMatchChat, generateFixtureId
+- Created MatchChatPanel.tsx component with: live message feed, quick reactions (8 emojis), collapsed/expanded mode, auto-scroll, message type styling (chat/reaction/event/system)
+- Integrated MatchChatPanel into matchday tab in page.tsx as a side panel (w-80) next to the match simulation
+- Added MatchChatPanel and generateFixtureId imports
+- Build verified successful
+
+Stage Summary:
+- SQL migration: /home/z/my-project/download/MATCH_CHAT_MIGRATION.sql
+- New service: /home/z/my-project/src/lib/fm/matchChatService.ts
+- New component: /home/z/my-project/src/components/fm/MatchChatPanel.tsx
+- Match chat uses Supabase Realtime (postgres_changes) for live messages
+- 4 message types: chat (user text), reaction (emoji), event (auto goal/card), system
+- 8 quick reactions: ⚽🔥😱👏❤️😂😤🤦
+- Chat panel displayed alongside match simulation in matchday tab
+- fixture_id generated from current_day + opponent name

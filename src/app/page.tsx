@@ -31,6 +31,7 @@ import { generateStarterPlayer, aiTeamNames, generateEliteWonderkid } from '@/li
 import { shouldPlayerRetire, processSeasonEndRetirements } from '@/lib/fm/retirement';
 import { updateMatchCareerStats } from '@/lib/fm/careerStats';
 import { inductRetiredPlayers } from '@/lib/fm/hallOfFameService';
+import { generateFixtureId } from '@/lib/fm/matchChatService';
 
 import { AppHeader } from '@/components/fm/AppHeader';
 import { ToastNotifications } from '@/components/fm/ToastNotifications';
@@ -48,6 +49,7 @@ import ScoutingTab from '@/components/fm/ScoutingTab';
 import AdminPanel from '@/components/fm/AdminPanel';
 import TrophyCabinetTab from '@/components/fm/TrophyCabinetTab';
 import HallOfFameTab from '@/components/fm/HallOfFameTab';
+import MatchChatPanel from '@/components/fm/MatchChatPanel';
 
 import { MultiplayerTab } from '@/components/fm/MultiplayerTab';
 import { listPlayerOnMarket, massListPlayers, initFreeAgentsOnMarket, moveTeamToMarket, listAllSquadOnMarket, buyPlayerFromMarket, MarketListing, assignTeamToManager, getTeamSquad } from '@/lib/fm/multiplayer';
@@ -846,8 +848,11 @@ export default function Home() {
                 </motion.div>
               )}
               {activeTab === 'matchday' && (
-                <motion.div key="matchday" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="h-[750px] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
-                  <MatchDay 
+                <motion.div key="matchday" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                  <div className="flex gap-3">
+                    {/* Match Simulation */}
+                    <div className="flex-1 h-[750px] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
+                      <MatchDay 
                     profile={profile}
                     activeOperations={activeOperations}
                     homeTeam={homeSquadSlice} 
@@ -1003,6 +1008,19 @@ export default function Home() {
                         }
                       }
                     }} />
+                    </div>
+                    {/* Match Chat Panel */}
+                    {profile && (
+                      <div className="w-80 h-[750px] flex-shrink-0">
+                        <MatchChatPanel
+                          fixtureId={generateFixtureId(profile.current_day, awayTeamSlice[0]?.name)}
+                          profileId={profile.id}
+                          teamName={profile.team_name}
+                          currentMinute={matchState.minute}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
               )}
               {activeTab === 'friendly' && (
