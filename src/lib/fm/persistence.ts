@@ -53,6 +53,10 @@ export const loadPlayers = async (userId: string, teamName?: string) => {
         // ADIM 1: Form rating ve sakatlık geçmişi
         form_rating: p.form_rating ?? p.form ?? 50,
         injury_history: p.injury_history ? (typeof p.injury_history === 'string' ? JSON.parse(p.injury_history) : p.injury_history) : [],
+        // ADIM 2: Kart cezaları ve sakatlık
+        suspended_until: p.suspended_until || null,
+        is_injured: p.is_injured || false,
+        injury_end_date: p.injury_end_date || null,
         traitLevels: p.trait_levels ? (typeof p.trait_levels === 'string' ? JSON.parse(p.trait_levels) : p.trait_levels) : (extra as any).traitLevels || {},
         styleLevels: p.style_levels ? (typeof p.style_levels === 'string' ? JSON.parse(p.style_levels) : p.style_levels) : (extra as any).styleLevels || {},
         playStyle: p.play_style || (extra as any).playStyle,
@@ -224,6 +228,10 @@ export const savePlayers = async (players: any[], userId?: string, teamName?: st
         // ADIM 1: Form rating ve sakatlık geçmişi
         form_rating: p.form_rating ?? p.form ?? 50,
         injury_history: p.injury_history ? JSON.stringify(p.injury_history) : '[]',
+        // ADIM 2: Kart cezaları ve sakatlık
+        suspended_until: p.suspended_until || null,
+        is_injured: p.is_injured || false,
+        injury_end_date: p.injury_end_date || null,
         trait_levels: JSON.stringify(p.traitLevels || {}),
         style_levels: JSON.stringify(p.styleLevels || {}),
         profile_id: userId || null,

@@ -54,3 +54,28 @@ Stage Summary:
 - New cron route: /home/z/my-project/src/app/api/cron/update-form-ratings/route.ts
 - Modified: types.ts, valuation.ts, playerGenerator.ts, persistence.ts, vercel.json
 - Build passes successfully
+---
+Task ID: step2
+Agent: Main Agent
+Task: ADIM 2 - Maç Motoruna Detaylar (Kart, Sakatlık)
+
+Work Log:
+- Created MATCH_ENGINE_MIGRATION.sql with events JSONB, suspended_until, is_injured, injury_end_date columns
+- Added suspended_until, is_injured, injury_end_date to Player type in types.ts
+- Created matchConsequencesService.ts with:
+  - applyCardSuspensions(): 2 yellow = 1 match, red = 1 match, updates suspended_until
+  - applyMatchInjuries(): Random injury type 3-21 days, updates is_injured, injury_end_date, injury_history
+  - cleanupExpiredSuspensionsAndInjuries(): Daily cleanup for expired suspensions/injuries
+  - filterAvailablePlayers(): Filters out suspended/injured from squad
+  - saveMatchEvents(): Saves events to match_history
+- Created /api/cron/match-simulator/route.ts for server-side match simulation
+- Updated vercel.json with match-simulator cron (daily at 02:30)
+- Updated /api/cron/update-form-ratings to also run cleanupExpiredSuspensionsAndInjuries
+- Updated persistence.ts loadPlayers() and savePlayers() for new fields
+- Build passes successfully
+
+Stage Summary:
+- SQL migration: /home/z/my-project/download/MATCH_ENGINE_MIGRATION.sql
+- New service: /home/z/my-project/src/lib/fm/matchConsequencesService.ts
+- New cron route: /home/z/my-project/src/app/api/cron/match-simulator/route.ts
+- Modified: types.ts, persistence.ts, vercel.json, update-form-ratings/route.ts
