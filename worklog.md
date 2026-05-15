@@ -221,3 +221,29 @@ Stage Summary:
 - New TrophyCabinetTab with 10 milestone badges (İlk Şampiyonluk, Üç Taç, Efsane Menajer, Hanedanlık, Keskin Nişancı, Krampon Efsanesi, MVP Kralı, Gazi Menajer, On Yıl, Koleksiyoncu)
 - Awards tab added to navigation under "AKADEMİ & KUPA" section
 - Build verified successful
+
+---
+Task ID: 5
+Agent: main
+Task: Step 5 - Hall of Fame Museum (Efsaneler Müzesi)
+
+Work Log:
+- Researched existing retirement system: age >= 38 hard cutoff, retiredPlayers only shown in transient toast, then lost
+- Created SQL migration for hall_of_fame table with TEXT id (not UUID), profile_id TEXT, legend_tier, is_club_legend, career stats, awards_won JSONB
+- Created hallOfFameService.ts with: computeLegendTier (platinum/gold/silver/bronze), isClubLegend, shouldInductToHOF, createHOFEntry, inductRetiredPlayers, fetchCareerStatsForHOF, loadHallOfFame, computeAllTimeRecords
+- Created HallOfFameTab.tsx component with: tier summary cards, all-time records (7 categories), legend gallery with tier filtering, expandable legend cards with full stats
+- Integrated auto-induction into retirement flow in page.tsx: after processSeasonEndRetirements, calls inductRetiredPlayers asynchronously
+- Added hof_count to Profile type
+- Added "EFSANELER" nav button in "AKADEMİ & KUPA" section
+- Added HallOfFameTab import and render in page.tsx
+- Fixed player.nationality -> player.nation (correct field name)
+- Build verified successful
+
+Stage Summary:
+- HOF SQL migration: /home/z/my-project/download/HALL_OF_FAME_MIGRATION.sql
+- New service: /home/z/my-project/src/lib/fm/hallOfFameService.ts
+- New component: /home/z/my-project/src/components/fm/HallOfFameTab.tsx
+- Legend tier system: Platinum (3+ seasons, 100+ goals/8.5+ rating/5+ MotM), Gold, Silver, Bronze
+- Club Legend criteria: 3+ seasons AND (50+ goals OR 7.5+ rating OR 5+ MotM)
+- All-time records: Most goals, assists, matches, rating, MotM, clean sheets, peak rating
+- Auto-induction on player retirement (season end)

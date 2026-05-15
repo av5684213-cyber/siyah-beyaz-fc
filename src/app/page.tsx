@@ -30,6 +30,7 @@ import { migrateLocalStorageToSupabase, type MigrationResult, checkSupabaseData 
 import { generateStarterPlayer, aiTeamNames, generateEliteWonderkid } from '@/lib/fm/playerGenerator';
 import { shouldPlayerRetire, processSeasonEndRetirements } from '@/lib/fm/retirement';
 import { updateMatchCareerStats } from '@/lib/fm/careerStats';
+import { inductRetiredPlayers } from '@/lib/fm/hallOfFameService';
 
 import { AppHeader } from '@/components/fm/AppHeader';
 import { ToastNotifications } from '@/components/fm/ToastNotifications';
@@ -46,6 +47,7 @@ import MarketTab from '@/components/fm/MarketTab';
 import ScoutingTab from '@/components/fm/ScoutingTab';
 import AdminPanel from '@/components/fm/AdminPanel';
 import TrophyCabinetTab from '@/components/fm/TrophyCabinetTab';
+import HallOfFameTab from '@/components/fm/HallOfFameTab';
 
 import { MultiplayerTab } from '@/components/fm/MultiplayerTab';
 import { listPlayerOnMarket, massListPlayers, initFreeAgentsOnMarket, moveTeamToMarket, listAllSquadOnMarket, buyPlayerFromMarket, MarketListing, assignTeamToManager, getTeamSquad } from '@/lib/fm/multiplayer';
@@ -501,6 +503,26 @@ export default function Home() {
       });
 
       setRetiredLog({ retired: retiredPlayers, talents: newTalents });
+
+      // ADIM 5: Emekli oyuncuları Hall of Fame'e kaydet (asenkron)
+      if (retiredPlayers.length > 0 && profile.id) {
+        const retiredSeason = getSeasonId(profile.current_day);
+        inductRetiredPlayers(retiredPlayers, profile.id, profile.current_day, retiredSeason)
+          .then(({ inducted, skipped }) => {
+            if (inducted.length > 0) {
+              console.log(`[HOF] ${inducted.length} oyuncu Efsaneler Müzesi'ne eklendi`);
+              inducted.forEach(entry => {
+                if (entry.is_club_legend) {
+                  console.log(`[HOF] KULÜP EFSANESİ: ${entry.player_name} (${entry.legend_tier})`);
+                }
+              });
+            }
+            if (skipped.length > 0) {
+              console.log(`[HOF] ${skipped.length} oyuncu HOF kriterlerini karşılamadı`);
+            }
+          })
+          .catch(err => console.error('[HOF] Induction error:', err));
+      }
     }
 
     // ADIM 3: Haftalık gençlik antrenmanı (her 7 günde bir)
@@ -789,6 +811,7 @@ export default function Home() {
                <NavButton icon={<Users size={18} />} label="GENÇLİK AKAD." active={activeTab === 'youth'} onClick={() => setActiveTab('youth')} />
                <NavButton icon={<Trophy size={18} />} label="KUPALAR" active={activeTab === 'cups'} onClick={() => setActiveTab('cups')} />
                <NavButton icon={<Award size={18} />} label="ÖDÜLLER" active={activeTab === 'awards'} onClick={() => setActiveTab('awards')} />
+               <NavButton icon={<Building2 size={18} />} label="EFSANELER" active={activeTab === 'hof'} onClick={() => setActiveTab('hof')} />
             </div>
             
             <div className="mt-6 pt-4 border-t border-white/5 space-y-1">
@@ -1172,6 +1195,11 @@ export default function Home() {
               {activeTab === 'awards' && profile && (
                 <motion.div key="awards" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <TrophyCabinetTab profileId={profile.id} teamName={profile.team_name} />
+                </motion.div>
+              )}
+              {activeTab === 'hof' && profile && (
+                <motion.div key="hof" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                  <HallOfFameTab profileId={profile.id} teamName={profile.team_name} />
                 </motion.div>
               )}
             </AnimatePresence>

@@ -204,6 +204,7 @@ export interface Profile {
   total_trophies?: number;
   total_awards?: number;
   season_badges?: SeasonBadge[];
+  hof_count?: number;
   created_at?: string;
 }
 
