@@ -45,6 +45,7 @@ import NewspaperTab from '@/components/fm/NewspaperTab';
 import MarketTab from '@/components/fm/MarketTab';
 import ScoutingTab from '@/components/fm/ScoutingTab';
 import AdminPanel from '@/components/fm/AdminPanel';
+import TrophyCabinetTab from '@/components/fm/TrophyCabinetTab';
 
 import { MultiplayerTab } from '@/components/fm/MultiplayerTab';
 import { listPlayerOnMarket, massListPlayers, initFreeAgentsOnMarket, moveTeamToMarket, listAllSquadOnMarket, buyPlayerFromMarket, MarketListing, assignTeamToManager, getTeamSquad } from '@/lib/fm/multiplayer';
@@ -70,7 +71,8 @@ import {
   Binoculars,
   ShieldAlert,
   RefreshCw,
-  DollarSign
+  DollarSign,
+  Award
 } from 'lucide-react';
 
 import { useFM } from '@/lib/fm/GameContext';
@@ -786,6 +788,7 @@ export default function Home() {
                <p className="text-[8px] font-black tracking-widest text-white/20 uppercase mb-2 group-hover:text-amber-400 transition-colors">AKADemi & KUPA</p>
                <NavButton icon={<Users size={18} />} label="GENÇLİK AKAD." active={activeTab === 'youth'} onClick={() => setActiveTab('youth')} />
                <NavButton icon={<Trophy size={18} />} label="KUPALAR" active={activeTab === 'cups'} onClick={() => setActiveTab('cups')} />
+               <NavButton icon={<Award size={18} />} label="ÖDÜLLER" active={activeTab === 'awards'} onClick={() => setActiveTab('awards')} />
             </div>
             
             <div className="mt-6 pt-4 border-t border-white/5 space-y-1">
@@ -945,16 +948,33 @@ export default function Home() {
                         }
                         if (!isFriendly) {
                           const seasonId = `season-${Math.ceil((profile.current_day || 1) / 34)}`;
+                          // En yüksek rating'li oyuncuyu MotM olarak belirle
+                          let motmPlayerId = '';
+                          let motmRating = 0;
+                          homeSquadSlice.forEach(p => {
+                            const r = results.playerRatings[p.id] || 0;
+                            if (r > motmRating) { motmRating = r; motmPlayerId = p.id; }
+                          });
+                          // Kaleci clean sheet kontrolü: rakip golü 0 ise kaleci clean sheet yapar
+                          const awayGoals = results.score.away;
                           homeSquadSlice.forEach(player => {
                             const rating = results.playerRatings[player.id] || 6.0;
                             const stats = results.playerStats[player.id] || { goals: 0, assists: 0, yellowCards: 0, redCards: 0, fouls: 0 };
+                            const isGK = player.position === 'GK';
+                            const isMotm = player.id === motmPlayerId;
+                            const gkSaves = isGK ? (stats as any).saves || Math.floor(Math.random() * 5) + 1 : 0;
                             updateMatchCareerStats(player.id, seasonId, profile.id, {
                               goals: stats.goals,
                               assists: stats.assists,
                               yellowCards: stats.yellowCards || 0,
                               redCards: stats.redCards || 0,
                               fouls: stats.fouls || Math.floor(Math.random() * 3),
-                              rating: rating
+                              rating: rating,
+                              cleanSheet: isGK && awayGoals === 0,
+                              isMotm: isMotm,
+                              saves: gkSaves,
+                              position: player.position,
+                              playerRating: player.rating,
                             });
                           });
                         }
@@ -1147,6 +1167,11 @@ export default function Home() {
               {activeTab === 'cups' && (
                 <motion.div key="cups" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <CupTab cupSeasons={[]} teamName={profile?.team_name || ''} />
+                </motion.div>
+              )}
+              {activeTab === 'awards' && profile && (
+                <motion.div key="awards" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                  <TrophyCabinetTab profileId={profile.id} teamName={profile.team_name} />
                 </motion.div>
               )}
             </AnimatePresence>

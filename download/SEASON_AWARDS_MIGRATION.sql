@@ -1,12 +1,19 @@
 -- ═══════════════════════════════════════════════════════════════════════
--- ADIM 4: Sezon Sonu İstatistikleri ve Ödüller Migration
--- season_awards tablosu, player_awards tablosu, season_summaries tablosu
+-- ADIM 4: Sezon Sonu İstatistikleri ve Ödüller Migration (DÜZELTİLMİŞ)
+-- season_awards tablosu, season_summaries tablosu
+-- DÜZELTME: id kolonları UUID→TEXT (kod string ID üretiyor)
+-- DÜZELTME: DROP TABLE IF EXISTS ile temiz kurulum
 -- ═══════════════════════════════════════════════════════════════════════
+
+-- ─── TEMIZLİK: Eski tabloları temizle (UUID id'li eski versiyonlar) ──
+DROP TABLE IF EXISTS season_awards CASCADE;
+DROP TABLE IF EXISTS season_summaries CASCADE;
+
 
 -- ─── 1. season_awards TABLOSU ────────────────────────────────────────
 -- Her sezonun ödül kategorilerini ve kazananlarını saklar
-CREATE TABLE IF NOT EXISTS season_awards (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE season_awards (
+  id            TEXT PRIMARY KEY,            -- "award_season-1_golden_boot_profileId" formatı
   season_id     TEXT NOT NULL,              -- "season-1", "season-2" formatı
   profile_id    TEXT NOT NULL,              -- profiles.id referansı (TEXT tipi)
   league_name   TEXT,                       -- Lig adı (ödüllerin lige özel olması için)
@@ -20,10 +27,10 @@ CREATE TABLE IF NOT EXISTS season_awards (
 );
 
 -- Index: sezon + profile bazında hızlı sorgulama
-CREATE INDEX IF NOT EXISTS idx_season_awards_season ON season_awards(season_id);
-CREATE INDEX IF NOT EXISTS idx_season_awards_profile ON season_awards(profile_id);
-CREATE INDEX IF NOT EXISTS idx_season_awards_type ON season_awards(award_type);
-CREATE INDEX IF NOT EXISTS idx_season_awards_player ON season_awards(player_id);
+CREATE INDEX idx_season_awards_season ON season_awards(season_id);
+CREATE INDEX idx_season_awards_profile ON season_awards(profile_id);
+CREATE INDEX idx_season_awards_type ON season_awards(award_type);
+CREATE INDEX idx_season_awards_player ON season_awards(player_id);
 
 -- RLS: Her kullanıcı kendi ödüllerini görsün + service role tam erişim
 ALTER TABLE season_awards ENABLE ROW LEVEL SECURITY;
@@ -46,8 +53,8 @@ CREATE POLICY season_awards_service ON season_awards
 
 -- ─── 2. season_summaries TABLOSU ─────────────────────────────────────
 -- Her profilin sezon özet istatistikleri (şampiyonluk sayısı, toplam ödül vs.)
-CREATE TABLE IF NOT EXISTS season_summaries (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE season_summaries (
+  id            TEXT PRIMARY KEY,            -- "summary_season-1_profileId" formatı
   season_id     TEXT NOT NULL,              -- "season-1", "season-2"
   profile_id    TEXT NOT NULL,              -- profiles.id referansı
   team_name     TEXT,                       -- Takım adı
@@ -80,9 +87,9 @@ CREATE TABLE IF NOT EXISTS season_summaries (
 );
 
 -- Index
-CREATE INDEX IF NOT EXISTS idx_season_summaries_season ON season_summaries(season_id);
-CREATE INDEX IF NOT EXISTS idx_season_summaries_profile ON season_summaries(profile_id);
-CREATE INDEX IF NOT EXISTS idx_season_summaries_champion ON season_summaries(is_champion) WHERE is_champion = true;
+CREATE INDEX idx_season_summaries_season ON season_summaries(season_id);
+CREATE INDEX idx_season_summaries_profile ON season_summaries(profile_id);
+CREATE INDEX idx_season_summaries_champion ON season_summaries(is_champion) WHERE is_champion = true;
 
 -- RLS
 ALTER TABLE season_summaries ENABLE ROW LEVEL SECURITY;
@@ -104,7 +111,7 @@ CREATE POLICY season_summaries_service ON season_summaries
 
 
 -- ─── 3. player_career_stats TABLOSUNA EK KOLONLAR ────────────────────
--- MotM sayısı ve clean_sheets zaten var ama kullanılmıyordu, şimdi motm ekliyoruz
+-- MotM sayısı, saves, position, rating kolonları
 ALTER TABLE player_career_stats ADD COLUMN IF NOT EXISTS motm INT DEFAULT 0;
 ALTER TABLE player_career_stats ADD COLUMN IF NOT EXISTS saves INT DEFAULT 0;
 ALTER TABLE player_career_stats ADD COLUMN IF NOT EXISTS position TEXT;
