@@ -1,16 +1,28 @@
 {
   "crons": [
     {
-      "path": "/api/cron/bot-actions",
+      "path": "/api/cron/check-academy-upgrades",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/season-end-trigger",
+      "schedule": "0 0 * * 0"
+    },
+    {
+      "path": "/api/cron/update-player-values",
+      "schedule": "0 2 * * 1"
+    },
+    {
+      "path": "/api/cron/bot-actions",
+      "schedule": "0 10 * * 1"
+    },
+    {
+      "path": "/api/cron/match-simulator",
+      "schedule": "0 12 * * 1-5"
     },
     {
       "path": "/api/cron/update-form-ratings",
       "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/cron/match-simulator",
-      "schedule": "30 2 * * *"
     },
     {
       "path": "/api/cron/youth-training",
