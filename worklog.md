@@ -106,3 +106,23 @@ Stage Summary:
 - Modified: persistence.ts, YouthAcademyTab.tsx, page.tsx
 - Key features: youth player persistence, facility upgrade persistence, player promotion, season-end aging/intake
 - Build passes successfully
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Fix SQL UUID type mismatch error in Youth Academy migration
+
+Work Log:
+- Investigated "operator does not exist: text = uuid" SQL error
+- Found root cause: profiles.id is TEXT type in Supabase, but YOUTH_ACADEMY_MIGRATION.sql defined profile_id as UUID
+- RLS policies used auth.uid() (returns UUID) compared against TEXT profile_id
+- Fixed migration: changed profile_id from UUID to TEXT in both youth_players and youth_facilities tables
+- Changed auth.uid() to auth.uid()::text in all RLS policies
+- Added DROP TABLE IF EXISTS at top to handle previously created tables with wrong schema
+- Used separate ALTER TABLE for foreign key constraints instead of inline REFERENCES
+- Verified build passes successfully
+
+Stage Summary:
+- Fixed YOUTH_ACADEMY_MIGRATION.sql to use TEXT type for profile_id columns
+- All RLS policies now use auth.uid()::text for proper type matching
+- Migration includes cleanup for previously failed attempts (DROP IF EXISTS)
