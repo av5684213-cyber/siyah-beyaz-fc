@@ -64,7 +64,7 @@ export default function StadiumTab() {
   const isUpgrading = !!profile?.active_upgrade_type;
   const speedUpUsed = !!profile?.active_upgrade_speedup;
   const remainingDays = Math.max(0, (profile?.active_upgrade_finish_day || 0) - (profile?.current_day || 0));
-  const canSpeedUp = isUpgrading && !speedUpUsed && remainingDays > 0 && (profile?.mg_coins || 0) >= 5;
+  const canSpeedUp = isUpgrading && !speedUpUsed && remainingDays > 0 && (profile?.credits || 0) >= 5;
 
   const getUpgradeDuration = (level: number) => {
     if (level <= 2) return 2;
@@ -138,7 +138,7 @@ export default function StadiumTab() {
 
   const handleSpeedUpUpgrade = () => {
     if (!profile || !canSpeedUp) return;
-    if (!confirm('Geliştirme süresini yarıya indirmek için 5 MG Coin harcanacak. Onaylıyor musun?')) return;
+    if (!confirm('Geliştirme süresini yarıya indirmek için 5 Kredi harcanacak. Onaylıyor musun?')) return;
     
     const currentDay = profile.current_day || 0;
     const finishDay = profile.active_upgrade_finish_day || 0;
@@ -146,7 +146,7 @@ export default function StadiumTab() {
     
     setProfile({
       ...profile,
-      mg_coins: (profile.mg_coins || 0) - 5,
+      credits: (profile.credits || 0) - 5,
       active_upgrade_finish_day: halfWay,
       active_upgrade_speedup: true
     });
@@ -186,12 +186,12 @@ export default function StadiumTab() {
                 <p className="text-[9px] font-black uppercase tracking-widest opacity-60">TAMAMLANMASINA</p>
                 <p className="text-2xl font-black italic tracking-tighter">{remainingDays} <span className="text-sm opacity-50 not-italic uppercase font-bold">GÜN KALDI</span></p>
              </div>
-             {isUpgrading && !speedUpUsed && remainingDays > 0 && !canSpeedUp && (profile?.mg_coins || 0) < 5 && (
+             {isUpgrading && !speedUpUsed && remainingDays > 0 && !canSpeedUp && (profile?.credits || 0) < 5 && (
                <div className="flex items-center gap-2 px-4 py-3 bg-white/5 text-white/20 border border-white/10 rounded-2xl">
                  <Zap size={16} />
                  <div className="flex flex-col leading-none">
                    <span className="text-[9px] font-black uppercase tracking-wider">HIZLANDIR</span>
-                   <span className="text-[7px] font-bold opacity-50">YETERSIZ COIN (5 MG)</span>
+                   <span className="text-[7px] font-bold opacity-50">YETERSİZ KREDİ (5 KR)</span>
                  </div>
                </div>
              )}
@@ -203,7 +203,7 @@ export default function StadiumTab() {
                  <Zap size={16} className="fill-black" />
                  <div className="flex flex-col leading-none">
                    <span className="text-[9px] font-black uppercase tracking-wider">HIZLANDIR</span>
-                   <span className="text-[7px] font-bold opacity-70">5 MG COIN</span>
+                   <span className="text-[7px] font-bold opacity-70">5 Kredi</span>
                  </div>
                </button>
              )}

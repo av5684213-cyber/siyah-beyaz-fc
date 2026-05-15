@@ -33,7 +33,7 @@ interface AppHeaderProps {
     team_name: string;
     league_name?: string;
     money: number;
-    mg_coins?: number;
+    credits?: number;
     current_day: number;
     primary_color?: string;
     secondary_color?: string;
@@ -171,13 +171,13 @@ export function AppHeader({
         </div>
 
         <div className="text-right flex flex-col items-end border-l border-white/5 pl-4">
-          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold mb-0.5">MG Coin</p>
+          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold mb-0.5">💰 Kredi</p>
           <div className="flex items-center gap-2 justify-end">
             <div className="w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center border border-amber-600 shadow-[0_0_10px_rgba(251,191,36,0.3)]">
-               <span className="text-[8px] font-black text-amber-900">MG</span>
+               <span className="text-[8px] font-black text-amber-900">KR</span>
             </div>
             <p className="font-mono text-lg font-medium tracking-tighter text-amber-400">
-              {profile?.mg_coins?.toLocaleString() || '0'}
+              {profile?.credits?.toLocaleString() || '0'}
             </p>
           </div>
         </div>

@@ -131,18 +131,18 @@ export default function AdminPanel() {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-white/20 uppercase block mb-2">MG Coin</label>
+                <label className="text-[10px] font-bold text-white/20 uppercase block mb-2">💰 Kredi</label>
                 <div className="flex gap-2">
                   <input 
                     type="number"
-                    defaultValue={profile?.mg_coins}
+                    defaultValue={profile?.credits}
                     id="admin_mg"
                     className="flex-1 bg-black border border-white/10 rounded-xl px-4 py-2 text-xs font-black"
                   />
                   <button 
                     onClick={() => {
                       const val = (document.getElementById('admin_mg') as HTMLInputElement).value;
-                      setProfile((p: any) => ({ ...p, mg_coins: parseInt(val) }));
+                      setProfile((p: any) => ({ ...p, credits: parseInt(val) }));
                     }}
                     className="p-2 bg-amber-500 rounded-xl text-black"
                   >

@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
           league_name: leagueName,
           money: bot.money || 100000000,
           reputation: bot.reputation || 30,
-          mg_coins: 250,
+          credits: 250,
           current_day: 1,
           ticket_price: 35,
           stadium_capacity: 10000,

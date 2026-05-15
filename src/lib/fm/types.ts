@@ -165,7 +165,7 @@ export interface Profile {
   money: number;
   fans: number;
   reputation: number;
-  mg_coins: number;
+  credits: number;
   current_day: number;
   team_id?: string;
   defense_powers?: Record<string, number>; 

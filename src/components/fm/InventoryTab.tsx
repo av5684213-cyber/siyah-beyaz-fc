@@ -44,7 +44,7 @@ const RARITY_STYLES: Record<string, { text: string; bg: string; border: string; 
 };
 
 function getDefaultInventory(profile: any): InventoryItem[] {
-  const mgCoins = profile?.mg_coins || 0;
+  const creditsBalance = profile?.credits || 0;
   const academyLevel = profile?.academy_level || 1;
   const philosophy = profile?.philosophy || 'balanced';
 
@@ -96,7 +96,7 @@ function getDefaultInventory(profile: any): InventoryItem[] {
       description: 'Tüm oyuncuların güç özelliğini +3 artırır (3 maç).',
       category: 'boost',
       icon: <Flame size={18} />,
-      quantity: mgCoins >= 200 ? 1 : 0,
+      quantity: creditsBalance >= 200 ? 1 : 0,
       rarity: 'legendary',
       effect: 'Güç +3 (3 maç)',
     },
@@ -347,8 +347,8 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
           </p>
         </div>
         <div className="ml-auto text-right">
-          <div className="text-[9px] text-white/20 font-black uppercase mb-1">MG Coin</div>
-          <div className="text-lg font-mono font-bold text-amber-400">{profile.mg_coins || 0}</div>
+          <div className="text-[9px] text-white/20 font-black uppercase mb-1">💰 Kredi</div>
+          <div className="text-lg font-mono font-bold text-amber-400">{profile.credits || 0}</div>
         </div>
       </motion.div>
 

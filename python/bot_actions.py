@@ -607,7 +607,7 @@ def take_over_bot_for_new_user(db: SupabaseClient, new_user_id: str, team_name: 
             "league_name": league_name,
             "money": bot.get("money", 100000000),
             "reputation": bot.get("reputation", 30),
-            "mg_coins": 250,
+            "credits": 250,
             "current_day": 1,
             "ticket_price": 35,
             "stadium_capacity": 10000,

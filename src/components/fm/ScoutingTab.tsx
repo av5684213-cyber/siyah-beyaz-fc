@@ -169,12 +169,12 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
   const handleAdvancedSearch = async () => {
     if (!profile) return;
     
-    if (profile.mg_coins < 2) {
-      alert('Yetersiz MG Coin! Detaylı arama için 2 MG Coin gerekiyor.');
+    if (profile.credits < 2) {
+      alert('Yetersiz Kredi! Detaylı arama için 2 Kredi gerekiyor.');
       return;
     }
 
-    if (!confirm('Detaylı arama yapmak için 2 MG Coin harcanacak. Devam etmek istiyor musunuz?')) {
+    if (!confirm('Detaylı arama yapmak için 2 Kredi harcanacak. Devam etmek istiyor musunuz?')) {
       return;
     }
 
@@ -195,7 +195,7 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
       }
 
       // Spend coins
-      setProfile({ ...profile, mg_coins: profile.mg_coins - 2 });
+      setProfile({ ...profile, credits: profile.credits - 2 });
 
       // Fetch from Supabase with name filter if provided
       let query = supabase.from('players').select('*');

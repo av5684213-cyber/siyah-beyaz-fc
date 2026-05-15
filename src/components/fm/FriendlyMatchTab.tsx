@@ -198,27 +198,27 @@ export function FriendlyMatchTab() {
     setActiveTab('matchday');
   };
 
-  // ── Button 1: Teklif Et (1 MG Coin - Direkt Mac) ──
+  // ── Button 1: Teklif Et (1 Kredi - Direkt Maç) ──
   const handleOfferMatch = async () => {
     if (!profile) return;
-    if ((profile.mg_coins || 0) < 1) {
-      alert('Yetersiz MG Coin! (1 MG gerekli)');
+    if ((profile.credits || 0) < 1) {
+      alert('Yetersiz Kredi! (1 Kredi gerekli)');
       return;
     }
 
-    if (!confirm('1 MG Coin karşılığında hazırlık maçı teklif edilecek. Rakip hemen bulunacak. Devam?')) return;
+    if (!confirm('1 Kredi karşılığında hazırlık maçı teklif edilecek. Rakip hemen bulunacak. Devam?')) return;
 
     setLoading(true);
     
     const opponent = generateOpponent('hard');
     
     // Deduct coin
-    const newMG = (profile.mg_coins || 0) - 1;
-    setProfile((prev: any) => ({ ...prev, mg_coins: newMG }));
+    const newCredits = (profile.credits || 0) - 1;
+    setProfile((prev: any) => ({ ...prev, credits: newCredits }));
     
     if (isSupabaseConfigured()) {
       const supabase = getSupabase();
-      if (supabase) await supabase.from('profiles').update({ mg_coins: newMG }).eq('id', profile.id);
+      if (supabase) await supabase.from('profiles').update({ credits: newCredits }).eq('id', profile.id);
     }
 
     // Small delay for UX feel

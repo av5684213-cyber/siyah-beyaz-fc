@@ -323,7 +323,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
         league_name: targetLeagueName,
         manager_name: managerName || authEmail?.split('@')[0] || 'Menajer',
         money: philosophy === 'financial' ? 150000000 : 100000000,
-        mg_coins: philosophy === 'legend' ? 500 : 250,
+        credits: philosophy === 'legend' ? 500 : 250,
         current_day: 1, 
         ticket_price: 35,
         stadium_capacity: 10000,
@@ -611,7 +611,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
             team_name: randomT,
             manager_name: 'Misafir Menajer',
             money: 50000000,
-            mg_coins: 100,
+            credits: 100,
             ticket_price: 20,
             academy_level: 1,
             reputation: 50,
@@ -953,11 +953,11 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
   const playFriendlyMatch = useCallback(async (isPaid: boolean = false) => {
     if (!profile) return { success: false, reason: 'Profil bulunamadı' };
     
-    if (isPaid && (profile.mg_coins || 0) < 1) {
-      return { success: false, reason: 'Yetersiz MG Coin (1 MG Coin gerekli)' };
+    if (isPaid && (profile.credits || 0) < 1) {
+      return { success: false, reason: 'Yetersiz Kredi (1 Kredi gerekli)' };
     }
 
-    const newMG = isPaid ? (profile.mg_coins || 0) - 1 : (profile.mg_coins || 0);
+    const newCredits = isPaid ? (profile.credits || 0) - 1 : (profile.credits || 0);
     
     // Simulate Match
     const homeScore = Math.floor(Math.random() * 4);
@@ -967,11 +967,11 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
     const { updatedSquad, results } = runTrainingSession(squad, trainingState, 2.0);
     
     setSquad(updatedSquad);
-    setProfile((prev: Profile | null) => ({ ...prev, mg_coins: newMG }));
+    setProfile((prev: Profile | null) => ({ ...prev, credits: newCredits }));
     
     if (isSupabaseConfigured()) {
       const supabase = getSupabase();
-      await supabase.from('profiles').update({ mg_coins: newMG }).eq('id', profile.id);
+      await supabase.from('profiles').update({ credits: newCredits }).eq('id', profile.id);
       
       await supabase.from('friendly_matches').insert({
         home_team_id: profile.id,

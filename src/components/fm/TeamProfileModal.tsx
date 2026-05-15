@@ -201,8 +201,8 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!profile || !teamData?.id) return;
-    if ((profile.mg_coins || 0) < 2) {
-      alert('Amblem yuklemek icin 2 MG Coin gerekli!');
+    if ((profile.credits || 0) < 2) {
+      alert('Amblem yüklemek için 2 Kredi gerekli!');
       return;
     }
     if (!e.target.files || !e.target.files[0]) return;
@@ -213,19 +213,19 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
       return;
     }
 
-    if (!confirm('Amblem yuklemek icin 2 MG Coin harcanacak. Devam?')) return;
+    if (!confirm('Amblem yüklemek için 2 Kredi harcanacak. Devam?')) return;
 
     try {
       const reader = new FileReader();
       reader.onload = async () => {
         const base64 = reader.result as string;
-        const newMG = (profile.mg_coins || 0) - 2;
-        setProfile((prev: any) => ({ ...prev, mg_coins: newMG }));
+        const newCredits = (profile.credits || 0) - 2;
+        setProfile((prev: any) => ({ ...prev, credits: newCredits }));
 
         if (isSupabaseConfigured()) {
           const supabase = getSupabase();
           if (supabase) {
-            await supabase.from('profiles').update({ mg_coins: newMG, team_logo: base64 }).eq('id', profile.id);
+            await supabase.from('profiles').update({ credits: newCredits, team_logo: base64 }).eq('id', profile.id);
             setTeamData(prev => ({ ...prev, team_logo: base64 }));
           }
         }

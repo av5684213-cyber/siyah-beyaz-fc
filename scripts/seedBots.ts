@@ -73,7 +73,7 @@ async function seedBots() {
         manager_name: managerName,
         team_name: teamName,
         money: 50_000_000 + Math.floor(Math.random() * 50_000_000),
-        mg_coins: 100,
+        credits: 100,
         level: 1,
         xp: 0,
         fans: 1000 + Math.floor(Math.random() * 5000),
