@@ -513,7 +513,18 @@ export const generatePlayer = (
     restrictedLevels[tName] = level;
   });
 
-  const potential = Math.min(99, baseRating + Math.floor(randomFn() * 15));
+  // ADIM 1D: Genç oyuncularda (age < 22) potential > rating olmasını garanti et
+  let potential: number;
+  if (age < 22) {
+    // Gençler: potential her zaman rating'den yüksek olmalı
+    const minPotentialBonus = 5; // Minimum +5
+    const maxPotentialBonus = 20; // Maksimum +20
+    const potentialBonus = minPotentialBonus + Math.floor(randomFn() * (maxPotentialBonus - minPotentialBonus));
+    potential = Math.min(99, baseRating + potentialBonus);
+  } else {
+    // 22+ yaş: potential rating'e eşit veya biraz fazla olabilir
+    potential = Math.min(99, baseRating + Math.floor(randomFn() * 10));
+  }
   const hidden_potential = Math.min(99, potential + Math.floor(randomFn() * 10));
 
   // ═══ ARKETİP BAZLI STAT ÜRETME ═══
@@ -602,6 +613,10 @@ export const generatePlayer = (
     styleLevels: { [playStyle]: 1 },
     match_ratings: [],
     scouted: false,
+    
+    // ADIM 1: Form rating ve sakatlık geçmişi
+    form_rating: 50, // Başlangıç form puanı (cron job ile güncellenecek)
+    injury_history: [], // Boş sakatlık geçmişi
     
     // Detailed Technical
     finishing: aStats.finishing || 50,

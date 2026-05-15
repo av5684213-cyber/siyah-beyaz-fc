@@ -80,6 +80,14 @@ export interface Player {
     remaining_days: number;
     severity: number;
   };
+
+  // SAKATLIK GEÇMİŞİ (ADIM 1A)
+  // Format: [{date: "2026-05-01", duration_days: 7, type: "hamstring"}]
+  injury_history?: InjuryRecord[];
+
+  // FORM PUANI (ADIM 1B) - Son 5 maç performans ortalaması (0-100)
+  // match_ratings dizisinden hesaplanır, günlük cron ile güncellenir
+  form_rating?: number;
   traits: string[];
   negTraits?: string[];
   personalityTraits?: string[];
@@ -138,6 +146,13 @@ export interface Player {
   aggression?: number;
   bravery?: number;
   decisions?: number;
+}
+
+/** Sakatlık geçmişi kaydı (ADIM 1A) */
+export interface InjuryRecord {
+  date: string;           // Sakatlık tarihi (ISO format)
+  duration_days: number;  // Sakatlık süresi (gün)
+  type: string;           // Sakatlık tipi (hamstring, ankle, knee, vb.)
 }
 
 export interface Sponsor {

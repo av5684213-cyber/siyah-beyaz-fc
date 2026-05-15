@@ -31,3 +31,26 @@ Stage Summary:
 - 28 lint errors reduced (remaining are React Compiler warnings in MatchDay.tsx)
 - Commit: 1d71bc1 "Major bug fixes & feature completions — 19 issues resolved"
 - GitHub push pending: needs user's GitHub token/credentials
+---
+Task ID: step1
+Agent: Main Agent
+Task: ADIM 1 - Oyuncu Değerleme Algoritması (Form, Sakatlık, Yaş)
+
+Work Log:
+- Created PLAYER_VALUATION_MIGRATION.sql with injury_history (JSONB) and form_rating (INTEGER) columns
+- Added InjuryRecord interface and form_rating/injury_history fields to Player type in types.ts
+- Created formRatingService.ts with calculateFormRating(), updateAllFormRatings(), injury history helpers
+- Created /api/cron/update-form-ratings/route.ts for daily cron job
+- Updated vercel.json with new cron schedule (daily at 03:00)
+- Updated calculateMarketValue() in valuation.ts with form_rating ±25%, injury history -20%, age <22 +30%, age >32 -20%
+- Updated playerGenerator.ts: young players (age<22) always get potential > rating, added form_rating and injury_history initialization
+- Updated persistence.ts: loadPlayers() and savePlayers() now handle form_rating and injury_history fields
+- Build successful with all new routes visible
+
+Stage Summary:
+- All Step 1 sub-tasks (1A-1E) completed
+- SQL migration file: /home/z/my-project/download/PLAYER_VALUATION_MIGRATION.sql
+- New service: /home/z/my-project/src/lib/fm/formRatingService.ts
+- New cron route: /home/z/my-project/src/app/api/cron/update-form-ratings/route.ts
+- Modified: types.ts, valuation.ts, playerGenerator.ts, persistence.ts, vercel.json
+- Build passes successfully

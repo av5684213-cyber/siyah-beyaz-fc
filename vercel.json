@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/bot-actions",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/update-form-ratings",
+      "schedule": "0 3 * * *"
     }
   ]
 }
