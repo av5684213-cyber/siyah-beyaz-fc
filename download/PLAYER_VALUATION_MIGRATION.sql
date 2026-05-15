@@ -22,15 +22,17 @@ CREATE INDEX IF NOT EXISTS idx_players_injury_history ON players USING GIN(injur
 UPDATE players SET form_rating = COALESCE(form, 50) WHERE form_rating IS NULL OR form_rating = 50;
 
 -- 6. Mevcut oyuncular için injury_history başlangıç değeri ata
--- Mevcut injury bilgisi varsa geçmişe ekle
+-- Mevcut injury bilgisi varsa geçmişe ekle (JSONB güvenli kontrol)
 UPDATE players
 SET injury_history = CASE
-  WHEN injury IS NOT NULL AND injury != 'null' AND injury != '' THEN
+  WHEN injury IS NOT NULL
+       AND injury::text NOT IN ('null', '""', '{}')
+       AND jsonb_typeof(injury::jsonb) != 'null' THEN
     jsonb_build_array(
       jsonb_build_object(
-        'date', CURRENT_DATE - (COALESCE((injury::json->>'remaining_days')::int, 7)) || ' days',
-        'duration_days', COALESCE((injury::json->>'remaining_days')::int, 7),
-        'type', COALESCE(injury::json->>'type', 'unknown')
+        'date', (CURRENT_DATE - COALESCE((injury::jsonb->>'remaining_days')::int, 7))::text,
+        'duration_days', COALESCE((injury::jsonb->>'remaining_days')::int, 7),
+        'type', COALESCE(injury::jsonb->>'type', 'unknown')
       )
     )
   ELSE '[]'::jsonb
