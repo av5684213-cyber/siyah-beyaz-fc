@@ -556,6 +556,78 @@ def get_all_bot_profiles(db: SupabaseClient) -> list[dict]:
         return []
 
 
+def make_tactical_decision(
+    db: SupabaseClient,
+    bot_user_id: str,
+    match_id: str,
+    minute: int = 60,
+    current_score: Optional[dict] = None,
+) -> dict:
+    """
+    Maç sırasında taktiksel karar alır.
+    
+    60. dakikada skor gerideyse agresif formasyona geç (4-2-4).
+    Skor eşitse veya öndeyse defansif (5-4-1).
+    
+    Args:
+        db: Supabase client
+        bot_user_id: Bot profil ID
+        match_id: Maç ID
+        minute: Maç dakikası
+        current_score: {"home": int, "away": int, "is_home": bool}
+    
+    Returns:
+        {"formation": str, "mentality": str, "changes_made": list}
+    """
+    logger.info(f"Bot taktik kararı: bot={bot_user_id}, dakika={minute}")
+    
+    result = {"formation": "4-4-2", "mentality": "normal", "changes_made": []}
+    
+    if not current_score:
+        return result
+    
+    is_home = current_score.get("is_home", True)
+    my_goals = current_score.get("home" if is_home else "away", 0)
+    opp_goals = current_score.get("away" if is_home else "home", 0)
+    
+    goal_diff = my_goals - opp_goals
+    
+    if minute >= 60:
+        if goal_diff < 0:
+            # Gerideyiz - agresif
+            if minute >= 75:
+                result["formation"] = "4-2-4"
+                result["mentality"] = "very_attacking"
+                result["changes_made"].append("Agresif formasyona geçildi (4-2-4)")
+            else:
+                result["formation"] = "4-3-3"
+                result["mentality"] = "attacking"
+                result["changes_made"].append("Hücum formasyonuna geçildi (4-3-3)")
+        elif goal_diff == 0:
+            # Eşit - dengeli
+            result["formation"] = "4-5-1"
+            result["mentality"] = "balanced"
+            result["changes_made"].append("Denge formasyonu (4-5-1)")
+        elif goal_diff >= 2:
+            # İki+ gol öndeyiz - defansif
+            result["formation"] = "5-4-1"
+            result["mentality"] = "defensive"
+            result["changes_made"].append("Defansif formasyona geçildi (5-4-1)")
+    
+    # match_lineups'a taktik güncellemeyi kaydet
+    if result["changes_made"]:
+        try:
+            db.update(
+                "match_lineups",
+                {"formation": result["formation"], "mentality": result["mentality"]},
+                {"match_id": f"eq.{match_id}", "team_id": f"eq.{bot_user_id}"},
+            )
+        except Exception as e:
+            logger.warning(f"Taktik güncelleme kaydedilemedi: {e}")
+    
+    return result
+
+
 def take_over_bot_for_new_user(db: SupabaseClient, new_user_id: str, team_name: str, manager_name: str) -> dict:
     """
     Yeni kullanıcı kaydolduğunda bot takımını devralır.
