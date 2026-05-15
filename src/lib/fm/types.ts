@@ -199,6 +199,8 @@ export interface Profile {
   secondary_color?: string;
   is_bot?: boolean;
   bot_difficulty?: number;
+  academy_weekly_budget?: number;
+  last_youth_intake_season?: string;
   created_at?: string;
 }
 

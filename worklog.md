@@ -126,3 +126,29 @@ Stage Summary:
 - Fixed YOUTH_ACADEMY_MIGRATION.sql to use TEXT type for profile_id columns
 - All RLS policies now use auth.uid()::text for proper type matching
 - Migration includes cleanup for previously failed attempts (DROP IF EXISTS)
+
+---
+Task ID: 3-continued
+Agent: Main Agent
+Task: ADIM 3 - Youth Academy Weekly Training & Cron Integration
+
+Work Log:
+- Fixed SQL migration: profile_id UUID→TEXT, auth.uid()→auth.uid()::text in all RLS policies
+- Integrated processYouthWeeklyTraining() into runEvolution(): triggers every 7 game days
+- Weekly training applies facility bonuses, development curves, age/wonderkid/personality modifiers
+- Added academy_weekly_budget and last_youth_intake_season to Profile interface in types.ts
+- Created /api/cron/youth-training/route.ts: server-side weekly youth training for all players
+  - Fetches all youth_players + youth_facilities from Supabase
+  - Groups by profile_id for correct facility levels
+  - Processes training in batches of 50
+  - Reports trained count, new injuries, errors
+- Updated vercel.json: added youth-training cron (weekly Monday 04:00)
+- Fixed promote player handler: added suspended_until, is_injured, injury_end_date fields
+- Build passes successfully with new route visible
+
+Stage Summary:
+- Weekly youth training now automated (both client-side via runEvolution and server-side via cron)
+- SQL migration fixed for TEXT profile_id compatibility
+- Profile type extended with academy fields
+- New API route: /api/cron/youth-training
+- Step 3 (Youth Academy) fully complete

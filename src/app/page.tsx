@@ -494,6 +494,32 @@ export default function Home() {
 
       setRetiredLog({ retired: retiredPlayers, talents: newTalents });
     }
+
+    // ADIM 3: Haftalık gençlik antrenmanı (her 7 günde bir)
+    const currentDay = profile?.current_day ?? 1;
+    if (currentDay > 0 && currentDay % 7 === 0 && profile) {
+      setYouthPlayers(prev => {
+        if (prev.length === 0) return prev;
+        // FacilityState[] formatına çevir
+        const facilityStates: { facilityId: string; currentLevel: number }[] = YOUTH_FACILITIES.map(f => ({
+          facilityId: f.id,
+          currentLevel: youthFacilities[f.id] ?? 1,
+        }));
+        const trained = prev.map(yp => {
+          try {
+            return processYouthWeeklyTraining(yp, facilityStates);
+          } catch {
+            return yp; // Hata olursa eski halinde bırak
+          }
+        });
+        // Supabase'e kaydet
+        if (profile.id) {
+          saveYouthPlayers(trained, profile.id);
+        }
+        return trained;
+      });
+    }
+
     setSquad(updatedSquad);
     setProfile(prev => {
       if (!prev) return prev;
@@ -1044,6 +1070,9 @@ export default function Home() {
                         traitLevels: youthPlayer.traitLevels,
                         form_rating: 50,
                         injury_history: [],
+                        suspended_until: undefined,
+                        is_injured: youthPlayer.injured,
+                        injury_end_date: undefined,
                       };
                       // A takıma ekle
                       setSquad(prev => [...prev, promotedPlayer]);
