@@ -32,6 +32,8 @@ interface YouthAcademyTabProps {
   onUpgradeFacility: (facilityId: string, cost: number) => void;
   onPromotePlayer: (player: YouthPlayer) => void;
   budget: number;
+  youthPlayers?: YouthPlayer[];
+  onYouthPlayersChange?: (players: YouthPlayer[]) => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────
@@ -140,9 +142,22 @@ export default function YouthAcademyTab({
   onUpgradeFacility,
   onPromotePlayer,
   budget,
+  youthPlayers: externalYouthPlayers,
+  onYouthPlayersChange,
 }: YouthAcademyTabProps) {
-  // ─── Internal State ─────────────────────────────────────────────────
-  const [youthPlayers, setYouthPlayers] = useState<YouthPlayer[]>([]);
+  // ─── State: External (controlled) or Internal ──────────────────────
+  // Eğer parent bileşen youthPlayers prop'u veriyorsa, onu kullan; yoksa internal state
+  const [internalYouthPlayers, setInternalYouthPlayers] = useState<YouthPlayer[]>([]);
+  const youthPlayers = externalYouthPlayers !== undefined ? externalYouthPlayers : internalYouthPlayers;
+  const setYouthPlayers = useCallback((update: YouthPlayer[] | ((prev: YouthPlayer[]) => YouthPlayer[])) => {
+    if (onYouthPlayersChange) {
+      // Parent kontrollü: yeni listeyi parent'a bildir
+      const newList = typeof update === 'function' ? update(youthPlayers) : update;
+      onYouthPlayersChange(newList);
+    } else {
+      setInternalYouthPlayers(update);
+    }
+  }, [onYouthPlayersChange, youthPlayers]);
   const [selectedPlayer, setSelectedPlayer] = useState<YouthPlayer | null>(null);
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('ALL');
   const [showIntakeConfirm, setShowIntakeConfirm] = useState(false);

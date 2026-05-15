@@ -79,6 +79,8 @@ import CommunicationPanel from '@/components/fm/CommunicationPanel';
 import TeamProfileModal from '@/components/fm/TeamProfileModal';
 import MatchReportPanel from '@/components/fm/MatchReportPanel';
 import YouthAcademyTab from '@/components/fm/YouthAcademyTab';
+import { generateYouthPlayer, generateScoutReport, YouthPlayer, processYouthWeeklyTraining, YOUTH_FACILITIES, getDefaultFacilityState } from '@/lib/fm/youthAcademy';
+import { loadYouthPlayers, saveYouthPlayers, loadYouthFacilities, saveYouthFacilities } from '@/lib/fm/persistence';
 import CupTab from '@/components/fm/CupTab';
 import FinancialTab from '@/components/fm/FinancialTab';
 import TacticsRolesPanel from '@/components/fm/TacticsRolesPanel';
@@ -125,6 +127,27 @@ export default function Home() {
   const [retiredLog, setRetiredLog] = useState<{ retired: Player[], talents: Player[] } | null>(null);
   const [showTrainingToast, setShowTrainingToast] = useState(false);
   const [transferOffers, setTransferOffers] = useState<Array<{ id: string; fromTeam: string; playerName: string; playerPosition: string; amount: number; status: string; date: string }>>([]);
+
+  // ADIM 3: Youth Academy verilerini profile yüklendiğinde çek
+  useEffect(() => {
+    if (!profile?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const [loadedPlayers, loadedFacilities] = await Promise.all([
+          loadYouthPlayers(profile.id),
+          loadYouthFacilities(profile.id),
+        ]);
+        if (!cancelled) {
+          if (loadedPlayers.length > 0) setYouthPlayers(loadedPlayers);
+          if (Object.keys(loadedFacilities).length > 0) setYouthFacilities(loadedFacilities);
+        }
+      } catch (err) {
+        console.error('[Youth Academy] Veri yükleme hatası:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [profile?.id]);
 
   const sellPlayer = async (player: Player, price: number) => {
     if (!profile) return;
@@ -442,6 +465,32 @@ export default function Home() {
         newTalents.push(eliteWonderkid);
         updatedSquad.push(eliteWonderkid);
       }
+
+      // ADIM 3: Sezon sonunda genç oyuncuların yaşını büyüt ve kategori güncelle
+      setYouthPlayers(prev => {
+        const aged = prev.map(yp => {
+          const newAge = yp.age + 1;
+          const newCategory = newAge <= 17 ? 'U17' : newAge <= 19 ? 'U19' : 'U21';
+          // 21 yaşını geçenler otomatik A takıma çıkar (yada serbest kalır)
+          if (newAge > 21) return null;
+          return { ...yp, age: newAge, category: newCategory };
+        }).filter(Boolean) as any[];
+        // Sezon sonu genç alımı (akademi seviyesine göre 2-5 oyuncu)
+        const academyLevel = profile.academy_level || 1;
+        const intakeCount = Math.min(5, 1 + academyLevel);
+        const newIntake: any[] = [];
+        for (let i = 0; i < intakeCount; i++) {
+          const yp = generateYouthPlayer(academyLevel);
+          const withReport = { ...yp, scoutReport: generateScoutReport(yp) };
+          newIntake.push(withReport);
+        }
+        const finalList = [...aged, ...newIntake];
+        // Supabase'e kaydet
+        if (profile.id) {
+          saveYouthPlayers(finalList, profile.id);
+        }
+        return finalList;
+      });
 
       setRetiredLog({ retired: retiredPlayers, talents: newTalents });
     }
@@ -923,14 +972,93 @@ export default function Home() {
                 <motion.div key="youth" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <YouthAcademyTab
                     academyLevel={profile.academy_level || 1}
-                    facilities={{}}
+                    facilities={youthFacilities as any}
                     onUpgradeFacility={(id, cost) => {
                       if ((profile.money || 0) >= cost) {
+                        // Bütçeden düş
                         setProfile(p => ({ ...p, money: (p.money || 0) - cost }));
+                        // Tesis seviyesini güncelle
+                        const newFacilities = { ...youthFacilities, [id]: (youthFacilities[id] || 1) + 1 };
+                        setYouthFacilities(newFacilities);
+                        // Supabase'e kaydet
+                        if (profile.id) {
+                          saveYouthFacilities(newFacilities, profile.id);
+                        }
                       }
                     }}
-                    onPromotePlayer={() => {}}
+                    onPromotePlayer={(youthPlayer: YouthPlayer) => {
+                      // Genç oyuncuyu A takım oyuncusuna dönüştür
+                      const promotedPlayer: Player = {
+                        id: youthPlayer.id.replace('youth_', 'p_'),
+                        name: youthPlayer.name,
+                        position: youthPlayer.position,
+                        specificPosition: youthPlayer.specificPosition,
+                        rating: youthPlayer.rating,
+                        age: youthPlayer.age,
+                        potential: youthPlayer.potential,
+                        hidden_potential: youthPlayer.hidden_potential,
+                        market_value: Math.round(Math.pow(youthPlayer.rating, 2.5) * 3000),
+                        salary: Math.round(youthPlayer.rating * 800 + 5000),
+                        nation: 'TR',
+                        club: profile.team_name,
+                        defending: youthPlayer.defending,
+                        passing: youthPlayer.passing,
+                        shooting: youthPlayer.shooting,
+                        speed: youthPlayer.speed,
+                        power: youthPlayer.power,
+                        goalkeeping: youthPlayer.goalkeeping ?? 10,
+                        finishing: youthPlayer.finishing,
+                        dribbling: youthPlayer.dribbling,
+                        firstTouch: youthPlayer.firstTouch,
+                        crossing: youthPlayer.crossing,
+                        marking: youthPlayer.marking,
+                        tackling: youthPlayer.tackling,
+                        technique: youthPlayer.technique,
+                        longShots: youthPlayer.longShots,
+                        offTheBall: youthPlayer.offTheBall,
+                        heading: youthPlayer.heading,
+                        aggression: youthPlayer.aggression,
+                        bravery: youthPlayer.bravery,
+                        workRate: youthPlayer.workRate,
+                        decisions: youthPlayer.decisions,
+                        determination: youthPlayer.determination,
+                        concentration: youthPlayer.concentration,
+                        leadership: youthPlayer.leadership,
+                        anticipation: youthPlayer.anticipation,
+                        flair: youthPlayer.flair,
+                        positioning: youthPlayer.positioning,
+                        composure: youthPlayer.composure,
+                        teamwork: youthPlayer.teamwork,
+                        vision: youthPlayer.vision,
+                        agility: youthPlayer.agility,
+                        balance: youthPlayer.balance,
+                        strength: youthPlayer.strength,
+                        acceleration: youthPlayer.acceleration,
+                        jumping: youthPlayer.jumping,
+                        cond: youthPlayer.cond,
+                        form: youthPlayer.form,
+                        morale: youthPlayer.morale,
+                        confidence: youthPlayer.confidence,
+                        traits: youthPlayer.traits,
+                        personalityTraits: youthPlayer.personalityTraits,
+                        traitLevels: youthPlayer.traitLevels,
+                        form_rating: 50,
+                        injury_history: [],
+                      };
+                      // A takıma ekle
+                      setSquad(prev => [...prev, promotedPlayer]);
+                      // Genç listeden çıkar
+                      setYouthPlayers(prev => prev.filter(p => p.id !== youthPlayer.id));
+                    }}
                     budget={profile.money || 0}
+                    youthPlayers={youthPlayers}
+                    onYouthPlayersChange={(newPlayers) => {
+                      setYouthPlayers(newPlayers);
+                      // Supabase'e kaydet
+                      if (profile.id) {
+                        saveYouthPlayers(newPlayers, profile.id);
+                      }
+                    }}
                   />
                 </motion.div>
               )}

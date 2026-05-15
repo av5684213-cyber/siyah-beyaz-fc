@@ -79,3 +79,30 @@ Stage Summary:
 - New service: /home/z/my-project/src/lib/fm/matchConsequencesService.ts
 - New cron route: /home/z/my-project/src/app/api/cron/match-simulator/route.ts
 - Modified: types.ts, persistence.ts, vercel.json, update-form-ratings/route.ts
+---
+Task ID: step3
+Agent: Main Agent
+Task: ADIM 3 - Gençlik Akademisi (Youth Academy Persistence & Integration)
+
+Work Log:
+- Created YOUTH_ACADEMY_MIGRATION.sql with youth_players and youth_facilities tables + RLS policies
+- Added loadYouthPlayers(), saveYouthPlayers(), loadYouthFacilities(), saveYouthFacilities() to persistence.ts
+- Added mapYouthPlayerFromRow() helper to convert Supabase rows to YouthPlayer objects
+- Updated resetLeague() to also clean up youth_players and youth_facilities on reset
+- Updated STORAGE_KEYS with YOUTH_PLAYERS and YOUTH_FACILITIES keys
+- Updated YouthAcademyTab.tsx to accept youthPlayers and onYouthPlayersChange props (controlled component)
+- Modified page.tsx: added imports for youthAcademy functions and persistence functions
+- Added useEffect to load youth data from Supabase when profile loads
+- Fixed YouthAcademyTab integration: passes real youthFacilities, youthPlayers, and proper callbacks
+- Implemented onUpgradeFacility: deducts money, updates facility levels, persists to Supabase
+- Implemented onPromotePlayer: converts YouthPlayer to Player and adds to A squad
+- Implemented onYouthPlayersChange: auto-saves to Supabase on any youth player changes
+- Added season-end youth aging: +1 age per season, category updates (U17/U19/U21), auto-removal at 22+
+- Added season-end youth intake: generates 2-5 new youth players based on academy level
+- Build passes successfully
+
+Stage Summary:
+- SQL migration: /home/z/my-project/download/YOUTH_ACADEMY_MIGRATION.sql
+- Modified: persistence.ts, YouthAcademyTab.tsx, page.tsx
+- Key features: youth player persistence, facility upgrade persistence, player promotion, season-end aging/intake
+- Build passes successfully
