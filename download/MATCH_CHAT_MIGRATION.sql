@@ -1,11 +1,15 @@
 -- ═══════════════════════════════════════════════════════════════════════
--- ADIM 6: Match Chat Migration
+-- ADIM 6: Match Chat Migration (DÜZELTİLMİŞ)
 -- match_chat tablosu: Maç sırasında gerçek zamanlı sohbet
+-- DÜZELTME: DROP TABLE IF EXISTS ile temiz kurulum
 -- ═══════════════════════════════════════════════════════════════════════
+
+-- ─── TEMIZLİK: Eski tabloyu temizle ──────────────────────────────────
+DROP TABLE IF EXISTS match_chat CASCADE;
 
 -- ─── 1. match_chat TABLOSU ────────────────────────────────────────────
 -- Maç odası bazlı sohbet mesajları (fixture_id ile odaya gruplanır)
-CREATE TABLE IF NOT EXISTS match_chat (
+CREATE TABLE match_chat (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   fixture_id    TEXT NOT NULL,              -- Maç ID (fixture ID veya "friendly-{timestamp}")
   profile_id    TEXT NOT NULL,              -- profiles.id referansı (TEXT tipi)
@@ -18,9 +22,9 @@ CREATE TABLE IF NOT EXISTS match_chat (
 );
 
 -- Index: fixture + zaman bazında hızlı sorgulama
-CREATE INDEX IF NOT EXISTS idx_match_chat_fixture ON match_chat(fixture_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_match_chat_profile ON match_chat(profile_id);
-CREATE INDEX IF NOT EXISTS idx_match_chat_type ON match_chat(message_type);
+CREATE INDEX idx_match_chat_fixture ON match_chat(fixture_id, created_at);
+CREATE INDEX idx_match_chat_profile ON match_chat(profile_id);
+CREATE INDEX idx_match_chat_type ON match_chat(message_type);
 
 -- RLS: Herkes kendi maçlarının sohbetini görsün + mesaj gönderebilsin
 ALTER TABLE match_chat ENABLE ROW LEVEL SECURITY;

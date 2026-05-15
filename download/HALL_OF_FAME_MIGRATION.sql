@@ -1,12 +1,16 @@
 -- ═══════════════════════════════════════════════════════════════════════
--- ADIM 5: Hall of Fame Museum Migration
+-- ADIM 5: Hall of Fame Museum Migration (DÜZELTİLMİŞ)
 -- hall_of_fame tablosu: Emekli olan efsane oyuncuların kalıcı kaydı
+-- DÜZELTME: DROP TABLE IF EXISTS + DROP POLICY IF EXISTS ile temiz kurulum
 -- ═══════════════════════════════════════════════════════════════════════
+
+-- ─── TEMIZLİK: Eski tabloyu ve policy'leri temizle ────────────────────
+DROP TABLE IF EXISTS hall_of_fame CASCADE;
 
 -- ─── 1. hall_of_fame TABLOSU ─────────────────────────────────────────
 -- Takımdan emekli olan oyuncuların kariyer özetlerini saklar
 -- Sadece belirli kriterleri karşılayan oyuncular otomatik olarak alınır
-CREATE TABLE IF NOT EXISTS hall_of_fame (
+CREATE TABLE hall_of_fame (
   id              TEXT PRIMARY KEY,            -- "hof_{playerId}_{profileId}"
   profile_id      TEXT NOT NULL,              -- profiles.id referansı (TEXT tipi)
   player_id       TEXT NOT NULL,              -- Orijinal player ID
@@ -39,11 +43,11 @@ CREATE TABLE IF NOT EXISTS hall_of_fame (
 );
 
 -- Indexler
-CREATE INDEX IF NOT EXISTS idx_hof_profile ON hall_of_fame(profile_id);
-CREATE INDEX IF NOT EXISTS idx_hof_player ON hall_of_fame(player_id);
-CREATE INDEX IF NOT EXISTS idx_hof_tier ON hall_of_fame(legend_tier);
-CREATE INDEX IF NOT EXISTS idx_hof_legend ON hall_of_fame(is_club_legend) WHERE is_club_legend = true;
-CREATE INDEX IF NOT EXISTS idx_hof_rating ON hall_of_fame(avg_rating DESC);
+CREATE INDEX idx_hof_profile ON hall_of_fame(profile_id);
+CREATE INDEX idx_hof_player ON hall_of_fame(player_id);
+CREATE INDEX idx_hof_tier ON hall_of_fame(legend_tier);
+CREATE INDEX idx_hof_legend ON hall_of_fame(is_club_legend) WHERE is_club_legend = true;
+CREATE INDEX idx_hof_rating ON hall_of_fame(avg_rating DESC);
 
 -- RLS: Her kullanıcı kendi HOF'unu görsün + service role tam erişim
 ALTER TABLE hall_of_fame ENABLE ROW LEVEL SECURITY;
