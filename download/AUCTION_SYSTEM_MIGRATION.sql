@@ -42,7 +42,7 @@ WHERE seller_id != 'free-agent-system' AND seller_id IS NOT NULL AND is_active =
 -- 6. expires_at indeksi (süresi dolan artırmaları bulmak için)
 CREATE INDEX IF NOT EXISTS idx_transfer_market_expires ON transfer_market(expires_at) WHERE is_active = true AND is_auction = true;
 
--- 7. RLS (Row Level Security) - Herkes okuyabilir, sadece ilgili kullanıcı yazabilir
+-- 7. RLS (Row Level Security)
 ALTER TABLE auction_bids ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "auction_bids_select" ON auction_bids;
@@ -53,23 +53,20 @@ DROP POLICY IF EXISTS "auction_bids_insert" ON auction_bids;
 CREATE POLICY "auction_bids_insert" ON auction_bids
   FOR INSERT WITH CHECK (true);
 
--- Not: transfer_market zaten RLS'de herkese açık
-
 -- =============================================
 -- OYUNCU KARİYER İSTATİSTİKLERİ TABLOSU
 -- Managerium v3.0 — Player Career Stats
 -- =============================================
 
 -- 8. player_career_stats tablosu
--- NOT: Kolon isimleri careerStats.ts ile uyumlu olmalıdır.
---   - matches_played (kodda bu isim kullanılıyor, matches değil)
---   - team_id (profile_id değil, kod team_id kullanıyor)
---   - fouls, clean_sheets (SQL'de tanımlı, kodda da kullanılıyor)
+-- Kolonlar careerStats.ts ile uyumlu:
+--   team_id (profile_id degil), matches_played (matches degil)
 CREATE TABLE IF NOT EXISTS player_career_stats (
-  id TEXT PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   player_id TEXT NOT NULL,
   season_id TEXT NOT NULL,
   team_id TEXT,
+  team_name TEXT,
   matches_played INT DEFAULT 0,
   goals INT DEFAULT 0,
   assists INT DEFAULT 0,
@@ -82,43 +79,19 @@ CREATE TABLE IF NOT EXISTS player_career_stats (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 9. player_career_stats: Eski tablo yapısından geçiş için eksik kolonları ekle
+-- 9. Eksik kolonlari ekle (mevcut tablo eski yapidadirsa)
 ALTER TABLE player_career_stats ADD COLUMN IF NOT EXISTS team_id TEXT;
+ALTER TABLE player_career_stats ADD COLUMN IF NOT EXISTS team_name TEXT;
 ALTER TABLE player_career_stats ADD COLUMN IF NOT EXISTS matches_played INT DEFAULT 0;
 ALTER TABLE player_career_stats ADD COLUMN IF NOT EXISTS fouls INT DEFAULT 0;
 ALTER TABLE player_career_stats ADD COLUMN IF NOT EXISTS clean_sheets INT DEFAULT 0;
 ALTER TABLE player_career_stats ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
-
--- Eski 'matches' kolonundaki veriyi 'matches_played' kolonuna taşı (eğer matches kolonu varsa)
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'player_career_stats' AND column_name = 'matches'
-  ) THEN
-    UPDATE player_career_stats SET matches_played = COALESCE(matches_played, matches) WHERE matches_played IS NULL OR matches_played = 0;
-  END IF;
-END $$;
-
--- Eski 'profile_id' kolonundaki veriyi 'team_id' kolonuna taşı (eğer profile_id kolonu varsa)
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'player_career_stats' AND column_name = 'profile_id'
-  ) THEN
-    UPDATE player_career_stats SET team_id = COALESCE(team_id, profile_id) WHERE team_id IS NULL;
-  END IF;
-END $$;
 
 -- 10. player_career_stats indeksleri
 CREATE INDEX IF NOT EXISTS idx_pcs_player_id ON player_career_stats(player_id);
 CREATE INDEX IF NOT EXISTS idx_pcs_season_id ON player_career_stats(season_id);
 CREATE INDEX IF NOT EXISTS idx_pcs_team_id ON player_career_stats(team_id);
 CREATE INDEX IF NOT EXISTS idx_pcs_player_season ON player_career_stats(player_id, season_id);
-
--- Eski profile_id indeksini bırak (artık kullanılmıyor)
-DROP INDEX IF EXISTS idx_pcs_profile_id;
 
 -- 11. RLS for player_career_stats
 ALTER TABLE player_career_stats ENABLE ROW LEVEL SECURITY;
