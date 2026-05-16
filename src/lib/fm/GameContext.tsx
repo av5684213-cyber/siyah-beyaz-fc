@@ -127,6 +127,22 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
   const [directMessageRecipient, setDirectMessageRecipient] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  // Safety timeout: if loading hangs for more than 8 seconds, force it to false
+  // This prevents the app from being stuck on the loading spinner forever
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setLoading(prev => {
+        if (prev) {
+          console.warn('[GameContext] Loading timeout - forcing loading=false');
+          return false;
+        }
+        return prev;
+      });
+    }, 8000);
+    return () => clearTimeout(timeout);
+  }, []);
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [matchState, setMatchState] = useState<MatchState>({
     minute: 0,
