@@ -20,6 +20,12 @@ import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import MatchChat from '@/components/Chat/MatchChat';
 import type { MatchEvent } from '@/lib/fm/types';
 
+// Duygusal katman — animasyonlar, ses efektleri, heyecanlı anlatım
+import { Confetti, GoalCelebration, RecordBreak } from '@/components/animations';
+import { playSound, isSoundEnabled, setSoundEnabled } from '@/utils/sound';
+import { emitEmotionalEvent, type EmotionalEvent } from '@/lib/fm/emotionalEvents';
+import MatchCommentary from '@/components/match/MatchCommentary';
+
 // ═══════════════════════════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════════════════════════
@@ -468,6 +474,12 @@ export default function MatchPage() {
   const [profileId, setProfileId] = useState<string>('');
   const [teamName, setTeamName] = useState<string>('');
 
+  // Duygusal katman — gol kutlama state
+  const [goalCelebrationTrigger, setGoalCelebrationTrigger] = useState(false);
+  const [goalScorer, setGoalScorer] = useState<string | undefined>();
+  const [goalMinute, setGoalMinute] = useState<number | undefined>();
+  const [prevEventsLength, setPrevEventsLength] = useState(0);
+
   // Kullanıcı profil bilgilerini yükle
   useEffect(() => {
     try {
@@ -629,6 +641,81 @@ export default function MatchPage() {
     return () => clearInterval(interval);
   }, [fixture?.status, loadFixture]);
 
+  // ─── Duygusal katman: Canlı maçta gol kutlama ─────────────────
+  useEffect(() => {
+    if (fixture?.status !== 'live') return;
+    if (events.length <= prevEventsLength) {
+      setPrevEventsLength(events.length);
+      return;
+    }
+
+    // Yeni olayları bul (sadece eklenenler)
+    const newEvents = events.slice(prevEventsLength);
+    setPrevEventsLength(events.length);
+
+    for (const event of newEvents) {
+      const evtType = event.event_type?.toUpperCase();
+
+      // Gol kutlama animasyonu ve ses efekti
+      if (evtType === 'GOAL' || evtType === 'PENALTY_GOAL') {
+        setGoalScorer(event.player_name || undefined);
+        setGoalMinute(event.minute);
+        setGoalCelebrationTrigger(true);
+        playSound('goal');
+        setTimeout(() => setGoalCelebrationTrigger(false), 2600);
+
+        // Son dakika golü duygusal olayı
+        if (event.minute >= 85) {
+          const currentHomeName = fixture?.home?.name || 'Ev Sahibi';
+          try {
+            emitEmotionalEvent({
+              type: 'LATE_WINNER',
+              severity: 'legendary',
+              title: 'SON DAKİKA GOLÜ!',
+              description: `${event.player_name || 'Bilinmeyen'}, ${event.minute}. dakikada golü attı! Tribünler çıldırdı!`,
+              icon: '🔥',
+              player: event.player_name || undefined,
+              teamName: currentHomeName,
+              timestamp: Date.now(),
+            });
+          } catch (err) {
+            console.error('[MatchPage] emitEmotionalEvent error:', err);
+          }
+        }
+      }
+
+      // Kart ses efekti
+      if (evtType === 'YELLOW_CARD' || evtType === 'RED_CARD') {
+        playSound('card');
+      }
+
+      // Maç sonu düdük sesi
+      if (evtType === 'FULLTIME') {
+        playSound('whistle');
+        const currentHomeName = fixture?.home?.name || 'Ev Sahibi';
+        const currentAwayName = fixture?.away?.name || 'Deplasman';
+        try {
+          emitEmotionalEvent({
+            type: 'CHAMPION',
+            severity: 'legendary',
+            title: 'MAÇ BİTTİ!',
+            description: `${currentHomeName} vs ${currentAwayName} maç sona erdi!`,
+            icon: '🏁',
+            teamName,
+            timestamp: Date.now(),
+          });
+        } catch (err) {
+          console.error('[MatchPage] emitEmotionalEvent error:', err);
+        }
+      }
+
+      // Devre arası düdük
+      if (evtType === 'HALFTIME') {
+        playSound('whistle');
+      }
+    }
+  }, [events.length, fixture?.status, prevEventsLength, fixture?.home?.name, fixture?.away?.name, teamName]);
+
   // ═══ Hesaplanan değerler ═══
 
   const homeName = useMemo(() => fixture?.home?.name || 'Ev Sahibi', [fixture]);
@@ -677,6 +764,28 @@ export default function MatchPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* Duygusal katman — global animasyonlar */}
+      <Confetti autoListen />
+      <GoalCelebration trigger={goalCelebrationTrigger} scorer={goalScorer} minute={goalMinute} />
+      <RecordBreak autoListen />
+
+      {/* Ses açma/kapama butonu */}
+      <button
+        onClick={() => {
+          try {
+            const newState = !isSoundEnabled();
+            setSoundEnabled(newState);
+            if (newState) playSound('click');
+          } catch (err) {
+            console.error('[MatchPage] Sound toggle error:', err);
+          }
+        }}
+        className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-zinc-900/90 text-sm backdrop-blur-sm transition-all hover:bg-zinc-800"
+        title={isSoundEnabled() ? 'Sesi Kapat' : 'Sesi Aç'}
+      >
+        {isSoundEnabled() ? '🔊' : '🔇'}
+      </button>
+
       {/* Üst Bar */}
       <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/[0.06] px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -810,11 +919,41 @@ export default function MatchPage() {
                   <div className="flex items-center gap-2 px-1 mb-2">
                     <Zap size={14} className="text-amber-400" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-white/30">
-                      Maç Olayları
+                      Maç Anlatımı
                     </span>
                     <span className="text-[9px] text-white/15">({events.length} olay)</span>
                   </div>
-                  <EventList events={events} />
+                  {events.length > 0 ? (
+                    <MatchCommentary
+                      events={events.map((e): MatchEvent => ({
+                        minute: e.minute,
+                        type: (e.event_type?.toUpperCase() === 'PENALTY_GOAL' ? 'GOAL'
+                          : e.event_type?.toUpperCase() === 'OWN_GOAL' ? 'GOAL'
+                          : e.event_type?.toUpperCase() === 'YELLOW_CARD' ? 'YELLOW'
+                          : e.event_type?.toUpperCase() === 'RED_CARD' ? 'RED'
+                          : e.event_type?.toUpperCase() === 'SECOND_YELLOW' ? 'RED'
+                          : e.event_type?.toUpperCase() === 'INJURY' ? 'INJURY'
+                          : e.event_type?.toUpperCase() === 'SUBSTITUTION' ? 'SUB'
+                          : e.event_type?.toUpperCase() === 'HALFTIME' ? 'HALFTIME'
+                          : e.event_type?.toUpperCase() === 'FULLTIME' ? 'FULLTIME'
+                          : e.event_type?.toUpperCase() === 'OFFSIDE' ? 'OFFSIDE'
+                          : e.event_type?.toUpperCase() === 'CORNER' ? 'CORNER'
+                          : 'COMMENTARY') as MatchEvent['type'],
+                        text: e.detail || e.event_type || '',
+                        player: e.player_name || undefined,
+                        team: (e.team?.toUpperCase() === 'HOME' || e.team?.toLowerCase() === 'home') ? 'HOME' as const
+                          : (e.team?.toUpperCase() === 'AWAY' || e.team?.toLowerCase() === 'away') ? 'AWAY' as const
+                          : undefined,
+                      }))}
+                      homeTeam={homeName}
+                      awayTeam={awayName}
+                    />
+                  ) : (
+                    <div className="text-center py-8">
+                      <Activity className="w-8 h-8 text-white/10 mx-auto mb-3" />
+                      <p className="text-xs text-white/25">Henüz olay kaydedilmedi</p>
+                    </div>
+                  )}
                 </motion.div>
               )}
 

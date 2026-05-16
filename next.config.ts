@@ -41,9 +41,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-
-  // Turbopack yapılandırması (Next.js 16+ varsayılan)
-  turbopack: {},
 };
 
 export default nextConfig;

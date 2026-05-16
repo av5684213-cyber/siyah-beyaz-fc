@@ -98,6 +98,16 @@ import FixtureScreen from '@/components/fm/FixtureScreen';
 
 import RealTimeLeagueManager from '@/components/fm/RealTimeLeagueManager';
 
+// Duygusal katman — animasyonlar ve ses efektleri
+import { Confetti, GoalCelebration, RecordBreak } from '@/components/animations';
+import { playSound, isSoundEnabled, setSoundEnabled } from '@/utils/sound';
+import { emitEmotionalEvent, type EmotionalEvent } from '@/lib/fm/emotionalEvents';
+
+// UX katman — eğitim, bildirim, ipucu
+import OnboardingTutorial, { shouldShowOnboarding } from '@/components/OnboardingTutorial';
+import HintBox from '@/components/hints/HintBox';
+import { useToast } from '@/hooks/use-toast';
+
 export default function Home() {
   const { 
     userId, setUserId, 
@@ -732,8 +742,71 @@ export default function Home() {
     );
   }
 
+  // ─── Duygusal katman: Gol kutlama state ────────────────────────────
+  const [goalCelebrationTrigger, setGoalCelebrationTrigger] = useState(false);
+  const [goalScorer, setGoalScorer] = useState<string | undefined>();
+  const [goalMinute, setGoalMinute] = useState<number | undefined>();
+
+  // ─── UX katman: Onboarding ve Toast ────────────────────────────
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const { toast } = useToast();
+
+  // Onboarding gösterim kontrolü
+  useEffect(() => {
+    if (profile?.id) {
+      setShowOnboarding(shouldShowOnboarding());
+    }
+  }, [profile?.id]);
+
+  // Maç olaylarını dinle ve gol kutlamasını tetikle
+  useEffect(() => {
+    if (!matchState.isActive || !matchState.result?.events) return;
+    const events = matchState.result.events as Array<{ type: string; player?: string; minute: number; team?: string }>;
+    const lastEvent = events[events.length - 1];
+    if (lastEvent?.type === 'GOAL' && lastEvent.team === 'HOME') {
+      setGoalScorer(lastEvent.player);
+      setGoalMinute(lastEvent.minute);
+      setGoalCelebrationTrigger(true);
+      playSound('goal');
+      setTimeout(() => setGoalCelebrationTrigger(false), 2600);
+    }
+  }, [matchState.result?.events?.length, matchState.isActive]);
+
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-white selection:text-black">
+      {/* Duygusal katman — global animasyonlar */}
+      <Confetti autoListen />
+      <GoalCelebration trigger={goalCelebrationTrigger} scorer={goalScorer} minute={goalMinute} />
+      <RecordBreak autoListen />
+
+      {/* UX katman — Onboarding eğitimi */}
+      {showOnboarding && (
+        <OnboardingTutorial
+          onComplete={(tab) => {
+            setShowOnboarding(false);
+            if (tab) setActiveTab(tab);
+            toast({ title: 'Hoş geldin, Menajer!', description: 'Siyah Beyaz FC artık senin takımın!' });
+          }}
+          onDismiss={() => setShowOnboarding(false)}
+        />
+      )}
+
+      {/* UX katman — İpucu kutusu */}
+      {profile?.id && !showOnboarding && <HintBox />}
+
+      {/* Ses açma/kapama butonu */}
+      <button
+        onClick={() => {
+          const newState = !isSoundEnabled();
+          setSoundEnabled(newState);
+          if (newState) playSound('click');
+        }}
+        className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-zinc-900/90 text-sm backdrop-blur-sm transition-all hover:bg-zinc-800"
+        title={isSoundEnabled() ? 'Sesi Kapat' : 'Sesi Aç'}
+      >
+        {isSoundEnabled() ? '🔊' : '🔇'}
+      </button>
+
       <AppHeader profile={profile} dbStatus={dbStatus} dbLatency={dbLatency} showMigrationBanner={showMigrationBanner} onCheckDb={handleCheckDb} onMigrate={handleMigrate} onNuke={handleNuke} migrating={migrating} />
       <ToastNotifications showTrainingToast={showTrainingToast} migrationResult={migrationResult} onDismissMigration={() => setMigrationResult(null)} />
       <RealTimeLeagueManager />
