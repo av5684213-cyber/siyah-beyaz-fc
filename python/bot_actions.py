@@ -143,35 +143,157 @@ class SupabaseClient:
 # ═══════════════════════════════════════════════════════════════════════
 
 # Zorluk seviyesi konfigürasyonu
+# Kolay (1): Sadece kadro seçimi yapar, transfer yapmaz
+# Orta (2): Haftada 1 transfer yapar, bütçeye dikkat eder
+# Zor (3): Aktif transfer yapar, rakibin zayıf yönüne göre taktik değiştirir, genç oyunculara yatırım yapar
 DIFFICULTY_CONFIG = {
-    1: {  # Kolay
-        "transfer_budget_ratio": 0.15,
+    1: {  # Kolay — Sadece kadro seçimi, transfer yok
+        "transfer_budget_ratio": 0.0,  # Transfer yapmaz
         "sell_threshold_rating": 45,
         "buy_rating_boost": 0,
         "max_squad_size": 22,
         "min_squad_size": 16,
-        "sell_chance": 0.20,
-        "buy_chance": 0.30,
+        "sell_chance": 0.0,  # Satış yapmaz
+        "buy_chance": 0.0,  # Alım yapmaz
+        "max_weekly_transfers": 0,  # Transfer limiti: 0
+        "youth_investment_ratio": 0.0,
+        "tactic_change_chance": 0.0,  # Taktik değişmez
+        "description": "Kolay bot: Sadece kadro seçimi yapar, transfer yapmaz",
     },
-    2: {  # Orta
-        "transfer_budget_ratio": 0.25,
+    2: {  # Orta — Haftada 1 transfer, bütçeye dikkat
+        "transfer_budget_ratio": 0.20,
         "sell_threshold_rating": 50,
         "buy_rating_boost": 2,
         "max_squad_size": 22,
         "min_squad_size": 16,
         "sell_chance": 0.25,
         "buy_chance": 0.35,
+        "max_weekly_transfers": 1,  # Haftada maks 1 transfer
+        "youth_investment_ratio": 0.10,
+        "tactic_change_chance": 0.30,  # %30 taktik değişim şansı
+        "description": "Orta bot: Haftada 1 transfer yapar, bütçeye dikkat eder",
     },
-    3: {  # Zor
+    3: {  # Zor — Aktif transfer, taktik değişimi, genç yatırımı
         "transfer_budget_ratio": 0.35,
         "sell_threshold_rating": 55,
         "buy_rating_boost": 5,
         "max_squad_size": 22,
         "min_squad_size": 16,
-        "sell_chance": 0.30,
-        "buy_chance": 0.40,
+        "sell_chance": 0.35,
+        "buy_chance": 0.50,
+        "max_weekly_transfers": 2,  # Haftada maks 2 transfer
+        "youth_investment_ratio": 0.25,
+        "tactic_change_chance": 0.70,  # %70 taktik değişim şansı
+        "description": "Zor bot: Aktif transfer yapar, taktik değiştirir, gençlere yatırım yapar",
     },
 }
+
+# ─── Bot Kişilik Sistemi ────────────────────────────────────────────────
+# Her bot bir "transfer hedefi" kişiliğine sahiptir. Bu, hangi tür
+# oyunculara öncelik vereceğini belirler.
+
+BOT_PERSONALITIES = {
+    "youth_developer": {
+        "name": "Genç Yetenek Avcısı",
+        "description": "Genç ve yüksek potansiyelli oyunculara yatırım yapar",
+        "preferred_age_max": 22,
+        "potential_weight": 2.5,  # Potansiyele 2.5x ağırlık verir
+        "rating_weight": 0.8,
+        "price_tolerance": 1.3,  # Fiyatın %30 üstüne kadar gider
+        "sell_old_players": True,
+        "sell_age_threshold": 30,
+    },
+    "star_chaser": {
+        "name": "Yıldız Oyuncu Takipçisi",
+        "description": "Yüksek OVR'li yıldız oyuncuları takip eder",
+        "preferred_age_max": 30,
+        "potential_weight": 0.5,
+        "rating_weight": 2.0,  # Rating'e 2x ağırlık verir
+        "price_tolerance": 1.5,  # Fiyatın %50 üstüne kadar gider
+        "sell_old_players": False,
+        "sell_age_threshold": 34,
+    },
+    "bargain_hunter": {
+        "name": "Fırsat Avcısı",
+        "description": "Ucuz ve değerli oyuncuları bulur",
+        "preferred_age_max": 28,
+        "potential_weight": 1.2,
+        "rating_weight": 1.0,
+        "price_tolerance": 0.8,  # Fiyatın %20 altına iner
+        "sell_old_players": True,
+        "sell_age_threshold": 29,
+    },
+    "balanced_builder": {
+        "name": "Dengeli Kurucu",
+        "description": "Dengeli bir kadro kurar, yaş/potansiyel/rating dengesine bakar",
+        "preferred_age_max": 26,
+        "potential_weight": 1.0,
+        "rating_weight": 1.0,
+        "price_tolerance": 1.0,
+        "sell_old_players": True,
+        "sell_age_threshold": 32,
+    },
+}
+
+# Kişilik atanma ağırlıkları (yüksek = daha sık atanır)
+PERSONALITY_WEIGHTS = {
+    "youth_developer": 3,
+    "star_chaser": 2,
+    "bargain_hunter": 3,
+    "balanced_builder": 2,
+}
+
+
+def assign_bot_personality(difficulty: int) -> str:
+    """
+    Zorluk seviyesine göre bot kişiliği atar.
+    Kolay botlar genelde dengeli, zor botlar genç yetenek avcısı olur.
+    """
+    if difficulty == 1:
+        return "balanced_builder"
+    elif difficulty == 2:
+        # Orta: %40 genç avcısı, %30 fırsat avcısı, %30 dengeli
+        roll = random.random()
+        if roll < 0.40:
+            return "youth_developer"
+        elif roll < 0.70:
+            return "bargain_hunter"
+        else:
+            return "balanced_builder"
+    else:
+        # Zor: Ağırlıklı rastgele seçim
+        personalities = list(PERSONALITY_WEIGHTS.keys())
+        weights = list(PERSONALITY_WEIGHTS.values())
+        return random.choices(personalities, weights=weights, k=1)[0]
+
+
+def evaluate_player_for_personality(player_data: dict, personality_key: str) -> float:
+    """
+    Bot kişiliğine göre bir oyuncunun transfer puanını hesaplar.
+    Yüksek puan = daha çok istenen oyuncu.
+    """
+    personality = BOT_PERSONALITIES.get(personality_key, BOT_PERSONALITIES["balanced_builder"])
+
+    rating = player_data.get("rating", 50)
+    potential = player_data.get("potential", rating)
+    age = player_data.get("age", 25)
+
+    # Baz puan
+    score = rating * personality["rating_weight"] + potential * personality["potential_weight"]
+
+    # Yaş faktörü
+    if age <= personality["preferred_age_max"]:
+        age_bonus = (personality["preferred_age_max"] - age) * 2
+        score += age_bonus
+    else:
+        age_penalty = (age - personality["preferred_age_max"]) * 3
+        score -= age_penalty
+
+    # Genç yatırımcı bonusu: 22 yaş altına ekstra puan
+    if personality_key == "youth_developer" and age <= 22:
+        score += potential * 0.5
+
+    return score
 
 # Her mevkide en az olması gereken oyuncu sayısı (v2)
 MIN_PER_POSITION_GROUP = 2
@@ -276,7 +398,6 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
     logger.info(f"Bot transfer işlemleri başlıyor (v2): {bot_user_id}")
 
     result = {"bought": False, "sold": False, "details": [], "errors": []}
-    transfer_count = 0  # Haftalık transfer sayacı
 
     try:
         # 1. Bot profilini çek
@@ -296,7 +417,24 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
         credits = profile.get("credits", 0) or 0
         money = profile.get("money", 0) or 0
 
-        logger.info(f"Bot: {team_name}, Credits: {credits}, Money: ₺{money:,}, Zorluk: {difficulty}")
+        # ─── v3: Bot kişiliğini ata ─────────────────────────────────
+        personality_key = profile.get("bot_personality") or assign_bot_personality(difficulty)
+        personality = BOT_PERSONALITIES.get(personality_key, BOT_PERSONALITIES["balanced_builder"])
+
+        logger.info(
+            f"Bot: {team_name}, Credits: {credits}, Money: ₺{money:,}, "
+            f"Zorluk: {difficulty}, Kişilik: {personality['name']}"
+        )
+
+        # Kolay botlar transfer yapmaz
+        if difficulty == 1:
+            logger.info(f"Kolay bot transfer yapmaz: {team_name}")
+            result["details"].append(f"Kolay bot: Transfer yapılmıyor ({personality['name']})")
+            return result
+
+        # Zorluk bazlı haftalık transfer limiti
+        max_weekly = config.get("max_weekly_transfers", MAX_WEEKLY_TRANSFERS)
+        transfer_count = 0
 
         # 2. Kadroyu çek
         squad = db.select("players", query="*", filters={"profile_id": f"eq.{bot_user_id}"})
@@ -307,10 +445,28 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
 
         logger.info(f"Kadro büyüklüğü: {len(squad)} oyuncu")
 
-        # ─── SATIŞ (v2: Mevki fazlalığı bazlı) ──────────────────────
+        # ─── SATIŞ (v3: Kişilik bazlı + Mevki fazlalığı) ──────────────
         surplus = get_surplus_positions(squad)
 
-        if surplus and transfer_count < MAX_WEEKLY_TRANSFERS:
+        # Kişilik bazlı satış: Yaşlı oyuncuları sat
+        if personality.get("sell_old_players") and transfer_count < max_weekly:
+            old_players = [
+                p for p in squad
+                if (p.get("age") or 25) >= personality.get("sell_age_threshold", 32)
+            ]
+            if old_players:
+                # En yaşlı ve en düşük OVR'li olanı seç
+                old_players.sort(key=lambda p: (-(p.get("age") or 25), p.get("rating", 0)))
+                sell_candidate = old_players[0]
+                # Eğer fazlalık listesinde değilse bile yaşlı olduğu için sat
+                if sell_candidate.get("id") not in [p.get("id") for p in surplus.get(map_to_group(sell_candidate.get("position", "CM")), [])]:
+                    surplus_group = map_to_group(sell_candidate.get("position", "CM"))
+                    if surplus_group not in surplus:
+                        surplus[surplus_group] = []
+                    surplus[surplus_group].append(sell_candidate)
+                    logger.info(f"Kişilik satış: {sell_candidate.get('name', '?')} yaş={sell_candidate.get('age', 0)}")
+
+        if surplus and transfer_count < max_weekly:
             # Rastgele bir fazlalık mevki seç
             surplus_group = random.choice(list(surplus.keys()))
             candidates = surplus[surplus_group]
@@ -377,15 +533,22 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
                     result["errors"].append(err_msg)
                     logger.error(err_msg)
 
-        # ─── ALIŞ (v2: Eksik mevki + en yüksek OVR + bütçe dostu) ──
-        if transfer_count < MAX_WEEKLY_TRANSFERS:
+        # ─── ALIŞ (v3: Kişilik bazlı oyuncu değerlendirmesi) ──────────
+        if transfer_count < max_weekly:
             needs = get_position_needs(squad)
             needed_positions = [pos for pos, count in needs.items() if count > 0]
 
             budget = money * config["transfer_budget_ratio"]
 
+            # Kişilik bazlı bütçe toleransı
+            price_tolerance = personality.get("price_tolerance", 1.0)
+            effective_budget = budget * price_tolerance
+
             if needed_positions:
-                logger.info(f"Eksik mevkiler: {needed_positions}, bütçe: ₺{budget:,}")
+                logger.info(
+                    f"Eksik mevkiler: {needed_positions}, bütçe: ₺{budget:,}, "
+                    f"kişilik limiti: ₺{effective_budget:,} ({personality['name']})"
+                )
 
                 try:
                     # Piyasadaki aktif ilanları çek
@@ -399,8 +562,11 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
                         # Kendi ilanlarını çıkar
                         other_listings = [l for l in listings if l.get("seller_id") != bot_user_id]
 
-                        # Bütçeye uygun ilanları filtrele
-                        affordable = [l for l in other_listings if (l.get("price", 999999999) or 0) <= budget]
+                        # Bütçeye uygun ilanları filtrele (kişilik toleransı ile)
+                        affordable = [
+                            l for l in other_listings
+                            if (l.get("price", 999999999) or 0) <= effective_budget
+                        ]
 
                         if affordable:
                             # Eksik mevki öncelikli seçim
@@ -422,15 +588,18 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
                                         matching.append((l, player_data))
 
                             if matching:
-                                # v2: En yüksek OVR'li uygun fiyatlı oyuncuyu seç
-                                matching.sort(
-                                    key=lambda x: (
-                                        x[1].get("rating", 0) if isinstance(x[1], dict) else 0
-                                    ),
-                                    reverse=True,
+                                # v3: Kişilik bazlı oyuncu değerlendirmesi ile sırala
+                                scored_matching = []
+                                for listing, p_data in matching:
+                                    score = evaluate_player_for_personality(p_data, personality_key)
+                                    scored_matching.append((listing, p_data, score))
+                                scored_matching.sort(key=lambda x: x[2], reverse=True)
+                                target = scored_matching[0][0]
+                                target_player_data = scored_matching[0][1]
+                                logger.info(
+                                    f"Kişilik seçimi: {target_player_data.get('name', '?')} "
+                                    f"puan={scored_matching[0][2]:.1f}"
                                 )
-                                target = matching[0][0]
-                                target_player_data = matching[0][1]
                             else:
                                 # Genel olarak en yüksek OVR'li olanı seç
                                 all_with_data = []
@@ -546,10 +715,12 @@ def process_bot_transfers(db: SupabaseClient, bot_user_id: str) -> dict:
 
         # Transfer özeti
         result["transfer_count"] = transfer_count
-        result["max_weekly"] = MAX_WEEKLY_TRANSFERS
+        result["max_weekly"] = max_weekly
+        result["personality"] = personality_key
         logger.info(
-            f"Transfer özeti: {transfer_count}/{MAX_WEEKLY_TRANSFERS} "
-            f"alım={result['bought']}, satım={result['sold']}"
+            f"Transfer özeti: {transfer_count}/{max_weekly} "
+            f"alım={result['bought']}, satım={result['sold']} "
+            f"kişilik={personality['name']}"
         )
 
     except Exception as e:

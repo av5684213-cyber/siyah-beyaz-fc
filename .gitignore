@@ -60,3 +60,4 @@ server.log
 /managerioum-0.5/
 # Mini services build artifacts
 /mini-services/__pycache__/
+daemon.sh\nstart.sh\nwatchdog.sh\nload-test-results.txt
