@@ -46,7 +46,6 @@ setInterval(() => {
 // ─── Security Headers ──────────────────────────────────────────────
 
 const SECURITY_HEADERS: Record<string, string> = {
-  'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'X-XSS-Protection': '1; mode=block',
@@ -58,7 +57,7 @@ const SECURITY_HEADERS: Record<string, string> = {
     "img-src 'self' data: blob: https://*.supabase.co",
     "font-src 'self' data:",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-    "frame-ancestors 'none'",
+    "frame-ancestors 'self' https://*.chatglm.site https://*.space-z.ai http://*.space-z.ai https://*.space.chatglm.site http://*.space.chatglm.site",
   ].join('; '),
 };
 
@@ -80,7 +79,18 @@ export function middleware(request: NextRequest) {
     response.headers.set(key, value);
   }
 
-  // 2. API route protection
+  // 2. Override CSP for page routes (non-API) to allow preview iframes
+  if (!request.nextUrl.pathname.startsWith('/api/')) {
+    response.headers.set(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors *"
+    );
+    // Remove X-Frame-Options for page routes so preview iframes work
+    // CSP frame-ancestors is the modern replacement
+    response.headers.delete('X-Frame-Options');
+  }
+
+  // 3. API route protection
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const clientIp =
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
@@ -115,6 +125,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/api/:path*',
+    '/:path*',
   ],
 };

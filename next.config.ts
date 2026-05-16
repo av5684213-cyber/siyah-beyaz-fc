@@ -9,10 +9,6 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
 
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-
   // Geliştirme ortamında tüm origin'lere izin ver
   allowedDevOrigins: [
     "*",
@@ -38,25 +34,16 @@ const nextConfig: NextConfig = {
       {
         source: '/(.*)',
         headers: [
-          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors *" },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
         ],
       },
     ];
   },
 
-  // Web Push Service Worker için webpack yapılandırması
-  webpack(config) {
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-    };
-    return config;
-  },
+  // Turbopack yapılandırması (Next.js 16+ varsayılan)
+  turbopack: {},
 };
 
 export default nextConfig;
