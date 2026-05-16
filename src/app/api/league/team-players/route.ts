@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { generateStableSquad, POS_TO_GROUP } from '@/lib/fm/playerGenerator';
 import type { SpecificPosition } from '@/lib/fm/types';
+import { logErrorToSupabase } from '@/lib/api-error-handler';
 
 // ═══════════════════════════════════════════════════
 //  Deterministik Seeded Random Generator
@@ -197,7 +198,8 @@ export async function GET(request: Request) {
       players: squad.map(mapPlayer)
     });
   } catch (error: any) {
-    console.error('[TEAM-PLAYERS] Error:', error);
+    console.error('[team-players] Error:', error);
+    logErrorToSupabase(error, { route: '/api/league/team-players', method: 'GET' }).catch(() => {});
     return NextResponse.json({
       source: 'error_fallback',
       players: generateDeterministicSquad(teamName, 4)

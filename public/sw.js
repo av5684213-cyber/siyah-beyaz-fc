@@ -1,86 +1,69 @@
-// ─── Siyah Beyaz FC — Service Worker ──────────────────────────────────
-// Push bildirimleri ve offline destek
+// ═══════════════════════════════════════════════════════════════
+// Service Worker — Web Push Bildirimleri
+// public/sw.js
+// ═══════════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'sbfc-v1';
-const STATIC_ASSETS = [
-  '/',
-  '/icon-192x192.png',
-  '/icon-72x72.png',
-];
+/// <reference lib="webworker" />
 
-// Install event - statik dosyaları önbelleğe al
-self.addEventListener('install', (event: ExtendableEvent) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
-  );
-  self.skipWaiting();
-});
+declare const self: ServiceWorkerGlobalScope;
 
-// Activate event - eski önbellekleri temizle
-self.addEventListener('activate', (event: ExtendableEvent) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
-      );
-    })
-  );
-  self.clients.claim();
-});
-
-// Fetch event - ağ öncelikli, önbellek fallback
-self.addEventListener('fetch', (event: FetchEvent) => {
-  event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
-    })
-  );
-});
-
-// Push event - bildirim göster
+// Push event — bildirim göster
 self.addEventListener('push', (event: PushEvent) => {
-  const data = event.data?.json() ?? {
-    title: 'Siyah Beyaz FC',
-    body: 'Yeni bildirim',
-    url: '/',
-  };
+  let data: { title?: string; body?: string; icon?: string; url?: string } = {};
+  
+  try {
+    if (event.data) {
+      data = event.data.json();
+    }
+  } catch {
+    data = {
+      title: 'Siyah Beyaz FC',
+      body: 'Yeni bildiriminiz var!',
+    };
+  }
+
+  const title = data.title || 'Siyah Beyaz FC';
+  const body = data.body || '';
+  const icon = data.icon || '/favicon.ico';
+  const url = data.url || '/';
 
   const options: NotificationOptions = {
-    body: data.body || '',
-    icon: data.icon || '/icon-192x192.png',
-    badge: data.badge || '/icon-72x72.png',
-    tag: data.tag || 'default',
-    data: {
-      url: data.url || '/',
-    },
+    body,
+    icon,
+    badge: '/favicon.ico',
+    vibrate: [200, 100, 200],
+    data: { url },
+    actions: [
+      { action: 'open', title: 'Aç' },
+      { action: 'dismiss', title: 'Kapat' },
+    ],
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Siyah Beyaz FC', options)
+    self.registration.showNotification(title, options)
   );
 });
 
-// Notification click event - URL'ye yönlendir
+// Notification click — URL'ye yönlendir
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
 
   const url = event.notification.data?.url || '/';
 
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Açık pencere varsa o pencereye odaklan
-      for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.navigate(url);
-          return client.focus();
-        }
-      }
-      // Yoksa yeni pencere aç
-      return self.clients.openWindow(url);
-    })
-  );
+  if (event.action === 'open' || !event.action) {
+    event.waitUntil(
+      self.clients.openWindow(url)
+    );
+  }
 });
+
+// Install & Activate
+self.addEventListener('install', () => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event: ExtendableEvent) => {
+  event.waitUntil(self.clients.claim());
+});
+
+export {};

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { 
   Trophy, 
@@ -21,6 +21,8 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
+  Flame,
+  HeartPulse,
 } from 'lucide-react';
 import type { Player } from '@/lib/fm/types';
 
@@ -70,6 +72,265 @@ interface DashboardTabProps {
   transferOffers?: TransferOffer[];
 }
 
+// ═══════════════════════════════════════════════════════════════
+// Training Report Types
+// ═══════════════════════════════════════════════════════════════
+
+interface TrainingPlayerResult {
+  player_id: string;
+  player_name: string;
+  position: string;
+  stats_gained: Record<string, number>;
+  cond_change: number;
+  morale_change: number;
+}
+
+interface TrainingRecord {
+  id: string;
+  profile_id: string;
+  team_name: string;
+  session_type: string;
+  training_date: string;
+  training_time: string;
+  player_results: TrainingPlayerResult[] | string;
+  avg_cond_change: number;
+  avg_morale_change: number;
+  total_players: number;
+  created_at: string;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Stat adı Türkçe çevirisi
+// ═══════════════════════════════════════════════════════════════
+
+const STAT_LABELS: Record<string, string> = {
+  speed: 'Hız', power: 'Güç', passing: 'Pas', shooting: 'Şut',
+  defending: 'Savunma', vision: 'Algı', control: 'Top',
+  heading: 'Kafa', goalkeeping: 'Kalecilik', stamina: 'Dayanıklılık',
+  finishing: 'Bitiricilik', dribbling: 'Dribling', tackling: 'Top Kapma',
+  crossing: 'Orta', marking: 'Markaj', technique: 'Teknik',
+  longShots: 'Uzun Şut', agility: 'Çeviklik', strength: 'Kuvvet',
+  acceleration: 'Hızlanma', jumping: 'Zıplama', composure: 'Soğukkanlılık',
+  rating: 'OVR', cond: 'Kondisyon', morale: 'Moral',
+};
+
+function statLabel(key: string): string {
+  return STAT_LABELS[key] || key;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Alt bileşen: Antrenman Raporu Kartı
+// ═══════════════════════════════════════════════════════════════
+
+function TrainingReportCard({ trainings }: { trainings: TrainingRecord[] }) {
+  if (trainings.length === 0) {
+    return (
+      <div className="bg-zinc-900 border border-white/5 rounded-2xl p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+            <Dumbbell size={14} className="text-emerald-400" />
+          </div>
+          <h3 className="text-[10px] uppercase font-bold tracking-widest text-white/30">SON ANTRENMAN RAPORU</h3>
+        </div>
+        <div className="flex items-center gap-2 py-4 text-white/20 text-xs">
+          <Clock size={14} className="opacity-50" />
+          <span>Bugünkü antrenman henüz yapılmadı. Saat 15:00 ve 21:00&apos;de otomatik gerçekleşir.</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-zinc-900 border border-white/5 rounded-2xl p-6 space-y-4">
+      <div className="flex items-center gap-3 mb-1">
+        <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+          <Dumbbell size={14} className="text-emerald-400" />
+        </div>
+        <h3 className="text-[10px] uppercase font-bold tracking-widest text-white/30">SON ANTRENMAN RAPORU</h3>
+      </div>
+
+      {trainings.slice(0, 2).map((training) => {
+        const playerResults: TrainingPlayerResult[] =
+          typeof training.player_results === 'string'
+            ? (() => { try { return JSON.parse(training.player_results); } catch { return []; } })()
+            : training.player_results || [];
+
+        const sessionLabel = training.session_type === 'morning' ? 'Sabah (15:00)' : 'Akşam (21:00)';
+        const formattedDate = (() => {
+          try {
+            return new Date(training.training_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+          } catch { return training.training_date; }
+        })();
+
+        // En çok gelişen oyuncuları bul (toplam stat artışına göre)
+        const topPlayers = [...playerResults]
+          .map(p => ({
+            ...p,
+            totalGain: Object.values(p.stats_gained || {}).reduce((s: number, v: number) => s + v, 0),
+          }))
+          .sort((a, b) => b.totalGain - a.totalGain)
+          .slice(0, 5);
+
+        const otherCount = Math.max(0, playerResults.length - 5);
+
+        return (
+          <div key={training.id} className="bg-black/30 border border-white/[0.04] rounded-xl p-4 space-y-3">
+            {/* Başlık */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock size={12} className="text-white/25" />
+                <span className="text-xs font-bold text-white/60">{sessionLabel}</span>
+              </div>
+              <span className="text-[9px] text-white/20 font-semibold">{formattedDate}</span>
+            </div>
+
+            {/* Oyuncu gelişimleri */}
+            {topPlayers.length > 0 ? (
+              <div className="space-y-2">
+                {topPlayers.map((p, idx) => {
+                  const gains = Object.entries(p.stats_gained || {})
+                    .filter(([, v]) => v > 0)
+                    .slice(0, 3);
+
+                  return (
+                    <div key={p.player_id || idx} className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="w-5 h-5 rounded-md bg-white/[0.04] flex items-center justify-center shrink-0">
+                          <span className="text-[7px] font-black text-white/30">{p.position?.slice(0, 2) || '?'}</span>
+                        </div>
+                        <span className="text-[11px] font-semibold text-white/70 truncate">
+                          {toTitleCase(p.player_name)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {gains.map(([stat, val]) => (
+                          <span key={stat} className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold">
+                            +{val.toFixed(1)} {statLabel(stat)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+                {otherCount > 0 && (
+                  <p className="text-[9px] text-white/15 pl-7">ve diğer {otherCount} oyuncu</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-[10px] text-white/15 italic">Kayıtlı gelişim verisi yok</p>
+            )}
+
+            {/* Kondisyon ve Moral özeti */}
+            <div className="flex items-center gap-4 pt-2 border-t border-white/[0.03]">
+              <div className="flex items-center gap-1.5">
+                <Flame size={10} className="text-orange-400/50" />
+                <span className="text-[9px] font-bold text-white/25">Kondisyon:</span>
+                <span className={`text-[9px] font-bold ${(training.avg_cond_change || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {(training.avg_cond_change || 0) >= 0 ? '+' : ''}{Number(training.avg_cond_change || 0).toFixed(1)}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <HeartPulse size={10} className="text-pink-400/50" />
+                <span className="text-[9px] font-bold text-white/25">Moral:</span>
+                <span className={`text-[9px] font-bold ${(training.avg_morale_change || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {(training.avg_morale_change || 0) >= 0 ? '+' : ''}{Number(training.avg_morale_change || 0).toFixed(1)}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 ml-auto">
+                <Users size={10} className="text-white/15" />
+                <span className="text-[9px] text-white/20">{training.total_players || playerResults.length} oyuncu</span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Alt bileşen: Sonraki Maç Kartı
+// ═══════════════════════════════════════════════════════════════
+
+interface NextMatchData {
+  id: string;
+  tur: number;
+  match_date: string;
+  match_time: string;
+  opponent: string;
+  is_home: boolean;
+}
+
+function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigate: (tab: string) => void }) {
+  const [nextMatch, setNextMatch] = useState<NextMatchData | null>(null);
+
+  useEffect(() => {
+    if (!profileId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/fixture/${profileId}`);
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          if (data.nextMatch) {
+            setNextMatch(data.nextMatch);
+          }
+        }
+      } catch (err) {
+        console.error('[NextMatchCard] Error:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [profileId]);
+
+  if (!nextMatch) return null;
+
+  const formattedDate = (() => {
+    try {
+      return new Date(nextMatch.match_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' });
+    } catch {
+      return nextMatch.match_date;
+    }
+  })();
+
+  return (
+    <div className="bg-gradient-to-br from-amber-500/[0.06] to-transparent border border-amber-500/15 rounded-2xl p-5">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
+          <Swords size={14} className="text-amber-400" />
+        </div>
+        <h3 className="text-[10px] uppercase font-bold tracking-widest text-white/30">SONRAKİ MAÇ</h3>
+      </div>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${
+              nextMatch.is_home ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-blue-500/15 text-blue-400 border border-blue-500/20'
+            }`}>
+              {nextMatch.is_home ? 'EV SAHİBİ' : 'DEPLASMAN'}
+            </span>
+            <span className="text-[9px] text-white/20">{nextMatch.tur}. Hafta</span>
+          </div>
+          <p className="text-sm font-bold text-white/80 truncate">{nextMatch.opponent}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <CalendarDays size={10} className="text-white/20" />
+            <span className="text-[10px] text-white/30">{formattedDate} • {nextMatch.match_time || '--:--'}</span>
+          </div>
+        </div>
+        <button
+          onClick={() => {
+            // Match sayfasına yönlendir
+            window.location.href = `/match/${nextMatch.id}`;
+          }}
+          className="px-4 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 rounded-xl text-[10px] font-black uppercase tracking-widest text-amber-300 transition-all active:scale-95 shrink-0"
+        >
+          Maçı İzle
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function DashboardTab({ 
   squad, 
   teamAvgStats, 
@@ -84,6 +345,29 @@ export function DashboardTab({
   transferOffers
 }: DashboardTabProps) {
   const { setProfile, setSquad } = useFM();
+
+  // ═══ Son Antrenman Raporu State ═══
+  const [recentTrainings, setRecentTrainings] = useState<TrainingRecord[]>([]);
+
+  // Antrenman verilerini yükle
+  const loadTrainings = useCallback(async () => {
+    if (!profile?.id) return;
+    try {
+      const res = await fetch(`/api/trainings?profileId=${profile.id}&limit=2`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.trainings) {
+          setRecentTrainings(data.trainings);
+        }
+      }
+    } catch (err) {
+      console.error('[DashboardTab] Training load error:', err);
+    }
+  }, [profile?.id]);
+
+  useEffect(() => {
+    loadTrainings();
+  }, [loadTrainings]);
 
   return (
     <motion.div key="dash" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
@@ -321,6 +605,12 @@ export function DashboardTab({
            </div>
          )}
        </div>
+
+       {/* Son Antrenman Raporu */}
+       <TrainingReportCard trainings={recentTrainings} />
+
+       {/* Sonraki Maç Kartı */}
+       <NextMatchCard profileId={profile?.id || ''} onNavigate={onNavigate} />
 
        {/* Hero/Visual Section */}
        <div className="grid grid-cols-1 gap-6">

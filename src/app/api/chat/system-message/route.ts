@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 /**
  * POST /api/chat/system-message
@@ -106,9 +107,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[system-message] Genel hata:', error);
-    return NextResponse.json(
-      { success: false, error: 'Sunucu hatası' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, { route: '/api/chat/system-message', method: 'POST' });
   }
 }

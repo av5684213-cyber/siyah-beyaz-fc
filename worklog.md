@@ -108,3 +108,48 @@ Stage Summary:
 - 23 test: Poisson dağılımı, puan hesaplama, takım gücü, kart cezası, MVP puanlama
 - Tüm testler PASSED
 - CI/CD: lint + test + build (Node 18) + Python syntax check
+
+---
+Task ID: gorev1-round3
+Agent: Super Z (main)
+Task: GÖREV 1 (3. Tur) - Maç İzleme Sayfası Oluştur (app/match/[id]/page.tsx)
+
+Work Log:
+- Proje GitHub'dan klonlandı (commit 85b27fc)
+- Mevcut proje yapısı incelendi: src/app/, src/components/, src/lib/fm/
+- Supabase client, types, MatchChat bileşeni, FixtureScreen, MatchDay, matchChatService analiz edildi
+- fixtures ve match_events tablo yapıları incelendi (API route'larından)
+- src/app/match/[id]/page.tsx oluşturuldu (896 satır)
+- TypeScript derleme kontrolü yapıldı (hata yok)
+
+Stage Summary:
+- Yeni sayfa: /match/[id] - Maç izleme sayfası
+- Özellikler:
+  * scheduled: Geri sayım sayacı, maç ön bilgisi, sohbet
+  * live: Canlı skor tablosu, olay listesi (Realtime), sohbet
+  * finished: Final skoru, olay listesi, oyuncu istatistikleri (gol/asist/kart), sohbet
+- Bileşenler: CountdownTimer, ScoreBoard, EventList, PlayerStatsTable
+- Supabase Realtime ile canlı maç olayları ve durum değişikliği dinleme
+- MatchChat entegrasyonu (tüm maç durumlarında)
+
+---
+Task ID: gorev2-round3
+Agent: Super Z (main)
+Task: GÖREV 2 (3. Tur) - Antrenman Sonuçlarını Dashboard'da Göster
+
+Work Log:
+- DashboardTab.tsx incelendi (428 satır)
+- schedule.ts kontrol edildi (antrenman saatleri: 15:00 ve 21:00)
+- trainingEngine.ts incelendi (runTrainingSession fonksiyonu)
+- Supabase'de trainings tablosu yok → migration SQL oluşturuldu
+- /api/trainings/route.ts oluşturuldu (GET + POST)
+- DashboardTab.tsx'e TrainingReportCard bileşeni eklendi
+- Son 2 antrenman kaydını çeken loadTrainings hook'u eklendi
+
+Stage Summary:
+- Yeni dosya: supabase/migrations/20240516_add_trainings_table.sql (trainings tablosu + RLS)
+- Yeni dosya: src/app/api/trainings/route.ts (GET/POST API)
+- Güncellenen: src/components/fm/DashboardTab.tsx
+  * TrainingReportCard bileşeni: antrenman saati/tarih, en çok gelişen 5 oyuncu, "ve diğerleri", kondisyon/moral özeti
+  * Antrenman yoksa "Bugünkü antrenman henüz yapılmadı. Saat 15:00 ve 21:00'de otomatik gerçekleşir."
+  * Stat adı Türkçe çevirisi (STAT_LABELS)

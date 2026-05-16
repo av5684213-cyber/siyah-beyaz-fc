@@ -27,6 +27,18 @@
     {
       "path": "/api/cron/youth-training",
       "schedule": "0 4 * * 1"
+    },
+    {
+      "path": "/api/cron/bot-transfers",
+      "schedule": "0 10 * * 1"
+    },
+    {
+      "path": "/api/cron/update-player-ovr",
+      "schedule": "0 23 * * 0"
+    },
+    {
+      "path": "/api/notifications/send-match-reminder",
+      "schedule": "50 11,17 * * 1-5"
     }
   ]
 }

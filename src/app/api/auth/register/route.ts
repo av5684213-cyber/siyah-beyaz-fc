@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
-import { sanitizeInput, isValidUserId, sanitizeError, checkRateLimit } from '@/lib/fm/security';
+import { sanitizeInput, isValidUserId, checkRateLimit } from '@/lib/fm/security';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function POST(request: NextRequest) {
   if (!isSupabaseConfigured()) {
@@ -118,6 +119,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (err: any) {
     console.error('[register] Error:', err);
-    return NextResponse.json({ error: sanitizeError(err) }, { status: 500 });
+    return createErrorResponse(err, { route: '/api/auth/register', method: 'POST' });
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
-import { sanitizeError, isValidUserId } from '@/lib/fm/security';
+import { isValidUserId } from '@/lib/fm/security';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 interface SendNotificationRequest {
   profileId?: string;
@@ -100,6 +101,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Hedef belirtilmedi (profileId veya leagueName)' }, { status: 400 });
   } catch (err) {
     console.error('[notifications/send] Fatal error:', err);
-    return NextResponse.json({ error: sanitizeError(err) }, { status: 500 });
+    return createErrorResponse(err, { route: '/api/notifications/send', method: 'POST' });
   }
 }

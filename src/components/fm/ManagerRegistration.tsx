@@ -39,6 +39,17 @@ const COLORS_LIST = [
     { name: 'Mor', value: '#a855f7' },
 ];
 
+const EMBLEMS = [
+    { emoji: '🦁', label: 'Aslan' },
+    { emoji: '🦊', label: 'Tilki' },
+    { emoji: '🐺', label: 'Kurt' },
+    { emoji: '🧠', label: 'Beyin' },
+    { emoji: '🛡️', label: 'Kalkan' },
+    { emoji: '🏃', label: 'Koşucu' },
+    { emoji: '👑', label: 'Kral' },
+    { emoji: '🥷', label: 'Ninja' },
+];
+
 export default function ManagerRegistration() {
   const { initTeam, setAuthEmail } = useFM();
   const [step, setStep] = useState(1);
@@ -48,6 +59,7 @@ export default function ManagerRegistration() {
   const [philosophy, setPhilosophy] = useState('balanced');
   const [primaryColor, setPrimaryColor] = useState('#ffffff');
   const [secondaryColor, setSecondaryColor] = useState('#000000');
+  const [teamEmblem, setTeamEmblem] = useState('🦁');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
@@ -228,7 +240,30 @@ export default function ManagerRegistration() {
                                     <div className="w-8 h-8 rounded-full shadow-lg border-2 border-zinc-900" style={{ backgroundColor: primaryColor }} />
                                     <div className="w-8 h-8 rounded-full shadow-lg border-2 border-zinc-900" style={{ backgroundColor: secondaryColor }} />
                                 </div>
+                                <div className="text-2xl">{teamEmblem}</div>
                                 <div className="text-[10px] font-black text-white/40 uppercase tracking-widest italic">Kulüp Kimliği Taslağı Hazır</div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 ml-2">
+                                    Takım Amblemi
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {EMBLEMS.map(e => (
+                                        <button
+                                            key={e.emoji}
+                                            onClick={() => setTeamEmblem(e.emoji)}
+                                            className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-all ${
+                                                teamEmblem === e.emoji
+                                                    ? 'bg-amber-500/15 border-2 border-amber-500/40 scale-110 shadow-lg'
+                                                    : 'bg-white/[0.04] border border-white/10 opacity-50 hover:opacity-100 hover:scale-105'
+                                            }`}
+                                            title={e.label}
+                                        >
+                                            {e.emoji}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 

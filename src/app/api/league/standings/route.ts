@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { getTeamNamesForDepartment } from '@/lib/fm/constants';
+import { logErrorToSupabase } from '@/lib/api-error-handler';
 
 // Mock data generator for fallback
 const getMockStandings = (tier: number) => {
@@ -126,7 +127,8 @@ export async function GET(request: Request) {
     return await getStandingsForLeague(supabase, String(finalLeagueId));
 
   } catch (error: any) {
-    console.error('API Error:', error.message, error.stack);
+    console.error('[standings] Error:', error);
+    logErrorToSupabase(error, { route: '/api/league/standings', method: 'GET' }).catch(() => {});
     return NextResponse.json({ 
       source: 'error_fallback',
       standings: getMockStandings(parseInt(leagueId || '1'))

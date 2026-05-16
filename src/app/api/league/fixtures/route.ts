@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
+import { logErrorToSupabase } from '@/lib/api-error-handler';
 
 // Takım ismini güvenli şekilde temizle
 function sanitizeTeamName(raw: any): string {
@@ -100,7 +101,8 @@ export async function GET(request: Request) {
     });
 
   } catch (error: any) {
-    console.error('Fixtures API Error:', error);
+    console.error('[fixtures] Error:', error);
+    logErrorToSupabase(error, { route: '/api/league/fixtures', method: 'GET' }).catch(() => {});
     return NextResponse.json({ source: 'error', message: error.message, fixtures: [] });
   }
 }

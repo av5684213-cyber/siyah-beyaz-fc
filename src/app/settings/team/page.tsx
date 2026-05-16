@@ -39,6 +39,27 @@ export default function TeamSettingsPage() {
         secondary_color: secondaryColor,
       });
 
+      // Emblem'ı da Supabase'e kaydet (team_emblem alanı)
+      try {
+        const { getSupabase, isSupabaseConfigured } = await import('@/lib/supabase');
+        if (isSupabaseConfigured()) {
+          const supabase = getSupabase();
+          if (supabase) {
+            await supabase
+              .from('profiles')
+              .update({
+                team_name: teamName,
+                primary_color: primaryColor,
+                secondary_color: secondaryColor,
+                team_emblem: emblem,
+              })
+              .eq('id', profile.id);
+          }
+        }
+      } catch (dbErr) {
+        console.error('Supabase kayıt hatası:', dbErr);
+      }
+
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
