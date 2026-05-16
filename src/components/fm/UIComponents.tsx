@@ -9,12 +9,12 @@ export const Card = ({ children, className }: { children: React.ReactNode, class
   </div>
 );
 
-export const NavButton = ({ icon, label, active, onClick, badge }: { icon: React.ReactNode, label: string, active: boolean, onClick: () => void, badge?: string }) => (
+export const NavButton = ({ icon, label, active, onClick, badge, className }: { icon: React.ReactNode, label: string, active: boolean, onClick: () => void, badge?: string, className?: string }) => (
   <button 
     onClick={onClick}
     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all relative ${
       active ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-white/40 hover:text-white hover:bg-white/5'
-    }`}
+    } ${className || ''}`}
   >
     {icon}
     <span>{label}</span>

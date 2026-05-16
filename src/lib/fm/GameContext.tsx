@@ -671,7 +671,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
   }, [squad, setProfile]);
 
   const processScouting = useCallback((day: number) => {
-    setTrainingState((prev: Profile | null) => {
+    setTrainingState((prev: TrainingState) => {
       if (!prev || !prev.scouting) return prev;
       
       const currentScouting = prev.scouting;

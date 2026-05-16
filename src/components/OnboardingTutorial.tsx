@@ -92,28 +92,26 @@ export default function OnboardingTutorial({ onComplete, onDismiss }: Onboarding
       localStorage.setItem(key, 'true');
 
       // Supabase'e de kaydet (mevcutsa)
-      import('@/lib/supabase').then(({ getSupabase, isSupabaseConfigured }) => {
-        if (isSupabaseConfigured()) {
-          const supabase = getSupabase();
-          if (supabase) {
-            const userId = localStorage.getItem('sbfc_user_id');
-            if (userId) {
-              supabase
-                .from('profiles')
-                .update({ onboarding_completed: true })
-                .eq('id', userId)
-                .then(() => {
-                  console.log('[Onboarding] Supabase\'e kaydedildi');
-                })
-                .catch((err: unknown) => {
-                  console.error('[Onboarding] Supabase kayıt hatası:', err);
-                });
+      void (async () => {
+        try {
+          const { getSupabase, isSupabaseConfigured } = await import('@/lib/supabase');
+          if (isSupabaseConfigured()) {
+            const supabase = getSupabase();
+            if (supabase) {
+              const userId = localStorage.getItem('sbfc_user_id');
+              if (userId) {
+                await supabase
+                  .from('profiles')
+                  .update({ onboarding_completed: true })
+                  .eq('id', userId);
+                console.log('[Onboarding] Supabase\'e kaydedildi');
+              }
             }
           }
+        } catch (err) {
+          console.error('[Onboarding] Supabase kayıt hatası:', err);
         }
-      }).catch((err: unknown) => {
-        console.error('[Onboarding] Import hatası:', err);
-      });
+      })();
     } catch (err) {
       console.error('[Onboarding] localStorage hatası:', err);
     }

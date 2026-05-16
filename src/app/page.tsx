@@ -152,6 +152,15 @@ export default function Home() {
   const [showSeasonAwards, setShowSeasonAwards] = useState(false);
   const [lastCompletedSeasonId, setLastCompletedSeasonId] = useState<string>('');
 
+  // ─── Duygusal katman: Gol kutlama state ────────────────────────────
+  const [goalCelebrationTrigger, setGoalCelebrationTrigger] = useState(false);
+  const [goalScorer, setGoalScorer] = useState<string | undefined>();
+  const [goalMinute, setGoalMinute] = useState<number | undefined>();
+
+  // ─── UX katman: Onboarding ve Toast ────────────────────────────
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const { toast } = useToast();
+
   // ADIM 3: Youth Academy verilerini profile yüklendiğinde çek
   useEffect(() => {
     if (!profile?.id) return;
@@ -411,7 +420,7 @@ export default function Home() {
         if (key === 'Alg' || key === 'vision') return p.vision || p.rating;
         if (key === 'Top' || key === 'control') return p.control || p.rating;
         if (key === 'total') return p.rating * 11.2;
-        if (key === 'fitness' || key === 'cond') return p.fitness || (p as any).cond || 100;
+        if (key === 'fitness' || key === 'cond') return p.cond || 100;
         if (key === 'rating') return p.rating;
         return (p[key as keyof Player] as number) || 0;
       };
@@ -742,15 +751,6 @@ export default function Home() {
     );
   }
 
-  // ─── Duygusal katman: Gol kutlama state ────────────────────────────
-  const [goalCelebrationTrigger, setGoalCelebrationTrigger] = useState(false);
-  const [goalScorer, setGoalScorer] = useState<string | undefined>();
-  const [goalMinute, setGoalMinute] = useState<number | undefined>();
-
-  // ─── UX katman: Onboarding ve Toast ────────────────────────────
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const { toast } = useToast();
-
   // Onboarding gösterim kontrolü
   useEffect(() => {
     if (profile?.id) {
@@ -1007,7 +1007,7 @@ export default function Home() {
                         const fitnessGain = isFriendly ? 10 : 0;
                         return { 
                           ...p, 
-                          fitness: Math.max(0, Math.min(100, p.fitness - loss + fitnessGain)),
+                          cond: Math.max(0, Math.min(100, (p.cond ?? 100) - loss + fitnessGain)),
                           match_ratings: newRatings
                         };
                       });

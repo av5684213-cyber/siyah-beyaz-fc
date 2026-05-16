@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Shield, Users, Trophy, Wallet, Zap, Trash2, Edit3, Save, Search } from 'lucide-react';
 import { useFM } from '@/lib/fm/GameContext';
+import { isSupabaseConfigured, getSupabase } from '@/lib/supabase';
 
 export default function AdminPanel() {
   const { profile, setProfile, squad, setSquad, authEmail, isAdmin } = useFM();

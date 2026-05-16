@@ -54,10 +54,11 @@ interface TrainingAcademyProps {
   onTrainingStateChange: (state: TrainingState) => void;
   onSquadUpdate: (squad: Player[]) => void;
   onPlayerClick?: (player: Player) => void;
+  isAdmin?: boolean;
 }
 
 export default function TrainingAcademy({ 
-  squad, trainingState, onTrainingStateChange, onSquadUpdate, onPlayerClick
+  squad, trainingState, onTrainingStateChange, onSquadUpdate, onPlayerClick, isAdmin
 }: TrainingAcademyProps) {
   
   const [selectedProgram, setSelectedProgram] = useState<TrainingProgramId | null>(null);
