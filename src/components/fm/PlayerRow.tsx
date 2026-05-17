@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Star, ChevronRight } from 'lucide-react';
 import { calculateMarketValue, formatCurrency } from '@/lib/fm/valuation';
-import { getPosColor, localizePos } from '@/lib/fm/ui-helpers';
+import { getPosColor, localizePos, getPosRowStyle } from '@/lib/fm/ui-helpers';
 import { getTraitInfo, getPlayStyleInfo, getTraitColor, getTraitBgColor } from '@/lib/fm/traits';
 import { fmStatColor, fmStatBg, toTitleCase } from '@/lib/fm/ui-helpers';
 import type { Player, TrainingState, TrainingAssignment, TrainingProgramId } from '@/lib/fm/types';
@@ -107,11 +107,7 @@ export default function PlayerRow({
     { label: 'Ort', val: rating.toFixed(0), key: 'rating' }
   ];
 
-  const posColor = 
-    player.position === 'GK' ? 'bg-emerald-950 border-l-4 border-l-emerald-400' :
-    ['CB', 'LB', 'RB', 'LWB', 'RWB', 'DEF'].includes(player.position) ? 'bg-blue-950 border-l-4 border-l-blue-400' :
-    ['CAM', 'CM', 'CDM', 'LM', 'RM', 'MID'].includes(player.position) ? 'bg-amber-950 border-l-4 border-l-amber-400' :
-    ['ST', 'CF', 'LF', 'RF', 'FWD'].includes(player.position) ? 'bg-red-950 border-l-4 border-l-red-400' : '';
+  const posColor = getPosRowStyle(player.position);
 
   return (
     <motion.div 

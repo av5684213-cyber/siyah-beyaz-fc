@@ -1,5 +1,39 @@
 import { Player, MatchResult, GameTactics, ActiveTactic, MatchEvent } from './types';
 
+// ═══════════════════════════════════════════════════
+//  SAĞLIK MERKEZİ ÇARPANI
+//  stadiumMatrix.ts → getInjuryRecoverySpeed() ile uyumlu
+//  Sağlık merkezi seviyesi, sakatlık iyileşme süresini kısaltır.
+//  Varsayılan: seviye 0 = 1.0x (normal hız), seviye 10 = 2.0x (2 kat hızlı)
+// ═══════════════════════════════════════════════════
+export const INJURY_RECOVERY_SPEED_BASE = 1.0;
+export const INJURY_RECOVERY_SPEED_PER_LEVEL = 0.1;
+
+/**
+ * Sağlık merkezi seviyesine göre sakatlık iyileşme hızı çarpanı hesaplar.
+ * @param medicalLevel - Sağlık merkezi seviyesi (0-10)
+ * @returns Çarpan (ör: level 4 → 1.4, level 10 → 2.0)
+ */
+export function getInjuryRecoveryMultiplier(medicalLevel: number): number {
+  return INJURY_RECOVERY_SPEED_BASE + medicalLevel * INJURY_RECOVERY_SPEED_PER_LEVEL;
+}
+
+/**
+ * Sakatlık süresini, sağlık merkezi seviyesine göre kısaltır.
+ * @param baseDays - Temel sakatlık gün sayısı
+ * @param medicalLevel - Sağlık merkezi seviyesi (0-10)
+ * @returns Kısaltılmış sakatlık gün sayısı (en az 1)
+ */
+export function applyInjuryRecovery(baseDays: number, medicalLevel: number): number {
+  try {
+    const multiplier = getInjuryRecoveryMultiplier(medicalLevel);
+    const reducedDays = Math.ceil(baseDays / multiplier);
+    return Math.max(1, reducedDays);
+  } catch {
+    return baseDays;
+  }
+}
+
 export function simulateMatch(
   homeSquad: Player[],
   awaySquad: Player[],

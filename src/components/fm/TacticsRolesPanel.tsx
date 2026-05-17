@@ -46,24 +46,24 @@ interface TacticsRolesPanelProps {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CATEGORY_COLORS: Record<string, string> = {
-  goalkeeper: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-  defensive: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  midfield: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-  attacking: 'bg-red-500/20 text-red-300 border-red-500/30',
+  goalkeeper: 'bg-[#4A90E2]/20 text-[#4A90E2] border-[#4A90E2]/30',
+  defensive: 'bg-[#50E3C2]/20 text-[#50E3C2] border-[#50E3C2]/30',
+  midfield: 'bg-[#F5A623]/20 text-[#F5A623] border-[#F5A623]/30',
+  attacking: 'bg-[#D0021B]/20 text-[#D0021B] border-[#D0021B]/30',
 };
 
 const CATEGORY_DOT_COLORS: Record<string, string> = {
-  goalkeeper: 'bg-emerald-400',
-  defensive: 'bg-blue-400',
-  midfield: 'bg-amber-400',
-  attacking: 'bg-red-400',
+  goalkeeper: 'bg-[#4A90E2]',
+  defensive: 'bg-[#50E3C2]',
+  midfield: 'bg-[#F5A623]',
+  attacking: 'bg-[#D0021B]',
 };
 
 const CATEGORY_GLOW: Record<string, string> = {
-  goalkeeper: 'shadow-emerald-500/40',
-  defensive: 'shadow-blue-500/40',
-  midfield: 'shadow-amber-500/40',
-  attacking: 'shadow-red-500/40',
+  goalkeeper: 'shadow-[#4A90E2]/40',
+  defensive: 'shadow-[#50E3C2]/40',
+  midfield: 'shadow-[#F5A623]/40',
+  attacking: 'shadow-[#D0021B]/40',
 };
 
 const INSTRUCTION_CATEGORY_LABELS: Record<string, string> = {

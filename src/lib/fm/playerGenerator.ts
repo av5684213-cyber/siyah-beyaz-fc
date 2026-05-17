@@ -710,18 +710,24 @@ export function generateStableSquad(teamName: string, tier: number, rng?: () => 
 }
 
 export const aiTeamNames = [
-  'Kartal Gücü', 'Aslan United', 'Kanarya City', 'Fırtına FC', 'Boğaz Spor', 'Yıldızlar Birliği', 
-  'Anadolu Kartalı', 'Sahil Belediye', 'İç Anadolu FC', 'Akdeniz Spor', 'Ege United', 'Marmara Gücü', 
-  'Zirve Spor', 'Güneşli City', 'Mavi Liman', 'Altınordu Yıldız', 'Demir Spor', 'Kuzey Gücü',
-  'Körfez City', 'Yeşil Vadi', 'Çınar Spor', 'Gümüş Ok', 'Yıldırım United', 'Fırtına 1923',
-  'Başkent Akademi', 'Ovada City', 'Dağ United', 'Liman Spor', 'Sanayi Gücü', 'Demir Bilek',
-  'Altın Patiler', 'Gölge Spor', 'Işık City', 'Gece United', 'Toprak FC', 'Rüzgar Spor',
-  'Buzul United', 'Lav Spor', 'Kutup City', 'Kumral FC', 'Çöl United', 'Vaha Spor',
-  'Derin Su City', 'Zeytin Spor', 'Üzüm United', 'Pamuk FC', 'İpek City', 'Keten Spor',
-  'Dantel United', 'Nakış Spor', 'Boya City', 'Fırça FC', 'Tuval United', 'Sergi Spor',
-  'Yaz United', 'Kış Spor', 'Bahar City', 'Güz FC', 'Mevsim United', 'Zaman Spor',
-  'Saat City', 'Dakika FC', 'Saniye United', 'An Spor', 'Rüya City', 'Gerçek FC',
-  'Hayal United', 'Umut Spor', 'Barış City', 'Sevgi FC', 'Dost United', 'Kardeş Spor'
+  'Anadolu Gücü', 'Ege Fırtınası', 'Karadeniz Yıldızı', 'Akdeniz Dalga',
+  'İç Anadolu Kartalı', 'Marmara Rüzgarı', 'Doğu Anadolu Ateşi',
+  'Güneydoğu Güneşi', 'Trakya Birlik', 'Boğaz Korelasi',
+  'FC Random 42', 'Spor Kulübü 17', 'United Anka', 'City Perspektif',
+  'FC Volkan', 'United Çelik', 'City Horizon', 'FC Dayanışma',
+  'Demir Fırtına', 'Altın Ayak', 'Gümüş Kanat', 'Bakır Kale',
+  'Volkan Spor', 'Buz Kılıcı', 'Ateş Çemberi', 'Rüzgar Süpürücü',
+  'Fırtına Kuşu', 'Güneş Kulesi', 'Yıldırım Ordu', 'Şimşek Gücü',
+  'Kartal Yuvası', 'Aslan Yüreği', 'Bozkurt FK', 'Çita Hızı',
+  'Panter Spor', 'Doğan Akademi', 'Atmaca Birlik', 'Karga Şaşkınlık',
+  'Zirve Peşinde', 'Ufuk Ötesi', 'Vadi Yıldızı', 'Ova Birliği',
+  'Tepe Kuşatı', 'Sahil Güvenliği', 'Liman Feneri', 'Adalet FK',
+  'Siyah Şimşek', 'Beyaz Fırtına', 'Kırmızı Kale', 'Yeşilova SK',
+  'Mavi Cephane', 'Turuncu Güç', 'Mor Yıldız', 'Gri Duvar',
+  'Spor 1923', 'FK 57', 'United 38', 'City 74',
+  'FC 91', 'Birlik 1905', 'Güç 1961', 'Yıldız 2010',
+  'Yeni Ufuklar', 'Işık Yolu', 'Gelecek FK', 'Kömür Madeni',
+  'Çelik Fabrikası', 'İpek Yolu SK', 'Bahar Canlılığı', 'Son Kale',
 ];
 
 export const generateEliteWonderkid = (): Player => {

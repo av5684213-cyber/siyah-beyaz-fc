@@ -9,7 +9,7 @@ import { useFM } from '@/lib/fm/GameContext';
 import { toTitleCase } from '@/lib/fm/ui-helpers';
 
 // Takım ismini güvenli şekilde temizle - undefined/null metinlerini filtrele
-function sanitizeTeamName(raw: any): string {
+function sanitizeTeamName(raw: unknown): string {
   if (raw === null || raw === undefined) return 'Bilinmiyor';
   if (typeof raw !== 'string') return 'Bilinmiyor';
   const cleaned = raw.trim();
@@ -38,6 +38,25 @@ interface LeagueInfo {
   id: number;
   name: string;
   tier: number;
+}
+
+interface PlayerRowData extends Player {
+  team_name?: string;
+  technical?: number;
+  mental?: number;
+  physical?: number;
+  gk_reflexes?: number;
+}
+
+interface FixtureData {
+  id: string;
+  home: { name: string };
+  away: { name: string };
+  home_score?: number;
+  away_score?: number;
+  status: string;
+  match_time?: string;
+  tur: number;
 }
 
 interface StandingsData {
@@ -73,8 +92,12 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
   const [sortKey, setSortKey] = useState<string>('points');
   const [sortDir, setSortDir] = useState<string>('desc');
 
-  // Set initial activeLeague from the leagues data once loaded
-  const effectiveActiveLeague = activeLeague || (data?.leagues?.[0]?.id) || '';
+  // Son başarılı fetch'ten gelen lig listesini tut (infinite loop'u önlemek için)
+  // MUST be declared BEFORE effectiveActiveLeague which references it
+  const [fetchedLeagues, setFetchedLeagues] = useState<LeagueInfo[]>([]);
+
+  // Set initial activeLeague from fetchedLeagues (stable, won't cause re-renders)
+  const effectiveActiveLeague = activeLeague || (fetchedLeagues.length > 0 ? fetchedLeagues[0].id : '') || '';
 
   const filteredPlayers = useMemo(() => {
     return (allPlayers as Player[]).filter((p: Player) => {
@@ -83,7 +106,7 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
        const matchesSearch = playerName.toLowerCase().includes(searchTerm.toLowerCase());
        const matchesPos = filterPos === 'ALL' || p.position === filterPos;
        return matchesSearch && matchesPos;
-    }).sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0));
+    }).sort((a: Player, b: Player) => (b.rating || 0) - (a.rating || 0));
   }, [allPlayers, searchTerm, filterPos]);
 
   // Team players state removed as we use the context-based modal now
@@ -110,6 +133,10 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
       if (!res.ok) throw new Error('Network response was not ok');
       const json = await res.json();
       setData(json);
+      // Lig listesini ayrı tut, böylece effect dependency'sinde data?.leagues kullanmayız
+      if (json.leagues && json.leagues.length > 0) {
+        setFetchedLeagues(json.leagues);
+      }
     } catch (err) {
       console.error('Standings fetch error:', err);
       // Fallback data structure if fetch fails completely
@@ -129,19 +156,26 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
     }
   }, []);
 
+  // İlk yükleme: activeLeague seçili değilse fetchedLeagues'den ilkini kullan
   useEffect(() => {
-    const leagueToFetch = activeLeague || data?.leagues?.[0]?.id;
-    if (leagueToFetch) {
-      fetchStandings(leagueToFetch);
+    if (activeLeague) {
+      // Kullanıcı bir lig seçti, onu getir
+      fetchStandings(Number(activeLeague));
+    } else if (fetchedLeagues.length > 0) {
+      // Daha önce lig listesi geldiyse ilkini getir
+      fetchStandings(fetchedLeagues[0].id);
+    } else {
+      // Hiç lig yoksa, varsayılan olarak 1. Lig'i getir
+      fetchStandings(1);
     }
-  }, [activeLeague, data?.leagues, fetchStandings]);
+  }, [activeLeague, fetchStandings]); // fetchedLeagues BURADA YOK — infinite loop önlenir
 
-  const leagues = useMemo(() => data?.leagues || [
+  const leagues = useMemo(() => fetchedLeagues.length > 0 ? fetchedLeagues : (data?.leagues || [
     { id: 1, name: '1. Lig', tier: 1 },
     { id: 2, name: '2. Lig', tier: 2 },
     { id: 3, name: '3. Lig', tier: 3 },
     { id: 4, name: '4. Lig', tier: 4 },
-  ], [data?.leagues]);
+  ]), [fetchedLeagues, data?.leagues]);
 
   // Group leagues by tier
   const tierMap = useMemo(() => {
@@ -160,8 +194,8 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
   const sortedStandings = useMemo(() => {
     if (!standings.length) return standings;
     const sorted = [...standings].sort((a, b) => {
-      const aVal = (a as Record<string, unknown>)[sortKey] as number || 0;
-      const bVal = (b as Record<string, unknown>)[sortKey] as number || 0;
+      const aVal = (a as unknown as Record<string, unknown>)[sortKey] as number || 0;
+      const bVal = (b as unknown as Record<string, unknown>)[sortKey] as number || 0;
       return sortDir === 'desc' ? bVal - aVal : aVal - bVal;
     });
     return sorted;
@@ -284,7 +318,7 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredPlayers.slice(0, 50).map((p: any) => {
+                        {filteredPlayers.slice(0, 50).map((p: PlayerRowData) => {
                              const total = ((p.rating || 0) + (p.passing || 0) + (p.shooting || 0) + (p.heading || 0) + (p.speed || 0) + (p.physical || 0) + (p.mental || 0) + (p.technical || 0));
                              return (
                                 <tr 
@@ -301,10 +335,10 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
                                         </div>
                                     </td>
                                     <td className="p-4 text-center">
-                                        <span className="text-[10px] font-black uppercase text-white/40 tracking-wider">{(p as any).team_name || 'SERBEST'}</span>
+                                        <span className="text-[10px] font-black uppercase text-white/40 tracking-wider">{p.team_name || p.club || 'SERBEST'}</span>
                                     </td>
                                     <td className="p-4 text-center text-xs font-mono font-bold text-white">{p.rating}</td>
-                                    <td className="p-4 text-center text-xs font-mono font-bold text-white/40">{p.position === 'GK' ? (p as any).gk_reflexes || 70 : '-'}</td>
+                                    <td className="p-4 text-center text-xs font-mono font-bold text-white/40">{p.position === 'GK' ? (p.gk_reflexes || p.goalkeeping || 70) : '-'}</td>
                                     <td className="p-4 text-center text-xs font-mono font-bold text-white/60">{p.technical || 70}</td>
                                     <td className="p-4 text-center text-xs font-mono font-bold text-white/60">{p.passing || 70}</td>
                                     <td className="p-4 text-center text-xs font-mono font-bold text-white/60">{p.shooting || 70}</td>
@@ -477,7 +511,7 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
 
           return (
             <div
-              key={row.id || idx}
+              key={row.team_id || row.id}
               onClick={() => handleTeamClick({ id: row.team_id, name: teamName })}
               className={`grid grid-cols-[2rem_1fr_repeat(8,_3.5rem)] items-center px-4 py-2.5 border-b border-white/[0.03] hover:bg-white/5 transition-colors group cursor-pointer ${getRowStyle(idx, effectiveActiveLeague)} ${isUser ? 'bg-white/[0.07] hover:bg-white/[0.1]' : ''}`}
             >
@@ -543,7 +577,7 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
 }
 
 function FixturesList({ leagueId }: { leagueId: number }) {
-  const [fixtures, setFixtures] = useState<any[]>([]);
+  const [fixtures, setFixtures] = useState<FixtureData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -570,7 +604,7 @@ function FixturesList({ leagueId }: { leagueId: number }) {
         <div className="py-20 text-center text-white/20">Henüz maç kaydı bulunamadı.</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {fixtures.map((f: any) => (
+          {fixtures.map((f: FixtureData) => (
             <div key={f.id} className="bg-zinc-900/40 border border-white/5 rounded-2xl p-4 flex items-center justify-between group hover:border-white/10 transition-all">
               <div className="flex-1 text-right pr-4">
                 <p className="text-xs font-black uppercase italic text-white truncate">{f.home?.name || 'Bilinmiyor'}</p>

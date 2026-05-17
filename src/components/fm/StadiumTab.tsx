@@ -9,6 +9,7 @@ import {
   Shield, 
   TrendingUp, 
   ChevronRight,
+  ChevronLeft,
   Landmark,
   Wifi,
   Users,
@@ -31,7 +32,7 @@ import {
 import { useFM } from '@/lib/fm/GameContext';
 import { InfoTrigger } from './InfoPopup';
 import { formatCurrency } from '@/lib/fm/valuation';
-import { STADIUM_MATRIX, calculateUpgradeCost, getManagerLevelRequirement } from '@/lib/fm/stadiumMatrix';
+import { STADIUM_MATRIX, calculateUpgradeCost, getManagerLevelRequirement, getFacilityBenefit, getLevelEffect } from '@/lib/fm/stadiumMatrix';
 
 interface AcademyStep {
   level: number;
@@ -59,6 +60,8 @@ export default function StadiumTab() {
   const stadiumUpgrades = profile?.stadium_upgrades || {};
   
   const [ticketPrice, setTicketPrice] = useState(profile?.ticket_price || 20);
+  // Önizleme seviyesi state'i — her tesis için ayrı slider pozisyonu
+  const [previewLevels, setPreviewLevels] = useState<Record<string, number>>({});
   const currentAcademyLevel = profile?.academy_level || 0;
   const nextAcademyStep = ACADEMY_STEPS[currentAcademyLevel];
   const isUpgrading = !!profile?.active_upgrade_type;
@@ -167,11 +170,11 @@ export default function StadiumTab() {
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-besiktas-red text-white p-6 rounded-[2.5rem] flex items-center justify-between shadow-2xl border border-white/20 mb-8"
+          className="bg-zinc-800/90 text-white p-5 rounded-2xl flex items-center justify-between shadow-lg border border-amber-500/20 mb-6 backdrop-blur-sm"
         >
           <div className="flex items-center gap-5">
-             <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center animate-spin">
-               <RefreshCw size={24} />
+             <div className="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center">
+               <RefreshCw size={20} className="text-amber-400 animate-spin" />
              </div>
              <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70">GELİŞTİRME SIRASINDAKİ YÜKSELTME</p>
@@ -303,26 +306,28 @@ export default function StadiumTab() {
           const canAfford = (profile?.money || 0) >= cost;
           const meetsLevel = (profile?.level || 1) >= reqLevel;
           const isBeingUpgraded = profile.active_upgrade_id === item.id;
+          // Önizleme seviyesi: slider ile seçilen, henüz kaydedilmemiş seviye
+          const previewLevel = previewLevels[item.id] ?? level;
 
           return (
             <div 
               key={item.id} 
-              className={`bg-zinc-900 border ${isBeingUpgraded ? 'border-besiktas-red shadow-[0_0_30px_rgba(227,30,36,0.1)] scale-[1.02]' : 'border-white/5'} rounded-[2.5rem] p-6 hover:border-white/10 transition-all group flex flex-col justify-between relative overflow-hidden`}
+              className={`bg-zinc-900 border ${isBeingUpgraded ? 'border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.1)] scale-[1.02]' : 'border-white/5'} rounded-2xl p-6 hover:border-white/10 transition-all group flex flex-col justify-between relative overflow-hidden`}
             >
               {isBeingUpgraded && (
                 <div className="absolute top-0 left-0 w-full h-full bg-black/50 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6 text-center">
-                   <div className="w-12 h-12 bg-besiktas-red rounded-full flex items-center justify-center animate-spin mb-4 shadow-[0_0_20px_rgba(227,30,36,0.5)]">
-                     <RefreshCw size={24} className="text-white" />
+                   <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center animate-spin mb-4 shadow-[0_0_20px_rgba(245,158,11,0.5)]">
+                     <RefreshCw size={24} className="text-black" />
                    </div>
-                   <h5 className="text-xs font-black italic text-besiktas-red uppercase tracking-widest mb-1">ŞANTİYE KURULDU</h5>
-                   <p className="text-[10px] font-bold text-white uppercase italic">YÜKSELTİLİYOR...</p>
+                   <h5 className="text-xs font-black italic text-amber-400 uppercase tracking-widest mb-1">YÜKSELTİLİYOR</h5>
+                   <p className="text-[10px] font-bold text-white uppercase italic">İnşaat devam ediyor...</p>
                 </div>
               )}
 
               <div className={isBeingUpgraded ? 'opacity-30' : ''}>
-                <div className="flex justify-between items-start mb-6">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-colors ${level > 0 ? 'bg-besiktas-red/10 border-besiktas-red/20 text-besiktas-red' : 'bg-white/5 border-white/5 text-white/20'}`}>
-                    <item.icon size={22} />
+                <div className="flex justify-between items-start mb-4">
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center border transition-colors ${level > 0 ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-white/5 border-white/5 text-white/20'}`}>
+                    <item.icon size={20} />
                   </div>
                   <div className="flex flex-col items-end">
                     <span className="text-[10px] font-mono font-bold text-white/40">LVL {level}/{item.maxLevel}</span>
@@ -332,27 +337,89 @@ export default function StadiumTab() {
                   </div>
                 </div>
 
-                <div className="mb-4">
+                <div className="mb-3">
                   <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">{item.name}</p>
-                  <h3 className="text-lg font-black italic uppercase tracking-tighter text-white group-hover:text-besiktas-red transition-colors leading-tight">
+                  <h3 className="text-base font-black italic uppercase tracking-tighter text-white group-hover:text-amber-400 transition-colors leading-tight">
                     {item.originalName}
                   </h3>
                 </div>
 
-                <p className="text-[10px] text-white/40 font-medium leading-relaxed mb-6 h-12 line-clamp-3">
+                <p className="text-[10px] text-white/40 font-medium leading-relaxed mb-4 min-h-[36px] line-clamp-2">
                   {item.description}
                 </p>
 
-                <div className="p-3 bg-black/40 rounded-xl border border-white/5 mb-6">
-                   <p className="text-[8px] font-black text-besiktas-red/70 uppercase tracking-widest mb-1">STADYUM ETKİSİ</p>
-                   <p className="text-[9px] font-bold text-white/60 leading-tight uppercase italic">{item.effect}</p>
+                {/* ── Seviye Geçiş Okları ── */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">Seviye Önizleme</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-3">
+                    <button 
+                      onClick={() => setPreviewLevels(prev => ({ ...prev, [item.id]: Math.max(1, (prev[item.id] ?? level) - 1) }))}
+                      className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/15 text-white/40 hover:text-white flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                      disabled={(previewLevels[item.id] ?? level) <= 1}
+                      title="Önceki Seviye"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <div className="flex flex-col items-center min-w-[48px]">
+                      <span className={`text-2xl font-black font-mono leading-none ${previewLevel > level ? 'text-amber-400' : previewLevel < level ? 'text-red-400' : 'text-white/60'}`}>
+                        {previewLevel}
+                      </span>
+                      <span className="text-[7px] font-bold text-white/20 mt-1">/ {item.maxLevel}</span>
+                    </div>
+                    <button 
+                      onClick={() => setPreviewLevels(prev => ({ ...prev, [item.id]: Math.min(item.maxLevel, (prev[item.id] ?? level) + 1) }))}
+                      className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/15 text-white/40 hover:text-white flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                      disabled={(previewLevels[item.id] ?? level) >= item.maxLevel}
+                      title="Sonraki Seviye"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
                 </div>
-                
-                <div className="flex gap-1 mb-8">
+
+                {/* ── Seviye faydası önizlemesi ── */}
+                <div className={`p-3 rounded-xl border mb-4 transition-all ${previewLevel > level ? 'bg-amber-500/5 border-amber-500/20' : 'bg-black/40 border-white/5'}`}>
+                  <p className="text-[8px] font-black uppercase tracking-widest mb-1">
+                    {previewLevel > level ? (
+                      <span className="text-amber-400">SEVİYE {previewLevel} FAYDASI (ÖNİZLEME)</span>
+                    ) : previewLevel === level ? (
+                      <span className="text-white/30">MEVCUT SEVİYE {level}</span>
+                    ) : (
+                      <span className="text-red-400/60">SEVİYE {previewLevel} (ÖNCEKİ)</span>
+                    )}
+                  </p>
+                  <p className="text-[9px] font-bold leading-tight uppercase italic text-white/60">
+                    {getFacilityBenefit(item.id, previewLevel)}
+                  </p>
+                  {/* levelEffect numeric değer */}
+                  {(() => {
+                    try {
+                      const effect = getLevelEffect(item.id, previewLevel);
+                      if (effect && previewLevel !== level) {
+                        return (
+                          <p className="text-[8px] font-bold text-amber-300/60 mt-1">
+                            {effect.key}: {effect.value}
+                          </p>
+                        );
+                      }
+                    } catch { /* ignore */ }
+                    return null;
+                  })()}
+                  {previewLevel > level && (
+                    <p className="text-[8px] font-bold text-amber-400/50 mt-2">
+                      Maliyet: {formatCurrency(calculateUpgradeCost(250000, level + 1))} → Seviye {level + 1} yükseltme
+                    </p>
+                  )}
+                </div>
+
+                {/* ── Mevcut seviye çubuğu ── */}
+                <div className="flex gap-1 mb-2">
                    {[...Array(item.maxLevel)].map((_, i) => (
                      <div 
                        key={i} 
-                       className={`h-1 flex-1 rounded-full ${i < level ? 'bg-besiktas-red shadow-[0_0_8px_rgba(227,30,36,0.4)]' : 'bg-white/5'}`} 
+                       className={`h-1 flex-1 rounded-full transition-all ${i < level ? 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.3)]' : i < previewLevel ? 'bg-amber-500/20' : 'bg-white/5'}`} 
                      />
                    ))}
                 </div>
@@ -361,12 +428,12 @@ export default function StadiumTab() {
               <button 
                 onClick={() => handleStartUpgrade(item.id, cost, level)}
                 disabled={isMax || isUpgrading || !canAfford || !meetsLevel}
-                className={`w-full py-4 rounded-[1.2rem] text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                   isMax 
                     ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
                     : isBeingUpgraded 
                     ? 'hidden'
-                    : 'bg-white text-black hover:bg-besiktas-red hover:text-white disabled:opacity-10'
+                    : 'bg-white text-black hover:bg-amber-500 hover:text-black disabled:opacity-10'
                 }`}
               >
                 {isMax ? 'MAKSİMUM SEVİYE' : `YÜKSELT: ${formatCurrency(cost)}`}

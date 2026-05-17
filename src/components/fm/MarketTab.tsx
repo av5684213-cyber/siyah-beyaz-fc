@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShoppingBag, 
@@ -31,6 +31,7 @@ import { useFM } from '@/lib/fm/GameContext';
 import { Player, Sponsor } from '@/lib/fm/types';
 import { formatCurrency } from '@/lib/fm/valuation';
 import { toTitleCase } from '@/lib/fm/ui-helpers';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 
 // ─── Suggested salary based on rating ───
 function getSuggestedSalary(rating: number): number {
@@ -73,15 +74,103 @@ export default function MarketTab() {
     return Math.round(Math.pow(player.rating || 60, 2.5) * 5000);
   };
 
+  // ── Fetch transfer market listings + free agents ──
+  const [transferListings, setTransferListings] = useState<Player[]>([]);
+  const [freeAgents, setFreeAgents] = useState<Player[]>([]);
+  const [marketLoading, setMarketLoading] = useState(true);
+
+  const fetchMarketPlayers = useCallback(async () => {
+    if (!isSupabaseConfigured() || !profile) {
+      setMarketLoading(false);
+      return;
+    }
+    setMarketLoading(true);
+    try {
+      const supabase = getSupabase();
+      if (!supabase) { setMarketLoading(false); return; }
+
+      // 1. Fetch active transfer listings with player data
+      const { data: listings, error: listingsError } = await supabase
+        .from('transfer_market')
+        .select('player_id, player_data, price, is_auction, expires_at, seller_id')
+        .eq('is_active', true)
+        .neq('seller_id', profile.id) // Don't show own listings
+        .order('price', { ascending: true })
+        .limit(50);
+
+      if (!listingsError && listings) {
+        const mapped = listings
+          .filter((l: Record<string, unknown>) => l.player_data)
+          .map((l: Record<string, unknown>) => {
+            const pd = l.player_data as Record<string, unknown>;
+            return {
+              ...pd,
+              id: l.player_id as string,
+              market_value: l.price as number,
+              is_for_sale: true,
+              is_auction: l.is_auction as boolean,
+              expires_at: l.expires_at as string,
+              seller_id: l.seller_id as string,
+            } as unknown as Player;
+          });
+        setTransferListings(mapped);
+      }
+
+      // 2. Fetch free agents (players with no team)
+      const { data: agents, error: agentsError } = await supabase
+        .from('players')
+        .select('*')
+        .is('profile_id', null)
+        .eq('is_free_agent', true)
+        .limit(30);
+
+      if (!agentsError && agents) {
+        const mapped = agents.map((p: Record<string, unknown>) => ({
+          ...p,
+          id: p.id as string,
+          name: p.name as string,
+          position: p.position as string,
+          rating: (p.rating as number) ?? 60,
+          potential: (p.potential as number) ?? (p.rating as number) ?? 70,
+          age: p.age as number,
+          market_value: (p.market_value as number) || Math.round(Math.pow((p.rating as number) || 60, 2.5) * 5000),
+          is_free_agent: true,
+          club: '',
+          team_name: '',
+        } as unknown as Player));
+        setFreeAgents(mapped);
+      }
+    } catch (err) {
+      console.error('[fetchMarketPlayers] Error:', err);
+    } finally {
+      setMarketLoading(false);
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    fetchMarketPlayers();
+  }, [fetchMarketPlayers]);
+
+  // Combine transfer-listed + free agents, filter by search
   const availablePlayers = useMemo(() => {
     const myTeam = profile?.team_name || '';
-    return league.filter((p: Player) =>
-      p &&
+    const combined = [...transferListings, ...freeAgents];
+
+    // Deduplicate by player id
+    const seen = new Set<string>();
+    const unique = combined.filter(p => {
+      if (!p || !p.id) return false;
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
+
+    return unique.filter((p: Player) =>
       !p?.club?.includes(myTeam) &&
       !p?.team_name?.includes(myTeam) &&
       (p?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
     ).slice(0, 50);
-  }, [league, profile?.team_name, searchTerm]);
+  }, [transferListings, freeAgents, profile?.team_name, searchTerm]);
 
   const handleOpenNegotiation = (player: Player) => {
     setNegotiatingPlayer(player);
@@ -193,7 +282,19 @@ export default function MarketTab() {
 
           {/* Player Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {availablePlayers.map((player: Player) => (
+            {marketLoading ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-16 gap-3">
+                <div className="w-8 h-8 border-2 border-white/10 border-t-emerald-500/40 rounded-full animate-spin" />
+                <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Pazar Yükleniyor</p>
+              </div>
+            ) : availablePlayers.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-16 gap-3">
+                <ShoppingBag className="w-10 h-10 text-white/10" />
+                <p className="text-xs text-white/25 text-center">Transfer listesinde veya serbest oyuncu bulunmuyor</p>
+                <p className="text-[9px] text-white/15 text-center">Sadece transfer listesine gönderilmiş oyuncular ve serbest oyuncular burada görünür</p>
+              </div>
+            ) : (
+              availablePlayers.map((player: Player) => (
               <motion.div 
                 key={player.id}
                 layout
@@ -203,7 +304,14 @@ export default function MarketTab() {
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h4 className="text-sm font-black italic uppercase tracking-tighter text-white">{toTitleCase(player.name)}</h4>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="text-sm font-black italic uppercase tracking-tighter text-white">{toTitleCase(player.name)}</h4>
+                      {(player as Record<string, unknown>).is_free_agent ? (
+                        <span className="px-1.5 py-0.5 bg-sky-500/15 border border-sky-500/30 text-sky-400 text-[7px] font-black uppercase tracking-widest rounded">SERBEST</span>
+                      ) : (player as Record<string, unknown>).is_for_sale ? (
+                        <span className="px-1.5 py-0.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[7px] font-black uppercase tracking-widest rounded">LİSTEDE</span>
+                      ) : null}
+                    </div>
                     <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">{player.position} • {player.age} YAŞ • {player.nation}</p>
                   </div>
                   <div className="text-right">
@@ -234,7 +342,8 @@ export default function MarketTab() {
                   <Handshake size={14} /> GÖRÜŞMELERE BAŞLA
                 </button>
               </motion.div>
-            ))}
+            ))
+            )}
           </div>
         </div>
       ) : (

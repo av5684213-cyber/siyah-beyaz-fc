@@ -20,7 +20,7 @@ import {
 import { Player, LeagueTeam } from '@/lib/fm/types';
 import { useFM } from '@/lib/fm/GameContext';
 import { isSupabaseConfigured, getSupabase } from '@/lib/supabase';
-import { toTitleCase } from '@/lib/fm/ui-helpers';
+import { toTitleCase, getPosGroup, getPosRowStyle } from '@/lib/fm/ui-helpers';
 
 interface TeamProfileModalProps {
   teamName: string;
@@ -237,11 +237,10 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
   };
 
   const getPositionColor = (position: string): string => {
-    if (position === 'GK') return 'bg-emerald-950 border-l-4 border-l-emerald-400 text-emerald-400';
-    if (position === 'DEF' || ['CB', 'LB', 'RB', 'LWB', 'RWB'].includes(position)) return 'bg-blue-950 border-l-4 border-l-blue-400 text-blue-400';
-    if (position === 'MID' || ['CDM', 'CM', 'CAM', 'LM', 'RM'].includes(position)) return 'bg-amber-950 border-l-4 border-l-amber-400 text-amber-400';
-    if (position === 'FWD' || ['LW', 'RW', 'CF', 'ST'].includes(position)) return 'bg-red-950 border-l-4 border-l-red-400 text-red-400';
-    return '';
+    const rowStyle = getPosRowStyle(position);
+    const group = getPosGroup(position);
+    const textColor = group === 'GK' ? 'text-[#4A90E2]' : group === 'DEF' ? 'text-[#50E3C2]' : group === 'MID' ? 'text-[#F5A623]' : group === 'FWD' ? 'text-[#D0021B]' : 'text-[#9B9B9B]';
+    return `${rowStyle} ${textColor}`;
   };
 
   return (

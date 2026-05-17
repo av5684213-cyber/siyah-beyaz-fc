@@ -191,6 +191,12 @@ export interface Profile {
   season_badges?: SeasonBadge[];
   hof_count?: number;
   created_at?: string;
+
+  // ── Personnel / Staff System ──
+  scout_slots?: number;          // Number of active scout slots (0-3)
+  staff_coaches?: number;        // Number of assistant coaches
+  staff_physios?: number;        // Number of physiotherapists
+  staff_monthly_fees?: number;   // Total monthly staff fees (computed)
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -328,6 +334,7 @@ export interface MatchState {
   isPaused: boolean;
   playerConditions: Record<string, number>;
   isReplay?: boolean;
+  isFriendly?: boolean;
 }
 
 export interface LeagueTeam {

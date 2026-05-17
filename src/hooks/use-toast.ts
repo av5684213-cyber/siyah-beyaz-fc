@@ -143,6 +143,17 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast) {
+  // ── Sayfa arka plandayken toast gösterme ──
+  // Bu kontrol hem doğrudan toast() çağrılarında hem de
+  // showToast() wrapper'ı üzerinden yapılan çağrılarda çalışır.
+  if (typeof document !== 'undefined' && document.hidden) {
+    return {
+      id: 'hidden-skip',
+      dismiss: () => {},
+      update: () => {},
+    }
+  }
+
   const id = genId()
 
   const update = (props: ToasterToast) =>

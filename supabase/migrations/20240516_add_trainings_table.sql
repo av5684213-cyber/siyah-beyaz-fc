@@ -1,6 +1,7 @@
 -- ═══════════════════════════════════════════════════════════════
--- Training Logs Tablosu
+-- Training Logs Tablosu (DUZELTILMIS VERSIYON)
 -- Antrenman sonuçlarını kaydetmek için
+-- DÜZELTME: CREATE POLICY ifadeleri DO $$ ... EXCEPTION ile sarıldı
 -- ═══════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS trainings (
@@ -21,14 +22,20 @@ CREATE TABLE IF NOT EXISTS trainings (
 ALTER TABLE trainings ENABLE ROW LEVEL SECURITY;
 
 -- Kullanıcılar sadece kendi antrenmanlarını görebilir
-CREATE POLICY "Users can view own trainings"
-  ON trainings FOR SELECT
-  USING (profile_id = auth.uid()::text);
+DO $$ BEGIN
+  CREATE POLICY "Users can view own trainings"
+    ON trainings FOR SELECT
+    USING (profile_id = auth.uid()::text);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Kullanıcılar kendi antrenmanlarını kaydedebilir
-CREATE POLICY "Users can insert own trainings"
-  ON trainings FOR INSERT
-  WITH CHECK (profile_id = auth.uid()::text);
+DO $$ BEGIN
+  CREATE POLICY "Users can insert own trainings"
+    ON trainings FOR INSERT
+    WITH CHECK (profile_id = auth.uid()::text);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Index: profile_id + training_date (son antrenmanları hızlı çekmek için)
 CREATE INDEX IF NOT EXISTS idx_trainings_profile_date

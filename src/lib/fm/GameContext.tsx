@@ -9,8 +9,10 @@ import {
 import { simulateHistory } from './historySimulator';
 import { isSupabaseConfigured, getSupabase } from '@/lib/supabase';
 import { getBrowserLocale, Locale } from './i18n';
+import { showToast } from '@/components/fm/ToastNotifications';
 import { generateLocalizedPlayer, getRegionConfig } from './region-generator';
 import { getTeamNamesForDepartment } from './constants';
+import { getTomorrowNoon } from './league';
 
 interface FMContextValue {
   userId: string | null;
@@ -39,7 +41,7 @@ interface FMContextValue {
   setLocale: React.Dispatch<React.SetStateAction<Locale>>;
   sellPlayer: (player: Player) => Promise<{ success: boolean; netRevenue: number; taxAmount: number } | void>;
   scoutPlayer: (playerId: string, playerObj?: Player) => Promise<{ success: boolean; reason?: string; player?: Player } | { success: boolean; player: Player }>;
-  playFriendlyMatch: (isPaid?: boolean) => Promise<{ success: boolean; reason?: string; homeScore?: number; awayScore?: number; results?: any }>;
+  playFriendlyMatch: (isPaid?: boolean) => Promise<{ success: boolean; reason?: string; homeScore?: number; awayScore?: number; results?: Record<string, unknown> }>;
   watchlist: string[];
   toggleWatchlist: (player: Player) => Promise<void>;
   negotiatePurchase: (player: Player, offerPrice: number) => Promise<{ success: boolean; reason?: string; totalCost?: number; agentCommission?: number; signingBonus?: number; counterOffer?: number }>;
@@ -93,7 +95,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
          
          return finalProfile;
        });
-       alert('İnşaat projesi tamamlandı!');
+       showToast('İnşaat projesi tamamlandı!', 'success');
     }
   }, [profile?.current_day, profile?.active_upgrade_type, profile?.active_upgrade_finish_day, setProfile, profile]);
 
@@ -231,16 +233,13 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
               }));
               await supabase.from('league_teams').insert(npcTeams);
 
-              // Sezon oluştur ( Pazartesi başlangıç)
-              const now = new Date();
-              const day = now.getDay();
-              const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-              const monday = new Date(now.setDate(diff));
+              // Sezon oluştur ( Yarın sabah 12:00 başlangıç)
+              const seasonStart = getTomorrowNoon();
               
               const { data: newSeason } = await supabase.from('seasons').insert({
                 league_id: leagueData.id,
                 year: '2025/26',
-                start_date: monday.toISOString().split('T')[0],
+                start_date: seasonStart.toISOString().split('T')[0],
                 current_tur: 1
               }).select().single();
 
@@ -254,14 +253,11 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
             // Sezon yoksa oluştur
             const { data: existingSeason } = await supabase.from('seasons').select('id').eq('league_id', leagueData.id).single();
             if (!existingSeason) {
-               const now = new Date();
-               const day = now.getDay();
-               const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-               const monday = new Date(now.setDate(diff));
+               const seasonStart2 = getTomorrowNoon();
                const { data: bSeason } = await supabase.from('seasons').insert({
                 league_id: leagueData.id,
                 year: '2025/26',
-                start_date: monday.toISOString().split('T')[0],
+                start_date: seasonStart2.toISOString().split('T')[0],
                 current_tur: 1
               }).select().single();
               if (bSeason) {
@@ -755,28 +751,38 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [profile?.current_day, processFinancials, processScouting, profile]);
 
-  const addMatchRevenue = useCallback((isHome: boolean) => {
+  const addMatchRevenue = useCallback((isHome: boolean, leaguePosition?: number, totalTeams?: number) => {
     setProfile((prev: Profile | null) => {
       if (!prev || !isHome) return prev;
       
-      const upgrades = prev.stadium_upgrades || {};
-      const capacityLvl = upgrades['capacity'] || 0;
-      const capacity = 5000 + (capacityLvl * 10000);
-      
-      // Assume 90% attendance on average
-      const attendance = Math.floor(capacity * 0.9);
-      const ticketPrice = 50 + (capacityLvl * 10);
-      const ticketRevenue = attendance * ticketPrice;
-      
-      // Food & Beverage (Utensils/Restaurant if added, but let's use a base anyway)
-      const fbRevenue = attendance * 15;
-      
-      const totalMatchRevenue = ticketRevenue + fbRevenue;
-      
-      return {
-        ...prev,
-        money: (prev.money || 0) + totalMatchRevenue
-      };
+      try {
+        const upgrades = prev.stadium_upgrades || {};
+        const capacityLvl = upgrades['capacity'] || 0;
+        const ticketPrice = prev.ticket_price ?? 35;
+        const pos = leaguePosition ?? 10;
+        const teams = totalTeams ?? 18;
+
+        // Use the formula from financialModel
+        // stadiumCapacity = 10000 + stadiumLevel * 2000
+        const capacity = 10000 + (capacityLvl * 2000);
+        const positionFactor = 0.5 + 0.5 * ((teams - pos + 1) / teams);
+        const baseAttendance = capacity * positionFactor;
+        const priceElasticity = Math.max(0.1, 1 - (ticketPrice - 50) / 100);
+        const attendance = Math.floor(Math.min(capacity, baseAttendance * priceElasticity));
+        const ticketRevenue = attendance * ticketPrice;
+
+        // Food & Beverage
+        const fbRevenue = attendance * 15;
+
+        const totalMatchRevenue = ticketRevenue + fbRevenue;
+
+        return {
+          ...prev,
+          money: (prev.money || 0) + totalMatchRevenue
+        };
+      } catch {
+        return prev;
+      }
     });
   }, [setProfile]);
 
@@ -968,54 +974,62 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
 
   const playFriendlyMatch = useCallback(async (isPaid: boolean = false) => {
     if (!profile) return { success: false, reason: 'Profil bulunamadı' };
-    
+
     if (isPaid && (profile.credits || 0) < 1) {
       return { success: false, reason: 'Yetersiz Kredi (1 Kredi gerekli)' };
     }
 
     const newCredits = isPaid ? (profile.credits || 0) - 1 : (profile.credits || 0);
-    
+
     // Simulate Match
     const homeScore = Math.floor(Math.random() * 4);
     const awayScore = Math.floor(Math.random() * 4);
-    
+
     // Apply Training Bonus (2x) as requested
     const { updatedSquad, results } = runTrainingSession(squad, trainingState, 2.0);
-    
+
     setSquad(updatedSquad);
-    setProfile((prev: Profile | null) => ({ ...prev, credits: newCredits }));
-    
+    setProfile((prev: Profile | null) => prev ? { ...prev, credits: newCredits } : prev);
+
     if (isSupabaseConfigured()) {
-      const supabase = getSupabase();
-      await supabase.from('profiles').update({ credits: newCredits }).eq('id', profile.id);
-      
-      await supabase.from('friendly_matches').insert({
-        home_team_id: profile.id,
-        away_team_id: 'cpu',
-        home_score: homeScore,
-        away_score: awayScore,
-        match_data: { results, simulated: true }
-      });
-      
-      // Batch update players would be better but let's do critical sync
-      for (const p of updatedSquad) {
-         await supabase.from('players').update({
-           rating: p.rating,
-           potential: p.potential,
-           speed: p.speed,
-           power: p.power,
-           passing: p.passing,
-           shooting: p.shooting,
-           defending: p.defending,
-           vision: p.vision,
-           control: p.control,
-           cond: p.cond,
-           form: p.form
-         }).eq('id', p.id);
+      try {
+        const supabase = getSupabase();
+        if (!supabase) return { success: false, reason: 'Supabase bağlantı hatası' };
+
+        await supabase.from('profiles').update({ credits: newCredits }).eq('id', profile.id);
+
+        await supabase.from('friendly_matches').insert({
+          home_team_id: profile.id,
+          away_team_id: 'cpu',
+          home_score: homeScore,
+          away_score: awayScore,
+          home_team_name: profile.team_name || 'Bilinmeyen',
+          away_team_name: 'CPU Takımı',
+          match_data: { results, simulated: true }
+        });
+
+        // Batch update players
+        for (const p of updatedSquad) {
+          await supabase.from('players').update({
+            rating: p.rating,
+            potential: p.potential,
+            speed: p.speed,
+            power: p.power,
+            passing: p.passing,
+            shooting: p.shooting,
+            defending: p.defending,
+            vision: p.vision,
+            control: p.control,
+            cond: p.cond,
+            form: p.form
+          }).eq('id', p.id);
+        }
+      } catch (err) {
+        console.error('[playFriendlyMatch] Supabase error:', err);
       }
     }
-    
-    return { success: true, homeScore, awayScore, results };
+
+    return { success: true, homeScore, awayScore, results: results as Record<string, unknown> };
   }, [profile, squad, trainingState, setProfile]);
 
   const toggleWatchlist = useCallback(async (player: Player) => {

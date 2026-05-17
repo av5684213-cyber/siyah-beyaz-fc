@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Save, Palette, Type, Shield } from 'lucide-react';
+import { Save, Palette, Type } from 'lucide-react';
 import { useFM } from '@/lib/fm/GameContext';
 
 const TEAM_COLORS = [
@@ -12,18 +12,12 @@ const TEAM_COLORS = [
   '#ffffff', '#ced4da', '#adb5bd', '#6c757d', '#495057',
 ];
 
-const TEAM_EMBLEMS = [
-  '🦁', '🐺', '🦅', '⚡', '🔥', '⭐', '👑', '🛡️',
-  '⚽', '🎯', '💎', '🏆', '🌟', '🐉', '🦊', '🐂',
-];
-
 export default function TeamSettingsPage() {
   const { profile, setProfile } = useFM();
 
   const [teamName, setTeamName] = useState(profile?.team_name || '');
   const [primaryColor, setPrimaryColor] = useState(profile?.primary_color || '#000000');
   const [secondaryColor, setSecondaryColor] = useState(profile?.secondary_color || '#ffffff');
-  const [emblem, setEmblem] = useState('🦁');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -39,7 +33,6 @@ export default function TeamSettingsPage() {
         secondary_color: secondaryColor,
       });
 
-      // Emblem'ı da Supabase'e kaydet (team_emblem alanı)
       try {
         const { getSupabase, isSupabaseConfigured } = await import('@/lib/supabase');
         if (isSupabaseConfigured()) {
@@ -51,7 +44,6 @@ export default function TeamSettingsPage() {
                 team_name: teamName,
                 primary_color: primaryColor,
                 secondary_color: secondaryColor,
-                team_emblem: emblem,
               })
               .eq('id', profile.id);
           }
@@ -77,13 +69,13 @@ export default function TeamSettingsPage() {
     >
       <div className="flex items-center gap-4 mb-8">
         <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl border-2"
+          className="w-16 h-16 rounded-2xl flex items-center justify-center border-2"
           style={{
             backgroundColor: primaryColor,
             borderColor: secondaryColor,
           }}
         >
-          {emblem}
+          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: secondaryColor }} />
         </div>
         <div>
           <h1 className="text-2xl font-black text-white uppercase tracking-tighter">
@@ -176,7 +168,7 @@ export default function TeamSettingsPage() {
                   }`}
                   style={{ backgroundColor: color }}
                 />
-              ))}
+            ))}
             </div>
           </div>
         </div>
@@ -186,13 +178,13 @@ export default function TeamSettingsPage() {
           <p className="text-[9px] text-white/30 uppercase font-bold mb-2">Önizleme</p>
           <div className="flex items-center gap-3">
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
               style={{
                 backgroundColor: primaryColor,
                 border: `2px solid ${secondaryColor}`,
               }}
             >
-              {emblem}
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: secondaryColor }} />
             </div>
             <div>
               <p className="text-sm font-black text-white">{teamName || 'Takım Adı'}</p>
@@ -205,29 +197,6 @@ export default function TeamSettingsPage() {
         </div>
       </div>
 
-      {/* Amblem */}
-      <div className="bg-[#111820] border border-white/5 rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Shield size={18} className="text-white/40" />
-          <h3 className="text-sm font-black text-white uppercase tracking-tight">Takım Amblemi</h3>
-        </div>
-        <div className="grid grid-cols-8 gap-2">
-          {TEAM_EMBLEMS.map((emoji) => (
-            <button
-              key={emoji}
-              onClick={() => setEmblem(emoji)}
-              className={`w-10 h-10 rounded-xl border flex items-center justify-center text-lg transition-all ${
-                emblem === emoji
-                  ? 'border-amber-400 bg-amber-500/10 scale-110'
-                  : 'border-white/5 bg-black/40 hover:border-white/10'
-              }`}
-            >
-              {emoji}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Save */}
       <button
         onClick={handleSave}
@@ -237,7 +206,7 @@ export default function TeamSettingsPage() {
           disabled:opacity-50"
       >
         <Save size={18} />
-        {saving ? 'Kaydediliyor...' : saved ? '✓ Kaydedildi!' : 'Kaydet'}
+        {saving ? 'Kaydediliyor...' : saved ? 'Kaydedildi!' : 'Kaydet'}
       </button>
     </motion.div>
   );

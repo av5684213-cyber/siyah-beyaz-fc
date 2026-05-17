@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { Player, LabSettings, MatchResult, ActiveTactic } from '@/lib/fm/types';
 import { integratedMatchEngine } from '@/lib/fm/IntegratedMatchEngine';
-import { toTitleCase } from '@/lib/fm/ui-helpers';
+import { toTitleCase, getPosDotColor } from '@/lib/fm/ui-helpers';
 import { useFM } from '@/lib/fm/GameContext';
 import PlayerDetailModal from './PlayerDetailModal';
 
@@ -45,7 +45,7 @@ function PlayerMarker({ player, pos, team, onClick, isSelected }: { player: Play
             <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white text-xs font-black shadow-xl transition-all group-hover:scale-125 border-2 ${
               isSelected ? 'border-white animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.5)]' : (team === 'A' ? 'border-blue-400' : 'border-red-400')
             } ${
-              player.position === 'FWD' ? 'bg-rose-700' : player.position === 'GK' ? 'bg-emerald-700' : player.position === 'DEF' ? 'bg-sky-700' : 'bg-amber-700'
+              player.position === 'FWD' ? 'bg-[#D0021B]' : player.position === 'GK' ? 'bg-[#4A90E2]' : player.position === 'DEF' ? 'bg-[#50E3C2]' : 'bg-[#F5A623]'
             }`}>
               {player.name.slice(0, 2).toUpperCase()}
               <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full border-2 border-zinc-950 flex items-center justify-center text-[8px] font-black ${
@@ -892,7 +892,7 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
                     >
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-[9px] font-black shadow-lg ${
-                          p.position === 'GK' ? 'bg-emerald-500' : p.position === 'DEF' ? 'bg-blue-600' : p.position === 'MID' ? 'bg-amber-600' : 'bg-red-600'
+                          p.position === 'GK' ? 'bg-[#4A90E2]' : p.position === 'DEF' ? 'bg-[#50E3C2]' : p.position === 'MID' ? 'bg-[#F5A623]' : 'bg-[#D0021B]'
                         }`}>
                           {p.specificPosition || p.position}
                         </div>

@@ -95,6 +95,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [activeSubTab, setActiveSubTab] = useState<'market' | 'auctions' | 'rankings' | 'store'>('market');
   const [myAuctions, setMyAuctions] = useState<MarketListing[]>([]);
+  const [selectedListing, setSelectedListing] = useState<MarketListing | null>(null);
   const [loading, setLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'price', direction: 'asc' });
   const [filter, setFilter] = useState({

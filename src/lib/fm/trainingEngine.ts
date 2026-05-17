@@ -1,6 +1,24 @@
 import { Player, TrainingState, TrainingSessionResult } from './types';
 import { TRAINING_PROGRAMS } from './constants';
 
+// ═══════════════════════════════════════════════════
+//  ANTRENMAN TESİSİ ÇARPANI
+//  stadiumMatrix.ts → getTrainingXPMultiplier() ile uyumlu
+//  Antrenman sahası seviyesi, oyuncu gelişim hızını artırır.
+//  Varsayılan: seviye 0 = 1.0x, seviye 10 = 2.0x
+// ═══════════════════════════════════════════════════
+export const TRAINING_GROUND_XP_MULTIPLIER_BASE = 1.0;
+export const TRAINING_GROUND_XP_MULTIPLIER_PER_LEVEL = 0.1;
+
+/**
+ * Antrenman sahası seviyesine göre XP çarpanı hesaplar.
+ * @param trainingGroundLevel - Antrenman sahası seviyesi (0-10)
+ * @returns Çarpan (ör: level 3 → 1.3, level 10 → 2.0)
+ */
+export function getTrainingGroundMultiplier(trainingGroundLevel: number): number {
+  return TRAINING_GROUND_XP_MULTIPLIER_BASE + trainingGroundLevel * TRAINING_GROUND_XP_MULTIPLIER_PER_LEVEL;
+}
+
 export const runTrainingSession = (squad: Player[], state: TrainingState, multiplier: number = 1.0) => {
   const results: Record<string, TrainingSessionResult> = {};
   

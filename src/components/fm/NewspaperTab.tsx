@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import {
   Newspaper,
@@ -12,10 +12,17 @@ import {
   Star,
   Flame,
   Eye,
+  RefreshCw,
+  Shield,
 } from 'lucide-react';
 import { useFM } from '@/lib/fm/GameContext';
 import { generateWeeklyNews } from '@/lib/fm/mediaSystem';
-import type { MediaMessage } from '@/lib/fm/mediaSystem';
+import type { Profile, Player } from '@/lib/fm/types';
+import { isSupabaseConfigured, getSupabase } from '@/lib/supabase';
+
+// ═══════════════════════════════════════════════════
+//  TİP TANIMLARI
+// ═══════════════════════════════════════════════════
 
 interface NewsArticle {
   id: string;
@@ -27,6 +34,37 @@ interface NewsArticle {
   impact?: { morale: number; reputation: number };
 }
 
+/** API'den gelen tek bir puan durumu satırı */
+interface StandingRow {
+  id: string;
+  team_id: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goals_for: number;
+  goals_against: number;
+  gd: number;
+  points: number;
+  teams?: {
+    name: string;
+    is_user_team: boolean;
+    is_bot: boolean;
+    avg_rating: number;
+  };
+}
+
+/** Kullanıcının üye olduğu lig bilgisi */
+interface UserLeagueInfo {
+  id: string;
+  name: string;
+  tier: number;
+}
+
+// ═══════════════════════════════════════════════════
+//  SABİTLER
+// ═══════════════════════════════════════════════════
+
 const FAKE_OPPONENTS = [
   'Karagümrük SK', 'Sivasspor', 'Kayserispor', 'Alanyaspor',
   'Hatayspor', 'Gaziantep FK', 'Adana Demirspor', 'Kasımpaşa',
@@ -34,20 +72,15 @@ const FAKE_OPPONENTS = [
   'İstanbulspor', 'Altay SK', 'Bandırmaspor', 'Boluspor',
 ];
 
-const FAKE_TEAMS_TOP5 = [
-  { name: 'Galatasaray', p: 34, w: 24, d: 6, l: 4, gf: 68, ga: 22, pts: 78 },
-  { name: 'Fenerbahçe', p: 34, w: 22, d: 7, l: 5, gf: 64, ga: 28, pts: 73 },
-  { name: 'Beşiktaş', p: 34, w: 20, d: 5, l: 9, gf: 58, ga: 35, pts: 65 },
-  { name: 'Trabzonspor', p: 34, w: 18, d: 8, l: 8, gf: 52, ga: 32, pts: 62 },
-  { name: 'Başakşehir', p: 34, w: 16, d: 9, l: 9, gf: 48, ga: 36, pts: 57 },
-];
+// ═══════════════════════════════════════════════════
+//  YARDIMCI FONKSİYONLAR
+// ═══════════════════════════════════════════════════
 
-function generateArticles(profile: any, squad: any[]): NewsArticle[] {
+function generateArticles(profile: Profile, squad: Player[]): NewsArticle[] {
   if (!profile) return [];
 
   const teamName = profile.team_name || 'Takım';
   const articles: NewsArticle[] = [];
-  const day = profile.current_day || 1;
 
   // Generate weekly news using mediaSystem
   const lastResult = Math.random() > 0.4 ? 'win' : Math.random() > 0.5 ? 'draw' : 'loss';
@@ -55,35 +88,39 @@ function generateArticles(profile: any, squad: any[]): NewsArticle[] {
   const goalsFor = lastResult === 'win' ? Math.floor(Math.random() * 3) + 1 : Math.floor(Math.random() * 2);
   const goalsAgainst = lastResult === 'loss' ? Math.floor(Math.random() * 3) + 1 : Math.floor(Math.random() * 2);
 
-  const mediaMessages = generateWeeklyNews({
-    profile,
-    lastMatch: {
-      result: lastResult,
-      opponentName: opponent,
-      goalsFor,
-      goalsAgainst,
-    },
-    leaguePosition: Math.floor(Math.random() * 12) + 1,
-    tier: 4,
-  });
-
-  // Convert MediaMessages to NewsArticles
-  for (const msg of mediaMessages) {
-    let category: NewsArticle['category'] = 'headline';
-    if (msg.type === 'transfer') category = 'transfer';
-    else if (msg.type === 'rumor') category = 'rumor';
-    else if (msg.type === 'praise' || msg.type === 'criticism') category = 'match';
-    else if (msg.type === 'milestone') category = 'league';
-
-    articles.push({
-      id: msg.id,
-      category,
-      title: msg.headline,
-      summary: msg.body,
-      importance: msg.importance,
-      timestamp: msg.date,
-      impact: { morale: msg.teamImpact.morale, reputation: msg.teamImpact.reputation },
+  try {
+    const mediaMessages = generateWeeklyNews({
+      profile,
+      lastMatch: {
+        result: lastResult,
+        opponentName: opponent,
+        goalsFor,
+        goalsAgainst,
+      },
+      leaguePosition: Math.floor(Math.random() * 12) + 1,
+      tier: 4,
     });
+
+    // Convert MediaMessages to NewsArticles
+    for (const msg of mediaMessages) {
+      let category: NewsArticle['category'] = 'headline';
+      if (msg.type === 'transfer') category = 'transfer';
+      else if (msg.type === 'rumor') category = 'rumor';
+      else if (msg.type === 'praise' || msg.type === 'criticism') category = 'match';
+      else if (msg.type === 'milestone') category = 'league';
+
+      articles.push({
+        id: msg.id,
+        category,
+        title: msg.headline,
+        summary: msg.body,
+        importance: msg.importance,
+        timestamp: msg.date,
+        impact: { morale: msg.teamImpact.morale, reputation: msg.teamImpact.reputation },
+      });
+    }
+  } catch (err) {
+    console.error('[NewspaperTab] generateWeeklyNews hatası:', err);
   }
 
   // Add transfer rumors from squad
@@ -154,24 +191,147 @@ function getCategoryLabel(category: NewsArticle['category']) {
   }
 }
 
+/** Takım ismini güvenli şekilde temizle */
+function sanitizeTeamName(raw: unknown): string {
+  if (raw === null || raw === undefined) return 'Bilinmiyor';
+  if (typeof raw !== 'string') return 'Bilinmiyor';
+  const cleaned = raw.trim();
+  if (!cleaned || cleaned.toLowerCase() === 'undefined' || cleaned.toLowerCase() === 'null' || cleaned === 'NaN') return 'Bilinmiyor';
+  if (cleaned.toLowerCase().includes('undefined') || cleaned.toLowerCase().includes('null')) return 'Bilinmiyor';
+  return cleaned;
+}
+
+// ═══════════════════════════════════════════════════
+//  ANA BİLEŞEN
+// ═══════════════════════════════════════════════════
+
 export default function NewspaperTab() {
   const { profile, squad } = useFM();
 
-  const articles = useMemo(() => generateArticles(profile, squad), [profile, squad]);
+  // ── Puan Durumu State ──
+  const [userLeagues, setUserLeagues] = useState<UserLeagueInfo[]>([]);
+  const [activeLeagueId, setActiveLeagueId] = useState<string>('');
+  const [standings, setStandings] = useState<StandingRow[]>([]);
+  const [standingsLoading, setStandingsLoading] = useState(false);
+  const [standingsError, setStandingsError] = useState<string>('');
 
-  const top5Teams = useMemo(() => {
-    if (!profile) return FAKE_TEAMS_TOP5;
-    // Insert user's team into the table at a random position
-    const userTeam = {
-      name: profile.team_name || 'Takımım',
-      p: 34, w: 15, d: 8, l: 11, gf: 45, ga: 38, pts: 53,
-      isUser: true,
+  // ── Kullanıcının liglerini bul ──
+  useEffect(() => {
+    if (!profile?.id) return;
+    if (!isSupabaseConfigured()) return;
+
+    const fetchUserLeagues = async () => {
+      try {
+        const supabase = getSupabase();
+        if (!supabase) return;
+
+        // league_teams tablosundan kullanıcının takımlarını bul
+        const { data: teamRows, error: teamError } = await supabase
+          .from('league_teams')
+          .select('league_id, leagues ( id, name, tier )')
+          .eq('profile_id', profile.id);
+
+        if (teamError) {
+          console.error('[NewspaperTab] league_teams sorgu hatası:', teamError);
+          return;
+        }
+
+        if (teamRows && teamRows.length > 0) {
+          const leagues: UserLeagueInfo[] = teamRows
+            .map((row: Record<string, unknown>) => {
+              const leagueData = row.leagues as Record<string, unknown> | null;
+              if (!leagueData) return null;
+              return {
+                id: String(leagueData.id),
+                name: String(leagueData.name || 'Bilinmeyen Lig'),
+                tier: Number(leagueData.tier || 4),
+              };
+            })
+            .filter((l: UserLeagueInfo | null): l is UserLeagueInfo => l !== null);
+
+          setUserLeagues(leagues);
+
+          // İlk ligi aktif olarak ayarla
+          if (leagues.length > 0 && !activeLeagueId) {
+            setActiveLeagueId(leagues[0].id);
+          }
+        } else {
+          // league_teams'de yoksa, profile.league_name'den dene
+          if (profile.league_name) {
+            try {
+              const { data: leagueByName } = await supabase
+                .from('leagues')
+                .select('id, name, tier')
+                .eq('name', profile.league_name)
+                .maybeSingle();
+
+              if (leagueByName) {
+                const leagueInfo: UserLeagueInfo = {
+                  id: String(leagueByName.id),
+                  name: String(leagueByName.name),
+                  tier: Number(leagueByName.tier || 4),
+                };
+                setUserLeagues([leagueInfo]);
+                if (!activeLeagueId) {
+                  setActiveLeagueId(leagueInfo.id);
+                }
+              }
+            } catch (nameErr) {
+              console.error('[NewspaperTab] league_name ile lig bulunamadı:', nameErr);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[NewspaperTab] Kullanıcı ligleri yüklenemedi:', err);
+      }
     };
-    const teams = [...FAKE_TEAMS_TOP5].map(t => ({ ...t, isUser: false }));
-    teams.push(userTeam);
-    teams.sort((a, b) => b.pts - a.pts);
-    return teams.slice(0, 6);
-  }, [profile]);
+
+    fetchUserLeagues();
+  }, [profile?.id, profile?.league_name]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Aktif lig için puan durumu çek ──
+  const fetchStandingsForLeague = useCallback(async (leagueId: string) => {
+    if (!leagueId) return;
+    setStandingsLoading(true);
+    setStandingsError('');
+
+    try {
+      const res = await fetch(`/api/league/standings?leagueId=${encodeURIComponent(leagueId)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+
+      if (json.standings && Array.isArray(json.standings)) {
+        setStandings(json.standings);
+      } else {
+        setStandings([]);
+      }
+    } catch (err) {
+      console.error('[NewspaperTab] Puan durumu yüklenemedi:', err);
+      setStandingsError('Puan durumu yüklenemedi');
+      setStandings([]);
+    } finally {
+      setStandingsLoading(false);
+    }
+  }, []);
+
+  // Aktif lig değiştiğinde puan durumu çek
+  useEffect(() => {
+    if (activeLeagueId) {
+      fetchStandingsForLeague(activeLeagueId);
+    }
+  }, [activeLeagueId, fetchStandingsForLeague]);
+
+  // ── Haber makaleleri ──
+  const articles = useMemo(() => {
+    if (!profile) return [];
+    return generateArticles(profile, squad);
+  }, [profile, squad]);
+
+  // ── Aktif lig adını bul ──
+  const activeLeague = userLeagues.find(l => l.id === activeLeagueId);
+
+  // ── Kullanıcının takımını puan durumunda vurgula ──
+  const userTeamName = profile?.team_name || '';
 
   if (!profile) {
     return (
@@ -324,7 +484,7 @@ export default function NewspaperTab() {
           </div>
         </div>
 
-        {/* League Table Snippet */}
+        {/* League Table - Kullanıcının Ligi */}
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center gap-2 px-1">
             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
@@ -333,51 +493,136 @@ export default function NewspaperTab() {
             <div className="h-px flex-1 bg-white/5" />
           </div>
 
-          <div className="bg-zinc-950 border border-white/5 rounded-2xl overflow-hidden">
-            <table className="w-full text-[10px]">
-              <thead>
-                <tr className="border-b border-white/5 text-white/20">
-                  <th className="text-left py-2 px-3 font-black uppercase">#</th>
-                  <th className="text-left py-2 px-1 font-black uppercase">Takım</th>
-                  <th className="text-center py-2 px-1 font-black uppercase">O</th>
-                  <th className="text-center py-2 px-1 font-black uppercase">G</th>
-                  <th className="text-center py-2 px-1 font-black uppercase">B</th>
-                  <th className="text-center py-2 px-1 font-black uppercase">M</th>
-                  <th className="text-center py-2 px-1 font-black uppercase">Av</th>
-                  <th className="text-center py-2 px-1 font-black uppercase">P</th>
-                </tr>
-              </thead>
-              <tbody>
-                {top5Teams.map((team, i) => (
-                  <tr
-                    key={team.name}
-                    className={`border-b border-white/5 ${team.isUser ? 'bg-amber-500/5' : 'hover:bg-white/[0.02]'} transition-colors`}
-                  >
-                    <td className={`py-2 px-3 font-mono font-bold ${i < 2 ? 'text-emerald-400' : i < 4 ? 'text-amber-400' : 'text-white/30'}`}>
-                      {i + 1}
-                    </td>
-                    <td className={`py-2 px-1 font-bold truncate max-w-[80px] ${team.isUser ? 'text-amber-400' : 'text-white/70'}`}>
-                      {team.name}
-                    </td>
-                    <td className="py-2 px-1 text-center text-white/30 font-mono">{team.p}</td>
-                    <td className="py-2 px-1 text-center text-emerald-400/60 font-mono">{team.w}</td>
-                    <td className="py-2 px-1 text-center text-white/30 font-mono">{team.d}</td>
-                    <td className="py-2 px-1 text-center text-red-400/60 font-mono">{team.l}</td>
-                    <td className="py-2 px-1 text-center text-white/30 font-mono">
-                      {team.gf - team.ga > 0 ? '+' : ''}{team.gf - team.ga}
-                    </td>
-                    <td className="py-2 px-1 text-center font-black font-mono text-white/80">{team.pts}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div className="p-2 border-t border-white/5 flex items-center justify-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500/40" />
-              <span className="text-[7px] text-white/15 font-bold uppercase">Şampiyonlar Ligi</span>
-              <div className="w-2 h-2 rounded-full bg-amber-500/40 ml-2" />
-              <span className="text-[7px] text-white/15 font-bold uppercase">AVrupa Ligi</span>
+          {/* Lig sekmeleri (birden fazla lig varsa) */}
+          {userLeagues.length > 1 && (
+            <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              {userLeagues.map(league => (
+                <button
+                  key={league.id}
+                  onClick={() => setActiveLeagueId(league.id)}
+                  className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider whitespace-nowrap transition-all border ${
+                    activeLeagueId === league.id
+                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                      : 'bg-white/5 text-white/30 border-white/5 hover:text-white/50 hover:border-white/10'
+                  }`}
+                >
+                  {league.name}
+                </button>
+              ))}
             </div>
+          )}
+
+          {/* Lig adı göstergesi */}
+          {activeLeague && (
+            <div className="flex items-center gap-2 px-1">
+              <Trophy size={10} className="text-amber-500/60" />
+              <span className="text-[9px] font-bold text-amber-400/60 uppercase tracking-wider">
+                {activeLeague.name}
+              </span>
+            </div>
+          )}
+
+          <div className="bg-zinc-950 border border-white/5 rounded-2xl overflow-hidden">
+            {/* Yükleniyor durumu */}
+            {standingsLoading && (
+              <div className="flex items-center justify-center py-10">
+                <RefreshCw size={16} className="text-white/20 animate-spin" />
+              </div>
+            )}
+
+            {/* Hata durumu */}
+            {!standingsLoading && standingsError && (
+              <div className="flex flex-col items-center justify-center py-8 text-white/20">
+                <AlertTriangle size={16} className="mb-2 opacity-30" />
+                <p className="text-[9px] uppercase tracking-wider font-bold">{standingsError}</p>
+                <button
+                  onClick={() => fetchStandingsForLeague(activeLeagueId)}
+                  className="mt-2 text-[8px] px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/60 border border-white/5 transition-all"
+                >
+                  Tekrar Dene
+                </button>
+              </div>
+            )}
+
+            {/* Puan durumu tablosu */}
+            {!standingsLoading && !standingsError && standings.length > 0 && (
+              <table className="w-full text-[10px]">
+                <thead>
+                  <tr className="border-b border-white/5 text-white/20">
+                    <th className="text-left py-2 px-3 font-black uppercase">#</th>
+                    <th className="text-left py-2 px-1 font-black uppercase">Takım</th>
+                    <th className="text-center py-2 px-1 font-black uppercase">O</th>
+                    <th className="text-center py-2 px-1 font-black uppercase">G</th>
+                    <th className="text-center py-2 px-1 font-black uppercase">B</th>
+                    <th className="text-center py-2 px-1 font-black uppercase">M</th>
+                    <th className="text-center py-2 px-1 font-black uppercase">Av</th>
+                    <th className="text-center py-2 px-1 font-black uppercase">P</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {standings.map((row, i) => {
+                    const teamName = sanitizeTeamName(row.teams?.name);
+                    const isUserTeam = row.teams?.is_user_team || teamName === userTeamName;
+                    const gd = row.gd || (row.goals_for - row.goals_against);
+
+                    return (
+                      <tr
+                        key={row.team_id || row.id}
+                        className={`border-b border-white/5 ${isUserTeam ? 'bg-amber-500/5' : 'hover:bg-white/[0.02]'} transition-colors`}
+                      >
+                        <td className={`py-2 px-3 font-mono font-bold ${i < 2 ? 'text-emerald-400' : i < 4 ? 'text-amber-400' : 'text-white/30'}`}>
+                          {i + 1}
+                        </td>
+                        <td className={`py-2 px-1 font-bold truncate max-w-[80px] ${isUserTeam ? 'text-amber-400' : 'text-white/70'}`}>
+                          <div className="flex items-center gap-1">
+                            {isUserTeam && <Shield size={8} className="shrink-0" />}
+                            <span className="truncate">{teamName}</span>
+                          </div>
+                        </td>
+                        <td className="py-2 px-1 text-center text-white/30 font-mono">{row.played}</td>
+                        <td className="py-2 px-1 text-center text-emerald-400/60 font-mono">{row.won}</td>
+                        <td className="py-2 px-1 text-center text-white/30 font-mono">{row.drawn}</td>
+                        <td className="py-2 px-1 text-center text-red-400/60 font-mono">{row.lost}</td>
+                        <td className={`py-2 px-1 text-center font-mono ${gd > 0 ? 'text-emerald-400/60' : gd < 0 ? 'text-red-400/60' : 'text-white/30'}`}>
+                          {gd > 0 ? '+' : ''}{gd}
+                        </td>
+                        <td className={`py-2 px-1 text-center font-black font-mono ${isUserTeam ? 'text-amber-400' : 'text-white/80'}`}>
+                          {row.points}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+
+            {/* Boş durum - lig bulunamadı */}
+            {!standingsLoading && !standingsError && standings.length === 0 && userLeagues.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-8 text-white/20">
+                <Trophy size={20} className="mb-2 opacity-20" />
+                <p className="text-[9px] uppercase tracking-wider font-bold">Lig bulunamadı</p>
+                <p className="text-[8px] text-white/10 mt-1">Takımınız bir lige kayıtlı değil</p>
+              </div>
+            )}
+
+            {/* Boş durum - lig var ama puan durumu yok */}
+            {!standingsLoading && !standingsError && standings.length === 0 && userLeagues.length > 0 && (
+              <div className="flex flex-col items-center justify-center py-8 text-white/20">
+                <Trophy size={20} className="mb-2 opacity-20" />
+                <p className="text-[9px] uppercase tracking-wider font-bold">Henüz puan durumu yok</p>
+                <p className="text-[8px] text-white/10 mt-1">Maçlar başladığında güncellenecek</p>
+              </div>
+            )}
+
+            {/* Alt açıklama şeridi */}
+            {standings.length > 0 && (
+              <div className="p-2 border-t border-white/5 flex items-center justify-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500/40" />
+                <span className="text-[7px] text-white/15 font-bold uppercase">Doğrudan Çıkma</span>
+                <div className="w-2 h-2 rounded-full bg-amber-500/40 ml-2" />
+                <span className="text-[7px] text-white/15 font-bold uppercase">Play-off</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

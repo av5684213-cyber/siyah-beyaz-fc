@@ -1,6 +1,7 @@
 "use client"
 
 import { useToast } from "@/hooks/use-toast"
+import { usePageVisibility } from "@/hooks/usePageVisibility"
 import {
   Toast,
   ToastClose,
@@ -12,6 +13,16 @@ import {
 
 export function Toaster() {
   const { toasts } = useToast()
+  const isPageVisible = usePageVisibility()
+
+  // Sayfa arka plandayken toast'ları render etme
+  if (!isPageVisible) {
+    return (
+      <ToastProvider>
+        <ToastViewport />
+      </ToastProvider>
+    )
+  }
 
   return (
     <ToastProvider>

@@ -17,7 +17,7 @@ import { traitDescriptions, getTraitTierLabel } from '@/lib/fm/traits';
 import { TRAIT_LEVELS } from '@/lib/fm/traitsData';
 import { useFM } from '@/lib/fm/GameContext';
 import { getPlayStyleEffect } from '@/lib/fm/playStyles';
-import { localizePos } from '@/lib/fm/ui-helpers';
+import { localizePos, getPosGroup, getPosDotColor, getPosBadgeStyle } from '@/lib/fm/ui-helpers';
 import { POS_TO_GROUP, POS_LABELS } from '@/lib/fm/playerGenerator';
 import { fmStatColor, fmStatBg, formatMoney, cap99, toTitleCase } from '@/lib/fm/ui-helpers';
 import type { Player, TrainingState } from '@/lib/fm/types';
@@ -161,11 +161,7 @@ function PitchPositionDot({ position, specificPosition }: { position?: string; s
   else if (group === 'MID') { leftPct = 50; topPct = 50; }
   else if (group === 'FWD') { leftPct = 80; topPct = 50; }
 
-  const colorClass =
-    group === 'GK' ? 'bg-emerald-500' :
-    group === 'DEF' ? 'bg-blue-500' :
-    group === 'MID' ? 'bg-amber-500' :
-    'bg-red-500';
+  const colorClass = getPosDotColor(group);
 
   const label = POS_LABELS[sp] || POS_LABELS[group] || sp;
 
@@ -406,8 +402,9 @@ export default function PlayerDetailModal({
     return 'FWD';
   };
   const posGroup = getGroup(sp);
-  const posColor = posGroup === 'GK' ? 'text-emerald-400' : posGroup === 'DEF' ? 'text-blue-400' : posGroup === 'MID' ? 'text-amber-400' : 'text-red-400';
-  const posBg = posGroup === 'GK' ? 'bg-emerald-500/10 border-emerald-500/20' : posGroup === 'DEF' ? 'bg-blue-500/10 border-blue-500/20' : posGroup === 'MID' ? 'bg-amber-500/10 border-amber-500/20' : 'bg-red-500/10 border-red-500/20';
+  const posBadge = getPosBadgeStyle(posGroup);
+  const posColor = posBadge.split(' ').find(c => c.startsWith('text-')) || 'text-[#9B9B9B]';
+  const posBg = posBadge.split(' ').filter(c => !c.startsWith('text-')).join(' ');
 
   const tabs = [
     { id: 'genel' as const, label: 'Genel Bakış' },
@@ -474,8 +471,9 @@ export default function PlayerDetailModal({
                   <div className="flex items-center gap-1">
                     {player.secondaryPositions.map((sec: string, si: number) => {
                       const secG = getGroup(sec);
-                      const secColor = secG === 'DEF' ? 'text-blue-300' : secG === 'MID' ? 'text-amber-300' : secG === 'FWD' ? 'text-red-300' : 'text-emerald-300';
-                      const secBg = secG === 'DEF' ? 'bg-blue-500/10 border-blue-500/15' : secG === 'MID' ? 'bg-amber-500/10 border-amber-500/15' : secG === 'FWD' ? 'bg-red-500/10 border-red-500/15' : 'bg-emerald-500/10 border-emerald-500/15';
+                      const secBadge = getPosBadgeStyle(secG);
+                      const secColor = secBadge.split(' ').find(c => c.startsWith('text-')) || 'text-[#9B9B9B]';
+                      const secBg = secBadge.split(' ').filter(c => !c.startsWith('text-')).join(' ');
                       return <span key={si} className={`px-1 py-px rounded-sm border text-[8px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{localizePos(sec)}</span>;
                     })}
                     <span className="text-[7px] text-white/20 font-bold uppercase">yan</span>
@@ -627,8 +625,9 @@ export default function PlayerDetailModal({
                       <div className="flex flex-wrap justify-center gap-1">
                         {player.secondaryPositions.map((sec: string, si: number) => {
                           const secG = getGroup(sec);
-                          const secColor = secG === 'DEF' ? 'text-blue-300' : secG === 'MID' ? 'text-amber-300' : secG === 'FWD' ? 'text-red-300' : 'text-emerald-300';
-                          const secBg = secG === 'DEF' ? 'bg-blue-500/10 border-blue-500/15' : secG === 'MID' ? 'bg-amber-500/10 border-amber-500/15' : secG === 'FWD' ? 'bg-red-500/10 border-red-500/15' : 'bg-emerald-500/10 border-emerald-500/15';
+                          const secBadge = getPosBadgeStyle(secG);
+                          const secColor = secBadge.split(' ').find(c => c.startsWith('text-')) || 'text-[#9B9B9B]';
+                          const secBg = secBadge.split(' ').filter(c => !c.startsWith('text-')).join(' ');
                           return <span key={si} className={`px-1.5 py-px rounded-full border text-[8px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{localizePos(sec)}</span>;
                         })}
                         <span className="text-[7px] text-white/15 font-bold uppercase w-full text-center">yan mevki</span>

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
-import { getTeamNamesForDepartment } from '@/lib/fm/constants';
+import { getTeamNamesForDepartment, getRandomTeamNames } from '@/lib/fm/constants';
 import { verifyCronSecret, sanitizeError } from '@/lib/fm/security';
+import { getTomorrowNoon } from '@/lib/fm/league';
 
 // Takım ismini güvenli şekilde temizle - NULL/undefined/boş isimleri yakala
 function sanitizeTeamName(raw: any): string {
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
     const { data: leagues, error: leagueError } = await supabase.from('leagues').select('*');
     if (leagueError) throw leagueError;
 
-    const maintenanceResults = [];
+    const maintenanceResults: { league: string; seasonId?: string; status: string }[] = [];
 
     for (const league of (leagues || [])) {
       // 1. Check current season progress
@@ -180,18 +181,15 @@ export async function GET(request: NextRequest) {
 
       if (!existingSeason || existingSeason.is_finished) {
         console.log(`Creating new season for league ${league.name}`);
-        // 3. Create new season (Starting on Monday)
-        const sNow = new Date();
-        const sDay = sNow.getDay();
-        const sDiff = sNow.getDate() - sDay + (sDay === 0 ? -6 : 1);
-        const sMonday = new Date(sNow.setDate(sDiff));
+        // 3. Create new season (Starting tomorrow at 12:00)
+        const seasonStartDate = getTomorrowNoon();
 
         const { data: newSeason, error: createSeasonError } = await supabase
           .from('seasons')
           .insert({
             league_id: league.id,
             year: year,
-            start_date: sMonday.toISOString().split('T')[0],
+            start_date: seasonStartDate.toISOString().split('T')[0],
             current_tur: 1,
             is_finished: false
           })

@@ -126,19 +126,15 @@ CREATE TABLE IF NOT EXISTS manager_messages (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Eski semadan kalan receiver_id kolonu varsa KALDIR (veri kaybi yoksa)
--- NOT: receiver_id artik kullanilmiyor, conversation_id bazli sistem var
--- Eger receiver_id kolonu varsa ve bos ise drop et
+-- Eski semadan kalan receiver_id kolonu varsa KALDIR
 DO $$ BEGIN
-  -- receiver_id kolonu varsa, NULL olanlari icin drop etmeye calis
   ALTER TABLE manager_messages DROP COLUMN IF EXISTS receiver_id;
 EXCEPTION WHEN others THEN NULL;
 END $$;
 
 -- Eski semadan kalan message kolonu varsa, content'e aktar ve drop et
 DO $$ BEGIN
-  -- message kolonu varsa, content NULL olanlara aktar
-  UPDATE manager_messages SET content = message WHERE content IS NULL OR content = '' AND message IS NOT NULL;
+  UPDATE manager_messages SET content = message WHERE (content IS NULL OR content = '') AND message IS NOT NULL;
   ALTER TABLE manager_messages DROP COLUMN IF EXISTS message;
 EXCEPTION WHEN others THEN NULL;
 END $$;

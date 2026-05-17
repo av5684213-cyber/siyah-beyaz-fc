@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  output: 'standalone',
+  // output: 'standalone',  // Disabled — causes next start to fail; use next dev instead
 
   // TypeScript strict build — hataları göster ama production'ı engelleme
   typescript: {

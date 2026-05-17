@@ -970,3 +970,72 @@ export const FINANCIAL_DEFAULTS = {
     criticalLossWeeks: 8,
   },
 } as const;
+
+// ═══════════════════════════════════════════════════════════════════
+//  MAÇ GELİRİ FORMÜLLERİ (Match Revenue Formulas)
+//  Stadyum seviyesi, lig pozisyonu ve bilet fiyatına göre
+//  seyirci sayısı ve maç gelirini hesaplar.
+//  GÖREV 6 → GÖREV 10 entegrasyonu
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Stadyum seviyesine göre kapasiteyi hesaplar.
+ * Temel 10.000 + seviye başına 2.000 kişi
+ * @param stadiumLevel - Stadyum (capacity) seviyesi (0-10)
+ * @returns Kapasite (seviye 0 → 10.000, seviye 5 → 20.000, seviye 10 → 30.000)
+ */
+export function calculateStadiumCapacity(stadiumLevel: number): number {
+  return 10000 + stadiumLevel * 2000;
+}
+
+/**
+ * Maç seyirci sayısını hesaplar.
+ * Kapasite, lig pozisyonu ve bilet fiyatı etkili.
+ * 
+ * @param stadiumLevel - Stadyum seviyesi (0-10)
+ * @param leaguePosition - Takımın lig sıralaması (1 = lider)
+ * @param totalTeams - Toplam takım sayısı (ör: 18)
+ * @param ticketPrice - Bilet fiyatı (ör: 50)
+ * @returns Tahmini seyirci sayısı
+ */
+export function calculateAttendance(
+  stadiumLevel: number,
+  leaguePosition: number,
+  totalTeams: number,
+  ticketPrice: number,
+): number {
+  try {
+    const capacity = calculateStadiumCapacity(stadiumLevel);
+    // Lig pozisyonu faktörü: üst sıralar daha çok seyirci çeker
+    const positionFactor = 0.5 + 0.5 * ((totalTeams - leaguePosition + 1) / totalTeams);
+    const baseAttendance = capacity * positionFactor;
+    // Fiyat faktörü: 50 ortalama fiyat, üstünde talep düşer, altında artar
+    const priceFactor = Math.max(0.1, 1 - (ticketPrice - 50) / 100);
+    return Math.floor(Math.min(capacity, baseAttendance * priceFactor));
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Maç gelirini hesaplar (seyirci × bilet fiyatı).
+ * 
+ * @param stadiumLevel - Stadyum seviyesi (0-10)
+ * @param leaguePosition - Takımın lig sıralaması (1 = lider)
+ * @param totalTeams - Toplam takım sayısı (ör: 18)
+ * @param ticketPrice - Bilet fiyatı (ör: 50)
+ * @returns Maç geliri (₺)
+ */
+export function calculateMatchRevenue(
+  stadiumLevel: number,
+  leaguePosition: number,
+  totalTeams: number,
+  ticketPrice: number,
+): number {
+  try {
+    const attendance = calculateAttendance(stadiumLevel, leaguePosition, totalTeams, ticketPrice);
+    return attendance * ticketPrice;
+  } catch {
+    return 0;
+  }
+}

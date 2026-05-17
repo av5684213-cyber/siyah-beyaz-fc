@@ -75,10 +75,10 @@ function getAllFacilityLevels(state: FacilityState): Record<string, number> {
 }
 
 const POSITION_COLORS: Record<string, { bg: string; text: string; border: string; badge: string }> = {
-  GK:   { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-  DEF:  { bg: 'bg-blue-500/10',    text: 'text-blue-400',    border: 'border-blue-500/20',    badge: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
-  MID:  { bg: 'bg-amber-500/10',   text: 'text-amber-400',   border: 'border-amber-500/20',   badge: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
-  FWD:  { bg: 'bg-red-500/10',     text: 'text-red-400',     border: 'border-red-500/20',     badge: 'bg-red-500/15 text-red-400 border-red-500/30' },
+  GK:   { bg: 'bg-[#4A90E2]/10', text: 'text-[#4A90E2]', border: 'border-[#4A90E2]/20', badge: 'bg-[#4A90E2]/15 text-[#4A90E2] border-[#4A90E2]/30' },
+  DEF:  { bg: 'bg-[#50E3C2]/10', text: 'text-[#50E3C2]', border: 'border-[#50E3C2]/20', badge: 'bg-[#50E3C2]/15 text-[#50E3C2] border-[#50E3C2]/30' },
+  MID:  { bg: 'bg-[#F5A623]/10', text: 'text-[#F5A623]', border: 'border-[#F5A623]/20', badge: 'bg-[#F5A623]/15 text-[#F5A623] border-[#F5A623]/30' },
+  FWD:  { bg: 'bg-[#D0021B]/10', text: 'text-[#D0021B]', border: 'border-[#D0021B]/20', badge: 'bg-[#D0021B]/15 text-[#D0021B] border-[#D0021B]/30' },
 };
 
 const POTENTIAL_LABELS: Record<string, { label: string; color: string; bg: string }> = {

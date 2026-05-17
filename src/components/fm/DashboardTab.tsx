@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { 
   Trophy, 
@@ -28,6 +28,7 @@ import type { Player } from '@/lib/fm/types';
 
 import { toTitleCase } from '@/lib/fm/ui-helpers';
 import { useFM } from '@/lib/fm/GameContext';
+import { calculateAttendance, calculateStadiumCapacity, calculateMatchRevenue } from '@/lib/fm/financialModel';
 
 interface TeamAvgStats {
   speed: number;
@@ -263,6 +264,7 @@ interface NextMatchData {
 
 function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigate: (tab: string) => void }) {
   const [nextMatch, setNextMatch] = useState<NextMatchData | null>(null);
+  const { profile: ctxProfile } = useFM();
 
   useEffect(() => {
     if (!profileId) return;
@@ -282,6 +284,22 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
     })();
     return () => { cancelled = true; };
   }, [profileId]);
+
+  // ── Attendance & Revenue Preview ──
+  const attendancePreview = useMemo(() => {
+    if (!nextMatch?.is_home || !ctxProfile) return null;
+    try {
+      const stadiumLevel = (ctxProfile.stadium_upgrades || {})['capacity'] || 0;
+      const ticketPrice = ctxProfile.ticket_price ?? 35;
+      const capacity = calculateStadiumCapacity(stadiumLevel);
+      const attendance = calculateAttendance(stadiumLevel, 10, 18, ticketPrice);
+      const revenue = calculateMatchRevenue(stadiumLevel, 10, 18, ticketPrice);
+      const fillRate = capacity > 0 ? Math.round((attendance / capacity) * 100) : 0;
+      return { capacity, attendance, revenue, fillRate, ticketPrice };
+    } catch {
+      return null;
+    }
+  }, [nextMatch?.is_home, ctxProfile]);
 
   if (!nextMatch) return null;
 
@@ -319,7 +337,6 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
         </div>
         <button
           onClick={() => {
-            // Match sayfasına yönlendir
             window.location.href = `/match/${nextMatch.id}`;
           }}
           className="px-4 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 rounded-xl text-[10px] font-black uppercase tracking-widest text-amber-300 transition-all active:scale-95 shrink-0"
@@ -327,6 +344,39 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
           Maçı İzle
         </button>
       </div>
+
+      {/* ── Attendance & Revenue Preview (Ev sahibi maçlar için) ── */}
+      {attendancePreview && (
+        <div className="mt-4 pt-4 border-t border-amber-500/10">
+          <div className="flex items-center gap-2 mb-3">
+            <Wallet size={12} className="text-emerald-400/60" />
+            <span className="text-[9px] font-black text-emerald-400/60 uppercase tracking-widest">Bilet Geliri Tahmini</span>
+          </div>
+          <div className="grid grid-cols-4 gap-3">
+            <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3 text-center">
+              <span className="text-[8px] text-white/20 uppercase font-bold tracking-widest">Kapasite</span>
+              <p className="text-sm font-black font-mono text-white/60 mt-1">{attendancePreview.capacity.toLocaleString('tr-TR')}</p>
+            </div>
+            <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3 text-center">
+              <span className="text-[8px] text-white/20 uppercase font-bold tracking-widest">Tahmini Seyirci</span>
+              <p className="text-sm font-black font-mono text-emerald-400 mt-1">{attendancePreview.attendance.toLocaleString('tr-TR')}</p>
+            </div>
+            <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3 text-center">
+              <span className="text-[8px] text-white/20 uppercase font-bold tracking-widest">Doluluk</span>
+              <p className="text-sm font-black font-mono text-amber-400 mt-1">%{attendancePreview.fillRate}</p>
+            </div>
+            <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 text-center">
+              <span className="text-[8px] text-emerald-400/40 uppercase font-bold tracking-widest">Bilet Geliri</span>
+              <p className="text-sm font-black font-mono text-emerald-400 mt-1">${attendancePreview.revenue.toLocaleString('tr-TR')}</p>
+            </div>
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-[7px] text-white/15 uppercase tracking-widest">Bilet: ₺{attendancePreview.ticketPrice}</span>
+            <span className="text-[7px] text-white/10">•</span>
+            <span className="text-[7px] text-white/15 uppercase tracking-widest">Yiyecek/İçecek: ₺15/kişi</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -45,9 +45,17 @@ export function ToastNotifications({ showTrainingToast, migrationResult, onDismi
 /**
  * Uygulama genelinde kullanılabilen toast gösterme fonksiyonu.
  * success = yeşil, error = kırmızı, info = mavi renk.
+ *
+ * Sayfa arka plandayken (başka sekmedeyken) toast gösterilmez.
  */
 export function showToast(msg: string, type: 'success' | 'error' | 'info' = 'success'): void {
   try {
+    // ── Sayfa görünür değilse bildirim gösterme ──
+    if (typeof document !== 'undefined' && document.hidden) {
+      console.log(`[Toast] Sayfa arka planda, bildirim atlandı [${type}]: ${msg}`);
+      return;
+    }
+
     const variantMap: Record<string, 'default' | 'destructive'> = {
       success: 'default',
       error: 'destructive',

@@ -204,6 +204,10 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
   const usedItemsCount = items.filter(item => item.quantity > 0).length;
 
   const showToast = useCallback((text: string, type: 'success' | 'error' = 'success') => {
+    // Sayfa arka plandayken bildirim gösterme
+    if (typeof document !== 'undefined' && document.hidden) {
+      return;
+    }
     setToast({ text, type });
     setTimeout(() => setToast(null), 2500);
   }, []);

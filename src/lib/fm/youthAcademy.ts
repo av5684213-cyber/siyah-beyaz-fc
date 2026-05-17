@@ -5,6 +5,33 @@
 
 import { PositionGroup, SpecificPosition } from './types';
 
+// ═══════════════════════════════════════════════════
+//  ALTYAPI TESİSİ ÇARPANI
+//  stadiumMatrix.ts → getAcademyQualityMultiplier() ile uyumlu
+//  Akademi konutları seviyesi, genç oyuncu sayısını ve kalitesini artırır.
+//  Varsayılan: seviye 0 = 1.0x, seviye 10 = 2.5x
+// ═══════════════════════════════════════════════════
+export const ACADEMY_QUALITY_MULTIPLIER_BASE = 1.0;
+export const ACADEMY_QUALITY_MULTIPLIER_PER_LEVEL = 0.15;
+
+/**
+ * Akademi konutları seviyesine göre kalite çarpanı hesaplar.
+ * @param academyFacilityLevel - Akademi konutları seviyesi (0-10)
+ * @returns Çarpan (ör: level 3 → 1.45, level 10 → 2.5)
+ */
+export function getAcademyFacilityQualityMultiplier(academyFacilityLevel: number): number {
+  return ACADEMY_QUALITY_MULTIPLIER_BASE + academyFacilityLevel * ACADEMY_QUALITY_MULTIPLIER_PER_LEVEL;
+}
+
+/**
+ * Akademi seviyesine göre sezon başı üretilecek genç oyuncu sayısı.
+ * @param academyFacilityLevel - Akademi konutları seviyesi (0-10)
+ * @returns Oyuncu sayısı (seviye 0 = 1, seviye 5 = 3, seviye 10 = 5)
+ */
+export function getAcademyYouthCount(academyFacilityLevel: number): number {
+  return 1 + Math.floor(academyFacilityLevel / 2);
+}
+
 // ─── Enums ────────────────────────────────────────────────────────────
 
 export enum YouthCategory {

@@ -1,6 +1,7 @@
 -- ═══════════════════════════════════════════════════════════════
--- Player Development Log Tablosu
+-- Player Development Log Tablosu (DUZELTILMIS VERSIYON)
 -- Oyuncu OVR değişimlerini kaydeder
+-- DÜZELTME: CREATE POLICY ifadeleri DO $$ ... EXCEPTION ile sarıldı
 -- ═══════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS player_development_log (
@@ -20,9 +21,12 @@ CREATE TABLE IF NOT EXISTS player_development_log (
 -- RLS
 ALTER TABLE player_development_log ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own development logs"
-  ON player_development_log FOR SELECT
-  USING (profile_id = auth.uid()::text);
+DO $$ BEGIN
+  CREATE POLICY "Users can view own development logs"
+    ON player_development_log FOR SELECT
+    USING (profile_id = auth.uid()::text);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Index
 CREATE INDEX IF NOT EXISTS idx_dev_log_player

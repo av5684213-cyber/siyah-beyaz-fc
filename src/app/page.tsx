@@ -735,6 +735,27 @@ export default function Home() {
     }
   };
 
+  // Onboarding gösterim kontrolü — MUST be before early returns (React Hooks rule)
+  useEffect(() => {
+    if (profile?.id) {
+      setShowOnboarding(shouldShowOnboarding());
+    }
+  }, [profile?.id]);
+
+  // Maç olaylarını dinle ve gol kutlamasını tetikle — MUST be before early returns
+  useEffect(() => {
+    if (!matchState.isActive || !matchState.result?.events) return;
+    const events = matchState.result.events as Array<{ type: string; player?: string; minute: number; team?: string }>;
+    const lastEvent = events[events.length - 1];
+    if (lastEvent?.type === 'GOAL' && lastEvent.team === 'HOME') {
+      setGoalScorer(lastEvent.player);
+      setGoalMinute(lastEvent.minute);
+      setGoalCelebrationTrigger(true);
+      playSound('goal');
+      setTimeout(() => setGoalCelebrationTrigger(false), 2600);
+    }
+  }, [matchState.result?.events?.length, matchState.isActive]);
+
   const homeSquadSlice = useMemo(() => squad.slice(0, 11), [squad]);
   const benchSlice = useMemo(() => squad.slice(11), [squad]);
   const awayTeamSlice = useMemo(() => squad.slice(11, 22).length > 0 ? squad.slice(11, 22) : squad.slice(0, 11), [squad]);
@@ -750,27 +771,6 @@ export default function Home() {
       </div>
     );
   }
-
-  // Onboarding gösterim kontrolü
-  useEffect(() => {
-    if (profile?.id) {
-      setShowOnboarding(shouldShowOnboarding());
-    }
-  }, [profile?.id]);
-
-  // Maç olaylarını dinle ve gol kutlamasını tetikle
-  useEffect(() => {
-    if (!matchState.isActive || !matchState.result?.events) return;
-    const events = matchState.result.events as Array<{ type: string; player?: string; minute: number; team?: string }>;
-    const lastEvent = events[events.length - 1];
-    if (lastEvent?.type === 'GOAL' && lastEvent.team === 'HOME') {
-      setGoalScorer(lastEvent.player);
-      setGoalMinute(lastEvent.minute);
-      setGoalCelebrationTrigger(true);
-      playSound('goal');
-      setTimeout(() => setGoalCelebrationTrigger(false), 2600);
-    }
-  }, [matchState.result?.events?.length, matchState.isActive]);
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-white selection:text-black">
@@ -811,35 +811,35 @@ export default function Home() {
       <ToastNotifications showTrainingToast={showTrainingToast} migrationResult={migrationResult} onDismissMigration={() => setMigrationResult(null)} />
       <RealTimeLeagueManager />
       
-      {/* Global Upgrade Persistence Banner */}
+      {/* Global Upgrade Progress Banner — nötr renk, kırmızı şerit değil */}
       {profile?.active_upgrade_type && (
         <div className="max-w-7xl mx-auto px-4 mt-4">
            <motion.div 
              initial={{ opacity: 0, scale: 0.95 }}
              animate={{ opacity: 1, scale: 1 }}
-             className="bg-besiktas-red text-white p-4 rounded-2xl flex items-center justify-between shadow-xl border border-white/20"
+             className="bg-zinc-800/80 text-white p-3 rounded-2xl flex items-center justify-between shadow-lg border border-white/10 backdrop-blur-sm"
            >
-              <div className="flex items-center gap-4">
-                 <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center animate-spin">
-                    <RefreshCw size={20} />
+              <div className="flex items-center gap-3">
+                 <div className="w-8 h-8 bg-amber-500/20 rounded-lg flex items-center justify-center">
+                    <RefreshCw size={16} className="text-amber-400 animate-spin" />
                  </div>
                  <div>
-                    <p className="text-[8px] font-black uppercase tracking-widest opacity-60">GELİŞTİRME SIRASINDAKİ YÜKSELTME</p>
-                    <p className="text-xs font-bold uppercase italic">
-                      {profile.active_upgrade_type === 'academy' ? 'Yetiştirme Merkezi' : 'Stadyum Tesisi'} • LV. {(profile.stadium_upgrades?.[profile.active_upgrade_id!] || 0) + 1} HEDEFİ
+                    <p className="text-[7px] font-black uppercase tracking-widest text-white/40">YÜKSELTME DEVAM EDİYOR</p>
+                    <p className="text-[11px] font-bold uppercase italic">
+                      {profile.active_upgrade_type === 'academy' ? 'Yetiştirme Merkezi' : 'Stadyum Tesisi'} • LV. {(profile.stadium_upgrades?.[profile.active_upgrade_id!] || 0) + 1}
                     </p>
                  </div>
               </div>
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-4">
                  <div className="text-right">
-                    <p className="text-[8px] font-black uppercase tracking-widest opacity-50">KALAN SÜRE</p>
-                    <p className="text-sm font-black italic tracking-tighter">{(profile?.active_upgrade_finish_day || 0) - (profile?.current_day || 0)} GÜN</p>
+                    <p className="text-[7px] font-black uppercase tracking-widest text-white/30">KALAN</p>
+                    <p className="text-xs font-black italic tracking-tighter">{(profile?.active_upgrade_finish_day || 0) - (profile?.current_day || 0)} GÜN</p>
                  </div>
                  <button 
                   onClick={() => setActiveTab('stadium')}
-                  className="px-4 py-2 bg-black/20 hover:bg-black/40 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
+                  className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all"
                  >
-                  DETAYLARI GÖR
+                  DETAY
                  </button>
               </div>
            </motion.div>
@@ -1045,6 +1045,8 @@ export default function Home() {
                               away_team_id: 'cpu',
                               home_score: results.score.home,
                               away_score: results.score.away,
+                              home_team_name: profile.team_name || 'Bilinmeyen',
+                              away_team_name: 'CPU Takımı',
                               match_data: results
                             }).then(() => {});
                           });

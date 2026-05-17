@@ -182,6 +182,7 @@ async function getStandingsForLeague(supabase: any, leagueId: string) {
   }
 
   // LEFT JOIN kullanarak, league_teams eşleşmese bile standings satırlarını getir
+  // profile_id de çekilir ki kullanıcı takımlarının ismi profiles'tan alınsın
   const { data: standings, error: standingsError } = await supabase
     .from('league_standings')
     .select(`
@@ -198,12 +199,15 @@ async function getStandingsForLeague(supabase: any, leagueId: string) {
       league_teams (
         name,
         is_npc,
-        is_bot
+        is_bot,
+        profile_id
       )
     `)
     .eq('season_id', seasonData.id)
     .order('points', { ascending: false })
-    .order('gd', { ascending: false });
+    .order('gd', { ascending: false })
+    .order('gf', { ascending: false })
+    .order('team_id', { ascending: true });
 
   if (standingsError) {
     console.error('[standings] Query error:', standingsError);
@@ -223,16 +227,44 @@ async function getStandingsForLeague(supabase: any, leagueId: string) {
   const leagueName = leagueInfo?.name || '';
   const leagueTier = leagueInfo?.tier || 4;
 
-  // Bu lig için tüm league_teams'leri getir (eksik standings tamiri için)
+  // Bu lig için tüm league_teams'leri getir (eksik standings tamiri + isim çözümleme için)
   const { data: allLeagueTeams } = await supabase
     .from('league_teams')
-    .select('id, name')
+    .select('id, name, profile_id, is_npc')
     .eq('league_id', resolvedLeagueId);
 
   const teamNameMap: Record<string, string> = {};
+  const teamProfileIdMap: Record<string, string | null> = {};
   if (allLeagueTeams) {
     for (const t of allLeagueTeams) {
       teamNameMap[t.id] = sanitizeTeamName(t.name);
+      teamProfileIdMap[t.id] = t.profile_id || null;
+    }
+  }
+
+  // ── profiles tablosundan kullanıcı takımlarının team_name'lerini çek ──
+  // league_teams.is_npc = false olan takımlar gerçek kullanıcı takımlarıdır
+  // Bunların ismi profiles.team_name'den gelmelidir
+  const userProfileNames: Record<string, string> = {};
+  const profileIds = (allLeagueTeams || [])
+    .filter((t: any) => t.profile_id)
+    .map((t: any) => t.profile_id as string);
+
+  if (profileIds.length > 0) {
+    try {
+      const { data: profileRows } = await supabase
+        .from('profiles')
+        .select('id, team_name')
+        .in('id', profileIds);
+      if (profileRows) {
+        for (const p of profileRows) {
+          if (p.team_name && sanitizeTeamName(p.team_name) !== 'Bilinmiyor') {
+            userProfileNames[p.id] = p.team_name;
+          }
+        }
+      }
+    } catch (profileErr) {
+      console.error('[standings] Profiles fetch error:', profileErr);
     }
   }
 
@@ -258,44 +290,65 @@ async function getStandingsForLeague(supabase: any, leagueId: string) {
     }
   }
 
-  const formattedStandings = (standings || []).map((s: any, idx: number) => {
-    // Önce join'den gelen ismi dene, sonra teamNameMap'ten, sonra fallback
-    let teamName = sanitizeTeamName(s.league_teams?.name);
-    
+  const formattedStandings = (standings || []).map((s: any) => {
+    // ── İsim çözümleme önceliği: ──
+    // 1. profiles.team_name (kullanıcı takımları için en güvenilir kaynak)
+    // 2. league_teams join'den gelen name
+    // 3. teamNameMap fallback (aynı ligdeki tüm league_teams sorgusundan)
+    // 4. team_id bazlı deterministik fallback (idx değil!)
+    let teamName = 'Bilinmiyor';
+    const profileId = s.league_teams?.profile_id || teamProfileIdMap[s.team_id];
+    const isNpc = s.league_teams?.is_npc !== false; // undefined = NPC kabul et
+
+    // 1. Kullanıcı takımıysa profiles.team_name'den al
+    if (!isNpc && profileId && userProfileNames[profileId]) {
+      teamName = userProfileNames[profileId];
+    }
+
+    // 2. profiles'tan gelmediyse, join'den gelen ismi dene
+    if (teamName === 'Bilinmiyor') {
+      teamName = sanitizeTeamName(s.league_teams?.name);
+    }
+
+    // 3. Hala bilinmiyorsa teamNameMap'ten dene
     if (teamName === 'Bilinmiyor' && teamNameMap[s.team_id]) {
       teamName = teamNameMap[s.team_id];
     }
-    
-    // Hala bilinmiyorsa, deterministik fallback isim üret
+
+    // 4. Son fallback: team_id bazlı deterministik isim (idx DEĞİL, her sorguda aynı kalır)
     if (teamName === 'Bilinmiyor') {
-      teamName = `${leagueName || leagueTier + '. Lig'} Takım ${idx + 1}`;
+      // team_id'nin son 8 karakterini kullanarak deterministik bir sıra numarası üret
+      const stableIndex = (allLeagueTeams || []).findIndex((t: any) => t.id === s.team_id);
+      teamName = `${leagueName || leagueTier + '. Lig'} Takım ${stableIndex >= 0 ? stableIndex + 1 : s.team_id.slice(-4)}`;
     }
 
     return {
       id: s.id,
       team_id: s.team_id,
-      played: s.played,
-      won: s.won,
-      drawn: s.drawn,
-      lost: s.lost,
-      goals_for: s.gf,
-      goals_against: s.ga,
-      gd: s.gd ?? (s.gf - s.ga) ?? 0,
-      points: s.points ?? (s.won * 3 + s.drawn) ?? 0,
+      played: s.played ?? 0,
+      won: s.won ?? 0,
+      drawn: s.drawn ?? 0,
+      lost: s.lost ?? 0,
+      goals_for: s.gf ?? 0,
+      goals_against: s.ga ?? 0,
+      gd: s.gd ?? ((s.gf ?? 0) - (s.ga ?? 0)),
+      points: s.points ?? ((s.won ?? 0) * 3 + (s.drawn ?? 0)),
       teams: {
         name: teamName,
-        is_user_team: !s.league_teams?.is_npc,
+        is_user_team: !isNpc,
         is_bot: s.league_teams?.is_bot || false,
         avg_rating: 70
       }
     };
   });
 
-  // Sort by points, then gd, then gf
+  // Deterministic sort: points → gd → gf → team_id (string compare)
   const sorted = formattedStandings.sort((a: any, b: any) => {
     if (b.points !== a.points) return b.points - a.points;
     if (b.gd !== a.gd) return b.gd - a.gd;
-    return b.goals_for - a.goals_for;
+    if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
+    // Final tiebreaker: team_id (stable, deterministic)
+    return String(a.team_id).localeCompare(String(b.team_id));
   });
 
   return NextResponse.json({
