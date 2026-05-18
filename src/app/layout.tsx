@@ -5,6 +5,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
 import { FMProvider } from "@/lib/fm/GameContext";
+import { ToastProvider } from "@/lib/fm/ToastContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -46,9 +47,11 @@ export default function RootLayout({
         style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}
       >
         <FMProvider>
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
+          <ToastProvider>
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
+          </ToastProvider>
         </FMProvider>
         <Toaster />
       </body>

@@ -26,6 +26,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { useFM } from '@/lib/fm/GameContext';
+import { useToast } from '@/lib/fm/ToastContext';
 import { formatCurrency } from '@/lib/fm/valuation';
 import { 
   STADIUM_MATRIX, 
@@ -248,6 +249,7 @@ function LevelComparisonPanel({
 // ═══════════════════════════════════════════════════
 export default function StadiumTab() {
   const { profile, setProfile } = useFM();
+  const { success, error, warning, info } = useToast();
   const stadiumUpgrades = profile?.stadium_upgrades || {};
   
   const [ticketPrice, setTicketPrice] = useState(profile?.ticket_price || 20);
@@ -276,18 +278,18 @@ export default function StadiumTab() {
     if (!profile) return;
     
     if (isUpgrading) {
-      alert('Şu anda devam eden bir geliştirme var!');
+      warning('Şu anda devam eden bir geliştirme var!');
       return;
     }
 
     const reqLevel = getManagerLevelRequirement(currentLvl + 1);
     if (profile.level < reqLevel) {
-      alert(`Bu seviye için Menajer Seviyesi ${reqLevel} gerekiyor!`);
+      warning(`Bu seviye için Menajer Seviyesi ${reqLevel} gerekiyor!`);
       return;
     }
 
     if (profile.money < cost) {
-      alert('Yetersiz bütçe!');
+      error('Yetersiz bütçe!');
       return;
     }
 
@@ -306,7 +308,7 @@ export default function StadiumTab() {
 
   const handleCancelUpgrade = () => {
     if (!profile) return;
-    if (confirm('İnşaatı iptal etmek istiyor musunuz? Harcanan bütçenin %50\'si iade edilir.')) {
+    if (!confirm('İnşaatı iptal etmek istiyor musunuz? Harcanan bütçenin %50\'si iade edilir.')) {
       let refundMoney = 0;
       if (profile.active_upgrade_type === 'stadium_matrix') {
         const currentLevel = stadiumUpgrades[profile.active_upgrade_id!] || 0;
@@ -326,7 +328,7 @@ export default function StadiumTab() {
         active_upgrade_speedup: null
       });
 
-      alert(`İnşaat iptal edildi. ${formatCurrency(refundMoney)} iade edildi.`);
+      success(`İnşaat iptal edildi. ${formatCurrency(refundMoney)} iade edildi.`);
     }
   };
 

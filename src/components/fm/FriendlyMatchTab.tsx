@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Swords, Clock, Trophy, Users, Zap, Shield, UserCheck, RotateCcw, Timer, ChevronRight, Play, Eye, ArrowRight, Sparkles } from 'lucide-react';
 import { useFM } from '@/lib/fm/GameContext';
+import { useToast } from '@/lib/fm/ToastContext';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { generateLocalizedPlayer } from '@/lib/fm/region-generator';
 import { simulateMatch } from '@/lib/fm/matchEngine';
@@ -55,6 +56,7 @@ const MATCH_START_DELAY_MS = 2500; // Delay before starting matched game
 export function FriendlyMatchTab() {
   const router = useRouter();
   const { profile, setProfile, squad, setSquad, setMatchState, setActiveTab, activeTactic } = useFM();
+  const toast = useToast();
 
   // ── State ──
   const [loading, setLoading] = useState(false);
@@ -387,7 +389,7 @@ export function FriendlyMatchTab() {
         if (error) {
           console.error('[handleJoinQueue] Insert error:', error.message);
           setLoading(false);
-          alert('Sıraya girilemedi. Tekrar deneyin.');
+          toast.error('Sıraya girilemedi. Tekrar deneyin.');
           return;
         }
       }
@@ -400,7 +402,7 @@ export function FriendlyMatchTab() {
       setTimeout(() => checkForMatch(), 500);
     } catch (err) {
       console.error('[handleJoinQueue] Exception:', err);
-      alert('Bir hata oluştu. Tekrar deneyin.');
+      toast.error('Bir hata oluştu. Tekrar deneyin.');
     } finally {
       setLoading(false);
     }
