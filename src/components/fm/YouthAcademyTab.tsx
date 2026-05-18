@@ -75,10 +75,10 @@ function getAllFacilityLevels(state: FacilityState): Record<string, number> {
 }
 
 const POSITION_COLORS: Record<string, { bg: string; text: string; border: string; badge: string }> = {
-  GK:   { bg: 'bg-[#4A90E2]/10', text: 'text-[#4A90E2]', border: 'border-[#4A90E2]/20', badge: 'bg-[#4A90E2]/15 text-[#4A90E2] border-[#4A90E2]/30' },
-  DEF:  { bg: 'bg-[#50E3C2]/10', text: 'text-[#50E3C2]', border: 'border-[#50E3C2]/20', badge: 'bg-[#50E3C2]/15 text-[#50E3C2] border-[#50E3C2]/30' },
-  MID:  { bg: 'bg-[#F5A623]/10', text: 'text-[#F5A623]', border: 'border-[#F5A623]/20', badge: 'bg-[#F5A623]/15 text-[#F5A623] border-[#F5A623]/30' },
-  FWD:  { bg: 'bg-[#D0021B]/10', text: 'text-[#D0021B]', border: 'border-[#D0021B]/20', badge: 'bg-[#D0021B]/15 text-[#D0021B] border-[#D0021B]/30' },
+  GK:   { bg: 'bg-[#7AB4E8]/10', text: 'text-[#7AB4E8]', border: 'border-[#7AB4E8]/20', badge: 'bg-[#7AB4E8]/15 text-[#7AB4E8] border-[#7AB4E8]/30' },
+  DEF:  { bg: 'bg-[#7EDBC8]/10', text: 'text-[#7EDBC8]', border: 'border-[#7EDBC8]/20', badge: 'bg-[#7EDBC8]/15 text-[#7EDBC8] border-[#7EDBC8]/30' },
+  MID:  { bg: 'bg-[#F0C87A]/10', text: 'text-[#F0C87A]', border: 'border-[#F0C87A]/20', badge: 'bg-[#F0C87A]/15 text-[#F0C87A] border-[#F0C87A]/30' },
+  FWD:  { bg: 'bg-[#E87878]/10', text: 'text-[#E87878]', border: 'border-[#E87878]/20', badge: 'bg-[#E87878]/15 text-[#E87878] border-[#E87878]/30' },
 };
 
 const POTENTIAL_LABELS: Record<string, { label: string; color: string; bg: string }> = {

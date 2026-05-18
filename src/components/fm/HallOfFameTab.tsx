@@ -60,10 +60,10 @@ const TIER_CONFIG: Record<LegendTier, {
 };
 
 const POSITION_COLORS: Record<string, string> = {
-  GK: 'text-[#4A90E2]',
-  DEF: 'text-[#50E3C2]',
-  MID: 'text-[#F5A623]',
-  FWD: 'text-[#D0021B]',
+  GK: 'text-[#7AB4E8]',
+  DEF: 'text-[#7EDBC8]',
+  MID: 'text-[#F0C87A]',
+  FWD: 'text-[#E87878]',
 };
 
 // ─── Stat Line Component ─────────────────────────────────────────────

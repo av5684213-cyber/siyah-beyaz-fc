@@ -239,7 +239,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
   const getPositionColor = (position: string): string => {
     const rowStyle = getPosRowStyle(position);
     const group = getPosGroup(position);
-    const textColor = group === 'GK' ? 'text-[#4A90E2]' : group === 'DEF' ? 'text-[#50E3C2]' : group === 'MID' ? 'text-[#F5A623]' : group === 'FWD' ? 'text-[#D0021B]' : 'text-[#9B9B9B]';
+    const textColor = group === 'GK' ? 'text-[#7AB4E8]' : group === 'DEF' ? 'text-[#7EDBC8]' : group === 'MID' ? 'text-[#F0C87A]' : group === 'FWD' ? 'text-[#E87878]' : 'text-[#9B9B9B]';
     return `${rowStyle} ${textColor}`;
   };
 

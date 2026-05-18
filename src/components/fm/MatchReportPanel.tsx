@@ -106,10 +106,10 @@ function ratingBg(r: number): string {
 // ─── Position badge color ─────────────────────────────────────────────────────
 function positionBadge(pos: string): string {
   switch (pos) {
-    case 'GK':  return 'bg-[#4A90E2]/20 text-[#4A90E2] border-[#4A90E2]/30';
-    case 'DEF': return 'bg-[#50E3C2]/20 text-[#50E3C2] border-[#50E3C2]/30';
-    case 'MID': return 'bg-[#F5A623]/20 text-[#F5A623] border-[#F5A623]/30';
-    case 'FWD': return 'bg-[#D0021B]/20 text-[#D0021B] border-[#D0021B]/30';
+    case 'GK':  return 'bg-[#7AB4E8]/20 text-[#7AB4E8] border-[#7AB4E8]/30';
+    case 'DEF': return 'bg-[#7EDBC8]/20 text-[#7EDBC8] border-[#7EDBC8]/30';
+    case 'MID': return 'bg-[#F0C87A]/20 text-[#F0C87A] border-[#F0C87A]/30';
+    case 'FWD': return 'bg-[#E87878]/20 text-[#E87878] border-[#E87878]/30';
     default:    return 'bg-[#9B9B9B]/20 text-[#9B9B9B] border-[#9B9B9B]/30';
   }
 }

@@ -175,7 +175,7 @@ export default function TacticsCommandCenter({
   const getPositionColor = (position: string): string => {
     const rowStyle = getPosRowStyle(position);
     const group = getPosGroup(position);
-    const textColor = group === 'GK' ? 'text-[#4A90E2]' : group === 'DEF' ? 'text-[#50E3C2]' : group === 'MID' ? 'text-[#F5A623]' : group === 'FWD' ? 'text-[#D0021B]' : 'text-[#9B9B9B]';
+    const textColor = group === 'GK' ? 'text-[#7AB4E8]' : group === 'DEF' ? 'text-[#7EDBC8]' : group === 'MID' ? 'text-[#F0C87A]' : group === 'FWD' ? 'text-[#E87878]' : 'text-[#9B9B9B]';
     return `${rowStyle} ${textColor}`;
   };
 
@@ -525,10 +525,10 @@ export default function TacticsCommandCenter({
           <h3 className="text-[10px] uppercase font-bold tracking-widest text-white/30">TAKIM SIRALAMASI</h3>
           <div className="flex-1" />
           <div className="flex items-center gap-3 text-[7px] font-black uppercase tracking-widest">
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#4A90E2]/10 border-2 border-[#4A90E2]" /> Kaleci</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#50E3C2]/10 border-2 border-[#50E3C2]" /> Defans</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#F5A623]/10 border-2 border-[#F5A623]" /> Orta Saha</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#D0021B]/10 border-2 border-[#D0021B]" /> Forvet</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#7AB4E8]/10 border-2 border-[#7AB4E8]" /> Kaleci</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#7EDBC8]/10 border-2 border-[#7EDBC8]" /> Defans</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#F0C87A]/10 border-2 border-[#F0C87A]" /> Orta Saha</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#E87878]/10 border-2 border-[#E87878]" /> Forvet</span>
           </div>
         </div>
         <div className="overflow-x-auto">

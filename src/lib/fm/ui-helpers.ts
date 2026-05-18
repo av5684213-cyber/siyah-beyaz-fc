@@ -57,11 +57,11 @@ export function localizePos(pos: string): string {
 }
 
 /**
- * Soft position color scheme:
- * GK  (Kaleci):   #4A90E2  soft blue
- * DEF (Defans):   #50E3C2  soft green-turquoise
- * MID (Orta Saha):#F5A623  soft orange
- * FWD (Forvet):   #D0021B  soft red
+ * Pastel position color scheme:
+ * GK  (Kaleci):   #7AB4E8  pastel sky blue
+ * DEF (Defans):   #7EDBC8  pastel mint
+ * MID (Orta Saha):#F0C87A  pastel amber
+ * FWD (Forvet):   #E87878  pastel rose
  * SUB (Yedek):    #9B9B9B  grey
  */
 
@@ -78,10 +78,10 @@ export function getPosGroup(pos: string): string {
 export function getPosColor(pos: string): string {
     if (!pos) return 'text-[#9B9B9B]';
     const p = pos.toUpperCase();
-    if (p === 'GK') return 'text-[#4A90E2]';
-    if (['DEF', 'CB', 'LB', 'RB', 'LWB', 'RWB'].includes(p)) return 'text-[#50E3C2]';
-    if (['MID', 'CDM', 'CM', 'CAM', 'LM', 'RM'].includes(p)) return 'text-[#F5A623]';
-    if (['FWD', 'ST', 'LW', 'RW', 'CF', 'LF', 'RF'].includes(p)) return 'text-[#D0021B]';
+    if (p === 'GK') return 'text-[#7AB4E8]';
+    if (['DEF', 'CB', 'LB', 'RB', 'LWB', 'RWB'].includes(p)) return 'text-[#7EDBC8]';
+    if (['MID', 'CDM', 'CM', 'CAM', 'LM', 'RM'].includes(p)) return 'text-[#F0C87A]';
+    if (['FWD', 'ST', 'LW', 'RW', 'CF', 'LF', 'RF'].includes(p)) return 'text-[#E87878]';
     return 'text-[#9B9B9B]';
 }
 
@@ -89,10 +89,10 @@ export function getPosColor(pos: string): string {
 export function getPosRowStyle(pos: string): string {
     if (!pos) return '';
     const p = pos.toUpperCase();
-    if (p === 'GK') return 'bg-[#4A90E2]/10 border-l-4 border-l-[#4A90E2]';
-    if (['DEF', 'CB', 'LB', 'RB', 'LWB', 'RWB'].includes(p)) return 'bg-[#50E3C2]/10 border-l-4 border-l-[#50E3C2]';
-    if (['MID', 'CDM', 'CM', 'CAM', 'LM', 'RM'].includes(p)) return 'bg-[#F5A623]/10 border-l-4 border-l-[#F5A623]';
-    if (['FWD', 'ST', 'LW', 'RW', 'CF', 'LF', 'RF'].includes(p)) return 'bg-[#D0021B]/10 border-l-4 border-l-[#D0021B]';
+    if (p === 'GK') return 'bg-[#7AB4E8]/10 border-l-4 border-l-[#7AB4E8]';
+    if (['DEF', 'CB', 'LB', 'RB', 'LWB', 'RWB'].includes(p)) return 'bg-[#7EDBC8]/10 border-l-4 border-l-[#7EDBC8]';
+    if (['MID', 'CDM', 'CM', 'CAM', 'LM', 'RM'].includes(p)) return 'bg-[#F0C87A]/10 border-l-4 border-l-[#F0C87A]';
+    if (['FWD', 'ST', 'LW', 'RW', 'CF', 'LF', 'RF'].includes(p)) return 'bg-[#E87878]/10 border-l-4 border-l-[#E87878]';
     return 'bg-[#9B9B9B]/10 border-l-4 border-l-[#9B9B9B]';
 }
 
@@ -101,10 +101,10 @@ export function getPosBadgeStyle(pos: string): string {
     const p = pos.toUpperCase();
     const group = getPosGroup(p);
     switch (group) {
-      case 'GK':  return 'bg-[#4A90E2]/10 border-[#4A90E2]/20 text-[#4A90E2]';
-      case 'DEF': return 'bg-[#50E3C2]/10 border-[#50E3C2]/20 text-[#50E3C2]';
-      case 'MID': return 'bg-[#F5A623]/10 border-[#F5A623]/20 text-[#F5A623]';
-      case 'FWD': return 'bg-[#D0021B]/10 border-[#D0021B]/20 text-[#D0021B]';
+      case 'GK':  return 'bg-[#7AB4E8]/10 border-[#7AB4E8]/20 text-[#7AB4E8]';
+      case 'DEF': return 'bg-[#7EDBC8]/10 border-[#7EDBC8]/20 text-[#7EDBC8]';
+      case 'MID': return 'bg-[#F0C87A]/10 border-[#F0C87A]/20 text-[#F0C87A]';
+      case 'FWD': return 'bg-[#E87878]/10 border-[#E87878]/20 text-[#E87878]';
       default:    return 'bg-[#9B9B9B]/10 border-[#9B9B9B]/20 text-[#9B9B9B]';
     }
 }
@@ -113,10 +113,10 @@ export function getPosBadgeStyle(pos: string): string {
 export function getPosDotColor(pos: string): string {
     const group = getPosGroup(pos);
     switch (group) {
-      case 'GK':  return 'bg-[#4A90E2]';
-      case 'DEF': return 'bg-[#50E3C2]';
-      case 'MID': return 'bg-[#F5A623]';
-      case 'FWD': return 'bg-[#D0021B]';
+      case 'GK':  return 'bg-[#7AB4E8]';
+      case 'DEF': return 'bg-[#7EDBC8]';
+      case 'MID': return 'bg-[#F0C87A]';
+      case 'FWD': return 'bg-[#E87878]';
       default:    return 'bg-[#9B9B9B]';
     }
 }
