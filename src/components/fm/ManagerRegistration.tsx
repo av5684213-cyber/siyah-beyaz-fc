@@ -25,7 +25,7 @@ const PHILOSOPHIES = [
     { id: 'youth', name: 'ALTYAPI EKOLÜ', icon: <Building2 className="text-amber-400" />, desc: 'Gelişmiş altyapı tesisleri.', bonus: 'Lv.3 Akademi' },
     { id: 'squad', name: 'YILDIZLAR KARMASI', icon: <Users className="text-purple-400" />, desc: 'Daha yetenekli başlangıç kadrosu.', bonus: '+%10 Kadro Kalitesi' },
     { id: 'reputation', name: 'MARKA DEĞERİ', icon: <Trophy className="text-red-400" />, desc: 'Daha yüksek kulüp itibarı.', bonus: '+20 İtibar' },
-    { id: 'legend', name: 'EFSANE ADAYI', icon: <Zap className="text-yellow-400" />, desc: 'Daha fazla MG Coin ile başlar.', bonus: '+250 MG Coin' },
+    { id: 'legend', name: 'EFSANE ADAYI', icon: <Zap className="text-yellow-400" />, desc: 'Daha fazla Kredi ile başlar.', bonus: '+250 Kredi' },
 ];
 
 const COLORS_LIST = [

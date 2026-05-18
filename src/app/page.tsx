@@ -879,7 +879,7 @@ export default function Home() {
             <div className="mt-4 px-3 py-1 mb-2 border-t border-white/5 pt-4 group">
                <p className="text-[8px] font-black tracking-widest text-white/20 uppercase mb-2 group-hover:text-emerald-400 transition-colors">EKONOMİ</p>
                <NavButton icon={<Globe size={18} />} label="TRANSFER PAZARI" active={activeTab === 'multiplayer'} onClick={() => setActiveTab('multiplayer')} />
-               <NavButton icon={<ShoppingBag size={18} />} label="MAĞAZA" active={activeTab === 'market'} onClick={() => setActiveTab('market')} />
+               <NavButton icon={<ShoppingBag size={18} />} label="KREDİ SATIN AL" active={activeTab === 'market'} onClick={() => setActiveTab('market')} />
                <NavButton icon={<DollarSign size={18} />} label="FİNANSAL" active={activeTab === 'financial'} onClick={() => setActiveTab('financial')} />
             </div>
             

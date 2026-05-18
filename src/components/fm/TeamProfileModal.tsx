@@ -275,10 +275,10 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
                   <button 
                     onClick={() => fileInputRef.current?.click()}
                     className="w-20 h-20 bg-white/5 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-white/10 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all shrink-0 shadow-2xl"
-                    title="Amblem yukle (2 MG Coin)"
+                    title="Amblem yukle (2 Kredi)"
                   >
                     <ImagePlus size={20} className="text-white/20 group-hover:text-amber-400 transition-colors mb-1" />
-                    <span className="text-[6px] font-black text-white/15 uppercase tracking-wider group-hover:text-amber-400/60 transition-colors">2 MG</span>
+                    <span className="text-[6px] font-black text-white/15 uppercase tracking-wider group-hover:text-amber-400/60 transition-colors">2 KR</span>
                   </button>
                 )}
                 <input 
@@ -308,7 +308,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
             <div className="flex flex-wrap gap-2 self-end">
               <button 
                 onClick={async () => {
-                  if (confirm(`${teamName} takimina 1 MG Coin karsiliginda hazirlik maci teklif etmek istiyor musunuz?`)) {
+                  if (confirm(`${teamName} takimina 1 Kredi karsiliginda hazirlik maci teklif etmek istiyor musunuz?`)) {
                     alert('Hazirlik maci teklifiniz iletildi!');
                   }
                 }}

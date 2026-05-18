@@ -31,6 +31,7 @@ export function toTitleCase(str: string | undefined | null): string {
   }).join(' ');
 }
 
+/** Kısa Türkçe mevki kısaltmaları (kartlarda/badge'lerde kullanılır) */
 export function localizePos(pos: string): string {
   if (!pos) return '---';
   const mapping: Record<string, string> = {
@@ -39,21 +40,58 @@ export function localizePos(pos: string): string {
     'MID': 'OS',
     'FWD': 'FV',
     'CB': 'STP',
-    'LB': 'SB',
-    'RB': 'SB',
-    'LWB': 'KNT',
-    'RWB': 'KNT',
+    'LB': 'SolB',
+    'RB': 'SağB',
+    'LWB': 'SolK',
+    'RWB': 'SağK',
     'CDM': 'DOS',
-    'CM': 'MC',
+    'CM': 'MOS',
     'CAM': 'OOS',
-    'LM': 'SLK',
-    'RM': 'SAK',
+    'LM': 'SolA',
+    'RM': 'SağA',
     'ST': 'SNT',
-    'LW': 'SLK',
-    'RW': 'SAK',
-    'CF': 'FV'
+    'LW': 'SolA',
+    'RW': 'SağA',
+    'CF': '2.FV'
   };
   return mapping[pos] || pos;
+}
+
+/** Tam Türkçe mevki isimleri (detay sayfası, tooltip) */
+export function localizePosFull(pos: string): string {
+  if (!pos) return '---';
+  const mapping: Record<string, string> = {
+    'GK': 'Kaleci',
+    'DEF': 'Defans',
+    'MID': 'Orta Saha',
+    'FWD': 'Forvet',
+    'CB': 'Stoper',
+    'LB': 'Sol Bek',
+    'RB': 'Sağ Bek',
+    'LWB': 'Sol Kanat Bek',
+    'RWB': 'Sağ Kanat Bek',
+    'CDM': 'Defansif Orta Saha',
+    'CM': 'Merkez Orta Saha',
+    'CAM': 'Ofansif Orta Saha',
+    'LM': 'Sol Açık',
+    'RM': 'Sağ Açık',
+    'ST': 'Forvet',
+    'LW': 'Sol Kanat',
+    'RW': 'Sağ Kanat',
+    'CF': 'İkinci Forvet'
+  };
+  return mapping[pos] || pos;
+}
+
+/** Oyuncunun mevki badge metnini oluşturur (çift mevki desteği ile) */
+export function formatPosBadge(player: { specificPosition?: string; position: string; secondaryPositions?: string[] }): string {
+  const primary = player.specificPosition || player.position;
+  const primaryShort = localizePos(primary);
+  if (player.secondaryPositions && player.secondaryPositions.length > 0) {
+    const secondaryShort = localizePos(player.secondaryPositions[0]);
+    return `${primaryShort}/${secondaryShort}`;
+  }
+  return primaryShort;
 }
 
 /**

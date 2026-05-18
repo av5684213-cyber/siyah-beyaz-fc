@@ -93,9 +93,9 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
   const { setDirectMessageRecipient, setSelectedTeamProfile } = useFM();
   const [listings, setListings] = useState<MarketListing[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [activeSubTab, setActiveSubTab] = useState<'market' | 'auctions' | 'rankings' | 'store'>('market');
+  const [activeSubTab, setActiveSubTab] = useState<'market' | 'auctions' | 'rankings' | 'store' | 'loans'>('market');
   const [myAuctions, setMyAuctions] = useState<MarketListing[]>([]);
-  const [selectedListing, setSelectedListing] = useState<MarketListing | null>(null);
+  const [loanPlayers, setLoanPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'price', direction: 'asc' });
   const [filter, setFilter] = useState({
@@ -233,6 +233,17 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
         const myData = await getMyAuctions(userId);
         setMyAuctions(myData || []);
       }
+
+      // Fetch loan players
+      try {
+        const loanRes = await fetch('/api/loans/available?profileId=' + userId);
+        if (loanRes.ok) {
+          const loanData = await loanRes.json();
+          setLoanPlayers(loanData.players || []);
+        }
+      } catch (loanErr) {
+        console.error('Loan fetch error:', loanErr);
+      }
     } catch (err) {
       console.error('Multiplayer fetch error:', err);
     } finally {
@@ -367,6 +378,12 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
             className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeSubTab === 'store' ? 'bg-amber-500 text-black' : 'text-white/40 hover:text-white'}`}
           >
             Mağaza
+          </button>
+          <button 
+            onClick={() => setActiveSubTab('loans')}
+            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeSubTab === 'loans' ? 'bg-cyan-500 text-black' : 'text-white/40 hover:text-white'}`}
+          >
+            Kiralık
           </button>
         </div>
         
@@ -672,7 +689,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                 ))}
              </div>
           </motion.div>
-        ) : (
+        ) : activeSubTab === 'store' ? (
           <motion.div key="store" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
@@ -684,7 +701,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                 <div 
                   key={i}
                   className={`relative p-8 rounded-[2rem] border ${pkg.color} flex flex-col items-center text-center group cursor-pointer hover:scale-[1.02] transition-all`}
-                  onClick={() => alert(`Google Play Store üzerinden ${pkg.coins} MG Coin satın alma işlemi başlatılıyor...`)}
+                  onClick={() => alert(`Google Play Store üzerinden ${pkg.coins} Kredi satın alma işlemi başlatılıyor...`)}
                 >
                   {pkg.badge && (
                     <div className="absolute -top-3 px-3 py-1 bg-white text-black text-[8px] font-black uppercase tracking-widest rounded-full shadow-lg">
@@ -692,9 +709,9 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                     </div>
                   )}
                   <div className="w-20 h-20 bg-amber-400 rounded-full flex items-center justify-center border-4 border-amber-600 shadow-[0_0_30px_rgba(251,191,36,0.3)] mb-6 group-hover:scale-110 transition-transform">
-                    <span className="text-2xl font-black text-amber-900">MG</span>
+                    <span className="text-2xl font-black text-amber-900">₺</span>
                   </div>
-                  <h4 className="text-2xl font-black italic leading-none mb-1">{pkg.coins} MG COIN</h4>
+                  <h4 className="text-2xl font-black italic leading-none mb-1">{pkg.coins} KREDİ</h4>
                   <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-6">{pkg.desc}</p>
                   
                   <div className="mt-auto w-full">
@@ -712,14 +729,84 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
 
             <div className="bg-zinc-900/40 border border-white/5 rounded-[2rem] p-10 text-center space-y-6">
               <div className="max-w-2xl mx-auto space-y-4">
-                <h3 className="text-2xl font-black italic uppercase tracking-tighter">MG COIN NEDİR?</h3>
+                <h3 className="text-2xl font-black italic uppercase tracking-tighter">KREDİ NEDİR?</h3>
                 <p className="text-sm text-white/60 leading-relaxed">
-                  MG Coin, Managerium evreninde kullanılan özel bir para birimidir. Bu paralarla transfer pazarında serbest oyuncuları kadronuza katabilir, stadyumunuzu geliştirebilir veya özel antrenman programları satın alabilirsiniz. Satın alınan coinler anında hesabınıza tanımlanır.
+                  Kredi, Managerium evreninde kullanılan özel bir para birimidir. Bu kredilerle transfer pazarında serbest oyuncuları kadronuza katabilir, stadyumunuzu geliştirebilir veya özel antrenman programları satın alabilirsiniz. Satın alınan krediler anında hesabınıza tanımlanır.
                 </p>
+                <a href="/free-agents" className="inline-block px-6 py-3 bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-white/20 transition-all">
+                  Serbest Oyunculara Göz At
+                </a>
               </div>
             </div>
           </motion.div>
-        )}
+        ) : activeSubTab === 'loans' ? (
+          <motion.div key="loans" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="bg-zinc-900/40 border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-md">
+            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Globe className="text-cyan-500" size={20} />
+                <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Kiralık Oyuncular</h3>
+              </div>
+              <div className="text-[10px] font-black text-white/40 uppercase tracking-widest">
+                {loanPlayers.length} OYUNCU MEVCUT
+              </div>
+            </div>
+            {loanPlayers.length === 0 ? (
+              <div className="py-20 text-center space-y-4 opacity-50">
+                <Globe size={48} className="mx-auto" />
+                <p className="text-xs font-black uppercase tracking-[.2em]">Kiralık oyuncu bulunmuyor.</p>
+                <p className="text-[10px] text-white/30">Diğer takımlar oyuncularını kiralık pazara çıkardığında burada görünecek.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-white/5">
+                {loanPlayers.map((lp: any) => {
+                  const p = lp;
+                  return (
+                    <div key={lp.id} className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors">
+                      <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center text-[10px] font-black border border-cyan-500/20 text-cyan-400">
+                        {p.specific_position || p.position || '??'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p.name)}</div>
+                        <div className="text-[9px] text-white/30">
+                          {toTitleCase(p.team_name || 'Bilinmeyen')} • {p.age} YAŞ • Klt {p.klt || p.rating || 0}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[11px] font-black text-cyan-400">{lp.loan_fee || 0} Kredi</div>
+                        <div className="text-[8px] text-white/20 uppercase">Kiralık Ücret</div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`${toTitleCase(p.name)} oyuncusunu 10 Kredi karşılığında kiralamak istiyor musunuz?`)) return;
+                          try {
+                            const res = await fetch('/api/loans/request', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ playerId: lp.id, profileId: userId }),
+                            });
+                            const data = await res.json();
+                            if (data.success) {
+                              alert('Oyuncu başarıyla kiralandı! Sezon sonunda geri dönecek.');
+                              fetchData();
+                            } else {
+                              alert(data.error || 'Kiralama başarısız.');
+                            }
+                          } catch (err) {
+                            alert('Bir hata oluştu.');
+                          }
+                        }}
+                        className="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 hover:text-cyan-300 transition-all"
+                      >
+                        Kirala (10 KR)
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        ) : null}
       </AnimatePresence>
     </motion.div>
   );

@@ -320,7 +320,49 @@ async function processLeagueSeasonEnd(
     console.error(`[season-end] HoF insert error:`, err);
   }
 
-  // 6. Yeni sezon başlat
+  // 6. Kiralamaları sonlandır (sezon sonu dönüşü)
+  try {
+    const { data: activeLoans } = await supabase
+      .from('loans')
+      .select('id, player_id')
+      .eq('status', 'active');
+
+    if (activeLoans && activeLoans.length > 0) {
+      // loans tablosunu güncelle
+      await supabase
+        .from('loans')
+        .update({ status: 'completed' })
+        .eq('status', 'active');
+
+      // Her kiralanan oyuncunun durumunu sıfırla
+      for (const loan of activeLoans) {
+        await supabase
+          .from('players')
+          .update({
+            loan_status: null,
+            loaned_to_profile_id: null,
+            loan_end_date: null,
+            is_on_loan_market: false,
+          })
+          .eq('id', loan.player_id);
+      }
+    }
+  } catch (err) {
+    console.error(`[season-end] Loan return error:`, err);
+  }
+
+  // 7. Süresi dolan sponsorlukları sonlandır
+  try {
+    await supabase
+      .from('team_sponsorships')
+      .update({ status: 'expired' })
+      .lt('remaining_rounds', 1)
+      .eq('status', 'active');
+  } catch (err) {
+    console.error(`[season-end] Sponsorship cleanup error:`, err);
+  }
+
+  // 8. Yeni sezon başlat
   // Lig puanlarını sıfırla
   for (const team of standings) {
     await supabase
