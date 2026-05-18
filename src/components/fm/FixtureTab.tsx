@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Calendar,
@@ -15,6 +15,7 @@ import {
   Eye,
   Radio,
   Play,
+  ArrowRight,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { loadFixtures, loadMatchHistory } from '@/lib/fm/persistence';
@@ -145,10 +146,11 @@ function ResultIndicator({ result }: { result: 'W' | 'D' | 'L' | null }) {
 }
 
 // ─── Team Shield Icon ─────────────────────────────────────────────
-function TeamShield({ name, isUser }: { name: string; isUser: boolean }) {
+function TeamShield({ name, isUser, size = 'sm' }: { name: string; isUser: boolean; size?: 'sm' | 'lg' }) {
+  const sz = size === 'lg' ? 'w-10 h-10 text-[10px]' : 'w-8 h-8 text-[9px]';
   return (
     <div
-      className={`w-8 h-8 rounded-lg flex items-center justify-center text-[9px] font-black shrink-0 ${
+      className={`${sz} rounded-lg flex items-center justify-center font-black shrink-0 ${
         isUser
           ? 'bg-gradient-to-br from-amber-500/30 to-amber-700/20 text-amber-300 border border-amber-500/40 shadow-[0_0_8px_rgba(245,158,11,0.15)]'
           : 'bg-white/[0.06] text-white/40 border border-white/10'
@@ -156,75 +158,6 @@ function TeamShield({ name, isUser }: { name: string; isUser: boolean }) {
     >
       {getTeamInitials(name)}
     </div>
-  );
-}
-
-// ─── Score Display ────────────────────────────────────────────────
-function ScoreDisplay({ fixture, isUserMatch }: { fixture: Fixture; isUserMatch: boolean }) {
-  const isLive = fixture.status === 'live';
-  const isScheduled = fixture.status === 'scheduled' || fixture.status === 'user_pending';
-  const isFinished = fixture.status === 'finished';
-
-  if (isScheduled) {
-    return (
-      <div className="flex flex-col items-center gap-1">
-        <span className="text-[10px] font-mono font-bold text-white/15">VS</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <div
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-          isLive
-            ? 'bg-red-500/10 border border-red-500/30 shadow-[0_0_12px_rgba(239,68,68,0.15)]'
-            : isUserMatch
-              ? 'bg-white/[0.06] border border-white/15'
-              : 'bg-black/40 border border-white/[0.06]'
-        }`}
-      >
-        <span
-          className={`text-lg font-black tabular-nums ${
-            isLive ? 'text-white' : 'text-white/80'
-          }`}
-        >
-          {fixture.home_score}
-        </span>
-        <span className="text-white/15 font-bold text-xs">-</span>
-        <span
-          className={`text-lg font-black tabular-nums ${
-            isLive ? 'text-white' : 'text-white/80'
-          }`}
-        >
-          {fixture.away_score}
-        </span>
-      </div>
-      {isLive && (
-        <div className="flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-          <span className="text-[7px] font-black text-red-400 uppercase tracking-widest">Canlı</span>
-        </div>
-      )}
-      {isFinished && fixture.homeScoreHT != null && fixture.awayScoreHT != null && (
-        <span className="text-[8px] text-white/25 font-mono">
-          İY: {fixture.homeScoreHT}-{fixture.awayScoreHT}
-        </span>
-      )}
-    </div>
-  );
-}
-
-// ─── Watch Match Button ───────────────────────────────────────────
-function WatchMatchButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600/90 to-emerald-500/90 hover:from-emerald-500 hover:to-emerald-400 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-[0_0_12px_rgba(16,185,129,0.25)] transition-all hover:scale-105 active:scale-95"
-    >
-      <Play size={10} className="fill-current" />
-      Maçı İzle
-    </button>
   );
 }
 
@@ -238,6 +171,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'played'>('all');
   const [selectedTur, setSelectedTur] = useState<number>(1);
   const [userTeamId, setUserTeamId] = useState<string | null>(null);
+  const weekScrollRef = useRef<HTMLDivElement>(null);
   const cycleStatus = GameCycleManager.getStatus();
 
   // ─── Data Fetching ─────────────────────────────────────────────
@@ -322,6 +256,17 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
     fetchData();
   }, [fetchData]);
 
+  // ─── Scroll to selected week ────────────────────────────────────
+  useEffect(() => {
+    if (weekScrollRef.current) {
+      const container = weekScrollRef.current;
+      const selectedEl = container.querySelector(`[data-week="${selectedTur}"]`);
+      if (selectedEl) {
+        selectedEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, [selectedTur]);
+
   // ─── Computed: Form Guide ────────────────────────────────────────
   const computeForm = useCallback(
     (targetTeamId: string | null, count = 5): FormResult[] => {
@@ -373,6 +318,17 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
 
   const nextMatch = fixtures.find(f => f.status === 'scheduled' || f.status === 'user_pending' || f.status === 'live');
   const turs = Array.from({ length: 34 }, (_, i) => i + 1);
+
+  // ─── Grouped by tur ──────────────────────────────────────────────
+  const fixturesByTur = useMemo(() => {
+    const map = new Map<number, Fixture[]>();
+    fixtures.forEach(f => {
+      const list = map.get(f.tur) || [];
+      list.push(f);
+      map.set(f.tur, list);
+    });
+    return map;
+  }, [fixtures]);
 
   // ─── Week date range ──────────────────────────────────────────
   const weekDateRange = useMemo(() => {
@@ -433,6 +389,21 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
     [userTeamId],
   );
 
+  // ─── Get user match for a specific tur ─────────────────────────
+  const getUserMatchForTur = useCallback(
+    (tur: number): Fixture | null => {
+      return fixtures.find(f => f.tur === tur && (f.home_team_id === userTeamId || f.away_team_id === userTeamId)) || null;
+    },
+    [fixtures, userTeamId],
+  );
+
+  // ─── Season progress ───────────────────────────────────────────
+  const seasonProgress = useMemo(() => {
+    const totalWeeks = 34;
+    const played = new Set(fixtures.filter(f => f.status === 'finished').map(f => f.tur)).size;
+    return Math.round((played / totalWeeks) * 100);
+  }, [fixtures]);
+
   // ═══════════════════════════════════════════════════════════════════
   //  RENDER
   // ═══════════════════════════════════════════════════════════════════
@@ -451,8 +422,18 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {/* Season progress mini-bar */}
+          <div className="hidden md:flex items-center gap-2">
+            <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-500"
+                style={{ width: `${seasonProgress}%` }}
+              />
+            </div>
+            <span className="text-[8px] font-black text-white/30">{seasonProgress}%</span>
+          </div>
           {cycleStatus.phase === 'LIVE_MATCH' && (
-            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-red-500/10 border border-red-500/30 rounded-full animate-pulse">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-red-500/10 border border-red-500/30 rounded-full animate-pulse ml-2">
               <Radio size={8} className="text-red-500" />
               <span className="text-[7px] font-black text-red-400 uppercase tracking-widest">CANLI</span>
             </div>
@@ -501,70 +482,143 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
         </div>
       </div>
 
-      {/* ── Week Selector ─────────────────────────────────────────── */}
+      {/* ── Horizontal Week Cards ─────────────────────────────────── */}
       {filter === 'all' && (
-        <div className="px-6 md:px-8 py-3 bg-zinc-900/30 border-b border-white/5">
-          {/* Date range display */}
-          <div className="flex items-center justify-center gap-2 mb-2">
+        <div className="px-4 md:px-6 py-4 bg-gradient-to-b from-zinc-900/60 to-black/40 border-b border-white/5">
+          <div className="flex items-center gap-2 mb-3">
             <Calendar size={11} className="text-white/30" />
             <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">
-              {weekDateDisplay}
+              Hafta {selectedTur} — {weekDateDisplay}
+            </span>
+            <span className="text-white/10 mx-1">·</span>
+            <span className="text-[9px] font-bold text-white/30 uppercase tracking-wider">
+              {weekMatchCount} Maç
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            {/* Previous week arrow */}
+          <div className="relative">
+            {/* Left Arrow */}
             <button
               onClick={() => setSelectedTur(prev => Math.max(1, prev - 1))}
               disabled={selectedTur <= 1}
-              className={`shrink-0 w-8 h-10 flex items-center justify-center rounded-lg border transition-all ${
-                selectedTur <= 1
-                  ? 'bg-black/10 border-white/5 text-white/10 cursor-not-allowed'
-                  : 'bg-black/20 border-white/10 text-white/40 hover:bg-white/10 hover:text-white hover:border-amber-500/40 active:scale-90'
+              className={`absolute left-0 top-0 bottom-0 z-10 w-8 flex items-center justify-center bg-gradient-to-r from-black/80 to-transparent transition-all ${
+                selectedTur <= 1 ? 'opacity-0 pointer-events-none' : 'hover:from-black/90'
               }`}
             >
-              <ChevronLeft size={14} />
+              <ChevronLeft size={16} className="text-white/60" />
             </button>
 
-            {/* Week chips */}
-            <div className="flex-1 overflow-x-auto no-scrollbar scroll-smooth">
-              <div className="flex gap-1.5 min-w-max">
-                {turs.map(tur => {
-                  const hasPlayed = fixtures.some(f => f.tur === tur && f.status === 'finished');
-                  const hasUserMatch = fixtures.some(f => f.tur === tur && (f.home_team_id === userTeamId || f.away_team_id === userTeamId));
-                  return (
-                    <button
-                      key={tur}
-                      onClick={() => setSelectedTur(tur)}
-                      className={`w-11 h-12 flex flex-col items-center justify-center rounded-xl border transition-all relative ${
-                        selectedTur === tur
-                          ? 'bg-gradient-to-b from-amber-500 to-amber-600 border-amber-500 text-white shadow-lg shadow-amber-500/30'
-                          : hasUserMatch
-                            ? 'bg-black/20 border-amber-500/20 text-amber-400/60 hover:border-amber-500/40'
-                            : 'bg-black/20 border-white/5 text-white/40 hover:border-white/20'
-                      }`}
-                    >
-                      <span className="text-[7px] font-black uppercase tracking-tighter opacity-50">HFT</span>
-                      <span className="text-sm font-black">{tur}</span>
-                      {hasPlayed && selectedTur !== tur && (
-                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-emerald-400 rounded-full" />
+            {/* Week Cards Scroll */}
+            <div
+              ref={weekScrollRef}
+              className="flex gap-2 overflow-x-auto no-scrollbar scroll-smooth px-6 py-1"
+            >
+              {turs.map(tur => {
+                const isSelected = selectedTur === tur;
+                const hasPlayed = fixtures.some(f => f.tur === tur && f.status === 'finished');
+                const hasUserMatch = fixtures.some(f => f.tur === tur && (f.home_team_id === userTeamId || f.away_team_id === userTeamId));
+                const hasLive = fixtures.some(f => f.tur === tur && f.status === 'live');
+                const userMatch = getUserMatchForTur(tur);
+                const userResult = userMatch ? getUserResult(userMatch) : null;
+
+                // Compact score display for the week card
+                const scoreDisplay = (() => {
+                  if (!userMatch) return null;
+                  if (userMatch.status === 'finished') {
+                    return `${userMatch.home_score} - ${userMatch.away_score}`;
+                  }
+                  if (userMatch.status === 'live') {
+                    return `${userMatch.home_score} - ${userMatch.away_score}`;
+                  }
+                  return 'VS';
+                })();
+
+                return (
+                  <button
+                    key={tur}
+                    data-week={tur}
+                    onClick={() => setSelectedTur(tur)}
+                    className={`shrink-0 relative rounded-xl border transition-all duration-300 overflow-hidden ${
+                      isSelected
+                        ? 'w-36 bg-gradient-to-br from-amber-500/20 via-zinc-800/80 to-amber-700/10 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
+                        : hasLive
+                          ? 'w-24 bg-gradient-to-b from-red-500/10 to-red-900/5 border-red-500/30 hover:border-red-500/50'
+                          : hasPlayed
+                            ? 'w-24 bg-gradient-to-b from-zinc-800/60 to-zinc-900/40 border-white/8 hover:border-white/15'
+                            : hasUserMatch
+                              ? 'w-24 bg-gradient-to-b from-zinc-800/40 to-zinc-900/20 border-amber-500/10 hover:border-amber-500/25'
+                              : 'w-24 bg-zinc-900/30 border-white/5 hover:border-white/10'
+                    }`}
+                  >
+                    {/* Top accent line for selected */}
+                    {isSelected && (
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
+                    )}
+                    {/* Live pulse accent */}
+                    {hasLive && !isSelected && (
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-red-500 animate-pulse" />
+                    )}
+
+                    <div className="px-3 py-2.5 flex flex-col items-center gap-1">
+                      {/* Week Number */}
+                      <div className="flex items-center gap-1.5">
+                        {hasLive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                        )}
+                        <span className={`text-[7px] font-black uppercase tracking-tighter ${
+                          isSelected ? 'text-amber-400/70' : 'text-white/30'
+                        }`}>
+                          HFT
+                        </span>
+                      </div>
+                      <span className={`text-base font-black ${
+                        isSelected ? 'text-white' : 'text-white/60'
+                      }`}>
+                        {tur}
+                      </span>
+
+                      {/* User match mini-score */}
+                      {hasUserMatch && userMatch && (
+                        <div className={`flex flex-col items-center gap-0.5 mt-0.5 ${
+                          isSelected ? 'opacity-100' : 'opacity-60'
+                        }`}>
+                          <span className={`text-[8px] font-mono font-bold ${
+                            userMatch.status === 'live'
+                              ? 'text-red-400'
+                              : userResult === 'W'
+                                ? 'text-emerald-400'
+                                : userResult === 'L'
+                                  ? 'text-red-400'
+                                  : userResult === 'D'
+                                    ? 'text-amber-400'
+                                    : 'text-white/30'
+                          }`}>
+                            {scoreDisplay}
+                          </span>
+                          <span className="text-[6px] font-black uppercase tracking-wider text-white/20">
+                            {userMatch.home_team_id === userTeamId ? 'EV' : 'DEP'}
+                          </span>
+                        </div>
                       )}
-                    </button>
-                  );
-                })}
-              </div>
+
+                      {/* Completed dot indicator for non-selected weeks */}
+                      {hasPlayed && !isSelected && !hasUserMatch && (
+                        <div className="w-1 h-1 bg-emerald-500/60 rounded-full mt-1" />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Next week arrow */}
+            {/* Right Arrow */}
             <button
               onClick={() => setSelectedTur(prev => Math.min(34, prev + 1))}
               disabled={selectedTur >= 34}
-              className={`shrink-0 w-8 h-10 flex items-center justify-center rounded-lg border transition-all ${
-                selectedTur >= 34
-                  ? 'bg-black/10 border-white/5 text-white/10 cursor-not-allowed'
-                  : 'bg-black/20 border-white/10 text-white/40 hover:bg-white/10 hover:text-white hover:border-amber-500/40 active:scale-90'
+              className={`absolute right-0 top-0 bottom-0 z-10 w-8 flex items-center justify-center bg-gradient-to-l from-black/80 to-transparent transition-all ${
+                selectedTur >= 34 ? 'opacity-0 pointer-events-none' : 'hover:from-black/90'
               }`}
             >
-              <ChevronRight size={14} />
+              <ChevronRight size={16} className="text-white/60" />
             </button>
           </div>
         </div>
@@ -626,6 +680,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                           <TeamShield
                             name={sanitizeName(nextMatch.home?.name)}
                             isUser={nextMatch.home_team_id === userTeamId}
+                            size="lg"
                           />
                           <h3 className="text-2xl md:text-3xl font-black italic text-white uppercase tracking-tighter leading-none">
                             {sanitizeName(nextMatch.home?.name) || '---'}
@@ -695,6 +750,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                           <TeamShield
                             name={sanitizeName(nextMatch.away?.name)}
                             isUser={nextMatch.away_team_id === userTeamId}
+                            size="lg"
                           />
                         </div>
                         {nextMatch.away_team_id === userTeamId && userForm.length > 0 && (
@@ -764,7 +820,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
             )}
 
             {/* ══════════════════════════════════════════════════════
-                WEEK HEADER CARD (Haftalık filter only)
+                WEEK HEADER CARD
                 ══════════════════════════════════════════════════════ */}
             {filter === 'all' && (
               <div className="bg-gradient-to-r from-zinc-900/80 via-zinc-800/60 to-zinc-900/80 rounded-2xl border border-white/5 p-5 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -821,9 +877,9 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
             )}
 
             {/* ══════════════════════════════════════════════════════
-                FIXTURE LIST — Week-by-week card design
+                FIXTURE LIST — Modern Gradient Match Cards
                 ══════════════════════════════════════════════════════ */}
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-3">
               <AnimatePresence mode="popLayout">
                 {filteredFixtures.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-16 bg-zinc-900/20 rounded-2xl border border-dashed border-white/10">
@@ -846,36 +902,49 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                     const homeName = sanitizeName(fixture.home?.name) || '---';
                     const awayName = sanitizeName(fixture.away?.name) || '---';
 
+                    // Gradient background based on match status & result
+                    const cardGradient = isUserMatch
+                      ? isLive
+                        ? 'from-red-500/[0.08] via-zinc-900/80 to-red-500/[0.08]'
+                        : isScheduled
+                          ? 'from-amber-500/[0.05] via-zinc-900/80 to-amber-500/[0.05]'
+                          : userResult === 'W'
+                            ? 'from-emerald-500/[0.05] via-zinc-900/80 to-emerald-500/[0.05]'
+                            : userResult === 'L'
+                              ? 'from-red-500/[0.03] via-zinc-900/80 to-red-500/[0.03]'
+                              : 'from-amber-500/[0.03] via-zinc-900/80 to-amber-500/[0.03]'
+                      : 'from-zinc-900/50 via-zinc-900/30 to-zinc-900/50';
+
+                    const borderColor = isUserMatch
+                      ? isLive
+                        ? 'border-red-500/30 hover:border-red-500/50'
+                        : isScheduled
+                          ? 'border-amber-500/25 hover:border-amber-500/45'
+                          : userResult === 'W'
+                            ? 'border-emerald-500/20 hover:border-emerald-500/40'
+                            : userResult === 'L'
+                              ? 'border-red-500/15 hover:border-red-500/30'
+                              : 'border-amber-500/15 hover:border-amber-500/30'
+                      : 'border-white/[0.06] hover:border-white/15';
+
+                    const accentColor = isLive ? 'bg-red-500' : isScheduled ? 'bg-amber-500' : userResult === 'W' ? 'bg-emerald-500' : userResult === 'L' ? 'bg-red-500' : 'bg-amber-500/50';
+
                     return (
                       <motion.div
                         key={fixture.id}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.03 }}
-                        className={`group rounded-xl border transition-all relative overflow-hidden ${
-                          isUserMatch
-                            ? isLive
-                              ? 'bg-gradient-to-r from-red-500/[0.06] via-zinc-900/70 to-red-500/[0.06] border-red-500/25 hover:border-red-500/40'
-                              : isScheduled
-                                ? 'bg-gradient-to-r from-amber-500/[0.04] via-zinc-900/70 to-amber-500/[0.04] border-amber-500/20 hover:border-amber-500/40'
-                                : userResult === 'W'
-                                  ? 'bg-gradient-to-r from-emerald-500/[0.04] via-zinc-900/70 to-emerald-500/[0.04] border-emerald-500/15 hover:border-emerald-500/30'
-                                  : userResult === 'L'
-                                    ? 'bg-gradient-to-r from-red-500/[0.03] via-zinc-900/70 to-red-500/[0.03] border-red-500/10 hover:border-red-500/25'
-                                    : 'bg-zinc-900/70 border-white/10 hover:border-amber-500/30'
-                            : 'bg-black/30 border-white/5 opacity-50 hover:opacity-80'
-                        }`}
+                        transition={{ delay: idx * 0.04 }}
+                        className={`group rounded-xl border transition-all relative overflow-hidden bg-gradient-to-r ${cardGradient} ${borderColor} ${!isUserMatch ? 'opacity-40 hover:opacity-70' : ''}`}
                       >
                         {/* User match accent strip */}
                         {isUserMatch && (
-                          <div className={`absolute left-0 top-0 bottom-0 w-1 ${
-                            isLive ? 'bg-red-500' : isScheduled ? 'bg-amber-500' : userResult === 'W' ? 'bg-emerald-500' : userResult === 'L' ? 'bg-red-500' : 'bg-amber-500/50'
-                          }`} />
+                          <div className={`absolute left-0 top-0 bottom-0 w-1 ${accentColor}`} />
                         )}
 
-                        <div className="flex items-center px-3 md:px-5 py-3.5 gap-3 md:gap-4">
-                          {/* Left: Date/Time column */}
-                          <div className="w-[68px] md:w-20 shrink-0 flex flex-col items-center border-r border-white/5 pr-3 md:pr-4">
+                        <div className="flex items-center px-3 md:px-5 py-4 gap-3 md:gap-4">
+                          {/* Left: Date/Time + Result column */}
+                          <div className="w-[72px] md:w-20 shrink-0 flex flex-col items-center border-r border-white/5 pr-3 md:pr-4">
                             <div className="flex items-center gap-1 mb-0.5">
                               <Clock
                                 size={9}
@@ -896,7 +965,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                             )}
                             {/* Result indicator for finished user matches */}
                             {isUserMatch && isFinished && (
-                              <div className="mt-1">
+                              <div className="mt-1.5">
                                 <ResultIndicator result={userResult} />
                               </div>
                             )}
@@ -919,8 +988,43 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                               <TeamShield name={homeName} isUser={fixture.home_team_id === userTeamId} />
                             </div>
 
-                            {/* Score */}
-                            <ScoreDisplay fixture={fixture} isUserMatch={isUserMatch} />
+                            {/* Score / VS area */}
+                            <div className="flex flex-col items-center gap-0.5 shrink-0">
+                              {isScheduled ? (
+                                <div className="px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                                  <span className="text-[10px] font-mono font-bold text-white/15">VS</span>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+                                    isLive
+                                      ? 'bg-red-500/10 border border-red-500/30 shadow-[0_0_12px_rgba(239,68,68,0.15)]'
+                                      : isUserMatch
+                                        ? 'bg-white/[0.06] border border-white/15'
+                                        : 'bg-black/40 border border-white/[0.06]'
+                                  }`}>
+                                    <span className={`text-lg font-black tabular-nums ${isLive ? 'text-white' : 'text-white/80'}`}>
+                                      {fixture.home_score}
+                                    </span>
+                                    <span className="text-white/15 font-bold text-xs">-</span>
+                                    <span className={`text-lg font-black tabular-nums ${isLive ? 'text-white' : 'text-white/80'}`}>
+                                      {fixture.away_score}
+                                    </span>
+                                  </div>
+                                  {isLive && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                      <span className="text-[7px] font-black text-red-400 uppercase tracking-widest">Canlı</span>
+                                    </div>
+                                  )}
+                                  {isFinished && fixture.homeScoreHT != null && fixture.awayScoreHT != null && (
+                                    <span className="text-[8px] text-white/25 font-mono">
+                                      İY: {fixture.homeScoreHT}-{fixture.awayScoreHT}
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </div>
 
                             {/* Away Team */}
                             <div className="flex-1 flex items-center justify-start gap-2 min-w-0">
@@ -941,7 +1045,13 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                           {/* Right: Action area */}
                           <div className="flex items-center gap-2 shrink-0">
                             {isUserMatch && isScheduled && onNavigateToMatch && (
-                              <WatchMatchButton onClick={onNavigateToMatch} />
+                              <button
+                                onClick={onNavigateToMatch}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600/90 to-emerald-500/90 hover:from-emerald-500 hover:to-emerald-400 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-[0_0_12px_rgba(16,185,129,0.25)] transition-all hover:scale-105 active:scale-95"
+                              >
+                                <Play size={10} className="fill-current" />
+                                Maçı İzle
+                              </button>
                             )}
                             {isUserMatch && isLive && onNavigateToMatch && (
                               <button
@@ -953,16 +1063,16 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                               </button>
                             )}
                             {isUserMatch && isFinished && (
-                              <>
+                              <div className="flex items-center gap-2">
                                 <FormGuide results={computeForm(isUserHome ? fixture.home_team_id : fixture.away_team_id, 3)} />
                                 <button
                                   onClick={() => router.push(`/match/${fixture.id}`)}
                                   className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-sky-600/80 to-sky-500/80 hover:from-sky-500 hover:to-sky-400 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-[0_0_8px_rgba(14,165,233,0.2)] transition-all hover:scale-105 active:scale-95"
                                 >
                                   <Play size={9} className="fill-current" />
-                                  Tekrar İzle
+                                  Tekrar
                                 </button>
-                              </>
+                              </div>
                             )}
                             {!isUserMatch && (
                               <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-colors">
