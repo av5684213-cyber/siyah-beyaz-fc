@@ -346,7 +346,7 @@ export default function MarketTab() {
             )}
           </div>
         </div>
-      ) : (
+      ) : activeSubTab === 'sponsors' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Active Sponsors */}
           <div className="space-y-4">
@@ -407,7 +407,7 @@ export default function MarketTab() {
             ))}
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* ═══════════════════════════════════════════════════════ */}
       {/* ENHANCED Negotiation Modal                                */}
@@ -520,7 +520,7 @@ export default function MarketTab() {
                           onChange={(e) => setWeeklySalary(Number(e.target.value))}
                           className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-base font-black text-amber-400 focus:outline-none focus:border-amber-500 transition-all pr-14"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-white/20 uppercase">€ / Hafta</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-white/20 uppercase">Kredi / Hafta</span>
                       </div>
                       <div className="flex gap-2 mt-3">
                         <button

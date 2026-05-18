@@ -21,6 +21,7 @@ import {
   Dumbbell,
   CalendarDays,
   Shield,
+  Clock,
 } from 'lucide-react';
 import type { ConnectionStatus } from '@/lib/fm/persistence';
 import { checkConnectionHealth } from '@/lib/fm/persistence';
@@ -105,6 +106,8 @@ export function AppHeader({
             </span>
             <span className="w-1 h-1 bg-white/20 rounded-full" />
             <span className="flex items-center gap-1"><CalendarDays size={10} /> {profile?.current_day}. GÜN</span>
+            <span className="w-1 h-1 bg-white/20 rounded-full" />
+            <span className="flex items-center gap-1 text-amber-400/60"><Clock size={10} /> Kalan: {Math.max(0, 34 - ((profile?.current_day || 1) % 34 || 34))} Gün</span>
           </div>
         </div>
       </div>
@@ -161,11 +164,11 @@ export function AppHeader({
         </div>
 
         <div className="text-right flex flex-col items-end border-l border-white/5 pl-4">
-          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold mb-0.5">Bütçe</p>
+          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold mb-0.5">Butce</p>
           <div className="flex items-center gap-2 justify-end">
-            <Wallet size={12} className="text-white/40" />
-            <p className="font-mono text-lg font-medium tracking-tighter">
-              €{((profile?.money || 1000000) / 1000000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}M
+            <Wallet size={12} className="text-emerald-400/60" />
+            <p className="font-mono text-lg font-medium tracking-tighter text-emerald-400">
+              {((profile?.money || 1000000) / 1000000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}M €
             </p>
           </div>
         </div>
@@ -174,7 +177,7 @@ export function AppHeader({
           <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold mb-0.5">💰 Kredi</p>
           <div className="flex items-center gap-2 justify-end">
             <div className="w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center border border-amber-600 shadow-[0_0_10px_rgba(251,191,36,0.3)]">
-               <span className="text-[8px] font-black text-amber-900">KR</span>
+               <span className="text-[8px] font-black text-amber-900">K</span>
             </div>
             <p className="font-mono text-lg font-medium tracking-tighter text-amber-400">
               {profile?.credits?.toLocaleString() || '0'}

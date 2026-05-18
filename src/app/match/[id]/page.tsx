@@ -15,6 +15,9 @@ import {
   MessageSquare,
   Calendar,
   ChevronRight,
+  Shield,
+  Bot,
+  Target,
 } from 'lucide-react';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import MatchChat from '@/components/Chat/MatchChat';
@@ -40,9 +43,11 @@ interface FixtureData {
   away_score: number | null;
   home_team_id: string;
   away_team_id: string;
-  home: { name: string; id: string } | null;
-  away: { name: string; id: string } | null;
+  home: { name: string; id: string; is_bot?: boolean; profile_id?: string } | null;
+  away: { name: string; id: string; is_bot?: boolean; profile_id?: string } | null;
   season_id?: string;
+  is_friendly?: boolean;
+  is_quick_match?: boolean;
 }
 
 interface MatchEventRow {
@@ -474,6 +479,19 @@ export default function MatchPage() {
   const [profileId, setProfileId] = useState<string>('');
   const [teamName, setTeamName] = useState<string>('');
 
+  // ── Taktik seçimi (maç öncesi) ──
+  const [selectedFormation, setSelectedFormation] = useState<string>('4-4-2');
+  const [selectedTactic, setSelectedTactic] = useState<string>('normal');
+
+  const FORMATIONS = ['4-4-2', '4-3-3', '3-5-2', '4-5-1', '4-2-3-1', '5-3-2', '3-4-3'];
+  const TACTICS: { id: string; label: string; desc: string; goalMod: number }[] = [
+    { id: 'normal', label: 'Normal', desc: 'Dengeli oyun', goalMod: 0 },
+    { id: 'attack', label: 'Hücum', desc: 'Gol ihtimali +%10', goalMod: 0.1 },
+    { id: 'defense', label: 'Defans', desc: 'Gol yeme ihtimali -%10', goalMod: -0.05 },
+    { id: 'counter', label: 'Kontra Atak', desc: 'Gol ihtimali +%5, kontra şansı', goalMod: 0.05 },
+    { id: 'press', label: 'Pres', desc: 'Top kazanma +%8, kondisyon -%5', goalMod: 0.03 },
+  ];
+
   // Duygusal katman — gol kutlama state
   const [goalCelebrationTrigger, setGoalCelebrationTrigger] = useState(false);
   const [goalScorer, setGoalScorer] = useState<string | undefined>();
@@ -513,7 +531,7 @@ export default function MatchPage() {
         return;
       }
 
-      // Fikstürü çek (home/away join ile)
+      // Fikstürü çek (home/away join ile — is_bot dahil)
       const { data: fixtureData, error: fixtureError } = await supabase
         .from('fixtures')
         .select(`
@@ -527,8 +545,8 @@ export default function MatchPage() {
           home_team_id,
           away_team_id,
           season_id,
-          home:league_teams!home_team_id (name, id),
-          away:league_teams!away_team_id (name, id)
+          home:league_teams!home_team_id (name, id, is_bot, profile_id),
+          away:league_teams!away_team_id (name, id, is_bot, profile_id)
         `)
         .eq('id', fixtureId)
         .single();
@@ -722,6 +740,20 @@ export default function MatchPage() {
   const awayName = useMemo(() => fixture?.away?.name || 'Deplasman', [fixture]);
   const matchStatus = useMemo(() => fixture?.status || 'scheduled', [fixture]);
 
+  // Bot maçı tespiti — rakip bot takım mı?
+  const isBotMatch = useMemo(() => {
+    if (!fixture) return false;
+    const homeIsBot = fixture.home?.is_bot === true;
+    const awayIsBot = fixture.away?.is_bot === true;
+    // Kullanıcının takımı olmayan taraf bot mu?
+    // Eğer her iki takımdan biri bot ise
+    return homeIsBot || awayIsBot;
+  }, [fixture]);
+
+  const isFriendlyOrQuick = useMemo(() => {
+    return fixture?.is_friendly === true || fixture?.is_quick_match === true;
+  }, [fixture]);
+
   // ═══ Yükleniyor ═══
 
   if (loading) {
@@ -852,6 +884,29 @@ export default function MatchPage() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-gradient-to-b from-amber-500/[0.04] to-transparent border border-amber-500/10 rounded-2xl p-6 text-center space-y-4"
           >
+            {/* ── Bot Maçı Uyarısı ── */}
+            {(isBotMatch || isFriendlyOrQuick) && (
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-blue-500/[0.08] border border-blue-500/20 rounded-xl p-4 flex items-center gap-3 text-left"
+              >
+                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center shrink-0">
+                  <Bot size={20} className="text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-blue-300 uppercase tracking-wider">
+                    {isBotMatch ? 'Bu maç bot takıma karşı oynanmaktadır' : 'Hazırlık maçı'}
+                  </p>
+                  <p className="text-[10px] text-blue-400/50 mt-0.5">
+                    {isBotMatch
+                      ? 'Rakip takım yapay zeka tarafından yönetilmektedir.'
+                      : 'Bu maç resmi lig müsabakası değildir.'}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
             <div className="flex items-center justify-center gap-2 mb-2">
               <Timer className="w-5 h-5 text-amber-400" />
               <span className="text-amber-400 text-xs font-black uppercase tracking-widest">
@@ -860,6 +915,85 @@ export default function MatchPage() {
             </div>
 
             <CountdownTimer targetDate={fixture.match_date} targetTime={fixture.match_time} />
+
+            {/* ── Taktik Ekranı ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-zinc-900/80 border border-white/[0.06] rounded-xl p-5 text-left space-y-4"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Shield size={14} className="text-amber-400" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-white/30">Maç Öncesi Taktik</span>
+              </div>
+
+              {/* Formasyon Seçici */}
+              <div>
+                <label className="text-[8px] font-black uppercase tracking-widest text-white/25 block mb-2">Formasyon</label>
+                <div className="flex flex-wrap gap-2">
+                  {FORMATIONS.map(f => (
+                    <button
+                      key={f}
+                      onClick={() => setSelectedFormation(f)}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                        selectedFormation === f
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.15)]'
+                          : 'bg-white/[0.03] text-white/30 border border-white/[0.06] hover:bg-white/[0.06] hover:text-white/50'
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Taktik Seçici */}
+              <div>
+                <label className="text-[8px] font-black uppercase tracking-widest text-white/25 block mb-2">Taktik</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {TACTICS.map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => setSelectedTactic(t.id)}
+                      className={`px-3 py-2.5 rounded-lg text-left transition-all ${
+                        selectedTactic === t.id
+                          ? 'bg-amber-500/15 border border-amber-500/25'
+                          : 'bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Target size={10} className={selectedTactic === t.id ? 'text-amber-400' : 'text-white/20'} />
+                        <span className={`text-[10px] font-black uppercase tracking-wider ${
+                          selectedTactic === t.id ? 'text-amber-300' : 'text-white/40'
+                        }`}>
+                          {t.label}
+                        </span>
+                      </div>
+                      <p className={`text-[8px] mt-1 ${selectedTactic === t.id ? 'text-amber-400/50' : 'text-white/20'}`}>
+                        {t.desc}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Seçilen taktik özeti */}
+              <div className="flex items-center gap-3 px-3 py-2 bg-white/[0.02] rounded-lg border border-white/[0.04]">
+                <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Seçilen:</span>
+                <span className="text-[10px] font-bold text-amber-400">{selectedFormation}</span>
+                <span className="text-white/10">|</span>
+                <span className="text-[10px] font-bold text-amber-400">{TACTICS.find(t => t.id === selectedTactic)?.label}</span>
+                {selectedTactic !== 'normal' && (
+                  <>
+                    <span className="text-white/10">|</span>
+                    <span className="text-[9px] text-emerald-400/60">
+                      Gol mod: {TACTICS.find(t => t.id === selectedTactic)?.goalMod > 0 ? '+' : ''}{((TACTICS.find(t => t.id === selectedTactic)?.goalMod || 0) * 100).toFixed(0)}%
+                    </span>
+                  </>
+                )}
+              </div>
+            </motion.div>
 
             <div className="pt-4">
               <p className="text-white/30 text-xs italic">
@@ -872,10 +1006,20 @@ export default function MatchPage() {
               <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 text-center">
                 <p className="text-[8px] font-black uppercase tracking-widest text-white/20 mb-2">EV SAHİBİ</p>
                 <p className="text-sm font-bold text-white/70">{homeName}</p>
+                {fixture.home?.is_bot && (
+                  <span className="inline-flex items-center gap-1 mt-1 text-[8px] text-blue-400/50 uppercase font-bold">
+                    <Bot size={8} /> Bot
+                  </span>
+                )}
               </div>
               <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 text-center">
                 <p className="text-[8px] font-black uppercase tracking-widest text-white/20 mb-2">DEPLASMAN</p>
                 <p className="text-sm font-bold text-white/70">{awayName}</p>
+                {fixture.away?.is_bot && (
+                  <span className="inline-flex items-center gap-1 mt-1 text-[8px] text-blue-400/50 uppercase font-bold">
+                    <Bot size={8} /> Bot
+                  </span>
+                )}
               </div>
             </div>
           </motion.div>

@@ -31,44 +31,61 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Kiralık pazarındaki oyuncuları getir (kendi takımımız hariç) ──
-    const { data: players, error: playersError } = await supabase
-      .from('players')
-      .select(`
-        id,
-        name,
-        position,
-        specific_position,
-        rating,
-        potential,
-        age,
-        nation,
-        speed,
-        power,
-        passing,
-        shooting,
-        defending,
-        control,
-        vision,
-        heading,
-        goalkeeping,
-        cond,
-        form,
-        morale,
-        team_name,
-        profile_id,
-        is_on_loan_market,
-        loan_fee,
-        loan_owner_profile_id,
-        loan_status,
-        loan_end_date,
-        loaned_to_profile_id,
-        personality
-      `)
-      .eq('is_on_loan_market', true)
-      .neq('profile_id', profileId);
+    // Use try/catch for column compatibility - is_on_loan_market may not exist yet
+    let players: any[] = [];
+    let playersError: any = null;
+    
+    try {
+      const result = await supabase
+        .from('players')
+        .select(`
+          id,
+          name,
+          position,
+          specific_position,
+          rating,
+          potential,
+          age,
+          nation,
+          speed,
+          power,
+          passing,
+          shooting,
+          defending,
+          control,
+          vision,
+          heading,
+          goalkeeping,
+          cond,
+          form,
+          morale,
+          team_name,
+          profile_id,
+          is_on_loan_market,
+          loan_fee,
+          loan_owner_profile_id,
+          loan_status,
+          loan_end_date,
+          loaned_to_profile_id,
+          personality
+        `)
+        .eq('is_on_loan_market', true)
+        .neq('profile_id', profileId);
+      
+      players = result.data || [];
+      playersError = result.error;
+    } catch (err: any) {
+      // Column may not exist yet — return empty list gracefully
+      console.warn('[GET /api/loans/available] Column might not exist yet:', err.message);
+      return NextResponse.json({ players: [], count: 0 });
+    }
 
     if (playersError) {
       console.error('[GET /api/loans/available] Fetch error:', playersError.message);
+      // If column doesn't exist, return empty gracefully
+      if (playersError.message?.includes('does not exist')) {
+        return NextResponse.json({ players: [], count: 0 });
+      }
       return NextResponse.json({ error: 'Kiralık oyuncular yüklenirken hata oluştu' }, { status: 500 });
     }
 

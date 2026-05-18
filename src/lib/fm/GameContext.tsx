@@ -207,7 +207,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
         const { data: maintenance4Lig } = await supabase.from('leagues').select('id, name').eq('tier', 4).order('created_at', { ascending: true }).limit(1).single();
         
         while (!groupFound && groupIndex <= 20) {
-          const leagueName = groupIndex === 1 ? '4. Lig' : `4. Lig ${groupIndex}. Departman`;
+          const leagueName = groupIndex === 1 ? '4. Lig' : `4. Lig ${groupIndex}. Bölüm`;
           let { data: leagueData } = await supabase.from('leagues').select('id').eq('name', leagueName).single();
           
           // İlk grup için maintenance'in oluşturduğu ligi kullan
@@ -218,7 +218,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
           }
           
           if (!leagueData) {
-            // Yeni departman oluştur
+            // Yeni bölüm oluştur
             const { data: newLeague } = await supabase.from('leagues').insert({ name: leagueName, tier: 4 }).select().single();
             leagueData = newLeague;
             
@@ -314,7 +314,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
               groupFound = true;
               console.log(`[initTeam] Slot bulundu: "${replacedTeamOldName}" (id:${replacedTeamSlotId}) lig: "${targetLeagueName}"`);
             } else {
-              console.log(`[initTeam] Grup ${groupIndex} dolu, sonraki departmana geciliyor...`);
+              console.log(`[initTeam] Grup ${groupIndex} dolu, sonraki bölüme geçiliyor...`);
               groupIndex++;
             }
           } else {
@@ -323,7 +323,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
         }
         
         if (!groupFound) {
-          console.error('[initTeam] HATA: 4. Lig\'de bos slot bulunamadi! 20 departman dolu.');
+          console.error('[initTeam] HATA: 4. Lig\'de boş slot bulunamadı! 20 bölüm dolu.');
         }
       } else {
         console.warn('[initTeam] Supabase baglantisi yok, offline modda devam ediliyor.');

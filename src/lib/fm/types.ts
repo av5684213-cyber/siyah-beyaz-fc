@@ -177,6 +177,9 @@ export interface Profile {
   active_upgrade_type?: string | null;
   active_upgrade_id?: string | null;
   active_upgrade_finish_day?: number | null;
+  active_upgrade_speedup?: boolean | null;
+  active_upgrade_started_at?: string | null;  // ISO timestamp when upgrade started
+  active_upgrade_end_at?: string | null;      // ISO timestamp when upgrade finishes (real-time)
   stadium_upgrades?: Record<string, number>;
   sponsors?: Sponsor[];
   philosophy?: string;

@@ -494,7 +494,7 @@ export default function TacticsCommandCenter({
                     </div>
                   </div>
                   <div className="flex items-center gap-2.5 shrink-0">
-                    <span className="text-[10px] font-black text-emerald-400">€{(offer.amount / 1000000).toFixed(1)}M</span>
+                    <span className="text-[10px] font-black text-emerald-400">{(offer.amount / 1000000).toFixed(1)}M Kredi</span>
                     <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-wider border rounded-full ${sc.color}`}>
                       {sc.icon} {sc.label}
                     </span>

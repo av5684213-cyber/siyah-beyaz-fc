@@ -13,6 +13,7 @@ import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { simulateEnhancedMatch } from '@/lib/fm/enhancedMatchEngine';
 import { applyCardSuspensions, applyMatchInjuries, saveMatchEvents } from '@/lib/fm/matchConsequencesService';
 import { verifyCronSecret, sanitizeError } from '@/lib/fm/security';
+import { pickRefereeForMatch, generateLeagueReferees, getRefereeDisplayInfo, type Referee } from '@/lib/fm/referee';
 
 export const maxDuration = 300; // 5 dakika (Vercel limiti)
 
@@ -128,7 +129,59 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        // 3. Simülasyonu çalıştır (SUNUCU TARAFINDA)
+        // 3. Hakem ata (lig bazlı rotasyon)
+        let refereeForMatch: Referee | null = null;
+        try {
+          // Sezonun league_id'sini bul (seasons.league_id = leagues.id)
+          let actualLeagueId: string | null = null;
+          if (fixture.season_id) {
+            const { data: seasonData } = await supabase
+              .from('seasons')
+              .select('league_id')
+              .eq('id', fixture.season_id)
+              .maybeSingle();
+            actualLeagueId = seasonData?.league_id || null;
+          }
+
+          // Lig hakemlerini çek (league_id UUID ile)
+          let refereeList: Referee[] = [];
+          if (actualLeagueId) {
+            const { data: existingReferees } = await supabase
+              .from('referees')
+              .select('*')
+              .eq('league_id', actualLeagueId);
+            refereeList = (existingReferees as Referee[]) || [];
+          }
+
+          // Hakem yoksa, bu lig için oluştur
+          if (refereeList.length === 0 && actualLeagueId) {
+            refereeList = generateLeagueReferees(actualLeagueId, 6);
+            // Kaydet
+            for (const ref of refereeList) {
+              await supabase.from('referees').upsert({
+                id: ref.id,
+                name: ref.name,
+                personality: ref.personality,
+                experience: ref.experience,
+                league_id: ref.league_id,
+                strictness: ref.strictness,
+                total_matches: ref.totalMatches,
+                total_yellows: ref.totalYellows,
+                total_reds: ref.totalReds,
+                total_penalties: ref.totalPenalties,
+              });
+            }
+          }
+
+          const matchWeek = fixture.tur || 1;
+          refereeForMatch = pickRefereeForMatch(refereeList, matchWeek);
+        } catch (refErr) {
+          console.warn('[cron/match-simulator] Referee assignment failed, using defaults:', refErr);
+        }
+
+        const refInfo = refereeForMatch ? getRefereeDisplayInfo(refereeForMatch) : null;
+
+        // 4. Simülasyonu çalıştır (SUNUCU TARAFINDA)
         const matchResult = simulateEnhancedMatch(
           availableHome.slice(0, 11), // İlk 11
           availableAway.slice(0, 11),
@@ -173,16 +226,24 @@ export async function GET(request: NextRequest) {
               home: availableHome.slice(11, 18),
               away: availableAway.slice(11, 18),
             },
+            // Referee integration
+            refereeStrictness: refereeForMatch?.strictness ?? 50,
+            refereePersonality: refereeForMatch?.personality ?? 'dengeci',
+            refereeName: refereeForMatch?.name ?? undefined,
           }
         );
 
-        // 4. Sonucu kaydet
+        // 4. Sonucu kaydet (hakem bilgisiyle)
         const { error: updateError } = await supabase
           .from('fixtures')
           .update({
             status: 'completed',
             home_score: matchResult.homeScore,
             away_score: matchResult.awayScore,
+            referee_id: refereeForMatch?.id ?? null,
+            referee_name: refereeForMatch?.name ?? null,
+            referee_personality: refereeForMatch?.personality ?? null,
+            referee_strictness: refereeForMatch?.strictness ?? null,
           })
           .eq('id', fixture.id);
 
@@ -214,6 +275,19 @@ export async function GET(request: NextRequest) {
 
         // 8. Lig puanlarını güncelle
         await updateLeagueStandings(supabase, fixture.season_id, homeTeamData.id, awayTeamData.id, matchResult.homeScore, matchResult.awayScore);
+
+        // 9. Hakem istatistiklerini güncelle
+        if (refereeForMatch) {
+          const yellowCount = matchResult.events.filter((e: any) => e.type === 'yellow_card').length;
+          const redCount = matchResult.events.filter((e: any) => e.type === 'red_card').length;
+          const penaltyCount = matchResult.events.filter((e: any) => e.type === 'penalty').length;
+          await supabase.from('referees').update({
+            total_matches: (refereeForMatch.totalMatches || 0) + 1,
+            total_yellows: (refereeForMatch.totalYellows || 0) + yellowCount,
+            total_reds: (refereeForMatch.totalReds || 0) + redCount,
+            total_penalties: (refereeForMatch.totalPenalties || 0) + penaltyCount,
+          }).eq('id', refereeForMatch.id);
+        }
 
         results.push({
           fixtureId: fixture.id,

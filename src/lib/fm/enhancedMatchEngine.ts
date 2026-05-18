@@ -6,6 +6,18 @@
 // =============================================================================
 
 import type { Player, ActiveTactic } from './types';
+import {
+  type RefereeMatchContext,
+  type RefereePersonality,
+  REFEREE_PERSONALITIES,
+  createRefereeMatchContext,
+  shouldCallFoul,
+  shouldGiveYellowCard,
+  shouldGiveRedCard,
+  shouldGivePenalty,
+  getOffsideMultiplier,
+  checkVARForGoal,
+} from './referee';
 
 // ─── Weather ────────────────────────────────────────────────────────────────
 export type Weather = 'sunny' | 'rainy' | 'snowy' | 'windy';
@@ -28,7 +40,9 @@ export type MatchEventType =
   | 'save'
   | 'tackle'
   | 'interception'
-  | 'chance';
+  | 'chance'
+  | 'var_review'
+  | 'goal_overturned';
 
 export interface MatchEvent {
   minute: number;
@@ -91,6 +105,11 @@ export interface EnhancedMatchResult {
   homePossession: number;
   awayPossession: number;
   weather: Weather;
+  refereeName?: string;
+  refereePersonality?: RefereePersonality;
+  refereeStrictness?: number;
+  varReviews?: number;
+  goalsOverturned?: number;
 }
 
 // ─── Simulation Options ─────────────────────────────────────────────────────
@@ -104,6 +123,10 @@ export interface SimulationOptions {
     home: Player[];
     away: Player[];
   };
+  // Referee system
+  refereeStrictness?: number;  // 1-99, modifies foul/card/penalty rates
+  refereePersonality?: 'katil' | 'dengeci' | 'hoşgörülü' | 'ev_sahibi' | 'değişken' | 'var_sever';
+  refereeName?: string;
 }
 
 // ─── Internal Mutable Player State ──────────────────────────────────────────
@@ -437,6 +460,18 @@ const COMMENTARY = {
       `${m}. dakikada ${p} ceza sahasına girdi, tehlikeli bir pozisyon!`,
     (p: string, m: number) =>
       `${m}. dakikada muazzam bir pas! ${p} vuruş hazırlığı yapıyor!`,
+  ],
+  var_review: [
+    (p: string, m: number) =>
+      `${m}. dakikada VAR incelemesi! Hakem monitöre gidiyor. ${p} ile ilgili pozisyon inceleniyor...`,
+    (p: string, m: number) =>
+      `${m}. dakikada şüpheli pozisyon! VAR hakemi uyarıyor, ${p} olayı değerlendiriliyor.`,
+  ],
+  goal_overturned: [
+    (p: string, m: number) =>
+      `${m}. dakikada VAR incelemesi sonucu gol İPTAL EDİLDİ! ${p} ofsayttaydı!`,
+    (p: string, m: number) =>
+      `${m}. dakikada gol iptal! VAR incelemesinde ${p}'in pozisyonu düdüğü bozdu.`,
   ],
   substitution: [
     (outP: string, inP: string, m: number) =>
@@ -818,6 +853,21 @@ export function simulateEnhancedMatch(
   const homeSubstitutes = createMutableState(options?.substitutes?.home || [], 'home');
   const awaySubstitutes = createMutableState(options?.substitutes?.away || [], 'away');
 
+  // Initialize referee match context (uses referee.ts system)
+  const defaultReferee = {
+    id: 'ref-default',
+    name: options?.refereeName ?? 'Varsayılan Hakem',
+    personality: (options?.refereePersonality ?? 'dengeci') as RefereePersonality,
+    experience: 5,
+    league_id: 'default',
+    strictness: options?.refereeStrictness ?? 50,
+    totalMatches: 0,
+    totalYellows: 0,
+    totalReds: 0,
+    totalPenalties: 0,
+  };
+  const refCtx: RefereeMatchContext = createRefereeMatchContext(defaultReferee);
+
   // Calculate strengths
   const homeStrength = calculateTeamStrength(homePlayers, homeTactic);
   const awayStrength = calculateTeamStrength(awayPlayers, awayTactic);
@@ -1023,15 +1073,17 @@ export function simulateEnhancedMatch(
   while (currentMinute <= 90) {
     const minute = currentMinute;
 
-    // Weather commentary at start
+    // Weather & referee commentary at start
     if (minute === 1) {
+      const refConfig = refCtx.personalityConfig;
+      const refInfo = refCtx.referee.name ? ` Hakem: ${refCtx.referee.name} (${refConfig.emoji} ${refConfig.label_tr}, Sertlik: ${refCtx.referee.strictness}).` : '';
       allEvents.push({
         minute: 0,
         type: 'chance',
         team: 'home',
         playerName: '',
         playerId: '',
-        description: `Maç başlıyor! Hava durumu: ${weather === 'sunny' ? 'Güneşli' : weather === 'rainy' ? 'Yağmurlu' : weather === 'snowy' ? 'Karlı' : 'Rüzgarlı'}. ${weatherMods.description}`,
+        description: `Maç başlıyor! Hava durumu: ${weather === 'sunny' ? 'Güneşli' : weather === 'rainy' ? 'Yağmurlu' : weather === 'snowy' ? 'Karlı' : 'Rüzgarlı'}. ${weatherMods.description}${refInfo}`,
         x: 50,
         y: 50,
         ratingImpact: 0,
@@ -1192,8 +1244,77 @@ export function simulateEnhancedMatch(
           minute,
           goalDetail
         );
-        allEvents.push(goalEvent);
-        selectedPlayer.events.push(goalEvent);
+
+        // VAR check for goal — referee.ts checkVARForGoal
+        const isScorerHome = selectedPlayer.team === 'home';
+        const varResult = checkVARForGoal(refCtx, isScorerHome);
+
+        if (varResult.varReview && varResult.overturned) {
+          // Goal overturned by VAR!
+          selectedPlayer.goals--;
+          selectedPlayer.ratingDelta -= 1.2;
+          if (assister) {
+            assister.assists--;
+            assister.ratingDelta -= 0.7;
+          }
+          if (hasMomentum === 'home') {
+            homeScore--;
+            homeLiveStats.shotsOnTarget--;
+          } else {
+            awayScore--;
+            awayLiveStats.shotsOnTarget--;
+          }
+
+          // Add VAR review event then overturned event
+          const varEvent: MatchEvent = {
+            minute,
+            type: 'var_review',
+            team: selectedPlayer.team,
+            playerName: selectedPlayer.player.name,
+            playerId: selectedPlayer.player.id,
+            assistPlayerId: assister?.player.id,
+            assistPlayerName: assister?.player.name,
+            description: `${minute}. dakikada VAR incelemesi! ${selectedPlayer.player.name}'in golü inceleniyor...`,
+            x: 50,
+            y: 50,
+            ratingImpact: 0,
+          };
+          allEvents.push(varEvent);
+
+          const overturnedEvent: MatchEvent = {
+            minute,
+            type: 'goal_overturned',
+            team: selectedPlayer.team,
+            playerName: selectedPlayer.player.name,
+            playerId: selectedPlayer.player.id,
+            description: pick(COMMENTARY.goal_overturned)(selectedPlayer.player.name, minute),
+            x: 50,
+            y: 50,
+            ratingImpact: -1.2,
+          };
+          allEvents.push(overturnedEvent);
+          selectedPlayer.events.push(overturnedEvent);
+        } else {
+          // Goal confirmed (or no VAR review)
+          allEvents.push(goalEvent);
+          selectedPlayer.events.push(goalEvent);
+
+          if (varResult.varReview) {
+            // VAR reviewed but goal stands
+            const varEvent: MatchEvent = {
+              minute,
+              type: 'var_review',
+              team: selectedPlayer.team,
+              playerName: selectedPlayer.player.name,
+              playerId: selectedPlayer.player.id,
+              description: `${minute}. dakikada VAR incelemesi — gol geçerli!`,
+              x: 50,
+              y: 50,
+              ratingImpact: 0,
+            };
+            allEvents.push(varEvent);
+          }
+        }
         if (assister) assister.events.push(goalEvent);
 
       } else if (shotRoll < goalChance + probs.shot) {
@@ -1296,17 +1417,21 @@ export function simulateEnhancedMatch(
             }
           }
 
-          // Fouls
-          const foulChance = probs.foul * (attackingTeam.tactic.aggression / 50);
-          if (Math.random() < foulChance) {
+          // Fouls — Referee-modified system (uses referee.ts decision functions)
+          const isDefenderHome = defender.team === 'home';
+          const baseFoulProb = probs.foul * (attackingTeam.tactic.aggression / 50);
+
+          if (shouldCallFoul(refCtx, baseFoulProb, isDefenderHome)) {
             defender.fouls++;
             defender.ratingDelta -= 0.15;
             if (hasMomentum === 'home') awayLiveStats.fouls++;
             else homeLiveStats.fouls++;
 
-            // Yellow card: 15% of fouls
-            if (Math.random() < 0.15) {
+            // Yellow card — referee decision function
+            const baseYellowProb = 0.15;
+            if (shouldGiveYellowCard(refCtx, baseYellowProb, isDefenderHome, minute)) {
               defender.yellowCards++;
+              refCtx.yellowsGiven++;
               defender.ratingDelta -= 0.35;
               if (hasMomentum === 'home') awayLiveStats.yellowCards++;
               else homeLiveStats.yellowCards++;
@@ -1314,9 +1439,10 @@ export function simulateEnhancedMatch(
               const yellowEvent = createEvent(minute, 'yellow_card', defendingTeam, defender, undefined, -0.35);
               allEvents.push(yellowEvent);
               defender.events.push(yellowEvent);
-            } else if (Math.random() < 0.03) {
-              // Red card: 3% of fouls (rare)
+            } else if (shouldGiveRedCard(refCtx, 0.03, isDefenderHome)) {
+              // Red card — referee decision function
               defender.redCards++;
+              refCtx.redsGiven++;
               defender.ratingDelta -= 2.0;
               defender.isSubbedOut = true;
               defender.minuteLeft = minute;
@@ -1328,18 +1454,29 @@ export function simulateEnhancedMatch(
               defender.events.push(redEvent);
             } else {
               // Regular foul event (sometimes visible)
-              if (Math.random() < 0.4) {
+              if (Math.random() < 0.4 * refCtx.personalityConfig.foulMultiplier * refCtx.runtimeFoulMod) {
                 const foulEvent = createEvent(minute, 'foul', defendingTeam, defender, undefined, -0.15);
                 allEvents.push(foulEvent);
                 defender.events.push(foulEvent);
 
-                // Award free kick or penalty
-                if (Math.random() < 0.1) {
+                // Award free kick or penalty — referee decision function with VAR
+                const isAttackerHome = selectedPlayer.team === 'home';
+                const penaltyResult = shouldGivePenalty(refCtx, 0.1, isAttackerHome, minute);
+
+                if (penaltyResult.penalty && !penaltyResult.overturned) {
                   const penaltyEvent = createEvent(minute, 'penalty', attackingTeam, selectedPlayer, undefined, 0.3);
                   allEvents.push(penaltyEvent);
                   selectedPlayer.events.push(penaltyEvent);
                   if (hasMomentum === 'home') homeLiveStats.freeKicks++;
                   else awayLiveStats.freeKicks++;
+                } else if (penaltyResult.varReview) {
+                  // VAR review event (penalty overturned or confirmed)
+                  const varEvent = createEvent(minute, 'var_review', attackingTeam, selectedPlayer, undefined, 0);
+                  varEvent.description = pick(COMMENTARY.var_review)(selectedPlayer.player.name, minute);
+                  if (penaltyResult.overturned) {
+                    varEvent.description += ' Penaltı iptal edildi!';
+                  }
+                  allEvents.push(varEvent);
                 } else {
                   const fkEvent = createEvent(minute, 'free_kick', attackingTeam, selectedPlayer, defender, 0.1);
                   allEvents.push(fkEvent);
@@ -1352,8 +1489,10 @@ export function simulateEnhancedMatch(
           }
         }
 
-        // Offside
-        if (Math.random() < 0.02) {
+        // Offside — referee-modified (uses referee.ts getOffsideMultiplier)
+        const isAttHome = hasMomentum === 'home';
+        const offsideMod = getOffsideMultiplier(refCtx, isAttHome);
+        if (Math.random() < 0.02 * offsideMod) {
           const forwards = getByPosition(attackingTeam, 'FWD');
           if (forwards.length > 0) {
             const offsidePlayer = pick(forwards);
@@ -1577,6 +1716,11 @@ export function simulateEnhancedMatch(
     homePossession,
     awayPossession,
     weather,
+    refereeName: refCtx.referee.name,
+    refereePersonality: refCtx.referee.personality,
+    refereeStrictness: refCtx.referee.strictness,
+    varReviews: refCtx.varReviews,
+    goalsOverturned: refCtx.goalsOverturned,
   };
 }
 

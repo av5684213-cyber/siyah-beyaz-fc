@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Package,
   X,
+  Construction,
 } from 'lucide-react';
 import { useFM } from '@/lib/fm/GameContext';
 
@@ -333,31 +334,52 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
         )}
       </AnimatePresence>
 
-      {/* Header */}
+      {/* Yakinda Warning Banner */}
       <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="flex items-center gap-4 border-b border-white/10 pb-4"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-2xl border border-amber-500/25 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/10 p-4"
       >
-        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-          <Archive className="text-amber-500" size={24} />
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center shrink-0">
+            <Construction size={20} className="text-amber-400" />
+          </div>
+          <div>
+            <p className="text-sm font-black text-amber-300 uppercase tracking-wider">Bu ozellik yakinda kullanima sunulacak.</p>
+            <p className="text-[10px] text-white/30 mt-0.5">Envanter sistemi henuz gelistirme asamasindadir. Gosterilen esyalar ornek veridir.</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
-            Envanter
-          </h2>
-          <p className="text-[10px] text-white/40 uppercase font-bold tracking-[0.3em]">
-            {totalItems} eşya • {usedItemsCount} tür aktif
-          </p>
-        </div>
-        <div className="ml-auto text-right">
-          <div className="text-[9px] text-white/20 font-black uppercase mb-1">💰 Kredi</div>
-          <div className="text-lg font-mono font-bold text-amber-400">{profile.credits || 0}</div>
-        </div>
+        {/* Decorative animated stripe */}
+        <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
       </motion.div>
 
-      {/* Category Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      {/* Header - slightly dimmed */}
+      <div className="opacity-60 pointer-events-none select-none">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-4 border-b border-white/10 pb-4"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+            <Archive className="text-amber-500" size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
+              Envanter
+            </h2>
+            <p className="text-[10px] text-white/40 uppercase font-bold tracking-[0.3em]">
+              {totalItems} eşya • {usedItemsCount} tür aktif
+            </p>
+          </div>
+          <div className="ml-auto text-right">
+            <div className="text-[9px] text-white/20 font-black uppercase mb-1">💰 Kredi</div>
+            <div className="text-lg font-mono font-bold text-amber-400">{profile.credits || 0}</div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Category Tabs - slightly dimmed */}
+      <div className="opacity-50 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
         {categoryTabs.map(tab => (
           <button
             key={tab.id}
@@ -384,8 +406,8 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
         </div>
       </div>
 
-      {/* Items Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {/* Items Grid - slightly dimmed */}
+      <div className="opacity-50 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filteredItems.map((item, i) => {
           const rarity = RARITY_STYLES[item.rarity];
           const isUsed = usedItem === item.id;
@@ -450,9 +472,9 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
         })}
       </div>
 
-      {/* Empty State */}
+      {/* Empty State - slightly dimmed */}
       {filteredItems.length === 0 && (
-        <div className="text-center py-12">
+        <div className="opacity-50 text-center py-12">
           <Archive size={40} className="mx-auto mb-3 text-white/10" />
           <p className="text-xs text-white/20 font-bold uppercase">Bu kategoride eşya yok</p>
         </div>

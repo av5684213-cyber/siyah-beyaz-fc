@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Building2, 
@@ -28,6 +28,8 @@ import {
 import { useFM } from '@/lib/fm/GameContext';
 import { useToast } from '@/lib/fm/ToastContext';
 import { formatCurrency } from '@/lib/fm/valuation';
+import StaffSection from './StaffSection';
+import RefereeSection from './RefereeSection';
 import { 
   STADIUM_MATRIX, 
   calculateUpgradeCost, 
@@ -176,7 +178,7 @@ function LevelComparisonPanel({
                 {currentEffect.key.includes('Multiplier') || currentEffect.key.includes('Bonus') || currentEffect.key.includes('Speed')
                   ? `×${currentEffect.value.toFixed(2)}`
                   : currentEffect.key.includes('Revenue') || currentEffect.key.includes('Income')
-                    ? `€${(currentEffect.value / 1000).toFixed(0)}K`
+                    ? `${(currentEffect.value / 1000).toFixed(0)}K Kredi`
                     : `${(currentEffect.value * 100).toFixed(0)}%`
                 }
               </span>
@@ -212,7 +214,7 @@ function LevelComparisonPanel({
               {targetEffect.key.includes('Multiplier') || targetEffect.key.includes('Bonus') || targetEffect.key.includes('Speed')
                 ? `×${targetEffect.value.toFixed(2)}`
                 : targetEffect.key.includes('Revenue') || targetEffect.key.includes('Income')
-                  ? `€${(targetEffect.value / 1000).toFixed(0)}K`
+                  ? `${(targetEffect.value / 1000).toFixed(0)}K Kredi`
                   : `${(targetEffect.value * 100).toFixed(0)}%`
               }
             </span>
@@ -262,6 +264,34 @@ export default function StadiumTab() {
   const remainingDays = Math.max(0, (profile?.active_upgrade_finish_day || 0) - (profile?.current_day || 0));
   const canSpeedUp = isUpgrading && !speedUpUsed && remainingDays > 0 && (profile?.credits || 0) >= 5;
 
+  // ── Real-time countdown for active upgrade ──
+  const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number; totalMs: number } | null>(null);
+
+  const computeCountdown = useCallback(() => {
+    if (!profile?.active_upgrade_end_at) {
+      setCountdown(null);
+      return;
+    }
+    const endAt = new Date(profile.active_upgrade_end_at).getTime();
+    const now = Date.now();
+    const diff = endAt - now;
+    if (diff <= 0) {
+      setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, totalMs: 0 });
+      return;
+    }
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    setCountdown({ days, hours, minutes, seconds, totalMs: diff });
+  }, [profile?.active_upgrade_end_at]);
+
+  useEffect(() => {
+    computeCountdown();
+    const interval = setInterval(computeCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [computeCountdown]);
+
   const getUpgradeDuration = (level: number) => {
     if (level <= 2) return 2;
     return Math.floor(2 * Math.pow(1.5, level - 2));
@@ -295,6 +325,8 @@ export default function StadiumTab() {
 
     const duration = getUpgradeDuration(currentLvl + 1);
     const finishDay = profile.current_day + duration;
+    const startedAt = new Date().toISOString();
+    const endAt = new Date(Date.now() + duration * 24 * 60 * 60 * 1000).toISOString();
 
     setProfile({
       ...profile,
@@ -302,50 +334,71 @@ export default function StadiumTab() {
       active_upgrade_type: id === 'academy' ? 'academy' : 'stadium_matrix',
       active_upgrade_id: id,
       active_upgrade_finish_day: finishDay,
-      active_upgrade_speedup: false
+      active_upgrade_speedup: false,
+      active_upgrade_started_at: startedAt,
+      active_upgrade_end_at: endAt,
     });
   };
 
   const handleCancelUpgrade = () => {
     if (!profile) return;
-    if (!confirm('İnşaatı iptal etmek istiyor musunuz? Harcanan bütçenin %50\'si iade edilir.')) {
-      let refundMoney = 0;
-      if (profile.active_upgrade_type === 'stadium_matrix') {
-        const currentLevel = stadiumUpgrades[profile.active_upgrade_id!] || 0;
-        const cost = calculateUpgradeCost(250000, currentLevel + 1);
-        refundMoney = Math.floor(cost * 0.5);
-      } else if (profile.active_upgrade_type === 'academy') {
-        const nextStep = ACADEMY_STEPS[currentAcademyLevel];
-        if (nextStep) refundMoney = Math.floor(nextStep.cost * 0.5);
-      }
-
-      setProfile({
-        ...profile,
-        money: (profile.money || 0) + refundMoney,
-        active_upgrade_type: null,
-        active_upgrade_id: null,
-        active_upgrade_finish_day: null,
-        active_upgrade_speedup: null
-      });
-
-      success(`İnşaat iptal edildi. ${formatCurrency(refundMoney)} iade edildi.`);
+    if (!confirm('İnşaatı iptal etmek istiyor musunuz? Harcanan bütçenin %50\'si iade edilir.')) return;
+    let refundMoney = 0;
+    if (profile.active_upgrade_type === 'stadium_matrix') {
+      const currentLevel = stadiumUpgrades[profile.active_upgrade_id!] || 0;
+      const cost = calculateUpgradeCost(250000, currentLevel + 1);
+      refundMoney = Math.floor(cost * 0.5);
+    } else if (profile.active_upgrade_type === 'academy') {
+      const nextStep = ACADEMY_STEPS[currentAcademyLevel];
+      if (nextStep) refundMoney = Math.floor(nextStep.cost * 0.5);
     }
+
+    setProfile({
+      ...profile,
+      money: (profile.money || 0) + refundMoney,
+      active_upgrade_type: null,
+      active_upgrade_id: null,
+      active_upgrade_finish_day: null,
+      active_upgrade_speedup: null,
+      active_upgrade_started_at: null,
+      active_upgrade_end_at: null,
+    });
+
+    success(`İnşaat iptal edildi. ${formatCurrency(refundMoney)} iade edildi.`);
   };
 
   const handleSpeedUpUpgrade = () => {
     if (!profile || !canSpeedUp) return;
-    if (!confirm('Geliştirme süresini yarıya indirmek için 5 Kredi harcanacak. Onaylıyor musun?')) return;
-    
+    const speedUpCost = 5;
+    if ((profile.credits || 0) < speedUpCost) {
+      error(`Yetersiz kredi! ${speedUpCost} kredi gerekli.`);
+      return;
+    }
+    if (!confirm(`Geliştirme süresini yarıya indirmek için ${speedUpCost} Kredi harcanacak. Onaylıyor musun?`)) return;
+
+    // Half the remaining real-time
+    let newEndAt: string | null = null;
+    if (profile.active_upgrade_end_at) {
+      const currentEnd = new Date(profile.active_upgrade_end_at).getTime();
+      const now = Date.now();
+      const remaining = currentEnd - now;
+      newEndAt = new Date(now + remaining / 2).toISOString();
+    }
+
+    // Half the game-day remaining too
     const currentDay = profile.current_day || 0;
     const finishDay = profile.active_upgrade_finish_day || 0;
     const halfWay = currentDay + Math.ceil((finishDay - currentDay) / 2);
-    
+
     setProfile({
       ...profile,
-      credits: (profile.credits || 0) - 5,
+      credits: (profile.credits || 0) - speedUpCost,
       active_upgrade_finish_day: halfWay,
-      active_upgrade_speedup: true
+      active_upgrade_speedup: true,
+      active_upgrade_end_at: newEndAt,
     });
+
+    success(`Yükseltme hızlandırıldı! ${speedUpCost} kredi harcandı.`);
   };
 
   const calculateTotalStars = () => {
@@ -391,7 +444,7 @@ export default function StadiumTab() {
                             effect.key.includes('Multiplier') || effect.key.includes('Bonus') || effect.key.includes('Speed')
                               ? `×${effect.value.toFixed(2)}`
                               : effect.key.includes('Revenue') || effect.key.includes('Income')
-                                ? `€${(effect.value / 1000).toFixed(0)}K`
+                                ? `${(effect.value / 1000).toFixed(0)}K Kredi`
                                 : `${(effect.value * 100).toFixed(0)}%`
                           }
                         </span>
@@ -405,7 +458,35 @@ export default function StadiumTab() {
           <div className="flex items-center gap-6">
              <div className="text-right">
                 <p className="text-[8px] font-black uppercase tracking-widest text-white/30">tamamlanmasına</p>
-                <p className="text-3xl font-black italic tracking-tighter text-white">{remainingDays} <span className="text-sm opacity-40 not-italic uppercase font-bold">gün</span></p>
+                {countdown && countdown.totalMs > 0 ? (
+                  <div className="flex items-center gap-1 justify-end">
+                    {countdown.days > 0 && (
+                      <span className="text-3xl font-black italic tracking-tighter text-white tabular-nums">
+                        {countdown.days}<span className="text-sm opacity-40 not-italic uppercase font-bold ml-0.5">g</span>
+                      </span>
+                    )}
+                    <span className="text-2xl font-black italic tracking-tighter text-white tabular-nums">
+                      {String(countdown.hours).padStart(2, '0')}<span className="text-sm opacity-40 not-italic">:</span>
+                      {String(countdown.minutes).padStart(2, '0')}<span className="text-sm opacity-40 not-italic">:</span>
+                      {String(countdown.seconds).padStart(2, '0')}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-3xl font-black italic tracking-tighter text-white">{remainingDays} <span className="text-sm opacity-40 not-italic uppercase font-bold">gün</span></p>
+                )}
+                {/* Progress bar based on real-time countdown */}
+                {profile.active_upgrade_started_at && profile.active_upgrade_end_at && countdown && (
+                  <div className="mt-1.5">
+                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                      {(() => {
+                        const total = new Date(profile.active_upgrade_end_at).getTime() - new Date(profile.active_upgrade_started_at).getTime();
+                        const elapsed = total - countdown.totalMs;
+                        const pct = total > 0 ? Math.min(100, Math.max(0, (elapsed / total) * 100)) : 0;
+                        return <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: `${pct}%` }} />;
+                      })()}
+                    </div>
+                  </div>
+                )}
              </div>
              {canSpeedUp && (
                <button 
@@ -424,7 +505,7 @@ export default function StadiumTab() {
                  <Zap size={16} />
                  <div className="flex flex-col leading-none">
                    <span className="text-[9px] font-black uppercase tracking-wider">Hızlandır</span>
-                   <span className="text-[7px] font-bold opacity-50">Yetersiz Kredi (5 KR)</span>
+                   <span className="text-[7px] font-bold opacity-50">Yetersiz Kredi (5 Kredi)</span>
                  </div>
                </div>
              )}
@@ -499,7 +580,7 @@ export default function StadiumTab() {
                  onChange={(e) => handleUpdateTicketPrice(parseInt(e.target.value) || 0)}
                  className="bg-transparent text-4xl font-black text-white w-20 focus:outline-none"
                />
-               <span className="text-xl font-bold text-white/20 mb-1">€</span>
+               <span className="text-xl font-bold text-white/20 mb-1">Kredi</span>
             </div>
             <div className="flex flex-col gap-1">
                <div className="flex justify-between text-[8px] font-bold text-white/20 uppercase">
@@ -548,7 +629,30 @@ export default function StadiumTab() {
                      <RefreshCw size={24} className="text-black" />
                    </div>
                    <h5 className="text-xs font-black italic text-amber-400 uppercase tracking-widest mb-1">YÜKSELTİLİYOR</h5>
-                   <p className="text-[10px] font-bold text-white uppercase italic">İnşaat devam ediyor...</p>
+                   {/* Real-time countdown per card */}
+                   {countdown && countdown.totalMs > 0 ? (
+                     <p className="text-lg font-black italic text-white tabular-nums">
+                       {countdown.days > 0 && <>{countdown.days}g </>}
+                       {String(countdown.hours).padStart(2, '0')}:{String(countdown.minutes).padStart(2, '0')}:{String(countdown.seconds).padStart(2, '0')}
+                     </p>
+                   ) : (
+                     <p className="text-[10px] font-bold text-white uppercase italic">İnşaat devam ediyor...</p>
+                   )}
+                   {/* Per-card speed up button */}
+                   {canSpeedUp && (
+                     <button 
+                       onClick={(e) => { e.stopPropagation(); handleSpeedUpUpgrade(); }}
+                       className="mt-3 flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black rounded-xl transition-all hover:scale-105 active:scale-95 text-[8px] font-black uppercase tracking-wider"
+                     >
+                       <Zap size={12} className="fill-black" />
+                       Kredi ile Hızlandır (5 Kredi)
+                     </button>
+                   )}
+                   {speedUpUsed && (
+                     <span className="mt-2 flex items-center gap-1 text-[8px] font-black text-emerald-400 uppercase tracking-wider">
+                       <Zap size={10} /> Hızlandırıldı
+                     </span>
+                   )}
                 </div>
               )}
 
@@ -585,7 +689,7 @@ export default function StadiumTab() {
                         currentLevelEffect.key.includes('Multiplier') || currentLevelEffect.key.includes('Bonus') || currentLevelEffect.key.includes('Speed')
                           ? `×${currentLevelEffect.value.toFixed(2)}`
                           : currentLevelEffect.key.includes('Revenue') || currentLevelEffect.key.includes('Income')
-                            ? `€${(currentLevelEffect.value / 1000).toFixed(0)}K`
+                            ? `${(currentLevelEffect.value / 1000).toFixed(0)}K Kredi`
                             : `${(currentLevelEffect.value * 100).toFixed(0)}%`
                       }
                     </span>
@@ -601,7 +705,7 @@ export default function StadiumTab() {
                         nextLevelEffect.key.includes('Multiplier') || nextLevelEffect.key.includes('Bonus') || nextLevelEffect.key.includes('Speed')
                           ? `×${nextLevelEffect.value.toFixed(2)}`
                           : nextLevelEffect.key.includes('Revenue') || nextLevelEffect.key.includes('Income')
-                            ? `€${(nextLevelEffect.value / 1000).toFixed(0)}K`
+                            ? `${(nextLevelEffect.value / 1000).toFixed(0)}K Kredi`
                             : `${(nextLevelEffect.value * 100).toFixed(0)}%`
                       }
                     </span>
@@ -683,7 +787,7 @@ export default function StadiumTab() {
                                       lvlEffect.key.includes('Multiplier') || lvlEffect.key.includes('Bonus') || lvlEffect.key.includes('Speed')
                                         ? `×${lvlEffect.value.toFixed(2)}`
                                         : lvlEffect.key.includes('Revenue') || lvlEffect.key.includes('Income')
-                                          ? `€${(lvlEffect.value / 1000).toFixed(0)}K`
+                                          ? `${(lvlEffect.value / 1000).toFixed(0)}K Kredi`
                                           : `${(lvlEffect.value * 100).toFixed(0)}%`
                                     }
                                   </span>
@@ -741,6 +845,10 @@ export default function StadiumTab() {
           );
         })}
       </div>
+
+      {/* ── Staff / Personnel Section ── */}
+      <StaffSection />
+      <RefereeSection />
     </motion.div>
   );
 }

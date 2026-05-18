@@ -46,9 +46,9 @@ interface YouthAcademyTabProps {
 type CategoryFilter = 'ALL' | 'U17' | 'U19' | 'U21';
 
 function formatCurrency(value: number): string {
-  if (value >= 1_000_000) return `€${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `€${(value / 1_000).toFixed(0)}K`;
-  return `€${value}`;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M Kredi`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K Kredi`;
+  return `${Math.round(value)} Kredi`;
 }
 
 function getFacilityLevel(state: FacilityState, facilityId: string): number {
@@ -370,7 +370,7 @@ export default function YouthAcademyTab({
                   disabled:opacity-50"
               >
                 <FastForward size={12} />
-                Hızlandır (5 KR)
+                Hızlandır (5 Kredi)
               </button>
             )}
             {isUpgradeActive && !speedUpUsedProp && !canSpeedUp && (

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Globe, ShoppingCart, TrendingUp, Users, DollarSign, ArrowRight, ShieldCheck, Trophy, LayoutList, Database, Clock, Timer, Gavel, XCircle } from 'lucide-react';
+import { Globe, ShoppingCart, TrendingUp, Users, DollarSign, ArrowRight, ShieldCheck, Trophy, LayoutList, Database, Clock, Timer, Gavel, XCircle, Coins, FileText, Handshake } from 'lucide-react';
+import CreditPurchaseModal from './CreditPurchaseModal';
 import { getMarketListings, listPlayerOnMarket, buyPlayerFromMarket, getGlobalLeaderboard, MarketListing, placeBid, initFreeAgentsOnMarket, cancelAuction, AuctionBid, getAuctionBids, getMyAuctions } from '@/lib/fm/multiplayer';
 import { isSupabaseConfigured, getSupabase } from '@/lib/supabase';
 import { Player } from '@/lib/fm/types';
@@ -11,6 +12,7 @@ import { syncPlayerStats } from '@/lib/fm/helpers';
 import { toTitleCase } from '@/lib/fm/ui-helpers';
 import { useFM } from '@/lib/fm/GameContext';
 import PlayerRow from './PlayerRow';
+import ContractOfferModal from './ContractOfferModal';
 
 interface MultiplayerTabProps {
   userId: string;
@@ -93,7 +95,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
   const { setDirectMessageRecipient, setSelectedTeamProfile } = useFM();
   const [listings, setListings] = useState<MarketListing[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [activeSubTab, setActiveSubTab] = useState<'market' | 'auctions' | 'rankings' | 'store' | 'loans'>('market');
+  const [activeSubTab, setActiveSubTab] = useState<'market' | 'auctions' | 'rankings' | 'loans'>('market');
   const [myAuctions, setMyAuctions] = useState<MarketListing[]>([]);
   const [loanPlayers, setLoanPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -106,13 +108,17 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
     attr2: { key: 'Tk', min: 0, max: 100 },
     attr3: { key: 'Pas', min: 0, max: 100 },
   });
+  const [contractListing, setContractListing] = useState<MarketListing | null>(null);
+  const [contractMode, setContractMode] = useState<'free-agent' | 'auction-win' | null>(null);
+  const [showCreditPurchase, setShowCreditPurchase] = useState(false);
+  const [wonAuctions, setWonAuctions] = useState<MarketListing[]>([]);
 
   const sortedAndFilteredListings = useMemo(() => {
     const filtered = listings.filter(l => {
       const p = l.player_data;
       if (!p) return false;
 
-      // Handle sub-positions in filtering
+      // Handle sub-positions in filtering — now supports specific_position
       if (filter.position !== 'ALL') {
         const bigPosMap: Record<string, string> = {
           'GK': 'GK',
@@ -120,8 +126,17 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
           'CDM': 'MID', 'CM': 'MID', 'CAM': 'MID', 'LM': 'MID', 'RM': 'MID', 'MID': 'MID',
           'ST': 'FWD', 'LW': 'FWD', 'RW': 'FWD', 'CF': 'FWD', 'FWD': 'FWD'
         };
-        const playerBigPos = bigPosMap[p.position] || p.position;
-        if (playerBigPos !== filter.position) return false;
+        // Use specific_position if available, fallback to position
+        const playerPos = p.specific_position || p.position;
+        // If filter is a group (GK/DEF/MID/FWD), match by group
+        const filterGroup = bigPosMap[filter.position];
+        if (filterGroup) {
+          const playerBigPos = bigPosMap[playerPos] || playerPos;
+          if (playerBigPos !== filterGroup) return false;
+        } else {
+          // Filter is a specific position (CB, CDM, LW etc.) — exact match
+          if (playerPos !== filter.position) return false;
+        }
       }
 
       const klt = p.Klt || p.rating;
@@ -232,6 +247,22 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
       if (userId) {
         const myData = await getMyAuctions(userId);
         setMyAuctions(myData || []);
+
+        // Fetch won auctions (expired auctions where this user is the highest bidder)
+        try {
+          const sb = getSupabase();
+          if (sb) {
+            const { data: expiredWins } = await sb
+              .from('transfer_market')
+              .select('*')
+              .eq('highest_bidder_id', userId)
+              .eq('is_active', false)
+              .order('created_at', { ascending: false });
+            setWonAuctions((expiredWins as MarketListing[]) || []);
+          }
+        } catch (wonErr) {
+          console.error('Won auctions fetch error:', wonErr);
+        }
       }
 
       // Fetch loan players
@@ -277,7 +308,6 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
           
           alert('Transfer başarıyla tamamlandı! Oyuncu kadronuza katıldı.');
           fetchData();
-          setSelectedListing(null);
         } else {
           alert(`Satın alma hatası: ${result.error}`);
         }
@@ -322,7 +352,6 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
           alert('Teklifiniz başarıyla iletildi!');
         }
         fetchData();
-        setSelectedListing(null);
       } else {
         alert(result.error);
       }
@@ -373,12 +402,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
           >
             Sıralama
           </button>
-          <button 
-            onClick={() => setActiveSubTab('store')}
-            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeSubTab === 'store' ? 'bg-amber-500 text-black' : 'text-white/40 hover:text-white'}`}
-          >
-            Mağaza
-          </button>
+
           <button 
             onClick={() => setActiveSubTab('loans')}
             className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeSubTab === 'loans' ? 'bg-cyan-500 text-black' : 'text-white/40 hover:text-white'}`}
@@ -412,13 +436,22 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                     <Globe className="text-emerald-500" size={20} />
                     <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Aktif Transfer Listesi</h3>
                   </div>
-                  <div className="text-[10px] font-black text-white/40 uppercase tracking-widest">
-                    {sortedAndFilteredListings.length} OYUNCU BULUNDU
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setShowCreditPurchase(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-amber-500/25 hover:text-amber-300 transition-all"
+                    >
+                      <Coins size={12} />
+                      Kredi Satın Al
+                    </button>
+                    <div className="text-[10px] font-black text-white/40 uppercase tracking-widest">
+                      {sortedAndFilteredListings.length} OYUNCU BULUNDU
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-3 bg-white/5 p-4 rounded-2xl border border-white/5">
-                  {/* Position Filter */}
+                  {/* Position Filter — Detaylı Pozisyon Sistemi */}
                   <div className="space-y-1">
                     <label className="text-[8px] font-black text-white/20 uppercase">MEVKİİ</label>
                     <select 
@@ -427,10 +460,32 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                       className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2 text-[10px] font-black uppercase text-white outline-none focus:border-emerald-500"
                     >
                       <option value="ALL">HEPSİ</option>
-                      <option value="GK">KALECİ</option>
-                      <option value="DEF">DEFANS</option>
-                      <option value="MID">ORTA SAHA</option>
-                      <option value="FWD">FORVET</option>
+                      <optgroup label="🏆 Kaleci">
+                        <option value="GK">GK — Kaleci</option>
+                      </optgroup>
+                      <optgroup label="🛡️ Defans">
+                        <option value="DEF">Tüm Defans</option>
+                        <option value="CB">CB — Stoper</option>
+                        <option value="LB">LB — Sol Bek</option>
+                        <option value="RB">RB — Sağ Bek</option>
+                        <option value="LWB">LWB — Sol Kanat Bek</option>
+                        <option value="RWB">RWB — Sağ Kanat Bek</option>
+                      </optgroup>
+                      <optgroup label="⚙️ Orta Saha">
+                        <option value="MID">Tüm Orta Saha</option>
+                        <option value="CDM">CDM — Defansif Orta Saha</option>
+                        <option value="CM">CM — Merkez Orta Saha</option>
+                        <option value="CAM">CAM — Ofansif Orta Saha</option>
+                        <option value="LM">LM — Sol Açık</option>
+                        <option value="RM">RM — Sağ Açık</option>
+                        <option value="LW">LW — Sol Kanat</option>
+                        <option value="RW">RW — Sağ Kanat</option>
+                      </optgroup>
+                      <optgroup label="⚡ Forvet">
+                        <option value="FWD">Tüm Forvet</option>
+                        <option value="CF">CF — Göbek Forvet</option>
+                        <option value="ST">ST — Santrfor</option>
+                      </optgroup>
                     </select>
                   </div>
 
@@ -518,7 +573,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                             <td className="p-4 px-6">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 bg-zinc-800 rounded-lg flex items-center justify-center text-[10px] font-black italic border border-white/10 group-hover:bg-emerald-500 group-hover:text-black transition-colors">
-                                  {p?.position || '??'}
+                                  {p?.specific_position || p?.position || '??'}
                                 </div>
                                 <div>
                                   <div className="text-[13px] font-black italic tracking-tighter truncate max-w-[120px]">{toTitleCase(p?.name)}
@@ -584,6 +639,15 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                                   <Gavel size={10} className="inline mr-1" />
                                   Teklif Ver
                                 </button>
+                              ) : listing.seller_id === 'free-agent-system' ? (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setContractListing(listing); setContractMode('free-agent'); }}
+                                  disabled={loading}
+                                  className="px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:text-emerald-300 transition-all"
+                                >
+                                  <FileText size={10} className="inline mr-1" />
+                                  Sozlesme Teklifi
+                                </button>
                               ) : (
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleBuy(listing); }}
@@ -623,7 +687,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                   return (
                     <div key={listing.id} className="p-4 flex items-center gap-4">
                       <div className="w-10 h-10 bg-zinc-800 rounded-xl flex items-center justify-center text-[10px] font-black border border-white/10">
-                        {p?.position || '??'}
+                        {p?.specific_position || p?.position || '??'}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p?.name)}</div>
@@ -646,6 +710,82 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Won Auctions - Contract Signing Section */}
+            {wonAuctions.length > 0 && (
+              <div className="mt-6 border-t border-white/5">
+                <div className="p-6 border-b border-white/5">
+                  <div className="flex items-center gap-3">
+                    <Handshake className="text-emerald-500" size={20} />
+                    <div>
+                      <h4 className="text-sm font-black uppercase tracking-widest text-white/80">Kazanilan Artirmalar</h4>
+                      <p className="text-[9px] text-white/30 uppercase tracking-widest">Sozlesme imzalamak icin tiklayin</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="divide-y divide-white/5">
+                  {wonAuctions.map(listing => {
+                    const p = listing.player_data;
+                    const bidAmount = listing.current_bid || listing.price;
+                    const penaltyAmount = Math.round(bidAmount * 0.05);
+                    return (
+                      <div key={listing.id} className="p-4 flex items-center gap-4">
+                        <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-[10px] font-black border border-emerald-500/20 text-emerald-400">
+                          {p?.specific_position || p?.position || '??'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p?.name)}</div>
+                          <div className="text-[9px] text-white/30">
+                            Kazandiginiz Teklif: {formatCurrency(bidAmount)}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => { setContractListing(listing); setContractMode('auction-win'); }}
+                            className="px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:text-emerald-300 transition-all flex items-center gap-1"
+                          >
+                            <FileText size={10} />
+                            Sozlesme Imzala
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!confirm(`Vazgecerseniz teklif bedelinin %5'i (${formatCurrency(penaltyAmount)}) saticiya tazminat olarak odenecektir. Emin misiniz?`)) return;
+                              try {
+                                const res = await fetch('/api/contract-offer', {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    listingId: listing.id,
+                                    playerId: listing.player_id,
+                                    buyerId: userId,
+                                    giveUp: true,
+                                    auctionBidAmount: bidAmount,
+                                  }),
+                                });
+                                const data = await res.json();
+                                if (data.gaveUp) {
+                                  alert(`Vazgecildi. ${formatCurrency(data.penalty)} tazminat odediniz.`);
+                                  onSetProfile({ ...profile, money: profile.money - data.penalty });
+                                  fetchData();
+                                } else {
+                                  alert(data.reason || 'Islem basarisiz.');
+                                }
+                              } catch (err) {
+                                alert('Bir hata olustu.');
+                              }
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 hover:text-red-300 transition-all flex items-center gap-1"
+                          >
+                            <XCircle size={10} />
+                            Vazgec
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </motion.div>
@@ -689,56 +829,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                 ))}
              </div>
           </motion.div>
-        ) : activeSubTab === 'store' ? (
-          <motion.div key="store" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { coins: 100, price: '₺69.99', desc: 'Başlangıç Paketi', color: 'border-white/10 bg-white/5' },
-                { coins: 500, price: '₺299.99', desc: 'Gümüş Paket', color: 'border-white/10 bg-white/5' },
-                { coins: 1200, price: '₺599.99', desc: 'Altın Paket', color: 'border-amber-500/20 bg-amber-500/5', badge: 'POPÜLER' },
-                { coins: 3000, price: '₺1299.99', desc: 'Efsanevi Paket', color: 'border-emerald-500/20 bg-emerald-500/5', badge: 'EN İYİ DEĞER' },
-              ].map((pkg, i) => (
-                <div 
-                  key={i}
-                  className={`relative p-8 rounded-[2rem] border ${pkg.color} flex flex-col items-center text-center group cursor-pointer hover:scale-[1.02] transition-all`}
-                  onClick={() => alert(`Google Play Store üzerinden ${pkg.coins} Kredi satın alma işlemi başlatılıyor...`)}
-                >
-                  {pkg.badge && (
-                    <div className="absolute -top-3 px-3 py-1 bg-white text-black text-[8px] font-black uppercase tracking-widest rounded-full shadow-lg">
-                      {pkg.badge}
-                    </div>
-                  )}
-                  <div className="w-20 h-20 bg-amber-400 rounded-full flex items-center justify-center border-4 border-amber-600 shadow-[0_0_30px_rgba(251,191,36,0.3)] mb-6 group-hover:scale-110 transition-transform">
-                    <span className="text-2xl font-black text-amber-900">₺</span>
-                  </div>
-                  <h4 className="text-2xl font-black italic leading-none mb-1">{pkg.coins} KREDİ</h4>
-                  <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-6">{pkg.desc}</p>
-                  
-                  <div className="mt-auto w-full">
-                    <div className="text-lg font-black font-mono text-white mb-4">{pkg.price}</div>
-                    <div className="w-full py-3 bg-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest group-hover:bg-white group-hover:text-black transition-all">
-                      SATIN AL
-                    </div>
-                  </div>
-                  <div className="mt-4 flex items-center gap-2 text-[8px] font-bold text-white/20 uppercase">
-                    <Database size={10} /> Secure Google Play Payment
-                  </div>
-                </div>
-              ))}
-            </div>
 
-            <div className="bg-zinc-900/40 border border-white/5 rounded-[2rem] p-10 text-center space-y-6">
-              <div className="max-w-2xl mx-auto space-y-4">
-                <h3 className="text-2xl font-black italic uppercase tracking-tighter">KREDİ NEDİR?</h3>
-                <p className="text-sm text-white/60 leading-relaxed">
-                  Kredi, Managerium evreninde kullanılan özel bir para birimidir. Bu kredilerle transfer pazarında serbest oyuncuları kadronuza katabilir, stadyumunuzu geliştirebilir veya özel antrenman programları satın alabilirsiniz. Satın alınan krediler anında hesabınıza tanımlanır.
-                </p>
-                <a href="/free-agents" className="inline-block px-6 py-3 bg-white/10 border border-white/10 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-white/20 transition-all">
-                  Serbest Oyunculara Göz At
-                </a>
-              </div>
-            </div>
-          </motion.div>
         ) : activeSubTab === 'loans' ? (
           <motion.div key="loans" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="bg-zinc-900/40 border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-md">
@@ -798,7 +889,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                         }}
                         className="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 hover:text-cyan-300 transition-all"
                       >
-                        Kirala (10 KR)
+                        Kirala (10 Kredi)
                       </button>
                     </div>
                   );
@@ -808,6 +899,49 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      {/* Contract Offer Modal */}
+      {contractListing && contractMode && (
+        <ContractOfferModal
+          listing={contractListing}
+          profile={profile}
+          isAuctionWin={contractMode === 'auction-win'}
+          auctionBidAmount={contractMode === 'auction-win' ? (contractListing.current_bid || contractListing.price) : undefined}
+          onClose={() => { setContractListing(null); setContractMode(null); }}
+          onOfferResult={(result) => {
+            if (result.accepted) {
+              const newSquad = [...squad, result.player];
+              onSetSquad(newSquad);
+              // Update credits and money
+              const updatedProfile = { ...profile };
+              updatedProfile.credits = (profile.credits || 0) - (result.signingFee || 0);
+              if (contractMode === 'free-agent') {
+                updatedProfile.money = profile.money - contractListing.price;
+              }
+              onSetProfile(updatedProfile);
+              alert('Sozlesme basariyla imzalandi! Oyuncu kadronuza katildi.');
+              fetchData();
+            }
+            setContractListing(null);
+            setContractMode(null);
+          }}
+        />
+      )}
+
+      {/* Credit Purchase Modal */}
+      {showCreditPurchase && (
+        <CreditPurchaseModal
+          currentCredits={profile?.credits || 0}
+          userId={userId}
+          onClose={() => setShowCreditPurchase(false)}
+          onPurchase={(credits) => {
+            if (profile) {
+              const updatedProfile = { ...profile, credits: (profile.credits || 0) + credits };
+              onSetProfile(updatedProfile);
+            }
+          }}
+        />
+      )}
     </motion.div>
   );
 }

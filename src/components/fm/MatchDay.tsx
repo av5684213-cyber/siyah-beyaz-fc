@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import TacticsPanel from './TacticsPanel';
 import TacticsCommandCenter from './TacticsCommandCenter';
@@ -10,6 +10,7 @@ import { tryMatchTraitGrowth } from '@/lib/fm/trainingEngine';
 import { syncPlayerStats } from '@/lib/fm/helpers';
 import type { Player, MatchState, GameTactics, MatchResult, ActiveTactic } from '@/lib/fm/types';
 import { unifiedMatchEngine } from '@/lib/fm/unifiedMatchEngine';
+import { generateLeagueReferees, pickRefereeForMatch, getRefereeDisplayInfo, type RefereePersonality } from '@/lib/fm/referee';
 import { GameCycleManager } from '@/lib/fm/GameCycleManager';
 import { toTitleCase } from '@/lib/fm/ui-helpers';
 import { getDefaultActiveTactic } from '@/lib/fm/types';
@@ -33,6 +34,10 @@ interface MatchDayProps {
   setIsTestMode?: (val: boolean) => void;
   lastMatch?: { result: any, homeTeamName: string, awayTeamName: string } | null;
   onStartReplay?: (data: { result: any, homeTeamName: string, awayTeamName: string }) => void;
+  // Referee info
+  refereeName?: string;
+  refereePersonality?: 'katil' | 'dengeci' | 'hoşgörülü' | 'ev_sahibi' | 'değişken' | 'var_sever';
+  refereeStrictness?: number;
 }
 
 const MatchDay = ({ 
@@ -49,12 +54,29 @@ const MatchDay = ({
   isTestMode = false,
   setIsTestMode,
   lastMatch,
-  onStartReplay
+  onStartReplay,
+  refereeName,
+  refereePersonality,
+  refereeStrictness
 }: MatchDayProps) => {
   const [activeTab, setActiveTab] = useState<string>('commentary');
   const [cycleStatus, setCycleStatus] = useState(GameCycleManager.getStatus());
   const { minute: gameMinute, score, result: matchResult, visibleEvents, isFinished: isMatchFinished, isActive, playerConditions } = matchState;
   
+  // Auto-generate referee for current match week if not provided via props
+  const autoReferee = useMemo(() => {
+    if (refereeName) return null; // props'tan gelmişse kullanma
+    const currentDay = profile?.current_day || 1;
+    const matchWeek = Math.ceil(currentDay / 2); // 2 maç/gün
+    const leagueId = profile?.league_id || profile?.id || 'default';
+    const referees = generateLeagueReferees(leagueId, 6);
+    return pickRefereeForMatch(referees, matchWeek);
+  }, [refereeName, profile?.current_day, profile?.league_id, profile?.id]);
+
+  const effectiveRefereeName = refereeName || autoReferee?.name;
+  const effectiveRefereePersonality = refereePersonality || (autoReferee?.personality as RefereePersonality | undefined);
+  const effectiveRefereeStrictness = refereeStrictness || autoReferee?.strictness;
+
   // Real-time clock advancement is handled by the parent Page component
   // to ensure a single source of truth for the Match Engine.
 
@@ -160,7 +182,11 @@ const MatchDay = ({
         homeOperations: activeOperations,
         stadiumUpgrades: profile?.stadium_upgrades,
         startMinute: currentMin || 0,
-        currentScore: currentScore || {home: 0, away: 0}
+        currentScore: currentScore || {home: 0, away: 0},
+        // Pass referee data to engine
+        refereeName: effectiveRefereeName || undefined,
+        refereePersonality: effectiveRefereePersonality || undefined,
+        refereeStrictness: effectiveRefereeStrictness || undefined,
       });
       
       setMatchState(prev => ({
@@ -676,6 +702,32 @@ const MatchDay = ({
         </div>
 
         <div className="mt-10 flex items-center gap-6">
+          <div className="h-px w-20 bg-white/20"></div>
+          {/* Referee Info Badge */}
+          {(effectiveRefereeName || matchResult?.refereeName) && (() => {
+            const refName = effectiveRefereeName || matchResult?.refereeName;
+            const refPersonality = effectiveRefereePersonality || matchResult?.refereePersonality;
+            const refStrictness = effectiveRefereeStrictness || matchResult?.refereeStrictness;
+            const REFEREE_LABELS: Record<string, { emoji: string; label: string; color: string }> = {
+              katil: { emoji: '🟥', label: 'Katılcı', color: 'text-red-400' },
+              dengeci: { emoji: '⚖️', label: 'Dengeci', color: 'text-yellow-400' },
+              hoşgörülü: { emoji: '🤝', label: 'Hoşgörülü', color: 'text-green-400' },
+              ev_sahibi: { emoji: '🏠', label: 'Ev Sahibi', color: 'text-blue-400' },
+              değişken: { emoji: '🎲', label: 'Değişken', color: 'text-purple-400' },
+              var_sever: { emoji: '📺', label: 'VAR Meraklısı', color: 'text-cyan-400' },
+            };
+            const info = refPersonality ? REFEREE_LABELS[refPersonality] : null;
+            const strictLabel = !refStrictness ? '' : refStrictness >= 75 ? 'Çok Sert' : refStrictness >= 55 ? 'Sert' : refStrictness >= 40 ? 'Dengeli' : refStrictness >= 25 ? 'Yumuşak' : 'Çok Yumuşak';
+            return (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg">
+                <span className="text-sm">{info?.emoji || '👨‍⚖️'}</span>
+                <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">HAKEM</span>
+                <span className="text-xs font-bold text-white/80">{refName}</span>
+                {info && <span className={`text-[10px] font-bold ${info.color}`}>{info.label}</span>}
+                {strictLabel && <span className="text-[9px] text-white/30">({strictLabel})</span>}
+              </div>
+            );
+          })()}
           <div className="h-px w-20 bg-white/20"></div>
           <div className="px-8 py-2 bg-white text-black text-xs font-black uppercase tracking-[0.3em] skew-x-[-12deg]">
             <span className="block skew-x-[12deg]">

@@ -67,7 +67,7 @@ export const STADIUM_MATRIX: StadiumMatrixItem[] = [
     name: 'VIP Localar',
     originalName: 'Heli-Port',
     description: 'Standart locadan gökyüzü erişimli ultra-lüks alanlara.',
-    effect: 'Devasa VIP geliri ve lobi gücü. Lvl 10: Her maç başı +500.000 € VIP fonu.',
+    effect: 'Devasa VIP geliri ve lobi gücü. Lvl 10: Her maç başı +500.000 Kredi VIP fonu.',
     maxLevel: 10,
     icon: Plane
   },
@@ -174,27 +174,27 @@ export const FACILITY_LEVEL_BENEFITS: Record<string, Record<number, string>> = {
     10: 'Kar/Don etkileri tamamen sıfırlanır',
   },
   vip: {
-    1: 'VIP gelir: +$50.000/maç',
-    2: 'VIP gelir: +$100.000/maç',
-    3: 'VIP gelir: +$150.000/maç',
-    4: 'VIP gelir: +$200.000/maç',
-    5: 'VIP gelir: +$250.000/maç',
-    6: 'VIP gelir: +$300.000/maç',
-    7: 'VIP gelir: +$350.000/maç',
-    8: 'VIP gelir: +$400.000/maç',
-    9: 'VIP gelir: +$450.000/maç',
-    10: 'Her maç başı +$500.000 VIP fonu',
+    1: 'VIP gelir: +50.000 Kredi/maç',
+    2: 'VIP gelir: +100.000 Kredi/maç',
+    3: 'VIP gelir: +150.000 Kredi/maç',
+    4: 'VIP gelir: +200.000 Kredi/maç',
+    5: 'VIP gelir: +250.000 Kredi/maç',
+    6: 'VIP gelir: +300.000 Kredi/maç',
+    7: 'VIP gelir: +350.000 Kredi/maç',
+    8: 'VIP gelir: +400.000 Kredi/maç',
+    9: 'VIP gelir: +450.000 Kredi/maç',
+    10: 'Her maç başı +500.000 Kredi VIP fonu',
   },
   store: {
-    1: 'Pasif gelir: +$20.000/gün',
-    2: 'Pasif gelir: +$40.000/gün',
-    3: 'Pasif gelir: +$60.000/gün',
-    4: 'Pasif gelir: +$80.000/gün',
-    5: 'Pasif gelir: +$100.000/gün',
-    6: 'Pasif gelir: +$130.000/gün',
-    7: 'Pasif gelir: +$160.000/gün',
-    8: 'Pasif gelir: +$200.000/gün',
-    9: 'Pasif gelir: +$250.000/gün',
+    1: 'Pasif gelir: +20.000 Kredi/gün',
+    2: 'Pasif gelir: +40.000 Kredi/gün',
+    3: 'Pasif gelir: +60.000 Kredi/gün',
+    4: 'Pasif gelir: +80.000 Kredi/gün',
+    5: 'Pasif gelir: +100.000 Kredi/gün',
+    6: 'Pasif gelir: +130.000 Kredi/gün',
+    7: 'Pasif gelir: +160.000 Kredi/gün',
+    8: 'Pasif gelir: +200.000 Kredi/gün',
+    9: 'Pasif gelir: +250.000 Kredi/gün',
     10: 'Global forma satış çarpanı aktif',
   },
   pitch: {
@@ -332,7 +332,7 @@ export function getScoutSlotCount(scoutLevel: number): number {
 
 /**
  * VIP Localar → VIP gelir çarpanı
- * Seviye başına +50.000 €/maç temel gelir
+ * Seviye başına +50.000 Kredi/maç temel gelir
  */
 export function getVIPRevenuePerMatch(vipLevel: number): number {
   return vipLevel * 50000;
@@ -340,7 +340,7 @@ export function getVIPRevenuePerMatch(vipLevel: number): number {
 
 /**
  * Merchandising → Günlük pasif gelir
- * Seviye başına +20.000 €/gün
+ * Seviye başına +20.000 Kredi/gün
  */
 export function getStoreDailyRevenue(storeLevel: number): number {
   return storeLevel * 20000;
@@ -421,13 +421,13 @@ export function getLevelEffect(facilityId: string, level: number): LevelEffectRe
       case 'vip':
         return {
           key: 'vipRevenuePerMatch',
-          label: 'VIP Gelir / Maç (€)',
+          label: 'VIP Gelir / Maç (Kredi)',
           value: getVIPRevenuePerMatch(level),
         };
       case 'store':
         return {
           key: 'dailyPassiveIncome',
-          label: 'Günlük Pasif Gelir (€)',
+          label: 'Günlük Pasif Gelir (Kredi)',
           value: getStoreDailyRevenue(level),
         };
       case 'pitch':

@@ -157,7 +157,14 @@ export const TIER_TEAM_NAMES: Record<number, string[]> = {
 
 // Verilen lig seviyesi ve departman indeksi için 18 takım ismi döndürür
 // Eğer departman havuzu yetersizse TEAM_NAME_BANK'tan rastgele çeker
+// NOT: 1-3. ligler TEK GRUP — departmentIndex her zaman 1 olmalı
+//      Sadece 4. lig ve üstü birden fazla bölüm alabilir
 export function getTeamNamesForDepartment(tier: number, departmentIndex: number): string[] {
+  // 1-3. liglerde sadece 1 bölüm var
+  if (tier >= 1 && tier <= 3 && departmentIndex > 1) {
+    console.warn(`[getTeamNamesForDepartment] ${tier}. Lig tek gruplu — departmentIndex=1 olarak düzeltildi`);
+    departmentIndex = 1;
+  }
   const pool = TIER_TEAM_NAMES[tier] || TIER_TEAM_NAMES[4] || [];
   const start = (departmentIndex - 1) * 18; // departmentIndex 1-based
   let names = pool.slice(start, start + 18);

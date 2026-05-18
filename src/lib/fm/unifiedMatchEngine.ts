@@ -52,6 +52,11 @@ export interface UnifiedMatchOptions {
   labSettings?: any;
   stadiumUpgrades?: Record<string, number>;
   isLabSimulation?: boolean;
+  // Referee system
+  refereeName?: string;
+  refereePersonality?: 'katil' | 'dengeci' | 'hoşgörülü' | 'ev_sahibi' | 'değişken' | 'var_sever';
+  refereeStrictness?: number;  // 1-99
+  refereeFavor?: number;       // Operations modifier (0.0 = no favor, >0 = favorable to home)
 }
 
 // ─── Event Type Mapping ─────────────────────────────────────────────────────
@@ -74,6 +79,8 @@ function mapEnhancedTypeToLegacy(type: string): string {
     case 'tackle': return 'BATTLE';
     case 'interception': return 'COMMENTARY';
     case 'chance': return 'CHANCE';
+    case 'var_review': return 'COMMENTARY';
+    case 'goal_overturned': return 'COMMENTARY';
     default: return 'COMMENTARY';
   }
 }
@@ -202,6 +209,12 @@ function convertEnhancedToLegacy(
       away: enhanced.awayStats,
     },
     weather: enhanced.weather,
+    // Referee info for UI display
+    refereeName: enhanced.refereeName,
+    refereePersonality: enhanced.refereePersonality,
+    refereeStrictness: enhanced.refereeStrictness,
+    varReviews: enhanced.varReviews,
+    goalsOverturned: enhanced.goalsOverturned,
   } as any;
 }
 
@@ -231,16 +244,24 @@ export async function runUnifiedMatch(
     lineHeight: 50,
   };
 
+  // Build referee options for enhanced engine
+  const refereeOptions: any = {
+    homeTeamName: options.homeTeamName,
+    awayTeamName: options.awayTeamName,
+  };
+
+  // Pass referee data if available
+  if (options.refereeName) refereeOptions.refereeName = options.refereeName;
+  if (options.refereePersonality) refereeOptions.refereePersonality = options.refereePersonality;
+  if (options.refereeStrictness) refereeOptions.refereeStrictness = options.refereeStrictness;
+
   // Run the enhanced simulation
   const enhancedResult = simulateEnhancedMatch(
     homeSquad,
     awaySquad,
     homeTactic,
     awayTactic,
-    {
-      homeTeamName: options.homeTeamName,
-      awayTeamName: options.awayTeamName,
-    }
+    refereeOptions
   );
 
   // Convert to MatchDay format

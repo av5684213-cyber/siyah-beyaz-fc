@@ -11,15 +11,17 @@ import { OperationManager } from '@/lib/fm/OperationManager';
 import { OPERATIONS } from '@/lib/fm/operations';
 import { TrainingState, Operation } from '@/lib/fm/types';
 import { InfoTrigger } from './InfoPopup';
+import NextMatchOpponentSquad from './NextMatchOpponentSquad';
 
 interface OperationRoomProps {
   trainingState: TrainingState;
   budget: number;
   onUpdateState: (state: TrainingState) => void;
   onDeductBudget: (amount: number) => void;
+  userId?: string;
 }
 
-export default function OperationRoom({ trainingState, budget, onUpdateState, onDeductBudget }: OperationRoomProps) {
+export default function OperationRoom({ trainingState, budget, onUpdateState, onDeductBudget, userId }: OperationRoomProps) {
   const [selectedTier, setSelectedTier] = useState<number | null>(null);
   const manager = OperationManager.getInstance();
 
@@ -58,7 +60,7 @@ export default function OperationRoom({ trainingState, budget, onUpdateState, on
         </div>
         <div className="text-right">
           <div className="text-[10px] text-white/20 font-black uppercase mb-1">Operasyon Bütçesi</div>
-          <div className="text-xl font-mono font-bold text-emerald-400 tracking-tighter">₺{budget.toLocaleString()}</div>
+          <div className="text-xl font-mono font-bold text-emerald-400 tracking-tighter">{budget.toLocaleString()} Kredi</div>
         </div>
       </div>
 
@@ -69,6 +71,11 @@ export default function OperationRoom({ trainingState, budget, onUpdateState, on
           HER OPERASYONUN KULLANIM SINIRI <span className="text-white">10</span> İLE SINIRLANDIRILMIŞTIR. KULLANIMDAN SONRA GERİ DÖNÜŞÜ YOKTUR. BİLGİNİZE.
         </div>
       </div>
+
+      {/* Opponent Squad Reveal Card */}
+      {userId && (
+        <NextMatchOpponentSquad userId={userId} />
+      )}
 
       {/* Tier Tabs */}
       <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
@@ -135,7 +142,7 @@ export default function OperationRoom({ trainingState, budget, onUpdateState, on
                 <div className={`px-2 py-0.5 border text-[8px] font-black uppercase ${tierStyle}`}>
                   TIER {op.tier} {isDefense ? '// DEFENSIVE' : '// OFFENSIVE'}
                 </div>
-                <div className="text-[10px] font-mono font-bold text-white/40 mr-6">₺{op.cost.toLocaleString()}</div>
+                <div className="text-[10px] font-mono font-bold text-white/40 mr-6">{op.cost.toLocaleString()} Kredi</div>
               </div>
               
               <div className="flex items-start gap-3">

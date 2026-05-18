@@ -37,6 +37,7 @@ import { AppHeader } from '@/components/fm/AppHeader';
 import { ToastNotifications } from '@/components/fm/ToastNotifications';
 import { DashboardTab } from '@/components/fm/DashboardTab';
 import MyTeamTab from '@/components/fm/MyTeamTab';
+import SquadBoard from '@/components/fm/SquadBoard';
 import FixtureTab from '@/components/fm/FixtureTab';
 import { FriendlyMatchTab } from '@/components/fm/FriendlyMatchTab';
 
@@ -80,6 +81,34 @@ import {
 } from 'lucide-react';
 
 import { useFM } from '@/lib/fm/GameContext';
+
+// ── Upgrade Countdown Component for global banner ──
+function UpgradeCountdown({ endAt }: { endAt: string }) {
+  const [timeLeft, setTimeLeft] = useState<{ d: number; h: number; m: number; s: number } | null>(null);
+
+  useEffect(() => {
+    const calc = () => {
+      const diff = new Date(endAt).getTime() - Date.now();
+      if (diff <= 0) { setTimeLeft({ d: 0, h: 0, m: 0, s: 0 }); return; }
+      setTimeLeft({
+        d: Math.floor(diff / 86400000),
+        h: Math.floor((diff % 86400000) / 3600000),
+        m: Math.floor((diff % 3600000) / 60000),
+        s: Math.floor((diff % 60000) / 1000),
+      });
+    };
+    calc();
+    const iv = setInterval(calc, 1000);
+    return () => clearInterval(iv);
+  }, [endAt]);
+
+  if (!timeLeft) return <p className="text-xs font-black italic tracking-tighter">...</p>;
+  return (
+    <p className="text-xs font-black italic tracking-tighter tabular-nums">
+      {timeLeft.d > 0 && <>{timeLeft.d}g </>}{String(timeLeft.h).padStart(2,'0')}:{String(timeLeft.m).padStart(2,'0')}:{String(timeLeft.s).padStart(2,'0')}
+    </p>
+  );
+}
 
 import RivalMessagingPanel from '@/components/fm/RivalMessagingPanel';
 import MatchChat from '@/components/Chat/MatchChat';
@@ -833,7 +862,11 @@ export default function Home() {
               <div className="flex items-center gap-4">
                  <div className="text-right">
                     <p className="text-[7px] font-black uppercase tracking-widest text-white/30">KALAN</p>
-                    <p className="text-xs font-black italic tracking-tighter">{(profile?.active_upgrade_finish_day || 0) - (profile?.current_day || 0)} GÜN</p>
+                    {profile.active_upgrade_end_at ? (
+                      <UpgradeCountdown endAt={profile.active_upgrade_end_at} />
+                    ) : (
+                      <p className="text-xs font-black italic tracking-tighter">{(profile?.active_upgrade_finish_day || 0) - (profile?.current_day || 0)} GÜN</p>
+                    )}
                  </div>
                  <button 
                   onClick={() => setActiveTab('stadium')}
@@ -864,6 +897,7 @@ export default function Home() {
             )}
             <NavButton icon={<Building2 size={18} />} label="YERLEŞKE" active={activeTab === 'stadium'} onClick={() => setActiveTab('stadium')} />
             <NavButton icon={<Binoculars size={18} />} label="GÖZLEMCİLİK" active={activeTab === 'scouting'} onClick={() => setActiveTab('scouting')} />
+            <NavButton icon={<Users size={18} />} label="KADRO" active={activeTab === 'squad'} onClick={() => setActiveTab('squad')} />
             <NavButton icon={<Settings size={18} />} label="TAKTİK&TAKIMIM" active={activeTab === 'tactics'} onClick={() => setActiveTab('tactics')} />
             <NavButton icon={<Dumbbell size={18} />} label="ANTRENMAN" active={activeTab === 'training'} onClick={() => setActiveTab('training')} />
 
@@ -879,7 +913,6 @@ export default function Home() {
             <div className="mt-4 px-3 py-1 mb-2 border-t border-white/5 pt-4 group">
                <p className="text-[8px] font-black tracking-widest text-white/20 uppercase mb-2 group-hover:text-emerald-400 transition-colors">EKONOMİ</p>
                <NavButton icon={<Globe size={18} />} label="TRANSFER PAZARI" active={activeTab === 'multiplayer'} onClick={() => setActiveTab('multiplayer')} />
-               <NavButton icon={<ShoppingBag size={18} />} label="KREDİ SATIN AL" active={activeTab === 'market'} onClick={() => setActiveTab('market')} />
                <NavButton icon={<DollarSign size={18} />} label="FİNANSAL" active={activeTab === 'financial'} onClick={() => setActiveTab('financial')} />
             </div>
             
@@ -1035,7 +1068,7 @@ export default function Home() {
                         
                         if (revenue > 0) {
                           setProfile((prev: any) => ({ ...prev, money: (prev.money || 0) + revenue }));
-                          alert(`Maç Sonu Özeti:\nSeyirci: ${attendance}\nBilet Geliri: ${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'EUR' }).format(revenue)}`);
+                          alert(`Maç Sonu Özeti:\nSeyirci: ${attendance}\nBilet Geliri: ${Math.round(revenue).toLocaleString('tr-TR')} Kredi`);
                         }
                         if (isFriendly && isSupabaseConfigured()) {
                           import('@/lib/supabase').then(({ getSupabase }) => {
@@ -1103,6 +1136,19 @@ export default function Home() {
               {activeTab === 'friendly' && (
                 <FriendlyMatchTab />
               )}
+              {activeTab === 'squad' && (
+                <motion.div key="squad" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                  <div className="pb-20">
+                    <div className="mb-6">
+                      <h2 className="text-2xl font-black uppercase tracking-tighter text-white">Kadro Yönetimi</h2>
+                      <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mt-1">
+                        Pozisyon Bazlı Gruplama &bull; Sürükle & Bırak &bull; Mevki Değişikliği
+                      </p>
+                    </div>
+                    <SquadBoard onPlayerClick={setSelectedPlayer} />
+                  </div>
+                </motion.div>
+              )}
               {activeTab === 'tactics' && (
                 <motion.div key="tactics" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <div className="pb-20">
@@ -1140,7 +1186,7 @@ export default function Home() {
               )}
               {activeTab === 'inventory' && (
                 <motion.div key="inventory" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                  <InventoryTab userId={userId || undefined} onMarketRedirect={() => setActiveTab('market')} />
+                  <InventoryTab userId={userId || undefined} onMarketRedirect={() => setActiveTab('multiplayer')} />
                 </motion.div>
               )}
               {activeTab === 'newspaper' && (
@@ -1148,11 +1194,7 @@ export default function Home() {
                   <NewspaperTab />
                 </motion.div>
               )}
-              {activeTab === 'market' && (
-                <motion.div key="market" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                  <MarketTab />
-                </motion.div>
-              )}
+              {/* MarketTab removed - transfer market is now in MultiplayerTab */}
               {activeTab === 'multiplayer' && userId && profile && (
                 <MultiplayerTab 
                   userId={userId} 

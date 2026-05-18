@@ -503,3 +503,23 @@ Stage Summary:
 - Mevcut dosya/kod silinmedi
 - Dev server HTTP 200 yanıt veriyor
 - Yeni TS hatası eklenmedi
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: Fix Application Error (404/client-side exception)
+
+Work Log:
+- Investigated pm2 logs: found 3 root causes: staff table missing, players.is_on_loan_market column missing, facility_upgrade_costs.target_level missing
+- Created comprehensive SQL migration file: /home/z/my-project/siyah-beyaz-fc/download/FIX_MISSING_TABLES_AND_COLUMNS.sql
+- Made /api/staff graceful: returns {staff:[], currentWeek:0, remainingWeeks:34} instead of 500 error when table doesn't exist
+- Made /api/loans/available graceful: returns {players:[], count:0} instead of 500 error when column doesn't exist
+- Made /api/facilities graceful: returns {facilities:[], upgradeCosts:[]} when table doesn't exist
+- Rebuilt Next.js and restarted pm2
+- All pages return 200 status, APIs return graceful empty responses
+
+Stage Summary:
+- Application no longer crashes with "Application error: a client-side exception has occurred"
+- User needs to run FIX_MISSING_TABLES_AND_COLUMNS.sql on Supabase to enable full functionality
+- StaffSection is already integrated into StadiumTab (Yerleşke)
+- Staff types: scout(3,max), coach(3), physio(3), youth_coordinator(2), sporting_director(1), analyst(2)

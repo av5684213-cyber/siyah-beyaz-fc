@@ -278,7 +278,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
                     title="Amblem yukle (2 Kredi)"
                   >
                     <ImagePlus size={20} className="text-white/20 group-hover:text-amber-400 transition-colors mb-1" />
-                    <span className="text-[6px] font-black text-white/15 uppercase tracking-wider group-hover:text-amber-400/60 transition-colors">2 KR</span>
+                    <span className="text-[6px] font-black text-white/15 uppercase tracking-wider group-hover:text-amber-400/60 transition-colors">2 Kredi</span>
                   </button>
                 )}
                 <input 

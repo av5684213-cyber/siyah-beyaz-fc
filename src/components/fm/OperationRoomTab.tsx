@@ -42,6 +42,7 @@ export default function OperationRoomTab({ userId }: { userId?: string }) {
         budget={budget}
         onUpdateState={handleUpdateState}
         onDeductBudget={handleDeductBudget}
+        userId={userId}
       />
     </motion.div>
   );

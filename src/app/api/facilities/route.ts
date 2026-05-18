@@ -35,15 +35,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: true, message: 'Tesisler yüklenirken hata oluştu.' }, { status: 500 });
     }
 
-    // Fetch upgrade costs
-    const { data: upgradeCosts, error: costsError } = await supabase
-      .from('facility_upgrade_costs')
-      .select('*')
-      .order('facility_type', { ascending: true })
-      .order('target_level', { ascending: true });
+    // Fetch upgrade costs (optional — may not exist yet)
+    let upgradeCosts: any[] = [];
+    try {
+      const { data: costs, error: costsError } = await supabase
+        .from('facility_upgrade_costs')
+        .select('*')
+        .order('facility_type', { ascending: true })
+        .order('target_level', { ascending: true });
 
-    if (costsError) {
-      console.error('[GET /api/facilities] Costs error:', costsError.message);
+      if (costsError) {
+        console.warn('[GET /api/facilities] Costs error (table may not exist):', costsError.message);
+      } else {
+        upgradeCosts = costs || [];
+      }
+    } catch (err: any) {
+      console.warn('[GET /api/facilities] Costs fetch failed:', err.message);
     }
 
     return NextResponse.json({

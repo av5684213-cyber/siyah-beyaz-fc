@@ -15,12 +15,12 @@ import { VALUATION_STAT_KEYS } from './sharedUtils';
 
 export function formatCurrency(val: number): string {
   if (val >= 1_000_000) {
-    return `${(val / 1_000_000).toFixed(1)}M €`;
+    return `${(val / 1_000_000).toFixed(1)}M Kredi`;
   }
   if (val >= 1_000) {
-    return `${(val / 1_000).toFixed(0)}K €`;
+    return `${(val / 1_000).toFixed(0)}K Kredi`;
   }
-  return `${val} €`;
+  return `${Math.round(val)} Kredi`;
 }
 
 /**

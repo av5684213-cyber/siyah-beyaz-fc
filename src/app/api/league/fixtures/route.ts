@@ -63,6 +63,10 @@ export async function GET(request: Request) {
         away_score,
         home_team_id,
         away_team_id,
+        referee_id,
+        referee_name,
+        referee_personality,
+        referee_strictness,
         home:league_teams!home_team_id (name, id),
         away:league_teams!away_team_id (name, id)
       `)

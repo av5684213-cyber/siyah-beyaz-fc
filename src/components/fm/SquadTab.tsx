@@ -7,6 +7,7 @@ import type { Player } from '@/lib/fm/types';
 import { TeamRadarChart } from './TeamRadarChart';
 import PlayerRow from './PlayerRow';
 import { toTitleCase } from '@/lib/fm/ui-helpers';
+import { formatCurrency, calculateMarketValue } from '@/lib/fm/valuation';
 
 interface TeamAvgStats {
   speed: number;
@@ -111,7 +112,7 @@ export function SquadTab({
              <div className="w-px h-8 bg-white/10" />
              <div className="flex flex-col">
                <span className="text-[8px] uppercase font-black text-white/20 tracking-widest">Kadro Değeri</span>
-               <span className="text-xl font-black font-mono text-emerald-500">$94.2M</span>
+               <span className="text-xl font-black font-mono text-emerald-500">{formatCurrency(squad.reduce((sum, p) => sum + calculateMarketValue(p), 0))}</span>
              </div>
           </div>
         </div>

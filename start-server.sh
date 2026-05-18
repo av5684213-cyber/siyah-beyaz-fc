@@ -1,13 +1,9 @@
 #!/bin/bash
 cd /home/z/my-project/siyah-beyaz-fc
-export PORT=3000
-
-# Ensure static files are in place
-if [ ! -d ".next/standalone/.next/static" ]; then
-  cp -r .next/static .next/standalone/.next/
-fi
-if [ ! -d ".next/standalone/public" ]; then
-  cp -r public .next/standalone/
-fi
-
-exec node .next/standalone/server.js
+while true; do
+  echo "[$(date)] Starting Next.js server..."
+  NODE_OPTIONS='--max-old-space-size=2048' npx next start -p 3000 2>&1
+  EXIT_CODE=$?
+  echo "[$(date)] Server exited with code $EXIT_CODE, restarting in 3s..."
+  sleep 3
+done

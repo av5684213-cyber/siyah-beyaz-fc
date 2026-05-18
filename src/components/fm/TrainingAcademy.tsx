@@ -1,17 +1,18 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Dumbbell, Target, Shield, Zap, 
   TrendingUp, AlertTriangle, Star, 
   ChevronDown, ChevronUp, Heart, GraduationCap, Award,
-  FlaskConical
+  FlaskConical, BarChart3, AlertCircle, Lock
 } from 'lucide-react';
 import type { Player, TrainingState, TrainingAssignment, TrainingProgramId } from '@/lib/fm/types';
 import { TRAINING_PROGRAMS } from '@/lib/fm/constants';
 import { runTrainingSession } from '@/lib/fm/trainingEngine';
 import { toTitleCase, getPosRowStyle } from '@/lib/fm/ui-helpers';
+import { useFM } from '@/lib/fm/GameContext';
 import TacticLab from './TacticLab';
 
 // ─────────────────────────────────────────────────
@@ -61,6 +62,71 @@ export default function TrainingAcademy({
   squad, trainingState, onTrainingStateChange, onSquadUpdate, onPlayerClick, isAdmin
 }: TrainingAcademyProps) {
   
+  const { profile } = useFM();
+  const [hasAnalyst, setHasAnalyst] = useState(false);
+  const [analystStars, setAnalystStars] = useState(0);
+  const [analystLoading, setAnalystLoading] = useState(true);
+
+  // ── Check if user has an analyst staff member ──
+  useEffect(() => {
+    const checkAnalyst = async () => {
+      if (!profile?.id) {
+        setAnalystLoading(false);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/staff?userId=${profile.id}`);
+        if (!res.ok) throw new Error('Failed to fetch staff');
+        const data = await res.json();
+        const staffList = data.staff || [];
+        const analyst = staffList.find((s: any) => s.type === 'analyst');
+        setHasAnalyst(!!analyst);
+        setAnalystStars(analyst?.stars || 0);
+      } catch (err) {
+        console.error('[TrainingAcademy] Analyst check error:', err);
+      } finally {
+        setAnalystLoading(false);
+      }
+    };
+    checkAnalyst();
+  }, [profile?.id]);
+
+  // ── Generate analyst recommendation based on squad data ──
+  const analystRecommendation = useMemo(() => {
+    if (!hasAnalyst || squad.length === 0) return null;
+    
+    const avgCond = squad.reduce((sum, p) => sum + (p.cond || 100), 0) / squad.length;
+    const lowCondPlayers = squad.filter(p => (p.cond || 100) < 50).length;
+    const avgAge = squad.reduce((sum, p) => sum + (p.age || 25), 0) / squad.length;
+    const weakStats: { stat: string; avg: number }[] = [];
+    
+    const statKeys = ['speed', 'power', 'passing', 'shooting', 'defending', 'vision', 'control'];
+    statKeys.forEach(key => {
+      const avg = squad.reduce((sum, p) => sum + ((p as any)[key] || 50), 0) / squad.length;
+      weakStats.push({ stat: key, avg });
+    });
+    weakStats.sort((a, b) => a.avg - b.avg);
+    
+    const weakest = weakStats.slice(0, 2);
+    const statLabels: Record<string, string> = {
+      speed: 'Hiz', power: 'Guc', passing: 'Pas', shooting: 'Sut',
+      defending: 'Tk', vision: 'Alg', control: 'Top'
+    };
+    
+    let recommendation = '';
+    if (lowCondPlayers > 5) {
+      recommendation = `Kadroda ${lowCondPlayers} oyuncunun kondisyonu kritik seviyede (%50 alti). Oncelikle dinlenme ve fiziksel yukleme programlarina agirlik verin.`;
+    } else if (avgCond < 65) {
+      recommendation = `Ortalama kondisyon %${Math.round(avgCond)} seviyesinde. Fiziksel yukleme ve dinlenme programlarini dengeleyin. Mac oncesi dinlenme oneriyoruz.`;
+    } else if (weakest.length > 0) {
+      recommendation = `En zayif alanlar: ${weakest.map(w => `${statLabels[w.stat] || w.stat} (Ort: ${Math.round(w.avg)})`).join(', ')}. Bu istatistiklere odakli antrenman programlari oneriyoruz.`;
+    } else {
+      recommendation = `Kadro ortalamasi iyi seviyede. Yas ortalamasi ${Math.round(avgAge)} - ${avgAge < 24 ? 'genc kadro icin teknik gelisim oncelikli.' : avgAge > 30 ? 'deneyimli kadro icin fiziksel idame onemli.' : 'dengeli bir antrenman programi uygulayabilirsiniz.'}`;
+    }
+    
+    return recommendation;
+  }, [hasAnalyst, squad]);
+
   const [selectedProgram, setSelectedProgram] = useState<TrainingProgramId | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showTacticLab, setShowTacticLab] = useState(false);
@@ -564,6 +630,79 @@ export default function TrainingAcademy({
           })}
         </div>
       </div>
+
+      {/* ═══ MAC ANALISTI ONERISI ═══ */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="border border-cyan-500/15 rounded-xl overflow-hidden"
+      >
+        {/* Section Header */}
+        <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-cyan-950/40 to-zinc-900 border-b border-cyan-500/10">
+          <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+            <BarChart3 size={16} className="text-cyan-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-black italic uppercase tracking-tighter text-cyan-100">Mac Analisti Onerisi</h3>
+            <span className="text-[6px] text-cyan-400/40 uppercase tracking-[0.3em] font-black">ANTRENMAN TAVSIYESI</span>
+          </div>
+          {hasAnalyst && analystStars > 0 && (
+            <div className="ml-auto flex items-center gap-1">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  size={10}
+                  className={i < analystStars ? 'text-cyan-400 fill-cyan-400' : 'text-white/10'}
+                />
+              ))}
+              <span className="text-[8px] font-bold text-cyan-400/60 ml-1">{analystStars}★</span>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="p-4 bg-zinc-900/50">
+          {analystLoading ? (
+            <div className="flex items-center gap-2 text-white/30">
+              <div className="w-4 h-4 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+              <span className="text-[10px] font-bold uppercase">Analiz yapiliyor...</span>
+            </div>
+          ) : !hasAnalyst ? (
+            <div className="flex items-start gap-3 px-4 py-3 bg-amber-500/5 border border-amber-500/15 rounded-lg">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                <Lock size={14} className="text-amber-400" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-amber-300/80 uppercase tracking-wider mb-1">Mac analistiniz yok</p>
+                <p className="text-[9px] text-white/30 leading-relaxed">
+                  Mac Analisti Onerisi gorebilmek icin Yerleske sekmesinden bir Mac Analisti satin alin. Analistinizin yildiz sayisi arttikca tavsiyeler daha detayli olur.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                <BarChart3 size={14} className="text-cyan-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] text-white/60 leading-relaxed mb-2">
+                  {analystRecommendation || 'Kadro analizi yapiliyor...'}
+                </p>
+                {analystStars >= 3 && (
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5">
+                    <span className="text-[7px] font-black text-cyan-400/40 uppercase tracking-widest">ANALIST DETAY</span>
+                    <span className="text-[7px] text-white/15">•</span>
+                    <span className="text-[7px] text-white/20">Kadro: {squad.length} oyuncu</span>
+                    <span className="text-[7px] text-white/15">•</span>
+                    <span className="text-[7px] text-white/20">Ort. Kondisyon: %{Math.round(squad.reduce((s, p) => s + (p.cond || 100), 0) / Math.max(1, squad.length))}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
 
     </div>
   );

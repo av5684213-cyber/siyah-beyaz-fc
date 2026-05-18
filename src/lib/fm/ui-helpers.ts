@@ -16,7 +16,7 @@ export function fmStatBg(value: number): string {
 }
 
 export function formatMoney(amount: number): string {
-  return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'EUR' }).format(amount);
+  return `${Math.round(amount).toLocaleString('tr-TR')} Kredi`;
 }
 
 export function cap99(value: number): number {
@@ -108,8 +108,9 @@ export function getPosGroup(pos: string): string {
   const p = pos.toUpperCase();
   if (p === 'GK') return 'GK';
   if (['DEF', 'CB', 'LB', 'RB', 'LWB', 'RWB'].includes(p)) return 'DEF';
-  if (['MID', 'CDM', 'CM', 'CAM', 'LM', 'RM'].includes(p)) return 'MID';
-  if (['FWD', 'ST', 'LW', 'RW', 'CF', 'LF', 'RF'].includes(p)) return 'FWD';
+  // LW/RW: positions tablosunda MID grubundalar (kanat açık/orta saha)
+  if (['MID', 'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW'].includes(p)) return 'MID';
+  if (['FWD', 'ST', 'CF', 'LF', 'RF'].includes(p)) return 'FWD';
   return 'SUB';
 }
 
@@ -118,8 +119,8 @@ export function getPosColor(pos: string): string {
     const p = pos.toUpperCase();
     if (p === 'GK') return 'text-[#7AB4E8]';
     if (['DEF', 'CB', 'LB', 'RB', 'LWB', 'RWB'].includes(p)) return 'text-[#7EDBC8]';
-    if (['MID', 'CDM', 'CM', 'CAM', 'LM', 'RM'].includes(p)) return 'text-[#F0C87A]';
-    if (['FWD', 'ST', 'LW', 'RW', 'CF', 'LF', 'RF'].includes(p)) return 'text-[#E87878]';
+    if (['MID', 'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW'].includes(p)) return 'text-[#F0C87A]';
+    if (['FWD', 'ST', 'CF', 'LF', 'RF'].includes(p)) return 'text-[#E87878]';
     return 'text-[#9B9B9B]';
 }
 
@@ -129,8 +130,8 @@ export function getPosRowStyle(pos: string): string {
     const p = pos.toUpperCase();
     if (p === 'GK') return 'bg-[#7AB4E8]/10 border-l-4 border-l-[#7AB4E8]';
     if (['DEF', 'CB', 'LB', 'RB', 'LWB', 'RWB'].includes(p)) return 'bg-[#7EDBC8]/10 border-l-4 border-l-[#7EDBC8]';
-    if (['MID', 'CDM', 'CM', 'CAM', 'LM', 'RM'].includes(p)) return 'bg-[#F0C87A]/10 border-l-4 border-l-[#F0C87A]';
-    if (['FWD', 'ST', 'LW', 'RW', 'CF', 'LF', 'RF'].includes(p)) return 'bg-[#E87878]/10 border-l-4 border-l-[#E87878]';
+    if (['MID', 'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW'].includes(p)) return 'bg-[#F0C87A]/10 border-l-4 border-l-[#F0C87A]';
+    if (['FWD', 'ST', 'CF', 'LF', 'RF'].includes(p)) return 'bg-[#E87878]/10 border-l-4 border-l-[#E87878]';
     return 'bg-[#9B9B9B]/10 border-l-4 border-l-[#9B9B9B]';
 }
 

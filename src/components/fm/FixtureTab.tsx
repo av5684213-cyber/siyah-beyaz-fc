@@ -44,6 +44,9 @@ interface Fixture {
   awayScoreHT?: number | null;
   home?: { name: string };
   away?: { name: string };
+  referee_name?: string | null;
+  referee_personality?: string | null;
+  referee_strictness?: number | null;
 }
 
 interface FixtureTabProps {
@@ -126,6 +129,40 @@ function VenueBadge({ isHome }: { isHome: boolean }) {
     >
       {isHome ? 'EV' : 'DEP'}
     </span>
+  );
+}
+
+// ─── Referee Badge ────────────────────────────────────────────────
+const REFEREE_LABELS: Record<string, { emoji: string; label: string; color: string }> = {
+  katil: { emoji: '🟥', label: 'Katılcı', color: 'text-red-400 bg-red-500/10 border-red-500/20' },
+  dengeci: { emoji: '⚖️', label: 'Dengeci', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
+  'hoşgörülü': { emoji: '🤝', label: 'Hoşgörülü', color: 'text-green-400 bg-green-500/10 border-green-500/20' },
+  ev_sahibi: { emoji: '🏠', label: 'Ev Sahibi', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+  'değişken': { emoji: '🎲', label: 'Değişken', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+  var_sever: { emoji: '📺', label: 'VAR Sever', color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' },
+};
+
+function RefereeBadge({ name, personality, strictness }: { name?: string | null; personality?: string | null; strictness?: number | null }) {
+  if (!name && !personality) return null;
+  const refInfo = personality ? REFEREE_LABELS[personality] : null;
+  const strictnessLabel = !strictness ? null
+    : strictness >= 75 ? 'Çok Sert'
+    : strictness >= 55 ? 'Sert'
+    : strictness >= 40 ? 'Dengeli'
+    : strictness >= 25 ? 'Yumuşak'
+    : 'Çok Yumuşak';
+
+  return (
+    <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border ${refInfo?.color || 'text-white/40 bg-white/5 border-white/10'}`}>
+      {refInfo && <span className="text-xs">{refInfo.emoji}</span>}
+      {name && <span className="text-[8px] font-bold text-white/60">{name}</span>}
+      {refInfo && <span className="text-[7px] font-black uppercase tracking-wider opacity-70">{refInfo.label}</span>}
+      {strictnessLabel && (
+        <span className="text-[6px] font-black uppercase tracking-widest opacity-50">
+          ({strictnessLabel})
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -507,10 +544,10 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
               <ChevronLeft size={16} className="text-white/60" />
             </button>
 
-            {/* Week Cards Scroll */}
+            {/* Week Cards — flex-wrap, no horizontal scroll */}
             <div
               ref={weekScrollRef}
-              className="flex gap-2 overflow-x-auto no-scrollbar scroll-smooth px-6 py-1"
+              className="flex flex-wrap gap-2 justify-center px-4 py-1"
             >
               {turs.map(tur => {
                 const isSelected = selectedTur === tur;
@@ -537,16 +574,16 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                     key={tur}
                     data-week={tur}
                     onClick={() => setSelectedTur(tur)}
-                    className={`shrink-0 relative rounded-xl border transition-all duration-300 overflow-hidden ${
+                    className={`relative rounded-xl border transition-all duration-300 overflow-hidden ${
                       isSelected
-                        ? 'w-36 bg-gradient-to-br from-amber-500/20 via-zinc-800/80 to-amber-700/10 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
+                        ? 'min-w-[5rem] bg-gradient-to-br from-amber-500/20 via-zinc-800/80 to-amber-700/10 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
                         : hasLive
-                          ? 'w-24 bg-gradient-to-b from-red-500/10 to-red-900/5 border-red-500/30 hover:border-red-500/50'
+                          ? 'min-w-[4rem] bg-gradient-to-b from-red-500/10 to-red-900/5 border-red-500/30 hover:border-red-500/50'
                           : hasPlayed
-                            ? 'w-24 bg-gradient-to-b from-zinc-800/60 to-zinc-900/40 border-white/8 hover:border-white/15'
+                            ? 'min-w-[4rem] bg-gradient-to-b from-zinc-800/60 to-zinc-900/40 border-white/8 hover:border-white/15'
                             : hasUserMatch
-                              ? 'w-24 bg-gradient-to-b from-zinc-800/40 to-zinc-900/20 border-amber-500/10 hover:border-amber-500/25'
-                              : 'w-24 bg-zinc-900/30 border-white/5 hover:border-white/10'
+                              ? 'min-w-[4rem] bg-gradient-to-b from-zinc-800/40 to-zinc-900/20 border-amber-500/10 hover:border-amber-500/25'
+                              : 'min-w-[4rem] bg-zinc-900/30 border-white/5 hover:border-white/10'
                     }`}
                   >
                     {/* Top accent line for selected */}
@@ -784,6 +821,17 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                           )}
                         </div>
                       </div>
+                      {/* Referee info */}
+                      {(nextMatch.referee_name || nextMatch.referee_personality) && (
+                        <div className="flex items-center gap-3 mt-3">
+                          <span className="text-[7px] font-black text-white/20 uppercase tracking-widest">Hakem:</span>
+                          <RefereeBadge
+                            name={nextMatch.referee_name}
+                            personality={nextMatch.referee_personality}
+                            strictness={nextMatch.referee_strictness}
+                          />
+                        </div>
+                      )}
                     </div>
 
                     {/* ── Action Button ───────────────────────────────── */}
@@ -879,7 +927,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
             {/* ══════════════════════════════════════════════════════
                 FIXTURE LIST — Modern Gradient Match Cards
                 ══════════════════════════════════════════════════════ */}
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <AnimatePresence mode="popLayout">
                 {filteredFixtures.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-16 bg-zinc-900/20 rounded-2xl border border-dashed border-white/10">
