@@ -2,7 +2,7 @@
  * POST /api/rental/list
  * Oyuncuyu kiralık listesine ekle (rental_listings tablosu)
  *
- * Body: { playerId, ownerTeamId, dailyCost }
+ * Body: { playerId, ownerTeamId, dailyCost, durationWeeks }
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -20,10 +20,14 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { playerId, ownerTeamId, dailyCost = 0 } = body;
+    const { playerId, ownerTeamId, dailyCost = 0, durationWeeks = 17 } = body;
 
     if (!playerId) {
       return NextResponse.json({ error: 'playerId zorunlu' }, { status: 400 });
+    }
+
+    if (typeof durationWeeks !== 'number' || durationWeeks < 1 || durationWeeks > 34) {
+      return NextResponse.json({ error: 'Kiralama süresi 1-34 hafta arasında olmalıdır' }, { status: 400 });
     }
 
     // Oyuncuyu getir — önce tüm kolonlarla dene, hata olursa sadece temel kolonlarla tekrar dene
@@ -47,7 +51,7 @@ export async function POST(request: NextRequest) {
       if (basicResult.error || !basicResult.data) {
         console.error('[POST /api/rental/list] Player not found. playerId:', playerId, 'error:', basicResult.error?.message);
         return NextResponse.json({
-          error: 'Oyuncu bulunamadı',
+          error: 'Oyuncu bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin.',
           debug: { playerId, error: basicResult.error?.message }
         }, { status: 404 });
       }
@@ -58,7 +62,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (!player) {
-      return NextResponse.json({ error: 'Oyuncu bulunamadı' }, { status: 404 });
+      console.error('[POST /api/rental/list] Player is null after query. playerId:', playerId);
+      return NextResponse.json({
+        error: 'Oyuncu bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin.',
+        debug: { playerId, ownerTeamId }
+      }, { status: 404 });
     }
 
     // Zaten kiralık pazarında mı?
@@ -70,22 +78,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Bu oyuncu şu anda kirada' }, { status: 400 });
     }
 
-    // rental_listings tablosuna ekle
+    // rental_listings tablosuna ekle — duration_weeks kolonu yoksa tekrar dene
     let listingId: string | null = null;
+    const baseListingPayload = {
+      player_id: playerId,
+      owner_team_id: ownerTeamId || player.team_name || player.profile_id,
+      daily_cost: dailyCost,
+      status: 'active',
+    };
+
     const { data: listing, error: insertError } = await supabase
       .from('rental_listings')
       .insert({
-        player_id: playerId,
-        owner_team_id: ownerTeamId || player.team_name || player.profile_id,
-        daily_cost: dailyCost,
-        status: 'active',
+        ...baseListingPayload,
+        duration_weeks: durationWeeks,
       })
       .select()
       .single();
 
     if (insertError) {
-      console.warn('[POST /api/rental/list] rental_listings insert error (non-critical):', insertError.message);
-      // rental_listings tablosu yoksa da devam et — players tablosu güncellenecek
+      console.warn('[POST /api/rental/list] rental_listings insert with duration_weeks failed:', insertError.message);
+      // duration_weeks kolonu yoksa tekrar dene
+      const { data: fallbackListing, error: fallbackError } = await supabase
+        .from('rental_listings')
+        .insert(baseListingPayload)
+        .select()
+        .single();
+
+      if (fallbackError) {
+        console.warn('[POST /api/rental/list] rental_listings insert error (non-critical):', fallbackError.message);
+        // rental_listings tablosu yoksa da devam et — players tablosu güncellenecek
+      } else {
+        listingId = fallbackListing?.id;
+      }
     } else {
       listingId = listing?.id;
     }
@@ -123,6 +148,7 @@ export async function POST(request: NextRequest) {
         player_id: playerId,
         owner_team_id: ownerTeamId || player.team_name || player.profile_id,
         loan_fee_paid: dailyCost,
+        duration_weeks: durationWeeks,
         status: 'listed',
       });
     } catch (loanErr) {
@@ -133,6 +159,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `${player.name || 'Oyuncu'} kiralık listesine eklendi`,
       dailyCost,
+      durationWeeks,
       listingId,
     });
   } catch (err) {

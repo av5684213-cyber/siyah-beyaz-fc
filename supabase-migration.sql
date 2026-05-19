@@ -214,6 +214,7 @@ CREATE TABLE IF NOT EXISTS rental_listings (
   player_id TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
   owner_team_id TEXT NOT NULL,
   daily_cost INT NOT NULL DEFAULT 0,
+  duration_weeks INT NOT NULL DEFAULT 17,
   status TEXT NOT NULL DEFAULT 'active',
   listed_at TIMESTAMPTZ DEFAULT now()
 );
@@ -223,6 +224,12 @@ CREATE INDEX IF NOT EXISTS idx_rental_listings_status ON rental_listings(status)
 CREATE INDEX IF NOT EXISTS idx_rental_listings_owner ON rental_listings(owner_team_id);
 
 ALTER TABLE rental_listings ENABLE ROW LEVEL SECURITY;
+
+-- Add duration_weeks column if it doesn't exist (for existing databases)
+DO $$ BEGIN
+  ALTER TABLE rental_listings ADD COLUMN IF NOT EXISTS duration_weeks INT NOT NULL DEFAULT 17;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
 
 DO $$ BEGIN
   CREATE POLICY "rental_select_all" ON rental_listings FOR SELECT USING (true);

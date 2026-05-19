@@ -43,6 +43,7 @@ import { formatCurrency } from '@/lib/fm/valuation';
 import { toTitleCase, localizePosFull, getPosBadgeStyle, getPosGroup, getPlayerPos } from '@/lib/fm/ui-helpers';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { calculateLoanFeeEuro } from '@/lib/fm/inflation';
+import ContractOfferModal from '@/components/fm/ContractOfferModal';
 
 // ─── Suggested salary based on rating ───
 function getSuggestedSalary(rating: number): number {
@@ -284,6 +285,7 @@ export default function MarketTab() {
 
   // ─── Player demands (randomly generated when opening negotiation) ───
   const [playerDemands, setPlayerDemands] = useState<{ minSalary: number; minWeeks: number } | null>(null);
+  const [contractOfferListing, setContractOfferListing] = useState<any>(null);
 
   const handleOpenNegotiation = (player: Player) => {
     setNegotiatingPlayer(player);
@@ -1603,6 +1605,38 @@ export default function MarketTab() {
                   >
                     {isNegotiating ? 'TEKLİF GÖNDERİLİYOR...' : (effectiveOffer <= 0 ? 'GEÇERLİ BİR TEKLİF GİR' : 'TEKLİFİ GÖNDER')}
                   </button>
+
+                  {/* ─── SATIN AL Button (opens ContractOfferModal) ─── */}
+                  <button 
+                    onClick={() => {
+                      if (!negotiatingPlayer) return;
+                      const listingForModal = {
+                        id: `listing-${negotiatingPlayer.id}`,
+                        player_id: negotiatingPlayer.id,
+                        player_data: {
+                          name: negotiatingPlayer.name,
+                          position: negotiatingPlayer.position,
+                          specific_position: (negotiatingPlayer as any).specificPosition || negotiatingPlayer.position,
+                          age: negotiatingPlayer.age,
+                          nation: negotiatingPlayer.nation,
+                          Klt: negotiatingPlayer.rating,
+                          rating: negotiatingPlayer.rating,
+                          Klc: (negotiatingPlayer as any).Klc || (negotiatingPlayer as any).klc || 0,
+                          Tk: (negotiatingPlayer as any).Tk || (negotiatingPlayer as any).tk || 0,
+                          Pas: (negotiatingPlayer as any).Pas || (negotiatingPlayer as any).pas || 0,
+                          Sut: (negotiatingPlayer as any).Sut || (negotiatingPlayer as any).sut || 0,
+                          Hız: (negotiatingPlayer as any).Hız || (negotiatingPlayer as any).hiz || 0,
+                        },
+                        price: getEffectiveMarketValue(negotiatingPlayer),
+                        seller_id: (negotiatingPlayer as any).seller_id || 'free-agent-system',
+                        is_active: true,
+                      };
+                      setContractOfferListing(listingForModal);
+                    }}
+                    className="w-full py-4 rounded-[20px] text-xs font-black uppercase tracking-[0.2em] transform active:scale-95 shadow-xl transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white flex items-center justify-center gap-2"
+                  >
+                    <Coins size={16} /> SATIN AL
+                  </button>
                 </div>
               ) : (
                 <div className="text-center space-y-6 py-8">
@@ -1647,6 +1681,23 @@ export default function MarketTab() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* ─── Contract Offer Modal ─── */}
+      {contractOfferListing && (
+        <ContractOfferModal
+          listing={contractOfferListing}
+          profile={profile}
+          onClose={() => setContractOfferListing(null)}
+          onOfferResult={(result) => {
+            if (result.accepted) {
+              fetchMarketPlayers();
+              setContractOfferListing(null);
+              setNegotiatingPlayer(null);
+              setPlayerDemands(null);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

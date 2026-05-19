@@ -651,7 +651,7 @@ export function FriendlyMatchTab() {
                     <Zap size={16} />
                   </div>
                   <div className="flex flex-col leading-none">
-                    <span className="text-[11px]">1 KR İLE ÖNCELİKLİ EŞLEŞME</span>
+                    <span className="text-[11px]">⚡ 1 KREDİ İLE ÖNCELİKLİ EŞLEŞME</span>
                     <span className="text-[7px] opacity-60 font-bold">
                       {(profile?.credits || 0) < 1 ? 'YETERSİZ KREDİ' : 'ÖNCELİKLİ SIRA — DAHA HIZLI EŞLEŞME'}
                     </span>
