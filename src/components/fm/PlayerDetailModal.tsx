@@ -1716,14 +1716,14 @@ export default function PlayerDetailModal({
                     }
                     setIsSendingLoan(true);
                     try {
-                      console.log('[Loan] Sending to /api/loans/list:', { playerId: player.id, loanFee: loanFeeEuro, profileId });
-                      const res = await fetch('/api/loans/list', {
+                      console.log('[Loan] Sending to /api/rental/list:', { playerId: player.id, dailyCost: loanFeeEuro, ownerTeamId: profileId });
+                      const res = await fetch('/api/rental/list', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                           playerId: player.id,
-                          loanFee: loanFeeEuro,
-                          profileId: profileId,
+                          dailyCost: loanFeeEuro,
+                          ownerTeamId: profileId,
                         }),
                       });
                       const data = await res.json();
