@@ -237,7 +237,7 @@ export default function NewspaperTab() {
         }
 
         if (teamRows && teamRows.length > 0) {
-          const leagues: UserLeagueInfo[] = teamRows
+          const leaguesRaw: UserLeagueInfo[] = teamRows
             .map((row: Record<string, unknown>) => {
               const leagueData = row.leagues as Record<string, unknown> | null;
               if (!leagueData) return null;
@@ -248,6 +248,16 @@ export default function NewspaperTab() {
               };
             })
             .filter((l: UserLeagueInfo | null): l is UserLeagueInfo => l !== null);
+
+          // Aynı lig birden fazla league_teams satırından gelmiş olabilir — tekillersin
+          const seenIds = new Set<string>();
+          const leagues: UserLeagueInfo[] = [];
+          for (const lg of leaguesRaw) {
+            if (!seenIds.has(lg.id)) {
+              seenIds.add(lg.id);
+              leagues.push(lg);
+            }
+          }
 
           setUserLeagues(leagues);
 
@@ -567,7 +577,7 @@ export default function NewspaperTab() {
 
                     return (
                       <tr
-                        key={row.team_id || row.id}
+                        key={row.id || `${row.team_id}-${i}`}
                         className={`border-b border-white/5 ${isUserTeam ? 'bg-amber-500/5' : 'hover:bg-white/[0.02]'} transition-colors`}
                       >
                         <td className={`py-2 px-3 font-mono font-bold ${i < 2 ? 'text-emerald-400' : i < 4 ? 'text-amber-400' : 'text-white/30'}`}>
