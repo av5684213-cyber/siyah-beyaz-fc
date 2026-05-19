@@ -312,7 +312,7 @@ export default function MyTeamTab({
                 className="fm-card group cursor-pointer relative"
               >
                 {/* Pos Badge */}
-                <div className={`absolute top-4 left-4 w-10 h-10 rounded-xl flex items-center justify-center font-black italic shadow-2xl ${getPosColor(player.position)} border border-white/10`}>
+                <div className={`absolute top-4 left-4 w-10 h-10 rounded-xl flex items-center justify-center font-black italic shadow-2xl ${getPosColor(getPlayerPos(player as Record<string, unknown>))} border border-white/10`}>
                    {localizePos(getPlayerPos(player as Record<string, unknown>))}
                 </div>
 

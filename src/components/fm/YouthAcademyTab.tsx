@@ -634,7 +634,7 @@ export default function YouthAcademyTab({
                 </tr>
               ) : (
                 filteredPlayers.map(player => {
-                  const posColors = POSITION_COLORS[player.position] || POSITION_COLORS.MID;
+                  const posColors = POSITION_COLORS[player.specificPosition || player.position] || POSITION_COLORS.MID;
                   const stars = getYouthPotentialStars(player);
                   const value = calculateYouthValue(player);
                   const promotion = checkYouthPromotion(player);
@@ -687,7 +687,7 @@ export default function YouthAcademyTab({
                       {/* Position */}
                       <td className="px-4 py-3">
                         <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${posColors.bg} ${posColors.text} border ${posColors.border}`}>
-                          {player.position}
+                          {player.specificPosition || player.position}
                         </span>
                       </td>
 

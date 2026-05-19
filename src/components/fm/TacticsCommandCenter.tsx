@@ -101,7 +101,7 @@ const PlayerIcon = ({ player, condition, pos, onDrop, onDragOver, onDragStart, o
                   );
                 })()}
                 <span className={`absolute inset-0 flex items-center justify-center text-[9px] font-black pt-1 ${player.special_role ? 'text-white' : 'text-black'}`}>
-                  {player.position}
+                  {player.specificPosition || player.position}
                 </span>
             </div>
         </div>
@@ -421,7 +421,7 @@ export default function TacticsCommandCenter({
                       className="p-3 bg-black/40 border border-white/5 rounded-xl flex items-center justify-between cursor-grab active:cursor-grabbing hover:border-white/20 transition-all group"
                   >
                       <div className="flex items-center gap-3">
-                          <div className="text-[8px] font-black p-1 bg-white/5 rounded text-white/30">{player.position}</div>
+                          <div className="text-[8px] font-black p-1 bg-white/5 rounded text-white/30">{player.specificPosition || player.position}</div>
                           <span className="text-[10px] font-bold text-white uppercase truncate max-w-[100px]">{player.name}</span>
                       </div>
                       <span className="text-[10px] font-black text-emerald-400">{player.rating}</span>
@@ -554,7 +554,7 @@ export default function TacticsCommandCenter({
           <div className="max-h-[400px] overflow-y-auto">
             {sortedSquad.map((player) => {
               const rating = player.rating || 50;
-              const posColor = getPositionColor(player.position);
+              const posColor = getPositionColor(player.specificPosition || player.position);
               const statKeys = ['Klt', 'Klc', 'Tk', 'Pas', 'Şut', 'Kfa', 'Hız', 'Güç', 'Alg', 'Top', 'Tplm', 'Knd'];
               return (
                 <div 

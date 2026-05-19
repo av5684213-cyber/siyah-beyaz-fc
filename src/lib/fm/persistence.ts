@@ -265,7 +265,7 @@ export const savePlayers = async (players: Record<string, unknown>[], userId?: s
         right_foot_detailed: p.rightFoot || 50,
         photo_url: p.photo_url,
         specific_position: p.specificPosition || (p as Record<string, unknown>).specific_position || null,
-        secondary_positions: p.secondaryPositions ? JSON.stringify(p.secondaryPositions) : null,
+        secondary_positions: p.secondaryPositions && Array.isArray(p.secondaryPositions) && p.secondaryPositions.length > 0 ? p.secondaryPositions : null,
         updated_at: new Date().toISOString()
       };
     });

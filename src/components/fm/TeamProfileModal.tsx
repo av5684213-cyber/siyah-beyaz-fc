@@ -426,7 +426,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
                 <div className="py-16 text-center text-white/20 text-sm italic">Oyuncu bulunamadi.</div>
               ) : (
                 sortedPlayers.map(player => {
-                  const posColor = getPositionColor(player.position);
+                  const posColor = getPositionColor(player.specificPosition || player.position);
                   return (
                     <div 
                       key={player.id}
@@ -435,7 +435,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
                       style={{ gridTemplateColumns: '56px 1fr repeat(11, 52px) 52px' }}
                     >
                       <div className="text-center text-[9px] font-black flex items-center justify-center">
-                        {player.position}
+                        {player.specificPosition || player.position}
                       </div>
                       <div className="text-left text-[9px] font-bold text-white/80 truncate flex items-center">
                         {toTitleCase(player.name)}

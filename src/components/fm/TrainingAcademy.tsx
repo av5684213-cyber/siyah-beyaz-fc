@@ -500,7 +500,7 @@ export default function TrainingAcademy({
               { label: 'Ort', val: rating.toFixed(0), key: 'rating' }
             ];
 
-            const posColor = getPosRowStyle(player.position);
+            const posColor = getPosRowStyle(player.specificPosition || player.position);
 
             return (
               <div key={player.id} 
@@ -511,7 +511,7 @@ export default function TrainingAcademy({
                   <div className={`w-8 h-8 flex items-center justify-center text-[9px] font-black rounded shrink-0 ${
                     isU21 ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-white/5 text-white/40'
                   }`}>
-                    {player.position}
+                    {player.specificPosition || player.position}
                   </div>
                   <button 
                     onClick={() => onPlayerClick?.(player)}

@@ -83,7 +83,7 @@ const PlayerIcon = ({ player, condition, pos, onDrop, onDragOver, onDragStart, o
                   );
                 })()}
                 <span className={`absolute inset-0 flex items-center justify-center text-[9px] font-black pt-1 ${player.special_role ? 'text-white' : 'text-black'}`}>
-                  {player.position}
+                  {player.specificPosition || player.position}
                 </span>
                 
                 {/* Role Badge */}
@@ -267,7 +267,7 @@ const TacticsPanel = ({
                           >
                               <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
-                                      <div className={`text-[8px] font-black italic ${isStarter ? 'text-black/40' : 'text-white/20'}`}>{player.position}</div>
+                                      <div className={`text-[8px] font-black italic ${isStarter ? 'text-black/40' : 'text-white/20'}`}>{player.specificPosition || player.position}</div>
                                       <div className="text-[10px] font-bold uppercase truncate max-w-[80px]">{player.name}</div>
                                   </div>
                                   <div className="text-[10px] font-black">{player.rating}</div>

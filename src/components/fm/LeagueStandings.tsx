@@ -107,7 +107,7 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
        if (!p) return false;
        const playerName = p.name || '';
        const matchesSearch = playerName.toLowerCase().includes(searchTerm.toLowerCase());
-       const matchesPos = filterPos === 'ALL' || p.position === filterPos;
+       const matchesPos = filterPos === 'ALL' || (p.specificPosition || p.position) === filterPos || p.position === filterPos;
        return matchesSearch && matchesPos;
     }).sort((a: Player, b: Player) => (b.rating || 0) - (a.rating || 0));
   }, [allPlayers, searchTerm, filterPos]);

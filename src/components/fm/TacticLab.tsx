@@ -46,7 +46,7 @@ function PlayerMarker({ player, pos, team, onClick, isSelected }: { player: Play
             <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white text-xs font-black shadow-xl transition-all group-hover:scale-125 border-2 ${
               isSelected ? 'border-white animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.5)]' : (team === 'A' ? 'border-blue-400' : 'border-red-400')
             } ${
-              player.position === 'FWD' ? 'bg-[#E87878]' : player.position === 'GK' ? 'bg-[#7AB4E8]' : player.position === 'DEF' ? 'bg-[#7EDBC8]' : 'bg-[#F0C87A]'
+              (player.specificPosition || player.position) === 'GK' ? 'bg-[#7AB4E8]' : ['CB','LB','RB','LWB','RWB','DEF'].includes(player.specificPosition || player.position) ? 'bg-[#7EDBC8]' : ['CDM','CM','CAM','LM','RM','LW','RW','MID'].includes(player.specificPosition || player.position) ? 'bg-[#F0C87A]' : 'bg-[#E87878]'
             }`}>
               {player.name.slice(0, 2).toUpperCase()}
               <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full border-2 border-zinc-950 flex items-center justify-center text-[8px] font-black ${
@@ -911,7 +911,7 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
                     >
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-[9px] font-black shadow-lg ${
-                          p.position === 'GK' ? 'bg-[#7AB4E8]' : p.position === 'DEF' ? 'bg-[#7EDBC8]' : p.position === 'MID' ? 'bg-[#F0C87A]' : 'bg-[#E87878]'
+                          (p.specificPosition || p.position) === 'GK' ? 'bg-[#7AB4E8]' : ['CB','LB','RB','LWB','RWB','DEF'].includes(p.specificPosition || p.position) ? 'bg-[#7EDBC8]' : ['CDM','CM','CAM','LM','RM','LW','RW','MID'].includes(p.specificPosition || p.position) ? 'bg-[#F0C87A]' : 'bg-[#E87878]'
                         }`}>
                           {p.specificPosition || p.position}
                         </div>

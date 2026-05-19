@@ -202,10 +202,10 @@ function PlayerRatingRow({ player, isMotm }: { player: PlayerMatchRating; isMotm
       <span className="flex-1 text-[11px] text-white/80 truncate">{player.playerName}</span>
       <span
         className={`inline-flex items-center px-1.5 py-[1px] rounded text-[9px] font-medium border ${positionBadge(
-          player.position
+          player.specificPosition || player.position
         )}`}
       >
-        {player.position}
+        {player.specificPosition || player.position}
       </span>
       {player.goals > 0 && (
         <span className="text-[9px] text-emerald-400 font-bold shrink-0">
