@@ -246,8 +246,12 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
 
               if (newSeason) {
                 await supabase.rpc('generate_league_fixtures', { p_season_id: newSeason.id });
-                // Hakemleri üret ve fikstürlere ata
-                await assignRefereesToSeason(supabase, leagueData.id, newSeason.id);
+                // Hakemleri üret ve fikstürlere ata (hata olsa bile devam et)
+                try {
+                  if (supabase) await assignRefereesToSeason(supabase, leagueData.id, newSeason.id);
+                } catch (refErr) {
+                  console.warn('[initTeam] Hakem atama hatası (devam ediliyor):', refErr);
+                }
               }
             }
           }
@@ -265,8 +269,12 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
               }).select().single();
               if (bSeason) {
                 await supabase.rpc('generate_league_fixtures', { p_season_id: bSeason.id });
-                // Hakemleri üret ve fikstürlere ata
-                await assignRefereesToSeason(supabase, leagueData.id, bSeason.id);
+                // Hakemleri üret ve fikstürlere ata (hata olsa bile devam et)
+                try {
+                  if (supabase) await assignRefereesToSeason(supabase, leagueData.id, bSeason.id);
+                } catch (refErr) {
+                  console.warn('[initTeam] Hakem atama hatası (devam ediliyor):', refErr);
+                }
               }
             }
 
