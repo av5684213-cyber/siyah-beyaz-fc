@@ -107,10 +107,77 @@ export default function MatchPage() {
       if (error) throw error;
 
       // Local state'leri güncelle
+      const prevFormation = selectedFormation;
+      const prevTactic = selectedTactic;
       setSelectedFormation(newFormation);
       setSelectedTactic(newTactic);
       setTacticChangeCount(prev => prev + 1);
       setLastTacticApplied(new Date().toLocaleTimeString('tr-TR'));
+
+      // ═══ TACTICAL_CHANGE olayını match_events tablosuna ekle ═══
+      const tacticLabelMap: Record<string, string> = {
+        'dengeli': 'Dengeli',
+        'hucum': 'Hücum',
+        'savunma': 'Savunma',
+        'kontra': 'Kontra Atak',
+        'tikitaka': 'Tiki-Taka',
+        'normal': 'Dengeli',
+        'attack': 'Hücum',
+        'defense': 'Defans',
+        'counter': 'Kontra Atak',
+        'press': 'Pres',
+      };
+
+      // Canlı maçtaki dakikayı hesapla (son event dakikası veya mevcut durum)
+      const currentMinute = events.length > 0 ? events[events.length - 1].minute : 45;
+
+      const formationChanged = prevFormation !== newFormation;
+      const tacticChanged = prevTactic !== newTactic;
+      const changeParts: string[] = [];
+      if (formationChanged) changeParts.push(`Formasyon: ${prevFormation} → ${newFormation}`);
+      if (tacticChanged) changeParts.push(`Stil: ${tacticLabelMap[prevTactic] || prevTactic} → ${tacticLabelMap[newTactic] || newTactic}`);
+
+      // Taktik etki açıklaması
+      const tacticEffectMap: Record<string, string> = {
+        'hucum': 'Gol ihtimali arttı, defans riski yükseldi',
+        'savunma': 'Defans güçlendi, hücum gücü azaldı',
+        'kontra': 'Kontra atak gücü arttı',
+        'tikitaka': 'Top kontrolü ve pas kalitesi yükseldi',
+        'attack': 'Gol ihtimali +%10',
+        'defense': 'Gol yeme riski -%10',
+        'counter': 'Kontra atak şansı arttı',
+        'press': 'Top kazanma +%8, kondisyon -%5',
+      };
+      const effectDesc = tacticEffectMap[newTactic] || '';
+      const detailText = changeParts.join(', ') + (effectDesc ? `. ${effectDesc}` : '');
+
+      // match_events tablosuna TACTICAL_CHANGE olayı ekle
+      try {
+        await supabaseClient
+          .from('match_events')
+          .insert({
+            fixture_id: fixtureId,
+            event_type: 'TACTICAL_CHANGE',
+            minute: currentMinute,
+            player_name: null,
+            team: teamName === homeName ? 'home' : 'away',
+            detail: detailText,
+          });
+      } catch (evtErr) {
+        console.warn('[MatchPage] TACTICAL_CHANGE event insert failed (non-critical):', evtErr);
+      }
+
+      // Local events'e de ekle (anlık gösterim için)
+      setEvents(prev => [...prev, {
+        id: `tactical-${Date.now()}`,
+        fixture_id: fixtureId,
+        event_type: 'TACTICAL_CHANGE',
+        minute: currentMinute,
+        player_name: null,
+        team: teamName === homeName ? 'home' : 'away',
+        detail: detailText,
+        created_at: new Date().toISOString(),
+      } as MatchEventRow]);
 
       if (typeof playSound === 'function') playSound('click');
     } catch (err) {
@@ -118,7 +185,7 @@ export default function MatchPage() {
     } finally {
       setIsApplyingTactic(false);
     }
-  }, [isApplyingTactic, tacticChangeCount, profileId]);
+  }, [isApplyingTactic, tacticChangeCount, profileId, selectedFormation, selectedTactic, events, fixtureId, teamName, homeName]);
 
   // Duygusal katman — gol kutlama state
   const [goalCelebrationTrigger, setGoalCelebrationTrigger] = useState(false);
@@ -711,6 +778,7 @@ export default function MatchPage() {
                           : e.event_type?.toUpperCase() === 'FULLTIME' ? 'FULLTIME'
                           : e.event_type?.toUpperCase() === 'OFFSIDE' ? 'OFFSIDE'
                           : e.event_type?.toUpperCase() === 'CORNER' ? 'CORNER'
+                          : e.event_type?.toUpperCase() === 'TACTICAL_CHANGE' ? 'TACTICAL_CHANGE'
                           : 'COMMENTARY') as MatchEvent['type'],
                         text: e.detail || e.event_type || '',
                         player: e.player_name || undefined,
@@ -825,6 +893,30 @@ export default function MatchPage() {
                     lastApplied={lastTacticApplied}
                     changeCount={tacticChangeCount}
                   />
+                  {/* ═══ Taktik Etki Bilgi Kutusu ═══ */}
+                  <div className="mt-4 bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Zap size={12} className="text-amber-400" />
+                      <p className="text-[9px] font-black uppercase tracking-widest text-amber-400/50">Taktik Etki Rehberi</p>
+                    </div>
+                    <div className="space-y-2">
+                      {[
+                        { label: 'Hücum', goalMod: '+%12', conceedMod: '+%5', color: 'text-red-400' },
+                        { label: 'Savunma', goalMod: '-%5', conceedMod: '-%15', color: 'text-emerald-400' },
+                        { label: 'Kontra Atak', goalMod: '+%5', conceedMod: '—', color: 'text-cyan-400' },
+                        { label: 'Tiki-Taka', goalMod: '+%4', conceedMod: '-%2', color: 'text-purple-400' },
+                      ].map(t => (
+                        <div key={t.label} className="flex items-center justify-between text-[10px] bg-white/[0.02] rounded-lg px-3 py-2">
+                          <span className={`font-bold ${t.color}`}>{t.label}</span>
+                          <div className="flex items-center gap-4">
+                            <span className="text-white/30">Gol şansı: <span className={t.goalMod.startsWith('+') ? 'text-emerald-400 font-black' : 'text-red-400 font-black'}>{t.goalMod}</span></span>
+                            <span className="text-white/30">Gol yeme: <span className={t.conceedMod.startsWith('+') ? 'text-red-400 font-black' : t.conceedMod.startsWith('-') ? 'text-emerald-400 font-black' : 'text-white/20 font-black'}>{t.conceedMod}</span></span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[8px] text-white/15 mt-2">Formasyon değişiklikleri de ofans/defans dengesini etkiler. Maç başına 3 müdahale hakkınız vardır.</p>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

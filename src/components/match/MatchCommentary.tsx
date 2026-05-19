@@ -56,6 +56,7 @@ function getEventIcon(type: MatchEvent['type'], intensity: number): string {
   if (type === 'FULLTIME') return '🏁';
   if (type === 'OFFSIDE') return '🚩';
   if (type === 'CORNER') return '🚩';
+  if (type === 'TACTICAL_CHANGE') return '📋';
   if (type === 'COMMENTARY') return '💬';
   return '📋';
 }
@@ -72,6 +73,7 @@ function getEventColor(type: MatchEvent['type'], intensity: number): string {
   if (type === 'RED' || type === 'SECOND_YELLOW') return 'border-red-500/40 bg-red-900/20';
   if (type === 'INJURY') return 'border-orange-500/40 bg-orange-900/20';
   if (type === 'SUB') return 'border-blue-500/40 bg-blue-900/20';
+  if (type === 'TACTICAL_CHANGE') return 'border-amber-500/30 bg-amber-900/15';
   if (type === 'HALFTIME' || type === 'FULLTIME') return 'border-white/30 bg-white/5';
   return 'border-white/10 bg-white/5';
 }
@@ -86,6 +88,7 @@ function getEventTextStyle(type: MatchEvent['type'], intensity: number): string 
   if (type === 'RED' || type === 'SECOND_YELLOW') return 'font-semibold text-red-300';
   if (type === 'YELLOW') return 'text-yellow-200/80';
   if (type === 'INJURY') return 'text-orange-200/80';
+  if (type === 'TACTICAL_CHANGE') return 'font-semibold text-amber-200/90';
   if (type === 'HALFTIME' || type === 'FULLTIME') return 'font-semibold text-white/80';
   return 'text-white/70';
 }

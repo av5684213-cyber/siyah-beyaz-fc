@@ -294,7 +294,7 @@ export interface SeasonAwardCeremony {
   badge: SeasonBadge | null;
 }
 
-export type MatchEventType = 'GOAL' | 'YELLOW' | 'RED' | 'SUB' | 'INJURY' | 'COMMENTARY' | 'HALFTIME' | 'FULLTIME' | 'OFFSIDE' | 'CORNER' | 'PENALTY_GOAL' | 'OWN_GOAL' | 'SECOND_YELLOW';
+export type MatchEventType = 'GOAL' | 'YELLOW' | 'RED' | 'SUB' | 'INJURY' | 'COMMENTARY' | 'HALFTIME' | 'FULLTIME' | 'OFFSIDE' | 'CORNER' | 'PENALTY_GOAL' | 'OWN_GOAL' | 'SECOND_YELLOW' | 'TACTICAL_CHANGE';
 
 export type MatchType = 'normal' | 'derby' | 'cup' | 'friendly' | 'cup_final';
 
