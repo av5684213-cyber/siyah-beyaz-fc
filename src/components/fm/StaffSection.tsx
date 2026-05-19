@@ -246,6 +246,8 @@ export default function StaffSection() {
         ...prev,
         credits: data.remainingCredits,
         money: data.remainingMoney ?? prev.money,
+        // Eğer scout ise scout_slots'u da güncelle
+        ...(type === 'scout' ? { scout_slots: (prev.scout_slots ?? 0) + 1 } : {}),
       } : prev);
       await fetchStaff();
     } catch (err) {
@@ -275,6 +277,14 @@ export default function StaffSection() {
       }
 
       success(data.message || 'Personel cikarildi.');
+      // Eğer scout ise scout_slots'u azalt
+      const firedStaff = staffList.find(s => s.id === staffId);
+      if (firedStaff?.type === 'scout') {
+        setProfile((prev: any) => prev ? {
+          ...prev,
+          scout_slots: Math.max(0, (prev.scout_slots ?? 0) - 1),
+        } : prev);
+      }
       await fetchStaff();
     } catch (err) {
       console.error('[StaffSection] Fire error:', err);

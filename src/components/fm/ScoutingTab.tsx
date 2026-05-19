@@ -74,8 +74,35 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
   
   const [watchlistPlayers, setWatchlistPlayers] = useState<Player[]>([]);
 
-  // ── Determine active scout count from profile OR from trainingState ──
-  const activeScoutSlots = profile?.scout_slots ?? scouting.scouts.length ?? 0;
+  // ── Determine active scout count from multiple sources ──
+  const [staffScoutCount, setStaffScoutCount] = useState(0);
+
+  React.useEffect(() => {
+    // Supabase staff tablosundan aktif gözlemci sayısını çek
+    const fetchStaffScouts = async () => {
+      if (!profile?.id || !isSupabaseConfigured()) return;
+      const supabase = getSupabase();
+      if (!supabase) return;
+      try {
+        const { count } = await supabase
+          .from('staff')
+          .select('*', { count: 'exact', head: true })
+          .eq('profile_id', profile.id)
+          .eq('type', 'scout');
+        if (count && count > 0) setStaffScoutCount(count);
+      } catch {
+        // Tablo yoksa sessizce devam et
+      }
+    };
+    fetchStaffScouts();
+  }, [profile?.id]);
+
+  // En yüksek değeri al: profile.scout_slots, yerel scouting.scouts, veya staff tablosu
+  const activeScoutSlots = Math.max(
+    profile?.scout_slots ?? 0,
+    scouting.scouts.length ?? 0,
+    staffScoutCount
+  );
   const scoutLevel = Math.min(3, activeScoutSlots); // 1-3
 
   // Fetch watchlist details
