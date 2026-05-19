@@ -126,6 +126,24 @@ async function fetchFixturesForTeam(
       .filter((f: Record<string, unknown>) => f.status === 'scheduled' && (f.match_date as string) >= now)
       .sort((a: Record<string, unknown>, b: Record<string, unknown>) => (a.match_date as string).localeCompare(b.match_date as string))[0] || null;
 
+    // Resolve team names for fixtures where join failed
+    const unresolvedIds = new Set<string>();
+    (fixtures || []).forEach((f: Record<string, unknown>) => {
+      if (!(f.home as Record<string, string>)?.name && f.home_team_id) unresolvedIds.add(f.home_team_id as string);
+      if (!(f.away as Record<string, string>)?.name && f.away_team_id) unresolvedIds.add(f.away_team_id as string);
+    });
+
+    let teamNameMap = new Map<string, string>();
+    if (unresolvedIds.size > 0) {
+      const { data: missingTeams } = await supabase
+        .from('league_teams')
+        .select('id, name')
+        .in('id', Array.from(unresolvedIds));
+      (missingTeams || []).forEach((t: Record<string, string>) => {
+        teamNameMap.set(t.id, t.name);
+      });
+    }
+
     const cleanedFixtures = (fixtures || []).map((f: Record<string, unknown>) => ({
       id: f.id,
       tur: f.tur,
@@ -134,8 +152,8 @@ async function fetchFixturesForTeam(
       status: f.status,
       home_score: f.home_score,
       away_score: f.away_score,
-      home_team: (f.home as Record<string, string>)?.name || 'Bilinmiyor',
-      away_team: (f.away as Record<string, string>)?.name || 'Bilinmiyor',
+      home_team: (f.home as Record<string, string>)?.name || teamNameMap.get(f.home_team_id as string) || 'Bilinmiyor',
+      away_team: (f.away as Record<string, string>)?.name || teamNameMap.get(f.away_team_id as string) || 'Bilinmiyor',
       home_team_id: f.home_team_id || (f.home as Record<string, string>)?.id || '',
       away_team_id: f.away_team_id || (f.away as Record<string, string>)?.id || '',
       is_home: f.home_team_id === leagueTeamId,
