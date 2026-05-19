@@ -14,14 +14,13 @@ import {
 } from 'recharts';
 import { calculateMarketValue, getTransferCorridor, formatCurrency } from '@/lib/fm/valuation';
 import { calculateLoanFeeEuro } from '@/lib/fm/inflation';
-import { getPerformanceStats } from '@/lib/fm/engine';
-import { traitDescriptions, getTraitTierLabel } from '@/lib/fm/traits';
+import { traitDescriptions } from '@/lib/fm/traits';
 import { TRAIT_LEVELS } from '@/lib/fm/traitsData';
 import { useFM } from '@/lib/fm/GameContext';
 import { getPlayStyleEffect } from '@/lib/fm/playStyles';
-import { localizePos, localizePosFull, getPosGroup, getPosBadgeStyle, getPlayerPos } from '@/lib/fm/ui-helpers';
+import { localizePosFull, getPosBadgeStyle, getPlayerPos } from '@/lib/fm/ui-helpers';
 import { POS_LABELS } from '@/lib/fm/playerGenerator';
-import { fmStatColor, fmStatBg, formatMoney, cap99, toTitleCase } from '@/lib/fm/ui-helpers';
+import { fmStatColor, fmStatBg, cap99, toTitleCase } from '@/lib/fm/ui-helpers';
 import type { Player, TrainingState } from '@/lib/fm/types';
 import type { MarketListing } from '@/lib/fm/multiplayer';
 import PlayerStatsTab from './PlayerStatsTab';
@@ -45,57 +44,6 @@ interface PlayerDetailModalProps {
 }
 
 // ──────────── Helpers ────────────
-const clamp = (base: number, mult: number) => cap99(base * mult);
-
-const deriveStats = (player: Player, perf: ReturnType<typeof getPerformanceStats>) => {
-  const base = {
-    // Teknik — ÖNCELİKLE YENİ SPESİFİK ALANLAR, YOKSA ESKİ ALANLAR
-    pas: cap99(player.passing || 50),
-    sut: cap99(player.finishing || player.shooting || 50),
-    topKontrol: cap99(player.firstTouch || player.control || 50),
-    kalecilik: cap99(player.goalkeeping ?? (player.position === 'GK' ? player.rating || 65 : 10)),
-    kurtaris: cap99(player.goalkeeping ?? (player.position === 'GK' ? (player.rating || 65) * 0.95 : 10)),
-    tekik: cap99(player.technique || player.control || 50),
-    dribling: cap99(player.dribbling || player.control || 50),
-    ortayapma: cap99(player.crossing || player.passing || 50),
-    topKapma: cap99(player.tackling || player.defending || 50),
-    kafaVurusu: cap99(player.heading || player.power || 50),
-    uzaktanSut: cap99(player.longShots || player.shooting || 50),
-    markaj: cap99(player.marking || player.defending || 50),
-    bitiricilik: cap99(player.finishing || player.shooting || 50),
-    ilkKontrol: cap99(player.firstTouch || player.control || 50),
-    // Zihinsel — HER STAT KENDİ ALANINDAN
-    algı: cap99(player.anticipation || 50),
-    vizyon: cap99(player.vision || 50),
-    kararAlma: cap99(player.decisions || 50),
-    pozisyonAlma: cap99(player.positioning || 50),
-    soggukkanlilik: cap99(player.composure || 50),
-    caliskanlik: cap99(player.workRate || 50),
-    takimOyunu: cap99(player.teamwork || 50),
-    liderlik: cap99(player.leadership || 50),
-    onsez: cap99(player.anticipation || 50),
-    ozelYetenek: cap99(player.flair || 20),
-    kararllik: cap99(player.determination || 50),
-    konsantrasyon: cap99(player.concentration || 50),
-    agresiflik: cap99(player.aggression || 40),
-    cesaret: cap99(player.bravery || 40),
-    // Fiziksel — HER STAT KENDİ ALANINDAN
-    hiz: cap99(player.speed || 50),
-    hizlanma: cap99(player.acceleration || player.speed || 50),
-    guc: cap99(player.strength || player.power || 50),
-    dayaniklilik: cap99(player.stamina || player.cond || 50),
-    ceviklik: cap99(player.agility || 50),
-    denge: cap99(player.balance || 50),
-    ziplama: cap99(player.jumping || player.power || 50),
-    kondisyon: cap99(player.cond || 75),
-    // Ayaklar
-    sagAyak: cap99(player.rightFoot || (player.preferred_foot === 'Right' ? 100 : 50)),
-    solAyak: cap99(player.leftFoot || (player.preferred_foot === 'Left' ? 100 : 50)),
-    // Mücadele
-    mudahale: cap99(player.tackling || player.defending || 50),
-  };
-  return base;
-};
 
 // ──────────── Stat Row Component (FM Grid Style) ────────────
 function StatRow({ label, value, isObserved = true }: { label: string; value: number | string; isObserved?: boolean }) {
@@ -178,32 +126,12 @@ export default function PlayerDetailModal({
 
   const rating = cap99(player?.rating || 65);
   const potential = cap99(player?.potential || 70);
-  const perf = getPerformanceStats(player, true, teamStats || {});
   const playStyle = getPlayStyleEffect(player?.playStyle || '');
   const marketValue = calculateMarketValue(player);
   const corridor = getTransferCorridor(marketValue);
   const potentialDiff = potential - rating;
-  const stats = deriveStats(player, perf);
   
   const isWatched = watchlist?.includes(player.id);
-
-  // Use real data if available, fallback to derived (derived is now based on new fields if I update deriveStats, but let's just use fields directly)
-  const mentalData = {
-    algı: player.anticipation || stats.algı,
-    vizyon: player.vision || stats.vizyon,
-    kararAlma: player.decisions || stats.kararAlma,
-    pozisyonAlma: player.positioning || stats.pozisyonAlma,
-    soggukkanlilik: player.composure || stats.soggukkanlilik,
-    caliskanlik: player.workrate || stats.caliskanlik,
-    takimOyunu: player.teamwork || stats.takimOyunu,
-    liderlik: player.leadership || stats.liderlik,
-    onsez: player.anticipation || stats.onsez,
-    ozelYetenek: player.flair || stats.ozelYetenek,
-    kararllik: player.determination || stats.kararllik,
-    konsantrasyon: player.concentration || stats.konsantrasyon,
-    agresiflik: player.aggression || stats.agresiflik,
-    cesaret: player.bravery || stats.cesaret,
-  };
 
   // Auto-set min price when entering market tab, and reset tab if not owned
   React.useEffect(() => {
@@ -237,76 +165,77 @@ export default function PlayerDetailModal({
   const sp = getPlayerPos(player as Record<string, unknown>);
   const isGK = player.position === 'GK' || sp === 'GK';
 
-  // Technical or Goalkeeping
+  // Technical or Goalkeeping — Doğrudan player attribute'leri, yoksa varsayılan 50
   const technicalStats: { label: string; val: number }[] = isGK ? [
-    { label: 'Refleksler', val: player.goalkeeping || stats.kurtaris },
-    { label: 'Top Tutma', val: cap99((player.goalkeeping || stats.kurtaris) * 0.95) },
-    { label: 'Bire Bir', val: cap99((player.goalkeeping || stats.kurtaris) * 1.05) },
-    { label: 'Hava Hakimiyeti', val: player.jumping || stats.ziplama },
-    { label: 'Alan Hakimiyeti', val: player.positioning || stats.pozisyonAlma },
-    { label: 'Degaj', val: player.passing || stats.pas },
-    { label: 'Elle Oyun', val: cap99((player.passing || stats.pas) * 1.1) },
-    { label: 'İletişim', val: player.leadership || stats.liderlik },
-    { label: 'Konsantrasyon', val: player.concentration || stats.konsantrasyon },
-    { label: 'Çeviklik', val: player.agility || stats.ceviklik },
+    { label: 'Refleksler', val: player.goalkeeping ?? 50 },
+    { label: 'Top Tutma', val: cap99((player.goalkeeping ?? 50) * 0.95) },
+    { label: 'Bire Bir', val: cap99((player.goalkeeping ?? 50) * 1.05) },
+    { label: 'Hava Hakimiyeti', val: player.jumping ?? 50 },
+    { label: 'Alan Hakimiyeti', val: player.positioning ?? 50 },
+    { label: 'Degaj', val: player.passing ?? 50 },
+    { label: 'Elle Oyun', val: cap99((player.passing ?? 50) * 1.1) },
+    { label: 'İletişim', val: player.leadership ?? 50 },
+    { label: 'Konsantrasyon', val: player.concentration ?? 50 },
+    { label: 'Çeviklik', val: player.agility ?? 50 },
   ] : [
-    { label: 'Bitiricilik', val: player.finishing || stats.bitiricilik },
-    { label: 'Dribbling', val: player.dribbling || stats.dribling },
-    { label: 'İlk Kontrol', val: player.firstTouch || stats.topKontrol },
-    { label: 'Kafa Vuruşu', val: player.heading || stats.kafaVurusu },
-    { label: 'Markaj', val: player.marking || stats.markaj },
-    { label: 'Orta Yapma', val: player.crossing || stats.ortayapma },
-    { label: 'Pas', val: player.passing || stats.pas },
-    { label: 'Teknik', val: player.technique || stats.tekik },
-    { label: 'Top Kapma', val: player.tackling || stats.topKapma },
-    { label: 'Uzaktan Şut', val: player.longShots || stats.uzaktanSut },
+    { label: 'Bitiricilik', val: player.finishing ?? player.shooting ?? 50 },
+    { label: 'Dribbling', val: player.dribbling ?? 50 },
+    { label: 'İlk Kontrol', val: player.firstTouch ?? player.control ?? 50 },
+    { label: 'Kafa Vuruşu', val: player.heading ?? player.power ?? 50 },
+    { label: 'Markaj', val: player.marking ?? player.defending ?? 50 },
+    { label: 'Orta Yapma', val: player.crossing ?? player.passing ?? 50 },
+    { label: 'Pas', val: player.passing ?? 50 },
+    { label: 'Teknik', val: player.technique ?? player.control ?? 50 },
+    { label: 'Top Kapma', val: player.tackling ?? player.defending ?? 50 },
+    { label: 'Uzaktan Şut', val: player.longShots ?? player.shooting ?? 50 },
   ];
 
-  // Mental
+  // ── Özet Skorları: Doğrudan player attribute'lerinden, yoksa varsayılan 50 ──
+  // Özel Yetenek: traits/personalityTraits sayısından türetilir (0-100)
+  const traitScore = cap99(
+    (player.flair) ||
+    Math.min(100, 30 + (player.traits?.length || 0) * 12 + (player.personalityTraits?.length || 0) * 8)
+  );
+
+  // Mental — Her stat doğrudan kendi attribute'ünden, derived stats kullanılmaz
   const mentalStats: { label: string; val: number }[] = [
-    { label: 'Agresiflik', val: player.aggression || stats.agresiflik },
-    { label: 'Cesaret', val: player.bravery || stats.cesaret },
-    { label: 'Çalışkanlık', val: player.workRate || stats.caliskanlik },
-    { label: 'Karar Alma', val: player.decisions || stats.kararAlma },
-    { label: 'Kararlılık', val: player.determination || stats.kararllik },
-    { label: 'Konsantrasyon', val: player.concentration || stats.konsantrasyon },
-    { label: 'Liderlik', val: player.leadership || stats.liderlik },
-    { label: 'Önsez', val: player.anticipation || stats.onsez },
-    { label: 'Özel Yetenek', val: player.flair || stats.ozelYetenek },
-    { label: 'Pozisyon Alma', val: player.positioning || stats.pozisyonAlma },
-    { label: 'Soğukkanlılık', val: player.composure || stats.soggukkanlilik },
-    { label: 'Takım Oyunu', val: player.teamwork || stats.takimOyunu },
-    { label: 'Vizyon', val: player.vision || stats.vizyon },
+    { label: 'Agresiflik', val: player.aggression ?? 50 },
+    { label: 'Cesaret', val: player.bravery ?? 50 },
+    { label: 'Çalışkanlık', val: player.workRate ?? 50 },
+    { label: 'Karar Alma', val: player.decisions ?? 50 },
+    { label: 'Kararlılık', val: player.determination ?? 50 },
+    { label: 'Konsantrasyon', val: player.concentration ?? 50 },
+    { label: 'Liderlik', val: player.leadership ?? 50 },
+    { label: 'Önsez', val: player.anticipation ?? 50 },
+    { label: 'Özel Yetenek', val: traitScore },
+    { label: 'Pozisyon Alma', val: player.positioning ?? player.offTheBall ?? 50 },
+    { label: 'Soğukkanlılık', val: player.composure ?? 50 },
+    { label: 'Takım Oyunu', val: player.teamwork ?? 50 },
+    { label: 'Vizyon', val: player.vision ?? 50 },
   ];
 
-  // Physical
+  // Physical — Doğrudan player attribute'leri, yoksa varsayılan 50
   const physicalStats: { label: string; val: number }[] = [
-    { label: 'Çeviklik', val: player.agility || stats.ceviklik },
-    { label: 'Dayanıklılık', val: player.stamina || stats.dayaniklilik },
-    { label: 'Denge', val: player.balance || stats.denge },
-    { label: 'Güç', val: player.strength || stats.guc },
-    { label: 'Hız', val: player.speed || stats.hiz },
-    { label: 'Hızlanma', val: player.acceleration || stats.hizlanma },
-    { label: 'Zıplama', val: player.jumping || stats.ziplama },
-    { label: 'Sol Ayak', val: player.leftFoot || stats.solAyak },
-    { label: 'Sağ Ayak', val: player.rightFoot || stats.sagAyak },
+    { label: 'Çeviklik', val: player.agility ?? 50 },
+    { label: 'Dayanıklılık', val: player.stamina ?? player.cond ?? 50 },
+    { label: 'Denge', val: player.balance ?? 50 },
+    { label: 'Güç', val: player.strength ?? player.power ?? 50 },
+    { label: 'Hız', val: player.speed ?? 50 },
+    { label: 'Hızlanma', val: player.acceleration ?? player.speed ?? 50 },
+    { label: 'Zıplama', val: player.jumping ?? player.power ?? 50 },
+    { label: 'Sol Ayak', val: player.leftFoot ?? (player.preferred_foot === 'Left' ? 80 : 50) },
+    { label: 'Sağ Ayak', val: player.rightFoot ?? (player.preferred_foot === 'Right' ? 80 : 50) },
   ];
 
-  // ── Radar — Evrensel 6 eksen (oyuncunun temel özellikleri) ──
-  const chartData = isGK ? [
-    { subject: 'Şut', A: cap99(player.shooting || 10) },
-    { subject: 'Pas', A: cap99(player.passing || 10) },
-    { subject: 'Dribling', A: cap99(player.dribbling || player.control || 10) },
-    { subject: 'Savunma', A: cap99(player.defending || player.tackling || 10) },
-    { subject: 'Fizik', A: cap99(player.power || player.strength || 10) },
-    { subject: 'Hız', A: cap99(player.speed || 10) },
-  ] : [
-    { subject: 'Şut', A: cap99(player.shooting || stats.uzaktanSut) },
-    { subject: 'Pas', A: cap99(player.passing || stats.pas) },
-    { subject: 'Dribling', A: cap99(player.dribbling || stats.dribling) },
-    { subject: 'Savunma', A: cap99(player.defending || stats.topKapma) },
-    { subject: 'Fizik', A: cap99(player.power || stats.guc) },
-    { subject: 'Hız', A: cap99(player.speed || stats.hiz) },
+  // ── Radar — Evrensel 6 eksen (oyuncunun gerçek attribute'leri) ──
+  // Her eksen doğrudan player objesindeki değerden alınır, derived stats kullanılmaz
+  const chartData = [
+    { subject: 'Şut', A: cap99(player.shooting || 0) },
+    { subject: 'Pas', A: cap99(player.passing || 0) },
+    { subject: 'Dribling', A: cap99(player.dribbling || 0) },
+    { subject: 'Savunma', A: cap99(player.defending || 0) },
+    { subject: 'Fizik', A: cap99(player.power || 0) },
+    { subject: 'Hız', A: cap99(player.speed || 0) },
   ];
 
   // ── Position colors (spesifik mevki bazlı) ──
