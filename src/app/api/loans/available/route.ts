@@ -6,6 +6,8 @@
  *
  * - is_on_loan_market = true VE profile_id != current user
  * - Oyuncu verisi + loan_fee dahil
+ *
+ * NOT: Kolonlar henüz yoksa boş liste döner
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -31,10 +33,9 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Kiralık pazarındaki oyuncuları getir (kendi takımımız hariç) ──
-    // Use try/catch for column compatibility - is_on_loan_market may not exist yet
     let players: any[] = [];
     let playersError: any = null;
-    
+
     try {
       const result = await supabase
         .from('players')
@@ -43,6 +44,7 @@ export async function GET(request: NextRequest) {
           name,
           position,
           specific_position,
+          secondary_positions,
           rating,
           potential,
           age,
@@ -72,7 +74,7 @@ export async function GET(request: NextRequest) {
         `)
         .eq('is_on_loan_market', true)
         .neq('profile_id', profileId);
-      
+
       players = result.data || [];
       playersError = result.error;
     } catch (err: any) {
@@ -84,7 +86,7 @@ export async function GET(request: NextRequest) {
     if (playersError) {
       console.error('[GET /api/loans/available] Fetch error:', playersError.message);
       // If column doesn't exist, return empty gracefully
-      if (playersError.message?.includes('does not exist')) {
+      if (playersError.message?.includes('does not exist') || playersError.code === '42703') {
         return NextResponse.json({ players: [], count: 0 });
       }
       return NextResponse.json({ error: 'Kiralık oyuncular yüklenirken hata oluştu' }, { status: 500 });
@@ -117,12 +119,23 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // ── secondary_positions parse ──
+    const parseSecondary = (raw: any): string[] | undefined => {
+      if (!raw) return undefined;
+      if (Array.isArray(raw)) return raw;
+      if (typeof raw === 'string') {
+        try { return JSON.parse(raw); } catch { return undefined; }
+      }
+      return undefined;
+    };
+
     // ── Oyuncu verisini zenginleştir ──
     const enrichedPlayers = availablePlayers.map((p: Record<string, unknown>) => {
       const ownerId = (p.loan_owner_profile_id as string) || (p.profile_id as string);
       const ownerProfile = ownerProfiles[ownerId];
       return {
         ...p,
+        secondary_positions: parseSecondary(p.secondary_positions),
         owner_team_name: ownerProfile?.team_name || p.team_name || 'Bilinmeyen Takım',
         loan_fee: p.loan_fee || 0,
       };
@@ -133,7 +146,7 @@ export async function GET(request: NextRequest) {
       count: enrichedPlayers.length,
     });
   } catch (err) {
-    console.error('[GET /api/loans/available] Exception:', err);
+    console.error('[GET /api/loansavailable] Exception:', err);
     return NextResponse.json({ error: 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.' }, { status: 500 });
   }
 }

@@ -19,8 +19,9 @@ import {
 import type { Player, TrainingState } from '@/lib/fm/types';
 import { calculateMarketValue, formatCurrency } from '@/lib/fm/valuation';
 import { toTitleCase, fmStatColor } from '@/lib/fm/ui-helpers';
-import { localizePos, getPosColor } from '@/lib/fm/ui-helpers';
+import { localizePos, getPosColor, localizePosFull } from '@/lib/fm/ui-helpers';
 import PlayerRow from './PlayerRow';
+import { POS_TO_GROUP, POS_LABELS } from '@/lib/fm/playerGenerator';
 
 interface MyTeamTabProps {
   userId: string;
@@ -74,7 +75,17 @@ export default function MyTeamTab({
       list = list.filter(p => p && p.name && p.name.toLowerCase().includes(term));
     }
     if (filterPos !== 'ALL') {
-      list = list.filter(p => p && p.position === filterPos);
+      const bigGroups = ['GK', 'DEF', 'MID', 'FWD'];
+      list = list.filter(p => {
+        if (!p) return false;
+        const sp = (p as any).specificPosition || (p as any).specific_position || p.position;
+        if (bigGroups.includes(filterPos)) {
+          // Geniş grup filtresi: hem position hem specificPosition grubu eşleşmeli
+          return p.position === filterPos || (POS_TO_GROUP as any)[sp] === filterPos;
+        }
+        // Detaylı mevki filtresi: specificPosition eşleşmeli
+        return sp === filterPos;
+      });
     }
 
     // Sort
@@ -168,16 +179,46 @@ export default function MyTeamTab({
         </div>
         
         <div className="flex gap-2 shrink-0">
-          <div className="bg-zinc-900 border border-white/5 rounded-2xl p-1 flex">
+          <div className="bg-zinc-900 border border-white/5 rounded-2xl p-1 flex overflow-x-auto no-scrollbar">
             {['ALL', 'GK', 'DEF', 'MID', 'FWD'].map(pos => (
               <button 
                 key={pos}
                 onClick={() => setFilterPos(pos)}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${filterPos === pos ? 'bg-white text-black' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all whitespace-nowrap ${filterPos === pos ? 'bg-white text-black' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
               >
                 {pos}
               </button>
             ))}
+            <select
+              value={filterPos}
+              onChange={(e) => setFilterPos(e.target.value)}
+              className="bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-[10px] font-black text-white/70 outline-none cursor-pointer"
+            >
+              <option value="ALL">Tüm Mevkiler</option>
+              <optgroup label="Kaleci">
+                <option value="GK">GK - Kaleci</option>
+              </optgroup>
+              <optgroup label="Defans">
+                <option value="CB">CB - Merkez Defans</option>
+                <option value="LB">LB - Sol Bek</option>
+                <option value="RB">RB - Sağ Bek</option>
+                <option value="LWB">LWB - Sol Kanat Bek</option>
+                <option value="RWB">RWB - Sağ Kanat Bek</option>
+              </optgroup>
+              <optgroup label="Orta Saha">
+                <option value="CDM">CDM - Defansif Orta Saha</option>
+                <option value="CM">CM - Merkez Orta Saha</option>
+                <option value="CAM">CAM - Ofansif Orta Saha</option>
+                <option value="LM">LM - Sol Açık</option>
+                <option value="RM">RM - Sağ Açık</option>
+                <option value="LW">LW - Sol Kanat</option>
+                <option value="RW">RW - Sağ Kanat</option>
+              </optgroup>
+              <optgroup label="Forvet">
+                <option value="CF">CF - Göbek Forvet</option>
+                <option value="ST">ST - Santrfor</option>
+              </optgroup>
+            </select>
           </div>
 
           <div className="bg-zinc-900 border border-white/5 rounded-2xl p-1 flex">
@@ -273,7 +314,7 @@ export default function MyTeamTab({
               >
                 {/* Pos Badge */}
                 <div className={`absolute top-4 left-4 w-10 h-10 rounded-xl flex items-center justify-center font-black italic shadow-2xl ${getPosColor(player.position)} border border-white/10`}>
-                   {localizePos(player.position)}
+                   {localizePos((player as any).specificPosition || player.position)}
                 </div>
 
                 {/* Main Identity */}
@@ -284,7 +325,7 @@ export default function MyTeamTab({
                          <h3 className="text-xl font-black italic tracking-tighter uppercase truncate max-w-[150px]">{toTitleCase(player.name)}</h3>
                          {player.age <= 21 && <Star size={12} className="text-amber-400 fill-amber-400" />}
                        </div>
-                       <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">{player.age} YAŞ • {localizePos(player.position)}</p>
+                       <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">{player.age} YAŞ • {localizePosFull((player as any).specificPosition || player.position)}</p>
                      </div>
                      <div className="text-right">
                         <div className={`text-3xl font-black font-mono italic leading-none ${fmStatColor(player.rating)}`}>{Math.round(player.rating)}</div>

@@ -630,35 +630,34 @@ function PreviousEncounters({
   useEffect(() => {
     const fetchPrevious = async () => {
       const supabase = getSupabase();
-      if (!supabase) {
+      if (!supabase || !fixture.home_team_id || !fixture.away_team_id) {
         setLoading(false);
         return;
       }
 
       try {
+        // İki takımın birlikte oynadığı maçları bul
+        // Senaryo 1: home_team_id=A, away_team_id=B
+        // Senaryo 2: home_team_id=B, away_team_id=A
         const { data, error } = await supabase
           .from('fixtures')
-          .select('id, match_date, home_team:league_teams!home_team_id(name), away_team:league_teams!away_team_id(name), home_score, away_score')
-          .or(`home_team_id.eq.${fixture.home_team_id},away_team_id.eq.${fixture.away_team_id}`)
+          .select('id, match_date, home_team_id, away_team_id, home_score, away_score, home:league_teams!home_team_id(name), away:league_teams!away_team_id(name)')
+          .or(`and(home_team_id.eq.${fixture.home_team_id},away_team_id.eq.${fixture.away_team_id}),and(home_team_id.eq.${fixture.away_team_id},away_team_id.eq.${fixture.home_team_id})`)
           .order('match_date', { ascending: false })
-          .limit(10);
+          .limit(6);
 
         if (error) {
+          console.error('PreviousEncounters error:', error.message);
           setMatches([]);
         } else {
-          const teamIds = new Set([fixture.home_team_id, fixture.away_team_id]);
           const filtered = (data || [])
-            .filter((m: any) => {
-              const homeId = m.home_team?.id;
-              const awayId = m.away_team?.id;
-              return teamIds.has(homeId) && teamIds.has(awayId) && m.id !== fixture.id;
-            })
+            .filter((m: any) => m.id !== fixture.id)
             .slice(0, 5)
             .map((m: any) => ({
               id: m.id,
               match_date: m.match_date,
-              home_team: m.home_team?.name || '?',
-              away_team: m.away_team?.name || '?',
+              home_team: m.home?.name || '?',
+              away_team: m.away?.name || '?',
               home_score: m.home_score,
               away_score: m.away_score,
             }));

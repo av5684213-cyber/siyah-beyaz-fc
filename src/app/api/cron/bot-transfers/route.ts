@@ -1,52 +1,31 @@
 /**
- * Cron Job: Bot Transfer Döngüsü
- *
- * Haftada bir Pazartesi 10:00'da çalışır.
- * Tüm bot takımlar için transfer işlemlerini gerçekleştirir:
- *   - En düşük OVR'li oyuncuyu satışa çıkar (mevkide 3+ oyuncu varsa)
- *   - Eksik mevkiye uygun en ucuz oyuncuyu satın al (bütçe yeterliyse)
- *
  * GET /api/cron/bot-transfers
- * Header: x-cron-secret veya Query: ?secret=<CRON_SECRET>
+ * Haftada bir (Pazartesi 10:00) çalışacak cron endpoint
+ * Bot takımlar için otomatik transfer AI
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { runBotTransferCycle } from '@/lib/fm/botService';
-import { verifyCronSecret, sanitizeError } from '@/lib/fm/security';
-
-export const maxDuration = 300; // 5 dakika (Vercel limiti)
+import { runBotTransfers } from '@/lib/fm/botActions';
 
 export async function GET(request: NextRequest) {
   // Cron secret doğrulama
-  const cronCheck = verifyCronSecret(request);
-  if (!cronCheck.valid) {
-    return NextResponse.json({ error: cronCheck.error }, { status: 401 });
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
   }
 
   try {
-    console.log('[cron/bot-transfers] Starting bot transfer cycle...');
-
-    const result = await runBotTransferCycle();
-
-    console.log(
-      `[cron/bot-transfers] Completed: ${result.totalBots} bots processed, ` +
-      `${result.results.filter(r => r.bought).length} bought, ` +
-      `${result.results.filter(r => r.sold).length} sold`
-    );
+    const result = await runBotTransfers();
 
     return NextResponse.json({
       success: true,
-      totalBots: result.totalBots,
-      boughtCount: result.results.filter(r => r.bought).length,
-      soldCount: result.results.filter(r => r.sold).length,
-      results: result.results.slice(0, 20), // İlk 20 sonucu döndür (limitli)
-      timestamp: new Date().toISOString(),
+      listed: result.listed,
+      bought: result.bought,
+      details: result.details,
     });
   } catch (err) {
-    console.error('[cron/bot-transfers] Fatal error:', err);
-    return NextResponse.json(
-      { error: sanitizeError(err) },
-      { status: 500 }
-    );
+    console.error('[bot-transfers] Exception:', err);
+    return NextResponse.json({ error: 'Bir hata oluştu' }, { status: 500 });
   }
 }

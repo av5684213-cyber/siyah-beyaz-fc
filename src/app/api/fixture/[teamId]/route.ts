@@ -136,6 +136,8 @@ async function fetchFixturesForTeam(
       away_score: f.away_score,
       home_team: (f.home as Record<string, string>)?.name || 'Bilinmiyor',
       away_team: (f.away as Record<string, string>)?.name || 'Bilinmiyor',
+      home_team_id: f.home_team_id || (f.home as Record<string, string>)?.id || '',
+      away_team_id: f.away_team_id || (f.away as Record<string, string>)?.id || '',
       is_home: f.home_team_id === leagueTeamId,
       referee_name: f.referee_name || null,
     }));

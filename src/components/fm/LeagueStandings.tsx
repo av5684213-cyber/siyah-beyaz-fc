@@ -92,12 +92,15 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
   const [sortKey, setSortKey] = useState<string>('points');
   const [sortDir, setSortDir] = useState<string>('desc');
 
-  // Son başarılı fetch'ten gelen lig listesini tut (infinite loop'u önlemek için)
-  // MUST be declared BEFORE effectiveActiveLeague which references it
+  // Lig listesini ayrı state'te tut — infinite loop'u önlemek için
   const [fetchedLeagues, setFetchedLeagues] = useState<LeagueInfo[]>([]);
 
-  // Set initial activeLeague from fetchedLeagues (stable, won't cause re-renders)
-  const effectiveActiveLeague = activeLeague || (fetchedLeagues.length > 0 ? fetchedLeagues[0].id : '') || '';
+  // effectiveActiveLeague: kullanıcı seçtiyse onu kullan, yoksa fetchedLeagues'den ilkini al
+  const effectiveActiveLeague = useMemo(() => {
+    if (activeLeague) return activeLeague;
+    if (fetchedLeagues.length > 0) return fetchedLeagues[0].id;
+    return '';
+  }, [activeLeague, fetchedLeagues]);
 
   const filteredPlayers = useMemo(() => {
     return (allPlayers as Player[]).filter((p: Player) => {
@@ -135,11 +138,21 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
       setData(json);
       // Lig listesini ayrı tut, böylece effect dependency'sinde data?.leagues kullanmayız
       if (json.leagues && json.leagues.length > 0) {
-        setFetchedLeagues(json.leagues);
+        setFetchedLeagues(prev => {
+          // Sadece farklıysa güncelle (gereksiz re-render'ı önle)
+          if (prev.length === json.leagues.length && prev.every((l, i) => l.id === json.leagues[i].id)) return prev;
+          return json.leagues;
+        });
       }
     } catch (err) {
       console.error('Standings fetch error:', err);
-      // Fallback data structure if fetch fails completely
+      // Fallback: fetchedLeagues boşsa varsayılan ligler ata
+      setFetchedLeagues(prev => prev.length > 0 ? prev : [
+        { id: 1, name: '1. Lig', tier: 1 },
+        { id: 2, name: '2. Lig', tier: 2 },
+        { id: 3, name: '3. Lig', tier: 3 },
+        { id: 4, name: '4. Lig', tier: 4 },
+      ]);
       setData(prev => prev || {
         source: 'error_fallback',
         leagues: [
@@ -156,19 +169,20 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
     }
   }, []);
 
-  // İlk yükleme: activeLeague seçili değilse fetchedLeagues'den ilkini kullan
+  // İlk yükleme: fetchedLeagues gelene kadar bekle, sonra aktif ligi getir
+  const hasFetchedRef = React.useRef(false);
+  useEffect(() => {
+    if (hasFetchedRef.current) return; // zaten fetch yapıldı
+    hasFetchedRef.current = true;
+    fetchStandings(1); // varsayılan: 1. Lig
+  }, [fetchStandings]);
+
+  // activeLeague değiştiğinde o ligi getir
   useEffect(() => {
     if (activeLeague) {
-      // Kullanıcı bir lig seçti, onu getir
       fetchStandings(Number(activeLeague));
-    } else if (fetchedLeagues.length > 0) {
-      // Daha önce lig listesi geldiyse ilkini getir
-      fetchStandings(fetchedLeagues[0].id);
-    } else {
-      // Hiç lig yoksa, varsayılan olarak 1. Lig'i getir
-      fetchStandings(1);
     }
-  }, [activeLeague, fetchStandings]); // fetchedLeagues BURADA YOK — infinite loop önlenir
+  }, [activeLeague, fetchStandings]);
 
   const leagues = useMemo(() => fetchedLeagues.length > 0 ? fetchedLeagues : (data?.leagues || [
     { id: 1, name: '1. Lig', tier: 1 },
@@ -569,6 +583,8 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
             onClose={() => setSelectedPlayer(null)}
             teamStats={{}}
             isAdmin={isAdmin}
+            profileId={profile?.id}
+            profileTeamName={profile?.team_name}
           />
         )}
       </AnimatePresence>

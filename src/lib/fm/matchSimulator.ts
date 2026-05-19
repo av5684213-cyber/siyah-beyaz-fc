@@ -287,12 +287,47 @@ const MINUTE_WEIGHTS: [number, number, number][] = [
  * Key format: "A vs B" where A and B are formation strings.
  */
 const FORMATION_ADVANTAGE: Record<string, number> = {
+  // Klasik RPS
   '4-4-2 vs 4-3-3': 0.05,
   '4-3-3 vs 3-5-2': 0.05,
   '3-5-2 vs 4-4-2': 0.05,
   '4-3-3 vs 4-4-2': -0.05,
   '3-5-2 vs 4-3-3': -0.05,
   '4-4-2 vs 3-5-2': -0.05,
+  // Genişletilmiş formasyon etkileşimleri
+  '4-3-3 vs 5-3-2': 0.04,    // Hücum vs defansif
+  '5-3-2 vs 4-3-3': -0.04,
+  '4-2-3-1 vs 4-4-2': 0.03,  // Orta saha kontrolü
+  '4-4-2 vs 4-2-3-1': -0.03,
+  '3-4-3 vs 5-3-2': 0.06,    // Aşırı hücum vs aşırı defans
+  '5-3-2 vs 3-4-3': -0.06,
+  '4-1-4-1 vs 4-3-3': 0.03,  // Defansif orta saha
+  '4-3-3 vs 4-1-4-1': -0.03,
+  '5-4-1 vs 4-4-2': 0.04,    // Çok defansif
+  '4-4-2 vs 5-4-1': -0.04,
+  '4-5-1 vs 4-3-3': 0.02,    // Orta saha yoğunluğu
+  '4-3-3 vs 4-5-1': -0.02,
+};
+
+/**
+ * Formasyon bazlı hücum/defans/kontrol çarpanları.
+ * Her formasyonun doğal eğilimini yansıtır.
+ */
+const FORMATION_IMPACTS: Record<string, { offense: number; defense: number; control: number }> = {
+  '4-4-2':   { offense: 1.00, defense: 1.00, control: 1.00 },  // Dengeli
+  '4-3-3':   { offense: 1.06, defense: 0.96, control: 1.00 },  // Hücum ağırlıklı
+  '3-5-2':   { offense: 1.02, defense: 0.97, control: 1.04 },  // Orta saha hakimiyeti
+  '5-3-2':   { offense: 0.92, defense: 1.08, control: 0.98 },  // Defans ağırlıklı
+  '5-4-1':   { offense: 0.88, defense: 1.12, control: 0.95 },  // Çok defansif
+  '4-2-3-1': { offense: 1.03, defense: 0.98, control: 1.03 },  // Orta saha + hücum
+  '3-4-3':   { offense: 1.08, defense: 0.92, control: 0.97 },  // Aşırı hücum
+  '4-1-4-1': { offense: 0.95, defense: 1.05, control: 1.03 },  // Defansif orta saha
+  '4-3-2-1': { offense: 0.97, defense: 1.03, control: 1.02 },  // Dar hücum
+  '4-3-1-2': { offense: 1.02, defense: 1.00, control: 1.01 },  // İçten hücum
+  '4-4-1-1': { offense: 0.98, defense: 1.02, control: 1.00 },  // Temkinli
+  '4-5-1':   { offense: 0.94, defense: 1.04, control: 1.06 },  // Orta saxa yoğun
+  '3-1-4-2': { offense: 1.03, defense: 0.97, control: 1.02 },  // Tiki-taka
+  '3-3-3-1': { offense: 1.07, defense: 0.93, control: 0.98 },  // Çok hücum
 };
 
 /** Probability per player per match of receiving a yellow card */
@@ -814,18 +849,26 @@ export function simulateMatch(config: MatchSimulatorConfig): MatchSimulatorResul
   const adjustedHomeStrength = homeStrength.overall + tacticalAdvantage.formationBonus * 50;
   const adjustedAwayStrength = awayStrength.overall - tacticalAdvantage.formationBonus * 50;
 
+  // ── Step 2b: Apply formation impacts (offense/defense/control) ──
+  const homeFormImpact = FORMATION_IMPACTS[homeFormation] || { offense: 1.0, defense: 1.0, control: 1.0 };
+  const awayFormImpact = FORMATION_IMPACTS[awayFormation] || { offense: 1.0, defense: 1.0, control: 1.0 };
+
+  // Adjusted defense values (formasyonun defans çarpanı uygulanır)
+  const homeDefForAwayXG = homeStrength.defence * homeFormImpact.defense;
+  const awayDefForHomeXG = awayStrength.defence * awayFormImpact.defense;
+
   // ── Step 3: Calculate expected goals ──────────────────────────────────────
   const homeXG = calculateExpectedGoals(
-    adjustedHomeStrength,
-    awayStrength.defence,
+    adjustedHomeStrength * homeFormImpact.offense,
+    awayDefForHomeXG,
     homeTactic,
     awayTactic,
     true,
     homeAdvantage
   );
   const awayXG = calculateExpectedGoals(
-    adjustedAwayStrength,
-    homeStrength.defence,
+    adjustedAwayStrength * awayFormImpact.offense,
+    homeDefForAwayXG,
     awayTactic,
     homeTactic,
     false,

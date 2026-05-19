@@ -1,69 +1,68 @@
 // ═══════════════════════════════════════════════════════════════
-// Service Worker — Web Push Bildirimleri
-// public/sw.js
+// Siyah Beyaz FC — Service Worker (Web Push Bildirimleri)
 // ═══════════════════════════════════════════════════════════════
 
 /// <reference lib="webworker" />
 
-declare const self: ServiceWorkerGlobalScope;
+const SW_VERSION = '1.0.0';
 
-// Push event — bildirim göster
-self.addEventListener('push', (event: PushEvent) => {
-  let data: { title?: string; body?: string; icon?: string; url?: string } = {};
-  
-  try {
-    if (event.data) {
-      data = event.data.json();
-    }
-  } catch {
-    data = {
-      title: 'Siyah Beyaz FC',
-      body: 'Yeni bildiriminiz var!',
-    };
-  }
-
-  const title = data.title || 'Siyah Beyaz FC';
-  const body = data.body || '';
-  const icon = data.icon || '/favicon.ico';
-  const url = data.url || '/';
-
-  const options: NotificationOptions = {
-    body,
-    icon,
-    badge: '/favicon.ico',
-    vibrate: [200, 100, 200],
-    data: { url },
-    actions: [
-      { action: 'open', title: 'Aç' },
-      { action: 'dismiss', title: 'Kapat' },
-    ],
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
-});
-
-// Notification click — URL'ye yönlendir
-self.addEventListener('notificationclick', (event: NotificationEvent) => {
-  event.notification.close();
-
-  const url = event.notification.data?.url || '/';
-
-  if (event.action === 'open' || !event.action) {
-    event.waitUntil(
-      self.clients.openWindow(url)
-    );
-  }
-});
-
-// Install & Activate
-self.addEventListener('install', () => {
+// Install
+self.addEventListener('install', (event) => {
+  console.log('[SW] Yüklendi v' + SW_VERSION);
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (event: ExtendableEvent) => {
+// Activate
+self.addEventListener('activate', (event) => {
+  console.log('[SW] Aktif v' + SW_VERSION);
   event.waitUntil(self.clients.claim());
 });
 
-export {};
+// Push bildirim alma
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  try {
+    const data = event.data.json();
+    const title = data.title || 'Siyah Beyaz FC';
+    const options: NotificationOptions = {
+      body: data.body || '',
+      icon: data.icon || '/icon-192.png',
+      badge: '/badge-72.png',
+      vibrate: [200, 100, 200],
+      data: {
+        url: data.url || '/fixture',
+      },
+      actions: [
+        { action: 'open', title: 'Maçı Görüntüle' },
+        { action: 'dismiss', title: 'Kapat' },
+      ],
+    };
+
+    event.waitUntil(self.registration.showNotification(title, options));
+  } catch (err) {
+    console.error('[SW] Push işleme hatası:', err);
+  }
+});
+
+// Bildirime tıklama
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const urlToOpen = event.notification.data?.url || '/fixture';
+
+  if (event.action === 'dismiss') return;
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Açık pencere varsa odaklan
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Yoksa yeni pencere aç
+      return self.clients.openWindow(urlToOpen);
+    })
+  );
+});

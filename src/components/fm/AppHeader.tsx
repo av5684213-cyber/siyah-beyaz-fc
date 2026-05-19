@@ -164,23 +164,27 @@ export function AppHeader({
         </div>
 
         <div className="text-right flex flex-col items-end border-l border-white/5 pl-4">
-          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold mb-0.5">Butce</p>
+          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold mb-0.5">BÜTÇE (€)</p>
           <div className="flex items-center gap-2 justify-end">
             <Wallet size={12} className="text-emerald-400/60" />
             <p className="font-mono text-lg font-medium tracking-tighter text-emerald-400">
-              {((profile?.money || 1000000) / 1000000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}M €
+              {(profile?.money || 0) >= 1000000
+                ? `${((profile?.money || 0) / 1000000).toFixed(2)}M`
+                : (profile?.money || 0) >= 1000
+                  ? `${((profile?.money || 0) / 1000).toFixed(0)}K`
+                  : `${profile?.money || 0}`} €
             </p>
           </div>
         </div>
 
         <div className="text-right flex flex-col items-end border-l border-white/5 pl-4">
-          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold mb-0.5">💰 Kredi</p>
+          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold mb-0.5">KREDİ (KR)</p>
           <div className="flex items-center gap-2 justify-end">
             <div className="w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center border border-amber-600 shadow-[0_0_10px_rgba(251,191,36,0.3)]">
                <span className="text-[8px] font-black text-amber-900">K</span>
             </div>
             <p className="font-mono text-lg font-medium tracking-tighter text-amber-400">
-              {profile?.credits?.toLocaleString() || '0'}
+              {profile?.credits?.toLocaleString() || '0'} KR
             </p>
           </div>
         </div>
