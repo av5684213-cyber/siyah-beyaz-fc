@@ -19,7 +19,7 @@ import { traitDescriptions, getTraitTierLabel } from '@/lib/fm/traits';
 import { TRAIT_LEVELS } from '@/lib/fm/traitsData';
 import { useFM } from '@/lib/fm/GameContext';
 import { getPlayStyleEffect } from '@/lib/fm/playStyles';
-import { localizePos, localizePosFull, getPosGroup, getPosDotColor, getPosBadgeStyle } from '@/lib/fm/ui-helpers';
+import { localizePos, localizePosFull, getPosGroup, getPosDotColor, getPosBadgeStyle, getPlayerPos } from '@/lib/fm/ui-helpers';
 import { POS_TO_GROUP, POS_LABELS } from '@/lib/fm/playerGenerator';
 import { fmStatColor, fmStatBg, formatMoney, cap99, toTitleCase } from '@/lib/fm/ui-helpers';
 import type { Player, TrainingState } from '@/lib/fm/types';
@@ -288,7 +288,7 @@ export default function PlayerDetailModal({
   };
 
   // Spesifik mevki bilgisini al
-  const sp = player.specificPosition || player.position || 'CM';
+  const sp = getPlayerPos(player as Record<string, unknown>);
   const isGK = player.position === 'GK' || sp === 'GK';
 
   // Technical or Goalkeeping
@@ -676,7 +676,7 @@ export default function PlayerDetailModal({
 
                   {/* Saha Yerleşimi */}
                   <PlayerPositionMap
-                    specificPosition={player.specificPosition}
+                    specificPosition={getPlayerPos(player as Record<string, unknown>)}
                     secondaryPositions={player.secondaryPositions}
                     size="sm"
                   />
@@ -968,7 +968,7 @@ export default function PlayerDetailModal({
                       <div className="absolute top-1/2 -translate-y-1/2 right-1 w-3 h-8 border border-white/10 rounded-l-sm" />
                       <div className="absolute top-1/2 -translate-y-1/2 left-1 w-3 h-8 border border-white/10 rounded-r-sm" />
                       {/* Player dot on pitch */}
-                      <PitchPositionDot position={player.position} specificPosition={player.specificPosition} />
+                      <PitchPositionDot position={player.position} specificPosition={getPlayerPos(player as Record<string, unknown>)} />
                     </div>
                   </div>
                 </div>

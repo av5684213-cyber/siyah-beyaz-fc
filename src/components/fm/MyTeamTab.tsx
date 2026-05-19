@@ -18,8 +18,7 @@ import {
 } from 'lucide-react';
 import type { Player, TrainingState } from '@/lib/fm/types';
 import { calculateMarketValue, formatCurrency } from '@/lib/fm/valuation';
-import { toTitleCase, fmStatColor } from '@/lib/fm/ui-helpers';
-import { localizePos, getPosColor, localizePosFull } from '@/lib/fm/ui-helpers';
+import { toTitleCase, fmStatColor, localizePos, getPosColor, localizePosFull, getPlayerPos } from '@/lib/fm/ui-helpers';
 import PlayerRow from './PlayerRow';
 import { POS_TO_GROUP, POS_LABELS } from '@/lib/fm/playerGenerator';
 
@@ -78,7 +77,7 @@ export default function MyTeamTab({
       const bigGroups = ['GK', 'DEF', 'MID', 'FWD'];
       list = list.filter(p => {
         if (!p) return false;
-        const sp = (p as any).specificPosition || (p as any).specific_position || p.position;
+        const sp = getPlayerPos(p as Record<string, unknown>);
         if (bigGroups.includes(filterPos)) {
           // Geniş grup filtresi: hem position hem specificPosition grubu eşleşmeli
           return p.position === filterPos || (POS_TO_GROUP as any)[sp] === filterPos;
@@ -314,7 +313,7 @@ export default function MyTeamTab({
               >
                 {/* Pos Badge */}
                 <div className={`absolute top-4 left-4 w-10 h-10 rounded-xl flex items-center justify-center font-black italic shadow-2xl ${getPosColor(player.position)} border border-white/10`}>
-                   {localizePos((player as any).specificPosition || player.position)}
+                   {localizePos(getPlayerPos(player as Record<string, unknown>))}
                 </div>
 
                 {/* Main Identity */}
@@ -325,7 +324,7 @@ export default function MyTeamTab({
                          <h3 className="text-xl font-black italic tracking-tighter uppercase truncate max-w-[150px]">{toTitleCase(player.name)}</h3>
                          {player.age <= 21 && <Star size={12} className="text-amber-400 fill-amber-400" />}
                        </div>
-                       <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">{player.age} YAŞ • {localizePosFull((player as any).specificPosition || player.position)}</p>
+                       <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">{player.age} YAŞ • {localizePosFull(getPlayerPos(player as Record<string, unknown>))}</p>
                      </div>
                      <div className="text-right">
                         <div className={`text-3xl font-black font-mono italic leading-none ${fmStatColor(player.rating)}`}>{Math.round(player.rating)}</div>

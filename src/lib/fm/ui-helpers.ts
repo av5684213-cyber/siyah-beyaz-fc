@@ -150,6 +150,29 @@ export function getPosBadgeStyle(pos: string): string {
     }
 }
 
+/**
+ * Oyuncunun spesifik mevkisini güvenli şekilde döndürür.
+ * Hem camelCase (specificPosition) hem snake_case (specific_position) alanlarını kontrol eder.
+ * İkisi de yoksa geniş grup (position) döner.
+ */
+export function getPlayerPos(player: Record<string, unknown>): string {
+  return (
+    (player.specificPosition as string) ||
+    (player.specific_position as string) ||
+    (player.position as string) ||
+    'MID'
+  );
+}
+
+/**
+ * Oyuncunun ikincil mevkilerini güvenli şekilde döndürür.
+ */
+export function getPlayerSecondaryPos(player: Record<string, unknown>): string[] {
+  const sp = player.secondaryPositions || player.secondary_positions;
+  if (Array.isArray(sp)) return sp as string[];
+  return [];
+}
+
 /** Dot/pip color for tactical boards */
 export function getPosDotColor(pos: string): string {
     const group = getPosGroup(pos);

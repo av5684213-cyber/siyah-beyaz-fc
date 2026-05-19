@@ -40,7 +40,7 @@ import {
 import { useFM } from '@/lib/fm/GameContext';
 import { Player, Sponsor } from '@/lib/fm/types';
 import { formatCurrency } from '@/lib/fm/valuation';
-import { toTitleCase, localizePosFull, getPosBadgeStyle, getPosGroup } from '@/lib/fm/ui-helpers';
+import { toTitleCase, localizePosFull, getPosBadgeStyle, getPosGroup, getPlayerPos } from '@/lib/fm/ui-helpers';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { calculateLoanFeeEuro } from '@/lib/fm/inflation';
 
@@ -260,7 +260,7 @@ export default function MarketTab() {
       if (p?.club?.includes(myTeam) || p?.team_name?.includes(myTeam)) return false;
       const term = searchTerm.toLowerCase();
       const nameMatch = (p?.name || '').toLowerCase().includes(term);
-      const posDisplay = (p as any).specificPosition || (p as any).specific_position || p.position || '';
+      const posDisplay = getPlayerPos(p as Record<string, unknown>);
       const posMatch = posDisplay.toLowerCase().includes(term) || localizePosFull(posDisplay).toLowerCase().includes(term);
       if (term && !nameMatch && !posMatch) return false;
       if (positionFilter !== 'ALL') {
@@ -466,7 +466,7 @@ export default function MarketTab() {
                         <span className="px-1.5 py-0.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[7px] font-black uppercase tracking-widest rounded">LİSTEDE</span>
                       ) : null}
                     </div>
-                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">{(player as any).specificPosition || (player as any).specific_position || player.position} • {player.age} YAŞ • {player.nation}</p>
+                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">{getPlayerPos(player as Record<string, unknown>)} • {player.age} YAŞ • {player.nation}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{formatCurrency(getEffectiveMarketValue(player))}</p>
@@ -475,9 +475,9 @@ export default function MarketTab() {
                 </div>
 
                 <div className="grid grid-cols-4 gap-2 mb-4 text-center">
-                  <div className={`p-2 rounded-lg border ${getPosBadgeStyle((player as any).specificPosition || (player as any).specific_position || player.position)} border`}>
-                    <p className="text-[8px] uppercase font-black opacity-60">{localizePosFull((player as any).specificPosition || (player as any).specific_position || player.position)}</p>
-                    <p className="text-xs font-black">{(player as any).specificPosition || (player as any).specific_position || player.position}</p>
+                  <div className={`p-2 rounded-lg border ${getPosBadgeStyle(getPlayerPos(player as Record<string, unknown>))} border`}>
+                    <p className="text-[8px] uppercase font-black opacity-60">{localizePosFull(getPlayerPos(player as Record<string, unknown>))}</p>
+                    <p className="text-xs font-black">{getPlayerPos(player as Record<string, unknown>)}</p>
                   </div>
                   <div className="bg-white/5 p-2 rounded-lg">
                     <p className="text-[8px] text-white/30 uppercase font-black">Rating</p>
@@ -577,7 +577,7 @@ export default function MarketTab() {
                     const computedWeekCost = computedDaily * 7;
                     const feeStr = computedDaily >= 1000000 ? `${(computedDaily / 1000000).toFixed(1)}M €` : computedDaily >= 1000 ? `${(computedDaily / 1000).toFixed(0)}K €` : `${computedDaily} €`;
                     const weekStr = computedWeekCost >= 1000000 ? `${(computedWeekCost / 1000000).toFixed(1)}M €` : computedWeekCost >= 1000 ? `${(computedWeekCost / 1000).toFixed(0)}K €` : `${computedWeekCost} €`;
-                    const posDisplay = lp.specific_position || lp.specificPosition || lp.position || 'MID';
+                    const posDisplay = getPlayerPos(lp as Record<string, unknown>);
                     return (
                       <motion.div
                         key={lp.id || lp.listing_id}
@@ -755,7 +755,7 @@ export default function MarketTab() {
                       <div className="space-y-2">
                         {myListings.map((listing: any) => {
                           const p = listing.player || {};
-                          const posDisplay = p.specific_position || p.position || 'MID';
+                          const posDisplay = getPlayerPos(p as Record<string, unknown>);
                           return (
                             <div key={listing.id} className="bg-white/[0.03] border border-white/5 rounded-xl p-4 flex items-center gap-4">
                               <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-[10px] font-black border ${getPosBadgeStyle(posDisplay)}`}>
@@ -922,7 +922,7 @@ export default function MarketTab() {
                         <div>
                           <h3 className="text-lg font-black italic tracking-tighter text-white uppercase">{toTitleCase(rentalModalPlayer.name)}</h3>
                           <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">
-                            {localizePosFull(rentalModalPlayer.specific_position || rentalModalPlayer.position)} • ⭐ {rentalModalPlayer.rating} • {rentalModalPlayer.age} yaş
+                            {localizePosFull(getPlayerPos(rentalModalPlayer as Record<string, unknown>))} • ⭐ {rentalModalPlayer.rating} • {rentalModalPlayer.age} yaş
                           </p>
                           <p className="text-[9px] text-white/20">Sahip: {rentalModalPlayer.owner_team_name || rentalModalPlayer.team_name}</p>
                         </div>
@@ -1179,7 +1179,7 @@ export default function MarketTab() {
                 <div className="flex-1">
                    <h3 className="text-2xl font-black italic tracking-tighter text-white uppercase">{toTitleCase(negotiatingPlayer.name)}</h3>
                    <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">
-                     {(negotiatingPlayer as any).specificPosition || (negotiatingPlayer as any).specific_position || negotiatingPlayer.position} • {localizePosFull((negotiatingPlayer as any).specificPosition || (negotiatingPlayer as any).specific_position || negotiatingPlayer.position)} • {negotiatingPlayer.age} YAŞ • {negotiatingPlayer.nation} • ⭐ {negotiatingPlayer.rating}
+                     {getPlayerPos(negotiatingPlayer as Record<string, unknown>)} • {localizePosFull(getPlayerPos(negotiatingPlayer as Record<string, unknown>))} • {negotiatingPlayer.age} YAŞ • {negotiatingPlayer.nation} • ⭐ {negotiatingPlayer.rating}
                    </p>
                 </div>
                 <div className="text-right">

@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Star, ChevronRight, Globe } from 'lucide-react';
 import { calculateMarketValue, formatCurrency } from '@/lib/fm/valuation';
-import { getPosColor, localizePos, localizePosFull, getPosRowStyle, formatPosBadge } from '@/lib/fm/ui-helpers';
+import { getPosColor, localizePos, localizePosFull, getPosRowStyle, formatPosBadge, getPlayerPos } from '@/lib/fm/ui-helpers';
 import { getTraitInfo, getPlayStyleInfo, getTraitColor, getTraitBgColor } from '@/lib/fm/traits';
 import { fmStatColor, fmStatBg, toTitleCase } from '@/lib/fm/ui-helpers';
 import type { Player, TrainingState, TrainingAssignment, TrainingProgramId } from '@/lib/fm/types';
@@ -86,7 +86,7 @@ export default function PlayerRow({
 
   const stats = [
     { label: 'Poz', val: formatPosBadge(player), key: 'position' },
-    { label: 'Mevki', val: localizePosFull(player.specificPosition || player.position), key: 'specificPosition' },
+    { label: 'Mevki', val: localizePosFull(getPlayerPos(player as Record<string, unknown>)), key: 'specificPosition' },
     { label: 'Klt', val: Math.round(player.potential || rating), key: 'potential' },
     { label: isGK ? 'Ref' : 'Klc', val: Math.round(player.goalkeeping || 0), key: 'goalkeeping' },
     { label: 'Tk', val: Math.round(player.control || rating), key: 'control' },
@@ -110,7 +110,7 @@ export default function PlayerRow({
     { label: 'Ort', val: rating.toFixed(0), key: 'rating' }
   ];
 
-  const posColor = getPosRowStyle(player.specificPosition || player.position);
+  const posColor = getPosRowStyle(getPlayerPos(player as Record<string, unknown>));
 
   return (
     <motion.div 
