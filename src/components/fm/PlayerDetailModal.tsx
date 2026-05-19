@@ -19,8 +19,8 @@ import { traitDescriptions, getTraitTierLabel } from '@/lib/fm/traits';
 import { TRAIT_LEVELS } from '@/lib/fm/traitsData';
 import { useFM } from '@/lib/fm/GameContext';
 import { getPlayStyleEffect } from '@/lib/fm/playStyles';
-import { localizePos, localizePosFull, getPosGroup, getPosDotColor, getPosBadgeStyle, getPlayerPos } from '@/lib/fm/ui-helpers';
-import { POS_TO_GROUP, POS_LABELS } from '@/lib/fm/playerGenerator';
+import { localizePos, localizePosFull, getPosGroup, getPosBadgeStyle, getPlayerPos } from '@/lib/fm/ui-helpers';
+import { POS_LABELS } from '@/lib/fm/playerGenerator';
 import { fmStatColor, fmStatBg, formatMoney, cap99, toTitleCase } from '@/lib/fm/ui-helpers';
 import type { Player, TrainingState } from '@/lib/fm/types';
 import type { MarketListing } from '@/lib/fm/multiplayer';
@@ -130,60 +130,6 @@ function AttrColumn({ title, icon, stats, isObserved = true }: { title: string; 
 }
 
 // ──────────── Main Component ────────────
-// ═══ Mini saha mevki noktası ═══
-function PitchPositionDot({ position, specificPosition }: { position?: string; specificPosition?: string }) {
-  const sp = (specificPosition || position || 'CM') as string;
-  const group = POS_TO_GROUP[sp as keyof typeof POS_TO_GROUP] || position || 'MID';
-
-  // X pozisyonu (yakın: GK 8%, DEF 25%, MID 50%, FWD 75%)
-  // Y pozisyonu (sol: L* 20%, merkez: 50%, sağ: R* 80%)
-  let leftPct = 50;
-  let topPct = 50;
-
-  // GK her zaman kale
-  if (sp === 'GK') {
-    leftPct = 8; topPct = 50;
-  }
-  // Defans
-  else if (sp === 'CB') { leftPct = 25; topPct = 50; }
-  else if (sp === 'LB' || sp === 'LWB') { leftPct = 22; topPct = 18; }
-  else if (sp === 'RB' || sp === 'RWB') { leftPct = 22; topPct = 82; }
-  // Orta saha
-  else if (sp === 'CDM') { leftPct = 38; topPct = 50; }
-  else if (sp === 'CM') { leftPct = 50; topPct = 50; }
-  else if (sp === 'CAM') { leftPct = 62; topPct = 50; }
-  else if (sp === 'LM') { leftPct = 50; topPct = 18; }
-  else if (sp === 'RM') { leftPct = 50; topPct = 82; }
-  else if (sp === 'LW') { leftPct = 62; topPct = 18; }
-  else if (sp === 'RW') { leftPct = 62; topPct = 82; }
-  // Forvet
-  else if (sp === 'CF') { leftPct = 72; topPct = 50; }
-  else if (sp === 'ST') { leftPct = 82; topPct = 50; }
-  // Eski broad position fallback
-  else if (group === 'GK') { leftPct = 8; topPct = 50; }
-  else if (group === 'DEF') { leftPct = 25; topPct = 50; }
-  else if (group === 'MID') { leftPct = 50; topPct = 50; }
-  else if (group === 'FWD') { leftPct = 80; topPct = 50; }
-
-  const colorClass = getPosDotColor(group);
-
-  const label = POS_LABELS[sp] || POS_LABELS[group] || sp;
-
-  return (
-    <>
-      <div
-        className={`absolute w-3.5 h-3.5 rounded-full border-2 border-white/60 shadow-lg shadow-black/50 ${colorClass}`}
-        style={{ left: `${leftPct}%`, top: `${topPct}%`, transform: 'translate(-50%, -50%)' }}
-      />
-      <div
-        className="absolute text-[7px] font-bold text-white/80 whitespace-nowrap pointer-events-none"
-        style={{ left: `${leftPct}%`, top: `calc(${topPct}% + 10px)`, transform: 'translateX(-50%)' }}
-      >
-        {sp}
-      </div>
-    </>
-  );
-}
 
 export default function PlayerDetailModal({ 
   player: initialPlayer, onClose, teamStats, onSell, marketListing, onBuy, onBid, onSign, trainingState, onTrainingStateChange, profileMoney, profileTeamName, profileId, isAdmin 
@@ -957,20 +903,7 @@ export default function PlayerDetailModal({
                     isObserved={isScouted}
                   />
 
-                  {/* Pitch diagram moved here */}
-                  <div className="mt-4 px-2">
-                    <div className="text-[8px] font-black uppercase tracking-[0.2em] text-white/20 mb-2">Saha Yerleşimi</div>
-                    <div className="w-full aspect-[2/1] bg-[#1a3a1a] rounded-sm border border-white/[0.08] p-2 relative overflow-hidden">
-                      {/* Pitch lines */}
-                      <div className="absolute inset-1 border border-white/10 rounded-sm" />
-                      <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px bg-white/10" />
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 border border-white/10 rounded-full" />
-                      <div className="absolute top-1/2 -translate-y-1/2 right-1 w-3 h-8 border border-white/10 rounded-l-sm" />
-                      <div className="absolute top-1/2 -translate-y-1/2 left-1 w-3 h-8 border border-white/10 rounded-r-sm" />
-                      {/* Player dot on pitch */}
-                      <PitchPositionDot position={player.position} specificPosition={getPlayerPos(player as Record<string, unknown>)} />
-                    </div>
-                  </div>
+
                 </div>
                 <div className="flex-1 min-w-0 p-2">
                   <AttrColumn

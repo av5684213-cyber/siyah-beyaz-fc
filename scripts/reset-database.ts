@@ -7,7 +7,7 @@
  * - Her takıma 15 oyuncu (players)
  * - 1 sezon (seasons)
  * - 34 haftalık fikstür (fixtures) yarın 12:00'den başlayan
- * - Tüm takımlara 5000 KR + 1.000.000 €
+ * - Tüm takımlara 5.000 KR + 100.000.000 €
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -269,7 +269,7 @@ async function resetDatabase() {
       .from('profiles')
       .insert({
         team_name: teamName,
-        money: 1000000,       // 1.000.000 €
+        money: 100000000,     // 100.000.000 €
         credits: 5000,        // 5.000 KR
         is_bot: t > 0,        // İlk takım kullanıcı
       })
@@ -472,7 +472,7 @@ async function resetDatabase() {
   console.log(`👥 ${TEAM_NAMES.length * SQUAD_TEMPLATE.length} oyuncu oluşturuldu`);
   console.log(`📅 ${fixtures.length} fikstür oluşturuldu`);
   console.log(`👨‍⚖️ ${refereeRows.length} hakem oluşturuldu`);
-  console.log(`💰 Her takım: 5.000 KR + 1.000.000 €`);
+  console.log(`💰 Her takım: 5.000 KR + 100.000.000 €`);
   console.log(`🕐 Fikstür başlangıcı: ${tomorrow.toISOString().split('T')[0]} 12:00`);
   if (firstProfile) {
     console.log(`\n🔑 Kullanıcı Takımı: ${firstProfile.team_name}`);
