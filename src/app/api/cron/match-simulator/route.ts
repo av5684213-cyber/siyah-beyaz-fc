@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
             const { data: tHome } = await supabase
               .from('active_tactics')
               .select('*')
-              .eq('id', homeTeamData.profile_id)
+              .eq('profile_id', homeTeamData.profile_id)
               .maybeSingle();
             if (tHome) homeTacticsData = tHome;
           }
@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
             const { data: tAway } = await supabase
               .from('active_tactics')
               .select('*')
-              .eq('id', awayTeamData.profile_id)
+              .eq('profile_id', awayTeamData.profile_id)
               .maybeSingle();
             if (tAway) awayTacticsData = tAway;
           }
@@ -213,47 +213,54 @@ export async function GET(request: NextRequest) {
         const refInfo = refereeForMatch ? getRefereeDisplayInfo(refereeForMatch) : null;
 
         // 4. Simülasyonu çalıştır — YENİ ENHANCED & INTEGRATED MATCH ENGINE
+        //
+        // active_tactics tablosu gerçek kolonları:
+        //   formation, starting_eleven, position_assignments, tempo (number 0-100),
+        //   defense_line (text: 'standart'|'onde'|'geride'), play_width (text: 'genis'|'dar'|'normal'),
+        //   mentality (number), pressing (boolean), passing_style (text),
+        //   player_roles (jsonb), focus_player_id
+        //
         const matchResult = await integratedMatchEngine.runScheduledMatch(
           availableHome.slice(0, 11), // İlk 11 oyuncuları
           availableAway.slice(0, 11),
           {
             homeTactics: {
               formation: homeTacticsData?.formation || '4-4-2',
-              playStyle: homeTacticsData?.playStyle || homeTacticsData?.tactic || 'dengeli',
+              playStyle: (homeTacticsData?.defense_line === 'onde' ? 'hucum' : homeTacticsData?.defense_line === 'geride' ? 'savunma' : 'dengeli'),
               mentality: Number(homeTacticsData?.mentality || 3),
               pressing: homeTacticsData?.pressing || false,
-              intensity: homeTacticsData?.intensity || 'normal',
-              passingStyle: homeTacticsData?.passingStyle || homeTacticsData?.passing_style || 'Karışık',
-              lineHeight: homeTacticsData?.lineHeight || 50,
-              width: homeTacticsData?.width || 50,
-              aggression: homeTacticsData?.aggression || 50,
-              passingIntensity: homeTacticsData?.passingIntensity || homeTacticsData?.passing_intensity || 50,
-              screenKeeper: homeTacticsData?.screenKeeper || false,
-              wasteTime: homeTacticsData?.wasteTime || false,
-              parkTheBus: homeTacticsData?.parkTheBus || false,
-              crossGame: homeTacticsData?.crossGame || false,
-              loneStrikerCounter: homeTacticsData?.loneStrikerCounter || false,
-              offsideTrap: homeTacticsData?.offsideTrap || homeTacticsData?.pressing || false,
+              intensity: (Number(homeTacticsData?.tempo) > 70 ? 'yuksek' : Number(homeTacticsData?.tempo) < 30 ? 'dusuk' : 'normal'),
+              passingStyle: homeTacticsData?.passing_style || 'Karışık',
+              lineHeight: homeTacticsData?.defense_line === 'onde' ? 70 : homeTacticsData?.defense_line === 'geride' ? 30 : 50,
+              width: homeTacticsData?.play_width === 'genis' ? 70 : homeTacticsData?.play_width === 'dar' ? 30 : 50,
+              aggression: Number(homeTacticsData?.tempo) > 70 ? 70 : 50,
+              passingIntensity: Number(homeTacticsData?.tempo) || 50,
+              screenKeeper: false,
+              wasteTime: false,
+              parkTheBus: homeTacticsData?.defense_line === 'geride',
+              crossGame: homeTacticsData?.play_width === 'genis',
+              loneStrikerCounter: false,
+              offsideTrap: homeTacticsData?.pressing || false,
             },
             activeTactic: {
               formation: homeTacticsData?.formation || '4-4-2',
               mentality: Number(homeTacticsData?.mentality || 3),
               pressing: homeTacticsData?.pressing || false,
-              passingStyle: homeTacticsData?.passingStyle || homeTacticsData?.passing_style || 'Karışık',
-              intensity: homeTacticsData?.intensity || 'normal',
-              lineHeight: homeTacticsData?.lineHeight || 50,
-              width: homeTacticsData?.width || 50,
-              aggression: homeTacticsData?.aggression || 50,
-              passingIntensity: homeTacticsData?.passingIntensity || homeTacticsData?.passing_intensity || 50,
-              screenKeeper: homeTacticsData?.screenKeeper || false,
-              wasteTime: homeTacticsData?.wasteTime || false,
-              parkTheBus: homeTacticsData?.parkTheBus || false,
-              crossGame: homeTacticsData?.crossGame || false,
-              loneStrikerCounter: homeTacticsData?.loneStrikerCounter || false,
-              offsideTrap: homeTacticsData?.offsideTrap || false,
-              playStyle: homeTacticsData?.playStyle || 'dengeli',
-              tempo: homeTacticsData?.tempo || 'normal',
-              defensiveLine: homeTacticsData?.defensiveLine || 'normal',
+              passingStyle: homeTacticsData?.passing_style || 'Karışık',
+              intensity: (Number(homeTacticsData?.tempo) > 70 ? 'yuksek' : Number(homeTacticsData?.tempo) < 30 ? 'dusuk' : 'normal'),
+              lineHeight: homeTacticsData?.defense_line === 'onde' ? 70 : homeTacticsData?.defense_line === 'geride' ? 30 : 50,
+              width: homeTacticsData?.play_width === 'genis' ? 70 : homeTacticsData?.play_width === 'dar' ? 30 : 50,
+              aggression: Number(homeTacticsData?.tempo) > 70 ? 70 : 50,
+              passingIntensity: Number(homeTacticsData?.tempo) || 50,
+              screenKeeper: false,
+              wasteTime: false,
+              parkTheBus: homeTacticsData?.defense_line === 'geride',
+              crossGame: homeTacticsData?.play_width === 'genis',
+              loneStrikerCounter: false,
+              offsideTrap: homeTacticsData?.pressing || false,
+              playStyle: (homeTacticsData?.defense_line === 'onde' ? 'hucum' : homeTacticsData?.defense_line === 'geride' ? 'savunma' : 'dengeli'),
+              tempo: (Number(homeTacticsData?.tempo) > 70 ? 'hizli' : Number(homeTacticsData?.tempo) < 30 ? 'yavas' : 'normal'),
+              defensiveLine: (homeTacticsData?.defense_line === 'onde' ? 'onde' : homeTacticsData?.defense_line === 'geride' ? 'geride' : 'normal'),
             } as any,
             homeOperations: [], // Gelecekteki operasyon kartları altyapısı
             homeTeamName: homeTeamData.name,
