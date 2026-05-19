@@ -313,7 +313,7 @@ export default function MyTeamTab({
               >
                 {/* Pos Badge */}
                 <div className={`absolute top-4 left-4 w-10 h-10 rounded-xl flex items-center justify-center font-black italic shadow-2xl ${getPosColor(getPlayerPos(player as Record<string, unknown>))} border border-white/10`}>
-                   {localizePos(getPlayerPos(player as Record<string, unknown>))}
+                   {getPlayerPos(player as Record<string, unknown>)}
                 </div>
 
                 {/* Main Identity */}

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Search, Map, Users, Star, Target, Zap, Shield, Activity, TrendingUp, Filter, AlertCircle, Eye, History, LayoutList, ChevronRight, X, Database, Lock, Ban } from 'lucide-react';
 import { useFM } from '@/lib/fm/GameContext';
 import { Player, Scout } from '@/lib/fm/types';
-import { toTitleCase, localizePos } from '@/lib/fm/ui-helpers';
+import { toTitleCase, localizePos, getPlayerPos } from '@/lib/fm/ui-helpers';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 
 // ─── Advanced Filters Interface ───────────────────────────────────
@@ -880,7 +880,7 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
                         </div>
                         <div>
                           <p className="text-xs font-black uppercase italic leading-none mb-1 group-hover:text-amber-400 transition-colors">{(p && p.name) || 'Bilinmeyen'}</p>
-                          <p className="text-[8px] font-black text-white/30 uppercase tracking-widest">{localizePos(p.position)} • {p.age} YAŞ</p>
+                          <p className="text-[8px] font-black text-white/30 uppercase tracking-widest">{getPlayerPos(p as Record<string, unknown>)} • {p.age} YAŞ</p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <p className="text-[7px] font-bold text-emerald-400/60 uppercase tracking-widest">{p.team_name || 'SERBEST'}</p>
                             {scoutLevel >= 2 && (
@@ -995,7 +995,7 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
                    </div>
                    <div>
                      <p className="text-[11px] font-black uppercase italic text-white/60">{p.name || 'Bilinmeyen'}</p>
-                     <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest">{localizePos(p.position)} • {p.age} Yaş</p>
+                     <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest">{getPlayerPos(p as Record<string, unknown>)} • {p.age} Yaş</p>
                    </div>
                  </div>
                  <button 
@@ -1033,7 +1033,7 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
                    </div>
                    <div>
                      <p className="text-[11px] font-black uppercase italic text-white">{p.name || 'Bilinmeyen'}</p>
-                     <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest">{localizePos(p.position)} • {p.age} Yaş</p>
+                     <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest">{getPlayerPos(p as Record<string, unknown>)} • {p.age} Yaş</p>
                    </div>
                  </div>
                  <div className="flex items-center gap-2">

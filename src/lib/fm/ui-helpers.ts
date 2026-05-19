@@ -85,15 +85,13 @@ export function localizePosFull(pos: string): string {
   return mapping[pos] || pos;
 }
 
-/** Oyuncunun mevki badge metnini oluşturur (çift mevki desteği ile) */
+/** Oyuncunun mevki badge metnini oluşturur (spesifik mevki kodu + yan mevki desteği) */
 export function formatPosBadge(player: { specificPosition?: string; position: string; secondaryPositions?: string[] }): string {
   const primary = player.specificPosition || player.position;
-  const primaryShort = localizePos(primary);
   if (player.secondaryPositions && player.secondaryPositions.length > 0) {
-    const secondaryShort = localizePos(player.secondaryPositions[0]);
-    return `${primaryShort}/${secondaryShort}`;
+    return `${primary}/${player.secondaryPositions[0]}`;
   }
-  return primaryShort;
+  return primary;
 }
 
 /**

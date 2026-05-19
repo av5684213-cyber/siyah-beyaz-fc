@@ -926,7 +926,7 @@ const MatchDay = ({
                        >
                          <div>
                             <div className="font-bold text-sm tracking-tight">{playerIn.name}</div>
-                            <div className="text-[10px] text-white/30 uppercase font-black">{playerIn.position} | RT: {playerIn.rating}</div>
+                            <div className="text-[10px] text-white/30 uppercase font-black">{(playerIn as any).specificPosition || (playerIn as any).specific_position || playerIn.position} | RT: {playerIn.rating}</div>
                          </div>
                          {subbingPlayer ? (
                            <button 

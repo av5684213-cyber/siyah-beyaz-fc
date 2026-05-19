@@ -197,7 +197,7 @@ function TrainingReportCard({ trainings }: { trainings: TrainingRecord[] }) {
                     <div key={p.player_id || idx} className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <div className="w-5 h-5 rounded-md bg-white/[0.04] flex items-center justify-center shrink-0">
-                          <span className="text-[7px] font-black text-white/30">{p.position?.slice(0, 2) || '?'}</span>
+                          <span className="text-[7px] font-black text-white/30">{(p as any).specificPosition || (p as any).specific_position || p.position?.slice(0, 2) || '?'}</span>
                         </div>
                         <span className="text-[11px] font-semibold text-white/70 truncate">
                           {toTitleCase(p.player_name)}
@@ -556,7 +556,7 @@ export function DashboardTab({
                     <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Emekli Olanlar</p>
                     <div className="space-y-1">
                       {retiredLog.retired.filter(p => !!p).map((p, idx) => (
-                         <div key={`ret-${p.id || idx}`} className="text-xs font-bold text-white/80">• {toTitleCase(p.name)} ({p.age} Yaş, {p.position})</div>
+                         <div key={`ret-${p.id || idx}`} className="text-xs font-bold text-white/80">• {toTitleCase(p.name)} ({p.age} Yaş, {(p as any).specificPosition || (p as any).specific_position || p.position})</div>
                       ))}
                     </div>
                   </div>
@@ -564,7 +564,7 @@ export function DashboardTab({
                     <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Altyapıdan Gelenler</p>
                     <div className="space-y-1">
                       {retiredLog.talents.filter(p => !!p).map((p, idx) => (
-                         <div key={`tal-${p.id || idx}`} className="text-xs font-bold text-white/80">• {toTitleCase(p.name)} (17 Yaş, {p.position}) -Pot: {p.potential}</div>
+                         <div key={`tal-${p.id || idx}`} className="text-xs font-bold text-white/80">• {toTitleCase(p.name)} (17 Yaş, {(p as any).specificPosition || (p as any).specific_position || p.position}) -Pot: {p.potential}</div>
                       ))}
                     </div>
                   </div>

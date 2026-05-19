@@ -220,7 +220,7 @@ export default function AdminPanel() {
                        <span className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-[10px] font-black text-white/40">{idx + 1}</span>
                        <div>
                          <p className="text-xs font-black text-white uppercase">{p.name}</p>
-                         <p className="text-[8px] font-bold text-white/20 uppercase">{p.position} • {p.rating} REY</p>
+                         <p className="text-[8px] font-bold text-white/20 uppercase">{(p as any).specificPosition || (p as any).specific_position || p.position} • {p.rating} REY</p>
                        </div>
                      </div>
                      <div className="flex gap-2">

@@ -398,7 +398,7 @@ export default function PlayerDetailModal({
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className={`px-1.5 py-px rounded-sm border text-[9px] font-bold uppercase tracking-wider ${posBg} ${posColor}`}>
-                  {localizePos(sp)}
+                  {sp}
                 </span>
                 <span className="text-[9px] text-white/30 font-semibold">{localizePosFull(sp)}</span>
                 {player.secondaryPositions && player.secondaryPositions.length > 0 && (
@@ -408,7 +408,7 @@ export default function PlayerDetailModal({
                       const secBadge = getPosBadgeStyle(secG);
                       const secColor = secBadge.split(' ').find(c => c.startsWith('text-')) || 'text-[#9B9B9B]';
                       const secBg = secBadge.split(' ').filter(c => !c.startsWith('text-')).join(' ');
-                      return <span key={si} className={`px-1 py-px rounded-sm border text-[8px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{localizePos(sec)} <span className="text-[7px] opacity-50">{localizePosFull(sec)}</span></span>;
+                      return <span key={si} className={`px-1 py-px rounded-sm border text-[8px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{sec} <span className="text-[7px] opacity-50">{localizePosFull(sec)}</span></span>;
                     })}
                     <span className="text-[7px] text-white/20 font-bold uppercase">yan</span>
                   </div>
@@ -562,7 +562,7 @@ export default function PlayerDetailModal({
                   
                   <div className="mt-1 flex flex-col items-center gap-1.5">
                     <span className={`px-4 py-1.5 rounded-sm border text-[12px] font-black uppercase tracking-[0.1em] ${posBg} ${posColor}`}>
-                      {localizePos(sp)}
+                      {sp}
                     </span>
                     <span className="text-[10px] text-white/35 font-bold">{localizePosFull(sp)}</span>
                     {player.secondaryPositions && player.secondaryPositions.length > 0 && (
@@ -572,7 +572,7 @@ export default function PlayerDetailModal({
                           const secBadge = getPosBadgeStyle(secG);
                           const secColor = secBadge.split(' ').find(c => c.startsWith('text-')) || 'text-[#9B9B9B]';
                           const secBg = secBadge.split(' ').filter(c => !c.startsWith('text-')).join(' ');
-                          return <span key={si} className={`px-1.5 py-px rounded-full border text-[8px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{localizePos(sec)} <span className="text-[6px] opacity-50">{localizePosFull(sec)}</span></span>;
+                          return <span key={si} className={`px-1.5 py-px rounded-full border text-[8px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{sec} <span className="text-[6px] opacity-50">{localizePosFull(sec)}</span></span>;
                         })}
                         <span className="text-[7px] text-white/15 font-bold uppercase w-full text-center">yan mevki</span>
                       </div>
@@ -1535,7 +1535,7 @@ export default function PlayerDetailModal({
                   </div>
                   <div>
                     <h3 className="text-sm font-black uppercase tracking-widest text-cyan-400">Kiralık Olarak Gönder</h3>
-                    <p className="text-[9px] text-white/30 font-bold uppercase tracking-wider">{toTitleCase(player.name)} • {localizePos(sp)} • {rating} OVR</p>
+                    <p className="text-[9px] text-white/30 font-bold uppercase tracking-wider">{toTitleCase(player.name)} • {sp} • {rating} OVR</p>
                   </div>
                 </div>
                 <button onClick={() => setShowLoanForm(false)} className="p-2 text-white/30 hover:text-white transition-colors">
