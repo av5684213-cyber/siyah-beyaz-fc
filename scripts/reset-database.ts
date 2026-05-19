@@ -1,12 +1,12 @@
 /**
  * SİYAH BEYAZ FC — Veritabanı Sıfırlama Script'i
- * Kullanım: npx ts-node scripts/reset-database.ts
+ * Kullanım: npx tsx scripts/reset-database.ts
  *
  * Tüm tabloları temizler ve başlangıç verilerini oluşturur:
  * - 18 takım (ligler, league_teams, profiles)
- * - Her takıma 17 oyuncu (players)
+ * - Her takıma 15 oyuncu (players)
  * - 1 sezon (seasons)
- * - 34 haftalık fikstür (fixtures)
+ * - 34 haftalık fikstür (fixtures) yarın 12:00'den başlayan
  * - Tüm takımlara 5000 KR + 1.000.000 €
  */
 
@@ -58,14 +58,15 @@ const STADIUMS: Record<string, string> = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// POSİTİON ŞABLONU (17 oyuncu)
+// POSİTİON ŞABLONU (15 oyuncu)
 // ═══════════════════════════════════════════════════════════════
 
 const SQUAD_TEMPLATE = [
   'GK', 'GK',
   'CB', 'CB', 'CB', 'LB', 'RB',
-  'CDM', 'CM', 'CM', 'CAM', 'LM', 'RM',
-  'LW', 'ST', 'ST', 'CF',
+  'CDM', 'CM', 'CM', 'CAM',
+  'LW', 'RW',
+  'ST', 'CF',
 ];
 
 const COMPATIBLE_SECONDARY: Record<string, string[]> = {
@@ -91,7 +92,7 @@ const POS_LABELS: Record<string, string> = {
   'LWB': 'Sol Kanat Bek', 'RWB': 'Sağ Kanat Bek', 'CDM': 'Defansif Orta Saha',
   'CM': 'Merkez Orta Saha', 'CAM': 'Ofansif Orta Saha', 'LM': 'Sol Açık',
   'RM': 'Sağ Açık', 'LW': 'Sol Kanat', 'RW': 'Sağ Kanat',
-  'CF': 'Göbek Forvet', 'ST': 'Santrfor',
+  'CF': 'İkinci Forvet', 'ST': 'Santrfor',
 };
 
 const POS_GROUP: Record<string, string> = {
@@ -127,11 +128,11 @@ function generatePlayerStats(position: string, baseRating: number) {
   const isMid = ['CDM', 'CM', 'CAM', 'LM', 'RM'].includes(position);
   const isFwd = ['LW', 'RW', 'CF', 'ST'].includes(position);
 
-  const v = () => Math.max(1, Math.min(99, baseRating + Math.floor(Math.random() * 20) - 10)));
+  const v = () => Math.max(1, Math.min(99, baseRating + Math.floor(Math.random() * 20) - 10));
 
   return {
     speed: isFwd ? v() + 5 : v(),
-    physical: isDef ? v() + 5 : v(),
+    power: isDef ? v() + 5 : v(),
     passing: isMid ? v() + 5 : v(),
     shooting: isFwd ? v() + 8 : v(),
     heading: isDef || isFwd ? v() + 3 : v(),
@@ -139,7 +140,6 @@ function generatePlayerStats(position: string, baseRating: number) {
     control: v(),
     vision: isMid ? v() + 3 : v(),
     defending: isDef ? v() + 8 : v(),
-    mental: v(),
   };
 }
 
@@ -148,11 +148,16 @@ function assignSecondary(pos: string): string[] | null {
   if (!compat || compat.length === 0) return null;
   const roll = Math.random();
   if (roll < 0.06 && compat.length >= 2) {
-    return [randomFrom(compat), randomFrom(compat)];
+    // 2 yan mevki (%6)
+    const picked = new Set<string>();
+    while (picked.size < 2) picked.add(randomFrom(compat));
+    return Array.from(picked);
   }
   if (roll < 0.24) {
+    // 1 yan mevki (%18)
     return [randomFrom(compat)];
   }
+  // Yan mevki yok (%76)
   return null;
 }
 
@@ -163,23 +168,68 @@ function assignSecondary(pos: string): string[] | null {
 async function resetDatabase() {
   console.log('🗑️  Veritabanı sıfırlanıyor...\n');
 
-  // 1. Tabloları temizle
-  const tablesToTruncate = [
-    'match_events', 'match_reports', 'fixtures', 'league_standings',
-    'seasons', 'players', 'league_teams', 'leagues', 'profiles',
-    'rental_listings', 'loans', 'player_positions', 'transfer_market',
+  // ── 1. Tüm tabloları temizle ──
+  // Sıralama: bağımlılık sırası (önce child tablolar, sonra parent)
+  const tablesToClean = [
+    // Child tablolar (FK bağımlılıkları)
+    'match_events',
+    'match_reports', 
+    'match_history',
+    'rental_agreements',
+    'rental_listings',
+    'loans',
+    'player_positions',
+    'transfer_market',
+    'push_subscriptions',
+    'notification_preferences',
+    'watchlist',
+    'active_tactics',
+    'training_state',
+    'youth_players',
+    'youth_facilities',
+    'fixtures',
+    'league_standings',
+    'referees',
+    'players',
+    // Parent tablolar
+    'league_teams',
+    'seasons',
+    'leagues',
+    'profiles',
   ];
 
-  for (const table of tablesToTruncate) {
-    const { error } = await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    if (error) {
-      console.warn(`⚠️  ${table} temizlenemedi: ${error.message}`);
-    } else {
-      console.log(`✅ ${table} temizlendi`);
+  console.log('📋 Tablolar temizleniyor...');
+  for (const table of tablesToClean) {
+    try {
+      // Tüm satırları sil - farklı PK tipleri için farklı stratejiler
+      const { error, count } = await supabase
+        .from(table)
+        .delete({ count: 'exact' })
+        .neq('id', '00000000-0000-0000-0000-000000000000__NEVER_MATCH');
+      
+      if (error) {
+        // 'id' sütunu olmayabilir veya farklı PK kullanabilir
+        // Fallback: tüm satırları silmeyi dene
+        const { error: err2 } = await supabase
+          .from(table)
+          .delete()
+          .lt('created_at', '2099-12-31');
+        
+        if (err2) {
+          console.warn(`  ⚠️  ${table}: ${err2.message}`);
+        } else {
+          console.log(`  ✅ ${table} temizlendi (fallback)`);
+        }
+      } else {
+        console.log(`  ✅ ${table} temizlendi (${count || 0} satır silindi)`);
+      }
+    } catch (e: any) {
+      console.warn(`  ⚠️  ${table}: ${e.message || 'Tablo mevcut olmayabilir'}`);
     }
   }
 
-  // 2. Lig oluştur
+  // ── 2. Lig oluştur ──
+  console.log('\n🏆 Lig oluşturuluyor...');
   const { data: league, error: leagueError } = await supabase
     .from('leagues')
     .insert({ name: 'Süper Lig', tier: 1, country: 'Türkiye' })
@@ -192,7 +242,8 @@ async function resetDatabase() {
   }
   console.log(`✅ Lig oluşturuldu: ${league.name} (ID: ${league.id})`);
 
-  // 3. Sezon oluştur
+  // ── 3. Sezon oluştur ──
+  console.log('\n📅 Sezon oluşturuluyor...');
   const { data: season, error: seasonError } = await supabase
     .from('seasons')
     .insert({ league_id: league.id, name: 'Sezon 1', status: 'active' })
@@ -205,8 +256,10 @@ async function resetDatabase() {
   }
   console.log(`✅ Sezon oluşturuldu: ${season.name} (ID: ${season.id})`);
 
-  // 4. Takımlar ve oyuncular oluştur
+  // ── 4. Takımlar ve oyuncular oluştur ──
+  console.log('\n⚽ Takımlar ve oyuncular oluşturuluyor...');
   const leagueTeamIds: string[] = [];
+  const teamProfileIds: string[] = [];
 
   for (let t = 0; t < TEAM_NAMES.length; t++) {
     const teamName = TEAM_NAMES[t];
@@ -227,6 +280,7 @@ async function resetDatabase() {
       console.warn(`⚠️  ${teamName} profili oluşturulamadı: ${profileError?.message}`);
       continue;
     }
+    teamProfileIds.push(profile.id);
 
     // League team oluştur
     const { data: leagueTeam, error: ltError } = await supabase
@@ -238,6 +292,7 @@ async function resetDatabase() {
         stadium_name: STADIUMS[teamName] || `${teamName} Stadyumu`,
         is_user_team: t === 0,
         is_bot: t > 0,
+        strength: 40 + Math.floor(Math.random() * 15),
       })
       .select()
       .single();
@@ -248,7 +303,7 @@ async function resetDatabase() {
     }
     leagueTeamIds.push(leagueTeam.id);
 
-    // Oyuncular oluştur
+    // 15 oyuncu oluştur
     const players = SQUAD_TEMPLATE.map((pos, i) => {
       const baseRating = 72 - Math.floor(t / 6) * 5; // Tier bazlı rating
       const rating = Math.max(55, Math.min(90, baseRating + Math.floor(Math.random() * 12) - 4));
@@ -279,9 +334,17 @@ async function resetDatabase() {
         ...stats,
         cond: 100,
         morale: 70 + Math.floor(Math.random() * 20),
+        form: 50 + Math.floor(Math.random() * 30),
         is_injured: false,
         is_on_loan_market: false,
+        loan_status: null,
         loan_fee: 0,
+        is_free_agent: false,
+        scouted: false,
+        scouting_stars: 0,
+        scouting_count: 0,
+        is_legend: false,
+        is_starter: i < 11,
       };
     });
 
@@ -289,7 +352,8 @@ async function resetDatabase() {
     if (playersError) {
       console.warn(`⚠️  ${teamName} oyuncuları oluşturulamadı: ${playersError.message}`);
     } else {
-      console.log(`✅ ${teamName}: ${players.length} oyuncu oluşturuldu (ORT: ${Math.round(players.reduce((s, p) => s + p.rating, 0) / players.length)})`);
+      const avgRating = Math.round(players.reduce((s, p) => s + p.rating, 0) / players.length);
+      console.log(`  ✅ ${teamName}: ${players.length} oyuncu (ORT: ${avgRating})`);
     }
 
     // League standings oluştur
@@ -308,8 +372,14 @@ async function resetDatabase() {
     });
   }
 
-  // 5. Fikstür oluştur (round-robin, 34 hafta)
+  // ── 5. Fikstür oluştur (round-robin, 34 hafta) ──
   console.log('\n📅 Fikstür oluşturuluyor...');
+  
+  if (leagueTeamIds.length < 2) {
+    console.error('❌ Fikstür oluşturmak için en az 2 takım gerekli');
+    process.exit(1);
+  }
+
   const n = leagueTeamIds.length;
   const totalRounds = (n - 1) * 2; // 34 hafta
   const tomorrow = new Date();
@@ -335,7 +405,7 @@ async function resetDatabase() {
           season_id: season.id,
           tur: round + 1,
           match_date: matchDate.toISOString().split('T')[0],
-          match_time: '15:00',
+          match_time: '12:00',
           status: 'scheduled',
         });
 
@@ -348,13 +418,13 @@ async function resetDatabase() {
           season_id: season.id,
           tur: round + 1 + (n - 1),
           match_date: returnDate.toISOString().split('T')[0],
-          match_time: '15:00',
+          match_time: '12:00',
           status: 'scheduled',
         });
       }
     }
 
-    // Takımları döndür
+    // Takımları döndür (ilk sabit, geri kalan döner)
     const last = teamIds.pop();
     if (last) teamIds.splice(1, 0, last);
   }
@@ -364,12 +434,31 @@ async function resetDatabase() {
     const batch = fixtures.slice(i, i + 100);
     const { error: fixError } = await supabase.from('fixtures').insert(batch);
     if (fixError) {
-      console.warn(`⚠️  Fikstür batch ${i / 100 + 1} hatası: ${fixError.message}`);
+      console.warn(`⚠️  Fikstür batch ${Math.floor(i / 100) + 1} hatası: ${fixError.message}`);
     }
   }
   console.log(`✅ ${fixtures.length} fikstür oluşturuldu (${totalRounds} hafta)`);
 
-  // 6. İlk takımın profil ID'sini göster
+  // ── 6. Hakemler oluştur ──
+  console.log('\n👨‍⚖️ Hakemler oluşturuluyor...');
+  const refereeNames = [
+    'Cüneyt Çakır', 'Halil Umut Meler', 'Ali Şansalan', 'Atilla Karaoğlan',
+    'Arda Kardeşler', 'Yaşar Kemal Yorgun', 'Zorbay Küçük', 'Koray Gençerler',
+    'Mehmet Türkmenoğlu', 'Volkan Bayarslan',
+  ];
+  const refereeRows = refereeNames.map((name, i) => ({
+    name,
+    rating: 70 + Math.floor(Math.random() * 20),
+    strictness: 3 + Math.floor(Math.random() * 5),
+  }));
+  const { error: refError } = await supabase.from('referees').insert(refereeRows);
+  if (refError) {
+    console.warn(`⚠️  Hakemler oluşturulamadı: ${refError.message}`);
+  } else {
+    console.log(`✅ ${refereeRows.length} hakem oluşturuldu`);
+  }
+
+  // ── 7. İlk takımın profil ID'sini göster ──
   const { data: firstProfile } = await supabase
     .from('profiles')
     .select('id, team_name')
@@ -380,9 +469,11 @@ async function resetDatabase() {
   console.log('🎉 SIFIRLAMA TAMAMLANDI!');
   console.log('═══════════════════════════════════════');
   console.log(`⚽ ${TEAM_NAMES.length} takım oluşturuldu`);
-  console.log(`👥 ${TEAM_NAMES.length * 17} oyuncu oluşturuldu`);
+  console.log(`👥 ${TEAM_NAMES.length * SQUAD_TEMPLATE.length} oyuncu oluşturuldu`);
   console.log(`📅 ${fixtures.length} fikstür oluşturuldu`);
+  console.log(`👨‍⚖️ ${refereeRows.length} hakem oluşturuldu`);
   console.log(`💰 Her takım: 5.000 KR + 1.000.000 €`);
+  console.log(`🕐 Fikstür başlangıcı: ${tomorrow.toISOString().split('T')[0]} 12:00`);
   if (firstProfile) {
     console.log(`\n🔑 Kullanıcı Takımı: ${firstProfile.team_name}`);
     console.log(`   Profile ID: ${firstProfile.id}`);
