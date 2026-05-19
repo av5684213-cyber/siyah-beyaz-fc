@@ -292,62 +292,21 @@ export default function PlayerDetailModal({
     { label: 'Sağ Ayak', val: player.rightFoot || stats.sagAyak },
   ];
 
-  // ── Radar — Mevki bazlı özet statlar (DYNAMIC) ──
+  // ── Radar — Evrensel 6 eksen (oyuncunun temel özellikleri) ──
   const chartData = isGK ? [
-    { subject: 'REF', A: stats.kurtaris },
-    { subject: 'PZS', A: stats.pozisyonAlma },
-    { subject: 'KON', A: stats.konsantrasyon },
-    { subject: 'LDR', A: stats.liderlik },
-    { subject: 'HAV', A: stats.ziplama },
-    { subject: '\u00c7VK', A: stats.ceviklik },
-  ] : sp === 'CB' || sp === 'LB' || sp === 'RB' || sp === 'LWB' || sp === 'RWB' ? [
-    // Defans: savunma odaklı
-    { subject: 'MRK', A: stats.markaj },
-    { subject: 'TKP', A: stats.topKapma },
-    { subject: 'KAF', A: stats.kafaVurusu },
-    { subject: 'POZ', A: stats.pozisyonAlma },
-    { subject: 'G\u00c7', A: stats.guc },
-    { subject: 'HIZ', A: stats.hiz },
-  ] : sp === 'CDM' ? [
-    // Ön Libero: dengeli savunma+pas
-    { subject: 'TKP', A: stats.topKapma },
-    { subject: 'PAS', A: stats.pas },
-    { subject: 'POZ', A: stats.pozisyonAlma },
-    { subject: 'VZN', A: stats.vizyon },
-    { subject: '\u00c7LK', A: stats.caliskanlik },
-    { subject: 'G\u00c7', A: stats.guc },
-  ] : sp === 'CM' ? [
-    // Orta Saha: dengeli
-    { subject: 'PAS', A: stats.pas },
-    { subject: 'DRB', A: stats.dribling },
-    { subject: 'VZN', A: stats.vizyon },
-    { subject: '\u00c7LK', A: stats.caliskanlik },
-    { subject: 'HIZ', A: stats.hiz },
-    { subject: 'SUT', A: stats.uzaktanSut },
-  ] : sp === 'CAM' ? [
-    // Ofansif Orta Saha: yaratıcılık odaklı
-    { subject: 'VZN', A: stats.vizyon },
-    { subject: 'PAS', A: stats.pas },
-    { subject: 'DRB', A: stats.dribling },
-    { subject: 'BIT', A: stats.bitiricilik },
-    { subject: 'TEK', A: stats.tekik },
-    { subject: '\u00d6NZ', A: stats.onsez },
-  ] : sp === 'LW' || sp === 'RW' || sp === 'LM' || sp === 'RM' ? [
-    // Kanat Oyuncuları: hız ve dribling odaklı
-    { subject: 'HIZ', A: stats.hiz },
-    { subject: 'DRB', A: stats.dribling },
-    { subject: 'ORT', A: stats.ortayapma },
-    { subject: 'TEK', A: stats.tekik },
-    { subject: '\u00c7VK', A: stats.ceviklik },
-    { subject: 'SUT', A: stats.bitiricilik },
+    { subject: 'Şut', A: cap99(player.shooting || 10) },
+    { subject: 'Pas', A: cap99(player.passing || 10) },
+    { subject: 'Dribling', A: cap99(player.dribbling || player.control || 10) },
+    { subject: 'Savunma', A: cap99(player.defending || player.tackling || 10) },
+    { subject: 'Fizik', A: cap99(player.power || player.strength || 10) },
+    { subject: 'Hız', A: cap99(player.speed || 10) },
   ] : [
-    // Forvetler (CF, ST): gol odaklı
-    { subject: 'BIT', A: stats.bitiricilik },
-    { subject: 'SUT', A: stats.uzaktanSut },
-    { subject: 'HIZ', A: stats.hiz },
-    { subject: 'DRB', A: stats.dribling },
-    { subject: 'POZ', A: stats.pozisyonAlma },
-    { subject: 'KAF', A: stats.kafaVurusu },
+    { subject: 'Şut', A: cap99(player.shooting || stats.uzaktanSut) },
+    { subject: 'Pas', A: cap99(player.passing || stats.pas) },
+    { subject: 'Dribling', A: cap99(player.dribbling || stats.dribling) },
+    { subject: 'Savunma', A: cap99(player.defending || stats.topKapma) },
+    { subject: 'Fizik', A: cap99(player.power || stats.guc) },
+    { subject: 'Hız', A: cap99(player.speed || stats.hiz) },
   ];
 
   // ── Position colors (spesifik mevki bazlı) ──
@@ -937,7 +896,7 @@ export default function PlayerDetailModal({
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
                       <PolarGrid stroke="#ffffff10" />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#ffffff30', fontSize: 7, fontWeight: 700 }} />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#ffffff40', fontSize: 8, fontWeight: 700 }} />
                       <Radar name={toTitleCase(player.name)} dataKey="A" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.10} strokeWidth={1.5} />
                     </RadarChart>
                   </ResponsiveContainer>
