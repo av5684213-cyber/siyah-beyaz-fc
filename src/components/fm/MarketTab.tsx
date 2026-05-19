@@ -26,7 +26,16 @@ import {
   CircleDollarSign,
   TrendingUp,
   ShieldCheck,
-  Globe
+  Globe,
+  ArrowRightLeft,
+  Clock,
+  Send,
+  Ban,
+  Check,
+  X,
+  RefreshCw,
+  Calendar,
+  Coins
 } from 'lucide-react';
 import { useFM } from '@/lib/fm/GameContext';
 import { Player, Sponsor } from '@/lib/fm/types';
@@ -80,6 +89,22 @@ export default function MarketTab() {
   // ── Kiralık oyuncular state ──
   const [loanPlayers, setLoanPlayers] = useState<any[]>([]);
   const [loanLoading, setLoanLoading] = useState(false);
+
+  // ── Kiralık alt sekme ──
+  const [rentalSubTab, setRentalSubTab] = useState<'market' | 'my-listed' | 'my-rented'>('market');
+
+  // ── Kiralama modal state ──
+  const [rentalModalPlayer, setRentalModalPlayer] = useState<any>(null);
+  const [rentalWeeks, setRentalWeeks] = useState(12);
+  const [rentalSubmitting, setRentalSubmitting] = useState(false);
+  const [rentalResult, setRentalResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  // ── Benim ilanlarım ve teklifler ──
+  const [myListings, setMyListings] = useState<any[]>([]);
+  const [myOffers, setMyOffers] = useState<any[]>([]);
+  const [myActiveRentals, setMyActiveRentals] = useState<any[]>([]);
+  const [myListingsLoading, setMyListingsLoading] = useState(false);
+  const [respondingOfferId, setRespondingOfferId] = useState<string | null>(null);
 
   // ── Fetch transfer market listings + free agents ──
   const [transferListings, setTransferListings] = useState<Player[]>([]);
@@ -160,20 +185,30 @@ export default function MarketTab() {
     fetchMarketPlayers();
   }, [fetchMarketPlayers]);
 
-  // ── Fetch loan players when Kiralık tab is active ──
+  // ── Fetch loan/rental players when Kiralık tab is active ──
   const fetchLoanPlayers = useCallback(async () => {
     if (!isSupabaseConfigured() || !profile) return;
     setLoanLoading(true);
     try {
-      const res = await fetch(`/api/loans/available?profileId=${profile.id}`);
+      // Önce rental_listings API dene, fallback olarak loans/available kullan
+      const res = await fetch(`/api/rental/listings?profileId=${profile.id}`);
       const data = await res.json();
-      if (data.players && Array.isArray(data.players)) {
-        setLoanPlayers(data.players);
-      } else if (data.error) {
-        console.error('[fetchLoanPlayers] API error:', data.error);
-        setLoanPlayers([]);
+      if (data.listings && Array.isArray(data.listings) && data.listings.length > 0) {
+        // rental_listings verisini loanPlayers formatına çevir
+        const mapped = data.listings.map((l: any) => ({
+          ...l.player,
+          id: l.player_id || l.player?.id,
+          listing_id: l.id,
+          daily_cost: l.daily_cost,
+          owner_team_name: l.owner_team_name,
+          listed_at: l.listed_at,
+        }));
+        setLoanPlayers(mapped);
       } else {
-        setLoanPlayers([]);
+        // Fallback: loans/available
+        const res2 = await fetch(`/api/loans/available?profileId=${profile.id}`);
+        const data2 = await res2.json();
+        setLoanPlayers(data2.players || []);
       }
     } catch (err) {
       console.error('[fetchLoanPlayers] Error:', err);
@@ -183,11 +218,29 @@ export default function MarketTab() {
     }
   }, [profile]);
 
+  // ── Benim ilanlarımı ve tekliflerimi getir ──
+  const fetchMyListings = useCallback(async () => {
+    if (!isSupabaseConfigured() || !profile) return;
+    setMyListingsLoading(true);
+    try {
+      const res = await fetch(`/api/rental/my-listings?profileId=${profile.id}`);
+      const data = await res.json();
+      if (data.listings) setMyListings(data.listings);
+      if (data.offers) setMyOffers(data.offers);
+      if (data.activeRentals) setMyActiveRentals(data.activeRentals);
+    } catch (err) {
+      console.error('[fetchMyListings] Error:', err);
+    } finally {
+      setMyListingsLoading(false);
+    }
+  }, [profile]);
+
   useEffect(() => {
     if (activeSubTab === 'kiralik') {
       fetchLoanPlayers();
+      fetchMyListings();
     }
-  }, [activeSubTab, fetchLoanPlayers]);
+  }, [activeSubTab, fetchLoanPlayers, fetchMyListings]);
 
   // Combine transfer-listed + free agents, filter by search
   const availablePlayers = useMemo(() => {
@@ -453,118 +506,588 @@ export default function MarketTab() {
         </div>
       ) : activeSubTab === 'kiralik' ? (
         <div className="space-y-6">
-          {/* Kiralık Oyuncular Header */}
-          <div className="flex items-center justify-between">
+          {/* ═══ Kiralık Alt Sekmeler ═══ */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center border border-cyan-500/20">
                 <Globe size={20} className="text-cyan-400" />
               </div>
               <div>
-                <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Kiralık Oyuncular</h3>
-                <p className="text-[9px] text-white/30 font-bold uppercase tracking-wider">Diğer takımların kiralık pazara çıkardığı oyuncular</p>
+                <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Kiralık Sistemi</h3>
+                <p className="text-[9px] text-white/30 font-bold uppercase tracking-wider">Oyuncu kiralayın veya kiralık pazara çıkarın</p>
               </div>
             </div>
             <button 
-              onClick={() => fetchLoanPlayers()}
-              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-[9px] font-bold uppercase tracking-wider text-white/40 hover:text-white transition-all rounded-lg border border-white/5"
+              onClick={() => { fetchLoanPlayers(); fetchMyListings(); }}
+              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-[9px] font-bold uppercase tracking-wider text-white/40 hover:text-white transition-all rounded-lg border border-white/5 flex items-center gap-1.5"
             >
-              Yenile
+              <RefreshCw size={10} /> Yenile
             </button>
           </div>
 
-          {/* Loan Players Grid */}
-          {loanLoading ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500/40 rounded-full animate-spin" />
-              <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Kiralık oyuncular yükleniyor</p>
-            </div>
-          ) : loanPlayers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Globe size={48} className="text-cyan-500/20" />
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-white/30">Kiralık oyuncu bulunmuyor</p>
-              <p className="text-[10px] text-white/20 text-center max-w-xs">
-                Diğer takımlar oyuncularını kiralık pazara çıkardığında burada görünecek.
-                Kendi oyuncularınızı da "Kiralık Olarak Gönder" seçeneği ile pazara çıkarabilirsiniz.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {loanPlayers.map((lp: any) => {
-                const loanFee = calculateLoanFeeEuro(lp.market_value || (lp.rating || 50) * 50000, profile?.current_day || 1);
-                const feeStr = loanFee >= 1_000_000 ? `${(loanFee / 1_000_000).toFixed(1)}M €` : loanFee >= 1_000 ? `${(loanFee / 1_000).toFixed(0)}K €` : `${loanFee} €`;
-                return (
-                  <motion.div
-                    key={lp.id}
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="fm-card p-5 group hover:border-cyan-500/20"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="text-sm font-black italic uppercase tracking-tighter text-white">{toTitleCase(lp.name)}</h4>
-                          <span className="px-1.5 py-0.5 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-[7px] font-black uppercase tracking-widest rounded">KİRALIK</span>
+          {/* Alt Sekme Butonları */}
+          <div className="flex p-1 bg-white/5 rounded-xl border border-white/5">
+            <button 
+              onClick={() => setRentalSubTab('market')}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${rentalSubTab === 'market' ? 'bg-cyan-500 text-white' : 'text-white/40 hover:text-white'}`}
+            >
+              <Globe size={11} /> Kiralık Pazar
+            </button>
+            <button 
+              onClick={() => setRentalSubTab('my-listed')}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${rentalSubTab === 'my-listed' ? 'bg-amber-500 text-white' : 'text-white/40 hover:text-white'}`}
+            >
+              <Send size={11} /> Verdiğim Kiralıklar
+              {myOffers.filter((o: any) => o.status === 'pending').length > 0 && (
+                <span className="px-1.5 py-0.5 bg-red-500 text-white text-[7px] font-black rounded-full">{myOffers.filter((o: any) => o.status === 'pending').length}</span>
+              )}
+            </button>
+            <button 
+              onClick={() => setRentalSubTab('my-rented')}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${rentalSubTab === 'my-rented' ? 'bg-emerald-500 text-white' : 'text-white/40 hover:text-white'}`}
+            >
+              <ArrowRightLeft size={11} /> Aldığım Kiralıklar
+            </button>
+          </div>
+
+          {/* ═══════════════════════════════════════════════════ */}
+          {/* ALT SEKME: KİRALIK PAZAR                         */}
+          {/* ═══════════════════════════════════════════════════ */}
+          {rentalSubTab === 'market' && (
+            <>
+              {loanLoading ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500/40 rounded-full animate-spin" />
+                  <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Kiralık oyuncular yükleniyor</p>
+                </div>
+              ) : loanPlayers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                  <Globe size={48} className="text-cyan-500/20" />
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-white/30">Kiralık oyuncu bulunmuyor</p>
+                  <p className="text-[10px] text-white/20 text-center max-w-xs">
+                    Diğer takımlar oyuncularını kiralık pazara çıkardığında burada görünecek.
+                    Kendi oyuncularınızı da &quot;Kiralık Olarak Gönder&quot; seçeneği ile pazara çıkarabilirsiniz.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {loanPlayers.map((lp: any) => {
+                    const dailyCost = lp.daily_cost || lp.loan_fee || 0;
+                    const computedDaily = dailyCost > 0 ? dailyCost : Math.round((lp.market_value || (lp.rating || 50) * 50000) * 0.002);
+                    const computedWeekCost = computedDaily * 7;
+                    const feeStr = computedDaily >= 1000000 ? `${(computedDaily / 1000000).toFixed(1)}M €` : computedDaily >= 1000 ? `${(computedDaily / 1000).toFixed(0)}K €` : `${computedDaily} €`;
+                    const weekStr = computedWeekCost >= 1000000 ? `${(computedWeekCost / 1000000).toFixed(1)}M €` : computedWeekCost >= 1000 ? `${(computedWeekCost / 1000).toFixed(0)}K €` : `${computedWeekCost} €`;
+                    const posDisplay = lp.specific_position || lp.specificPosition || lp.position || 'MID';
+                    return (
+                      <motion.div
+                        key={lp.id || lp.listing_id}
+                        layout
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="fm-card p-5 group hover:border-cyan-500/20"
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="text-sm font-black italic uppercase tracking-tighter text-white">{toTitleCase(lp.name)}</h4>
+                              <span className="px-1.5 py-0.5 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-[7px] font-black uppercase tracking-widest rounded">KİRALIK</span>
+                            </div>
+                            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">
+                              {localizePosFull(posDisplay)} • {lp.age || '?'} YAŞ • {lp.owner_team_name || lp.team_name || 'Bilinmeyen'}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">{feeStr}</p>
+                            <p className="text-[8px] text-white/20 uppercase font-bold">Günlük</p>
+                          </div>
                         </div>
-                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">
-                          {localizePosFull(lp.specific_position || lp.position || '??')} • {lp.age || '?'} YAŞ • {lp.team_name || 'Bilinmeyen'}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">{feeStr}</p>
-                        <p className="text-[9px] text-white/20 uppercase font-bold">Kiralık Ücret</p>
-                      </div>
-                    </div>
 
-                    <div className="grid grid-cols-4 gap-2 mb-4 text-center">
-                      <div className={`p-2 rounded-lg border ${getPosBadgeStyle(lp.specific_position || lp.position || 'MID')} border`}>
-                        <p className="text-[7px] uppercase font-black opacity-60">{localizePosFull(lp.specific_position || lp.position || '??')}</p>
-                        <p className="text-[10px] font-black">{lp.specific_position || lp.position || '?'}</p>
-                      </div>
-                      <div className="bg-white/5 p-2 rounded-lg">
-                        <p className="text-[8px] text-white/30 uppercase font-black">Rating</p>
-                        <p className="text-xs font-black text-white">{lp.rating || '?'}</p>
-                      </div>
-                      <div className="bg-white/5 p-2 rounded-lg">
-                        <p className="text-[8px] text-white/30 uppercase font-black">Pot.</p>
-                        <p className="text-xs font-black text-emerald-500">{lp.potential || '?'}</p>
-                      </div>
-                      <div className="bg-white/5 p-2 rounded-lg">
-                        <p className="text-[8px] text-white/30 uppercase font-black">Sahip</p>
-                        <p className="text-[8px] font-black text-white/60 truncate">{lp.owner_team_name || lp.team_name || '?'}</p>
-                      </div>
-                    </div>
+                        <div className="grid grid-cols-4 gap-2 mb-4 text-center">
+                          <div className={`p-2 rounded-lg border ${getPosBadgeStyle(posDisplay)} border`}>
+                            <p className="text-[7px] uppercase font-black opacity-60">{localizePosFull(posDisplay)}</p>
+                            <p className="text-[10px] font-black">{posDisplay}</p>
+                          </div>
+                          <div className="bg-white/5 p-2 rounded-lg">
+                            <p className="text-[8px] text-white/30 uppercase font-black">Rating</p>
+                            <p className="text-xs font-black text-white">{lp.rating || '?'}</p>
+                          </div>
+                          <div className="bg-white/5 p-2 rounded-lg">
+                            <p className="text-[8px] text-white/30 uppercase font-black">Pot.</p>
+                            <p className="text-xs font-black text-emerald-500">{lp.potential || '?'}</p>
+                          </div>
+                          <div className="bg-white/5 p-2 rounded-lg">
+                            <p className="text-[8px] text-white/30 uppercase font-black">Haftalık</p>
+                            <p className="text-[8px] font-black text-cyan-400">{weekStr}</p>
+                          </div>
+                        </div>
 
-                    <button
-                      onClick={async () => {
-                        if (!profile?.id) return;
-                        if (!confirm(`${toTitleCase(lp.name)} oyuncusunu ${feeStr} + 10 Kredi karşılığında kiralamak istiyor musunuz?\n\n• ${feeStr} oyuncu sahibine ödenecek\n• 10 Kredi sistem komisyonu olarak düşülecek\n• Sezon sonunda oyuncu geri dönecek`)) return;
-                        try {
-                          const res = await fetch('/api/loans/request', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ playerId: lp.id, profileId: profile.id }),
-                          });
-                          const data = await res.json();
-                          if (data.success) {
-                            alert(`Oyuncu başarıyla kiralandı!\n• ${data.loanFeeEuroFormatted || feeStr} oyuncu sahibine ödendi\n• 10 Kredi sistem komisyonu düşüldü\nSezon sonunda oyuncu geri dönecek.`);
-                            fetchLoanPlayers();
-                          } else {
-                            alert(data.error || 'Kiralama başarısız.');
-                          }
-                        } catch (err) {
-                          alert('Bir hata oluştu.');
-                        }
-                      }}
-                      className="w-full py-3 bg-cyan-500/10 group-hover:bg-cyan-500 group-hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 text-cyan-400 border border-cyan-500/20 group-hover:border-cyan-500"
-                    >
-                      <Globe size={14} /> KİRALA (10 KR + Euro)
-                    </button>
-                  </motion.div>
-                );
-              })}
-            </div>
+                        <button
+                          onClick={() => {
+                            setRentalModalPlayer(lp);
+                            setRentalWeeks(12);
+                            setRentalResult(null);
+                          }}
+                          className="w-full py-3 bg-cyan-500/10 group-hover:bg-cyan-500 group-hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 text-cyan-400 border border-cyan-500/20 group-hover:border-cyan-500"
+                        >
+                          <Globe size={14} /> KİRALAMA TEKLİFİ GÖNDER
+                        </button>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
+
+          {/* ═══════════════════════════════════════════════════ */}
+          {/* ALT SEKME: VERDİĞİM KİRALIKLAR                   */}
+          {/* ═══════════════════════════════════════════════════ */}
+          {rentalSubTab === 'my-listed' && (
+            <>
+              {myListingsLoading ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500/40 rounded-full animate-spin" />
+                  <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">İlanlar yükleniyor</p>
+                </div>
+              ) : (
+                <>
+                  {/* Bekleyen Teklifler */}
+                  {myOffers.filter((o: any) => o.status === 'pending').length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-400 flex items-center gap-2">
+                        <Send size={12} /> BEKLEYEN TEKLİFLER
+                      </h4>
+                      {myOffers.filter((o: any) => o.status === 'pending').map((offer: any) => (
+                        <motion.div
+                          key={offer.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-5"
+                        >
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="text-sm font-black italic uppercase tracking-tighter text-white">{toTitleCase(offer.player_name)}</h4>
+                                <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[7px] font-black uppercase tracking-widest rounded">{offer.player_position}</span>
+                                <span className="px-1.5 py-0.5 bg-white/5 text-white/40 text-[7px] font-black uppercase tracking-widest rounded">⭐ {offer.player_rating}</span>
+                              </div>
+                              <p className="text-[10px] text-white/40 font-bold">
+                                Teklif sahibi: <span className="text-amber-400">{offer.renter_team_name}</span> • Süre: {offer.duration_weeks} hafta • Toplam: {offer.total_cost?.toLocaleString('tr-TR')} € + {offer.commission} KR
+                              </p>
+                              <p className="text-[9px] text-white/20 mt-1">Günlük ücret: {offer.daily_cost?.toLocaleString('tr-TR')} €</p>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={async () => {
+                                  if (!profile?.id) return;
+                                  setRespondingOfferId(offer.id);
+                                  try {
+                                    const res = await fetch('/api/rental/respond', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ agreementId: offer.id, response: 'accept', ownerTeamId: profile.id }),
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                      fetchMyListings();
+                                      fetchLoanPlayers();
+                                    } else {
+                                      alert(data.error || 'Hata oluştu');
+                                    }
+                                  } catch (err) {
+                                    alert('Bir hata oluştu');
+                                  } finally {
+                                    setRespondingOfferId(null);
+                                  }
+                                }}
+                                disabled={respondingOfferId === offer.id}
+                                className="px-4 py-2.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-white text-[9px] font-black uppercase tracking-widest rounded-xl border border-emerald-500/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                              >
+                                <Check size={12} /> KABUL
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (!profile?.id) return;
+                                  setRespondingOfferId(offer.id);
+                                  try {
+                                    const res = await fetch('/api/rental/respond', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ agreementId: offer.id, response: 'reject', ownerTeamId: profile.id }),
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                      fetchMyListings();
+                                      fetchLoanPlayers();
+                                    } else {
+                                      alert(data.error || 'Hata oluştu');
+                                    }
+                                  } catch (err) {
+                                    alert('Bir hata oluştu');
+                                  } finally {
+                                    setRespondingOfferId(null);
+                                  }
+                                }}
+                                disabled={respondingOfferId === offer.id}
+                                className="px-4 py-2.5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white text-[9px] font-black uppercase tracking-widest rounded-xl border border-red-500/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                              >
+                                <X size={12} /> REDDET
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* İlanlarım Listesi */}
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/30 flex items-center gap-2">
+                      <Send size={12} /> KİRALIK PAZARINDAKİ OYUNCULARIM
+                    </h4>
+                    {myListings.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-16 gap-3">
+                        <Send size={36} className="text-amber-500/20" />
+                        <p className="text-[10px] text-white/20 text-center">Henüz kiralık pazara oyuncu çıkarmamışsınız.</p>
+                        <p className="text-[9px] text-white/10 text-center">Kadronuzdan bir oyuncuyu &quot;Kiralık Olarak Gönder&quot; ile pazara çıkarabilirsiniz.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {myListings.map((listing: any) => {
+                          const p = listing.player || {};
+                          const posDisplay = p.specific_position || p.position || 'MID';
+                          return (
+                            <div key={listing.id} className="bg-white/[0.03] border border-white/5 rounded-xl p-4 flex items-center gap-4">
+                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-[10px] font-black border ${getPosBadgeStyle(posDisplay)}`}>
+                                {posDisplay}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-black uppercase tracking-tighter text-white truncate">{toTitleCase(p.name || 'Bilinmeyen')}</p>
+                                <p className="text-[9px] text-white/30 font-bold">{localizePosFull(posDisplay)} • ⭐ {p.rating || '?'} • {p.age || '?'} yaş</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[10px] font-black text-cyan-400">{(listing.daily_cost || 0).toLocaleString('tr-TR')} €/gün</p>
+                                <span className={`px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded ${
+                                  listing.status === 'active' ? 'bg-emerald-500/15 text-emerald-400' :
+                                  listing.status === 'pending' ? 'bg-amber-500/15 text-amber-400' :
+                                  listing.status === 'rented' ? 'bg-sky-500/15 text-sky-400' :
+                                  'bg-white/5 text-white/30'
+                                }`}>
+                                  {listing.status === 'active' ? 'AKTİF' : listing.status === 'pending' ? 'BEKLİYOR' : listing.status === 'rented' ? 'KİRALANDI' : listing.status?.toUpperCase()}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Yanıtlanmış Teklifler (Kabul/Red) */}
+                  {myOffers.filter((o: any) => o.status !== 'pending').length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-white/20 flex items-center gap-2">
+                        <Clock size={12} /> GEÇMİŞ TEKLİFLER
+                      </h4>
+                      {myOffers.filter((o: any) => o.status !== 'pending').map((offer: any) => (
+                        <div key={offer.id} className="bg-white/[0.02] border border-white/5 rounded-xl p-3 flex items-center gap-3 opacity-50">
+                          <div className="flex-1">
+                            <p className="text-[10px] font-black text-white/60">{toTitleCase(offer.player_name)} → {offer.renter_team_name}</p>
+                            <p className="text-[9px] text-white/30">{offer.duration_weeks} hafta • {offer.total_cost?.toLocaleString('tr-TR')} €</p>
+                          </div>
+                          <span className={`px-2 py-1 text-[8px] font-black uppercase rounded ${
+                            offer.status === 'accepted' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
+                          }`}>
+                            {offer.status === 'accepted' ? 'KABUL' : 'RED'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          )}
+
+          {/* ═══════════════════════════════════════════════════ */}
+          {/* ALT SEKME: ALDIĞIM KİRALIKLAR                    */}
+          {/* ═══════════════════════════════════════════════════ */}
+          {rentalSubTab === 'my-rented' && (
+            <>
+              {myListingsLoading ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <div className="w-8 h-8 border-2 border-emerald-500/20 border-t-emerald-500/40 rounded-full animate-spin" />
+                  <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Anlaşmalar yükleniyor</p>
+                </div>
+              ) : myActiveRentals.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                  <ArrowRightLeft size={48} className="text-emerald-500/20" />
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-white/30">Henüz kiralama anlaşmanız yok</p>
+                  <p className="text-[10px] text-white/20 text-center max-w-xs">
+                    &quot;Kiralık Pazar&quot; sekmesinden oyuncu kiralayarak burada takip edebilirsiniz.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {myActiveRentals.map((rental: any) => (
+                    <motion.div
+                      key={rental.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className={`border rounded-2xl p-5 ${
+                        rental.status === 'accepted' ? 'bg-emerald-500/5 border-emerald-500/20' :
+                        rental.status === 'pending' ? 'bg-amber-500/5 border-amber-500/20' :
+                        'bg-white/[0.03] border-white/5'
+                      }`}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xs font-black border ${
+                            getPosBadgeStyle(rental.player_position)
+                          }`}>
+                            {rental.player_position}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-black italic uppercase tracking-tighter text-white">{toTitleCase(rental.player_name)}</h4>
+                              <span className={`px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded ${
+                                rental.status === 'accepted' ? 'bg-emerald-500/15 text-emerald-400' :
+                                rental.status === 'pending' ? 'bg-amber-500/15 text-amber-400' :
+                                'bg-white/5 text-white/30'
+                              }`}>
+                                {rental.status === 'accepted' ? 'AKTİF' : rental.status === 'pending' ? 'BEKLİYOR' : rental.status?.toUpperCase()}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-white/40 font-bold">
+                              ⭐ {rental.player_rating} • {rental.player_age || '?'} yaş • Sahip: {rental.owner_team_name}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-4 text-center">
+                          <div className="bg-white/5 px-3 py-2 rounded-lg">
+                            <p className="text-[8px] text-white/30 uppercase font-black">Süre</p>
+                            <p className="text-xs font-black text-white">{rental.duration_weeks} hafta</p>
+                          </div>
+                          <div className="bg-white/5 px-3 py-2 rounded-lg">
+                            <p className="text-[8px] text-white/30 uppercase font-black">Toplam</p>
+                            <p className="text-xs font-black text-cyan-400">{(rental.total_cost || 0).toLocaleString('tr-TR')} €</p>
+                          </div>
+                          <div className="bg-white/5 px-3 py-2 rounded-lg">
+                            <p className="text-[8px] text-white/30 uppercase font-black">Bitiş</p>
+                            <p className="text-[10px] font-black text-white/60">{rental.loan_end_date || rental.end_date?.split('T')[0] || '?'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ═══════════════════════════════════════════════════ */}
+          {/* KİRALAMA MODALI                                   */}
+          {/* ═══════════════════════════════════════════════════ */}
+          <AnimatePresence>
+            {rentalModalPlayer && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => { setRentalModalPlayer(null); setRentalResult(null); }}
+                  className="absolute inset-0 bg-black/90 backdrop-blur-md"
+                />
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                  className="relative w-full max-w-md bg-zinc-900 border border-cyan-500/20 rounded-[32px] p-8 overflow-hidden shadow-2xl"
+                >
+                  {/* Modal Kapat */}
+                  <button
+                    onClick={() => { setRentalModalPlayer(null); setRentalResult(null); }}
+                    className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all"
+                  >
+                    <X size={16} />
+                  </button>
+
+                  {!rentalResult ? (
+                    <>
+                      {/* Oyuncu Başlık */}
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className="w-14 h-14 bg-cyan-500/10 rounded-2xl flex items-center justify-center border border-cyan-500/20">
+                          <Globe size={24} className="text-cyan-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-black italic tracking-tighter text-white uppercase">{toTitleCase(rentalModalPlayer.name)}</h3>
+                          <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">
+                            {localizePosFull(rentalModalPlayer.specific_position || rentalModalPlayer.position)} • ⭐ {rentalModalPlayer.rating} • {rentalModalPlayer.age} yaş
+                          </p>
+                          <p className="text-[9px] text-white/20">Sahip: {rentalModalPlayer.owner_team_name || rentalModalPlayer.team_name}</p>
+                        </div>
+                      </div>
+
+                      {/* Günlük Ücret */}
+                      <div className="bg-cyan-500/5 border border-cyan-500/10 rounded-2xl p-4 mb-4">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400">Günlük Kiralama Ücreti</p>
+                          <p className="text-lg font-black text-cyan-400 italic">
+                            {(rentalModalPlayer.daily_cost || 0).toLocaleString('tr-TR')} €
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Süre Seçimi */}
+                      <div className="mb-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3 flex items-center gap-1.5">
+                          <Calendar size={11} /> Kiralama Süresi (Hafta)
+                        </p>
+                        <div className="grid grid-cols-6 gap-2">
+                          {[4, 8, 12, 17, 24, 34].map(w => (
+                            <button
+                              key={w}
+                              onClick={() => setRentalWeeks(w)}
+                              className={`py-2.5 rounded-lg text-[10px] font-black uppercase transition-all border ${
+                                rentalWeeks === w
+                                  ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400'
+                                  : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10'
+                              }`}
+                            >
+                              {w}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Maliyet Hesaplama */}
+                      {(() => {
+                        const dailyCost = rentalModalPlayer.daily_cost || 0;
+                        const totalDays = rentalWeeks * 7;
+                        const totalCost = dailyCost * totalDays;
+                        const myMoney = profile?.money || 0;
+                        const myCredits = profile?.credits || 0;
+                        const canAfford = myMoney >= totalCost && myCredits >= 10;
+                        return (
+                          <div className="bg-white/5 rounded-2xl p-4 mb-4 space-y-2">
+                            <div className="flex justify-between text-[10px]">
+                              <span className="text-white/40 font-bold">Günlük ücret</span>
+                              <span className="text-white font-black">{dailyCost.toLocaleString('tr-TR')} €</span>
+                            </div>
+                            <div className="flex justify-between text-[10px]">
+                              <span className="text-white/40 font-bold">Gün sayısı</span>
+                              <span className="text-white font-black">{totalDays} gün ({rentalWeeks} hafta)</span>
+                            </div>
+                            <div className="border-t border-white/5 my-2" />
+                            <div className="flex justify-between text-[10px]">
+                              <span className="text-white/40 font-bold">Toplam kira ücreti</span>
+                              <span className="text-cyan-400 font-black">{totalCost.toLocaleString('tr-TR')} €</span>
+                            </div>
+                            <div className="flex justify-between text-[10px]">
+                              <span className="text-white/40 font-bold">Sistem komisyonu</span>
+                              <span className="text-amber-400 font-black">10 KR</span>
+                            </div>
+                            <div className="border-t border-white/5 my-2" />
+                            <div className="flex justify-between text-[10px]">
+                              <span className="text-white/40 font-bold">Bakiyeniz (€)</span>
+                              <span className={`font-black ${myMoney >= totalCost ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {myMoney.toLocaleString('tr-TR')} €
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-[10px]">
+                              <span className="text-white/40 font-bold">Krediniz (KR)</span>
+                              <span className={`font-black ${myCredits >= 10 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {myCredits} KR
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Gönder Butonu */}
+                      <button
+                        onClick={async () => {
+                          if (!profile?.id || rentalSubmitting) return;
+                          setRentalSubmitting(true);
+                          try {
+                            const dailyCost = rentalModalPlayer.daily_cost || 0;
+                            const totalCost = dailyCost * rentalWeeks * 7;
+                            const myMoney = profile?.money || 0;
+                            const myCredits = profile?.credits || 0;
+
+                            if (myMoney < totalCost) {
+                              setRentalResult({ success: false, message: `Yetersiz Euro bakiye. Gerekli: ${totalCost.toLocaleString('tr-TR')} €, Mevcut: ${myMoney.toLocaleString('tr-TR')} €` });
+                              return;
+                            }
+                            if (myCredits < 10) {
+                              setRentalResult({ success: false, message: `Yetersiz kredi. Gerekli: 10 KR, Mevcut: ${myCredits} KR` });
+                              return;
+                            }
+
+                            const res = await fetch('/api/rental/offer', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                listingId: rentalModalPlayer.listing_id,
+                                playerId: rentalModalPlayer.id,
+                                renterTeamId: profile.id,
+                                durationWeeks: rentalWeeks,
+                              }),
+                            });
+                            const data = await res.json();
+                            if (data.success) {
+                              setRentalResult({ success: true, message: `${toTitleCase(rentalModalPlayer.name)} için ${rentalWeeks} haftalık kiralama teklifi gönderildi! İlan sahibinin onayı bekleniyor.` });
+                              fetchLoanPlayers();
+                              fetchMyListings();
+                            } else {
+                              setRentalResult({ success: false, message: data.error || 'Teklif gönderilemedi' });
+                            }
+                          } catch (err) {
+                            setRentalResult({ success: false, message: 'Bir hata oluştu' });
+                          } finally {
+                            setRentalSubmitting(false);
+                          }
+                        }}
+                        disabled={rentalSubmitting}
+                        className="w-full py-3.5 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {rentalSubmitting ? (
+                          <><div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" /> GÖNDERİLİYOR...</>
+                        ) : (
+                          <><Send size={14} /> TEKLİFİ GÖNDER</>
+                        )}
+                      </button>
+                    </>
+                  ) : (
+                    /* Sonuç */
+                    <div className="text-center py-4">
+                      <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ${
+                        rentalResult.success ? 'bg-emerald-500/15' : 'bg-red-500/15'
+                      }`}>
+                        {rentalResult.success ? (
+                          <CheckCircle2 size={32} className="text-emerald-400" />
+                        ) : (
+                          <XCircle size={32} className="text-red-400" />
+                        )}
+                      </div>
+                      <h3 className={`text-lg font-black italic uppercase tracking-tighter mb-2 ${
+                        rentalResult.success ? 'text-emerald-400' : 'text-red-400'
+                      }`}>
+                        {rentalResult.success ? 'TEKLİF GÖNDERİLDİ!' : 'HATA OLUŞTU'}
+                      </h3>
+                      <p className="text-[11px] text-white/60 leading-relaxed">{rentalResult.message}</p>
+                      <button
+                        onClick={() => { setRentalModalPlayer(null); setRentalResult(null); }}
+                        className="mt-6 px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
+                      >
+                        KAPAT
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
         </div>
       ) : activeSubTab === 'sponsors' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

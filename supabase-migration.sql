@@ -284,10 +284,46 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- BÖLÜM 10: RENTAL_AGREEMENTS TABLOSU (kiralama anlaşmaları)
+-- ═══════════════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS rental_agreements (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  listing_id UUID REFERENCES rental_listings(id) ON DELETE SET NULL,
+  player_id TEXT NOT NULL,
+  owner_team_id TEXT NOT NULL,
+  renter_team_id TEXT NOT NULL,
+  start_date TIMESTAMPTZ DEFAULT now(),
+  end_date TIMESTAMPTZ,
+  duration_weeks INT NOT NULL DEFAULT 12,
+  daily_cost INT NOT NULL DEFAULT 0,
+  total_cost BIGINT NOT NULL DEFAULT 0,
+  commission INT NOT NULL DEFAULT 10,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  responded_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_rental_agreements_player ON rental_agreements(player_id);
+CREATE INDEX IF NOT EXISTS idx_rental_agreements_owner ON rental_agreements(owner_team_id);
+CREATE INDEX IF NOT EXISTS idx_rental_agreements_renter ON rental_agreements(renter_team_id);
+CREATE INDEX IF NOT EXISTS idx_rental_agreements_status ON rental_agreements(status);
+
+ALTER TABLE rental_agreements ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  CREATE POLICY "rental_agreements_select_all" ON rental_agreements FOR SELECT USING (true);
+  CREATE POLICY "rental_agreements_insert_all" ON rental_agreements FOR INSERT WITH CHECK (true);
+  CREATE POLICY "rental_agreements_update_all" ON rental_agreements FOR UPDATE USING (true);
+  CREATE POLICY "rental_agreements_delete_all" ON rental_agreements FOR DELETE USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- BİTTİ! Bu SQL'i çalıştırdıktan sonra:
 -- 1. Tüm oyunculara specific_position atanmış olacak
 -- 2. Yan mevkiler (secondary_positions) text[] olarak doldurulmuş olacak
--- 3. Kiralama sistemi (loans + rental_listings) hazır olacak
+-- 3. Kiralama sistemi (loans + rental_listings + rental_agreements) hazır olacak
 -- 4. Push bildirimleri (push_subscriptions) hazır olacak
 -- 5. Sezon sonu ödülleri (season_awards) hazır olacak
 -- 6. Detaylı istatistik kolonları eklenmiş olacak
