@@ -507,7 +507,7 @@ export default function MarketTab() {
                           <span className="px-1.5 py-0.5 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-[7px] font-black uppercase tracking-widest rounded">KİRALIK</span>
                         </div>
                         <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">
-                          {lp.specific_position || lp.position || '??'} • {lp.age || '?'} YAŞ • {lp.team_name || 'Bilinmeyen'}
+                          {localizePosFull(lp.specific_position || lp.position || '??')} • {lp.age || '?'} YAŞ • {lp.team_name || 'Bilinmeyen'}
                         </p>
                       </div>
                       <div className="text-right">
@@ -516,7 +516,11 @@ export default function MarketTab() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 mb-4 text-center">
+                    <div className="grid grid-cols-4 gap-2 mb-4 text-center">
+                      <div className={`p-2 rounded-lg border ${getPosBadgeStyle(lp.specific_position || lp.position || 'MID')} border`}>
+                        <p className="text-[7px] uppercase font-black opacity-60">{localizePosFull(lp.specific_position || lp.position || '??')}</p>
+                        <p className="text-[10px] font-black">{lp.specific_position || lp.position || '?'}</p>
+                      </div>
                       <div className="bg-white/5 p-2 rounded-lg">
                         <p className="text-[8px] text-white/30 uppercase font-black">Rating</p>
                         <p className="text-xs font-black text-white">{lp.rating || '?'}</p>

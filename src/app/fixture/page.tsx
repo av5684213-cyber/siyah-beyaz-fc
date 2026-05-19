@@ -18,6 +18,11 @@ import {
   Shield,
   Users,
   Circle,
+  CloudSun,
+  CloudRain,
+  Wind,
+  Thermometer,
+  Handshake,
 } from 'lucide-react';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { toTitleCase } from '@/lib/fm/ui-helpers';
@@ -174,6 +179,114 @@ function isMatchFinished(fixture: FixtureListItem): boolean {
 
 function isMatchLive(fixture: FixtureListItem): boolean {
   return fixture.status === 'live';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Simüle Edilmiş Hava Durumu
+// ═══════════════════════════════════════════════════════════════════════
+
+type WeatherType = 'sunny' | 'rainy' | 'windy' | 'cloudy' | 'snowy';
+
+interface SimulatedWeather {
+  type: WeatherType;
+  temperature: number;
+  label: string;
+  icon: React.ReactNode;
+}
+
+function simulateWeather(matchDate: string): SimulatedWeather {
+  // Deterministic pseudo-random based on date
+  const d = new Date(matchDate);
+  const seed = d.getDate() * 31 + d.getMonth() * 7 + d.getFullYear();
+  const roll = ((seed * 9301 + 49297) % 233280) / 233280;
+
+  const month = d.getMonth() + 1; // 1-12
+
+  // Season-based temperature & weather probability
+  let baseTemp: number;
+  if (month >= 6 && month <= 8) baseTemp = 28;      // Summer
+  else if (month >= 12 || month <= 2) baseTemp = 5;  // Winter
+  else if (month >= 3 && month <= 5) baseTemp = 15;  // Spring
+  else baseTemp = 14;                                  // Autumn
+
+  const tempVariance = Math.floor(roll * 12) - 6;
+  const temperature = baseTemp + tempVariance;
+
+  // Weather distribution
+  if (roll < 0.40) {
+    return { type: 'sunny', temperature, label: 'Güneşli', icon: <CloudSun size={16} className="text-amber-400" /> };
+  } else if (roll < 0.60) {
+    return { type: 'cloudy', temperature, label: 'Bulutlu', icon: <CloudSun size={16} className="text-white/40" /> };
+  } else if (roll < 0.78) {
+    return { type: 'rainy', temperature, label: 'Yağmurlu', icon: <CloudRain size={16} className="text-sky-400" /> };
+  } else if (roll < 0.92) {
+    return { type: 'windy', temperature, label: 'Rüzgarlı', icon: <Wind size={16} className="text-white/50" /> };
+  } else {
+    return { type: 'snowy', temperature: Math.min(temperature, 2), label: 'Karlı', icon: <CloudRain size={16} className="text-blue-300" /> };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Sakat/Cezalı Oyuncular Bileşeni
+// ═══════════════════════════════════════════════════════════════════════
+
+function InjuredSuspendedPlayers({ teamName }: { teamName: string }) {
+  const [players, setPlayers] = useState<{ name: string; status: string; detail: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPlayers = async () => {
+      const supabase = getSupabase();
+      if (!supabase || !teamName) { setLoading(false); return; }
+
+      try {
+        const { data, error } = await supabase
+          .from('players')
+          .select('name, is_injured, suspended_until, injury')
+          .ilike('team_name', teamName)
+          .or('is_injured.eq.true,suspended_until.not.is.null');
+
+        if (!error && data) {
+          const mapped = data
+            .filter((p: any) => p.is_injured || p.suspended_until)
+            .map((p: any) => ({
+              name: p.name || 'Bilinmeyen',
+              status: p.is_injured ? 'Sakat' : 'Cezalı',
+              detail: p.is_injured
+                ? (p.injury ? `${(p.injury as any)?.remaining_days || '?'} gün` : 'Sakat')
+                : `Cezası var`,
+            }));
+          setPlayers(mapped);
+        }
+      } catch { /* silent */ }
+      finally { setLoading(false); }
+    };
+    fetchPlayers();
+  }, [teamName]);
+
+  if (loading) return null;
+  if (players.length === 0) return null;
+
+  return (
+    <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <AlertTriangle size={14} className="text-orange-400" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Sakat / Cezalı</span>
+        <span className="text-[9px] text-white/25 bg-white/5 px-1.5 py-0.5 rounded-full">{players.length}</span>
+      </div>
+      <div className="space-y-1.5">
+        {players.slice(0, 6).map((p, i) => (
+          <div key={i} className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+            <span className={`text-[8px] font-bold shrink-0 ${p.status === 'Sakat' ? 'text-orange-400' : 'text-red-400'}`}>
+              {p.status === 'Sakat' ? '🏥' : '🟥'} {p.status}
+            </span>
+            <span className="text-[11px] font-semibold text-white/70 truncate flex-1">{toTitleCase(p.name)}</span>
+            <span className="text-[9px] text-white/30 shrink-0">{p.detail}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -620,10 +733,12 @@ function MatchDetailsPanel({
 }) {
   const [events, setEvents] = useState<MatchEventRow[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
+  const [friendlyLoading, setFriendlyLoading] = useState(false);
   const finished = isMatchFinished(fixture);
   const live = isMatchLive(fixture);
   const competition = getCompetitionType(fixture);
   const stadium = getStadiumName(fixture.is_home ? fixture.home_team : fixture.away_team);
+  const weather = useMemo(() => simulateWeather(fixture.match_date), [fixture.match_date]);
 
   // Fetch match events for finished/live matches
   useEffect(() => {
@@ -759,6 +874,20 @@ function MatchDetailsPanel({
         <div className="mt-2">
           <span className="text-[9px] text-white/15 font-mono">Hafta {fixture.tur}</span>
         </div>
+
+        {/* ── Weather Card ── */}
+        <div className="mt-3 pt-3 border-t border-white/[0.04]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {weather.icon}
+              <span className="text-[11px] text-white/50 font-medium">{weather.label}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Thermometer size={12} className="text-white/25" />
+              <span className="text-[11px] text-white/40 font-semibold">{weather.temperature}°C</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── Match Not Played ── */}
@@ -789,6 +918,51 @@ function MatchDetailsPanel({
 
       {/* ── Previous Encounters ── */}
       <PreviousEncounters fixture={fixture} />
+
+      {/* ── Injured/Suspended Players ── */}
+      <InjuredSuspendedPlayers teamName={teamName} />
+
+      {/* ── Friendly Match Button (only for scheduled matches) ── */}
+      {!finished && !live && (
+        <div className="pt-1">
+          <button
+            onClick={async () => {
+              setFriendlyLoading(true);
+              try {
+                const profileStr = localStorage.getItem('fm_profile');
+                const profile = profileStr ? JSON.parse(profileStr) : null;
+                const res = await fetch('/api/friendly-matches/queue', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    profileId: profile?.id,
+                    teamName: profile?.team_name,
+                  }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                  alert('Hazırlık maçı sıraya eklendi! Eşleşme bulunduğunda bildirim alacaksınız.');
+                } else {
+                  alert(data.error || 'Hazırlık maçı ayarlanamadı.');
+                }
+              } catch {
+                alert('Bir hata oluştu.');
+              } finally {
+                setFriendlyLoading(false);
+              }
+            }}
+            disabled={friendlyLoading}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 border border-emerald-500/25 text-emerald-400 text-xs font-black uppercase tracking-widest hover:from-emerald-500/20 hover:to-emerald-600/20 transition-all active:scale-[0.98] disabled:opacity-30"
+          >
+            {friendlyLoading ? (
+              <div className="w-4 h-4 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
+            ) : (
+              <Handshake size={14} />
+            )}
+            {friendlyLoading ? 'Ayarlanıyor...' : 'Hazırlık Maçı Ayarla'}
+          </button>
+        </div>
+      )}
 
       {/* ── Go to Match Page Button ── */}
       {finished && (

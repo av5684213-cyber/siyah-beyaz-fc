@@ -86,6 +86,7 @@ export default function PlayerRow({
 
   const stats = [
     { label: 'Poz', val: formatPosBadge(player), key: 'position' },
+    { label: 'Mevki', val: localizePosFull(player.specificPosition || player.position), key: 'specificPosition' },
     { label: 'Klt', val: Math.round(player.potential || rating), key: 'potential' },
     { label: isGK ? 'Ref' : 'Klc', val: Math.round(player.goalkeeping || 0), key: 'goalkeeping' },
     { label: 'Tk', val: Math.round(player.control || rating), key: 'control' },
@@ -165,11 +166,11 @@ export default function PlayerRow({
           </div>
       </div>
 
-      <div className="flex-1 grid grid-cols-14 gap-px bg-white/5 rounded overflow-hidden p-px">
+      <div className="flex-1 grid grid-cols-15 gap-px bg-white/5 rounded overflow-hidden p-px">
         {stats.map(s => {
           const isFocused = assignment?.focusedStat === s.key;
-          const isTrainable = s.key !== 'total' && s.key !== 'rating' && s.key !== 'cond' && s.key !== 'potential' && s.key !== 'position';
-          const isSpecial = s.key === 'position';
+          const isTrainable = s.key !== 'total' && s.key !== 'rating' && s.key !== 'cond' && s.key !== 'potential' && s.key !== 'position' && s.key !== 'specificPosition';
+          const isSpecial = s.key === 'position' || s.key === 'specificPosition';
 
           return (
             <div 

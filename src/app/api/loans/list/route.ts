@@ -53,13 +53,49 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (playerError || !player) {
-      console.error('[POST /api/loans/list] Player fetch error:', playerError?.message);
-      return NextResponse.json({ error: 'Oyuncu bulunamadı' }, { status: 404 });
+      console.error('[POST /api/loans/list] Player fetch error:', playerError?.message, 'playerId:', playerId);
+      return NextResponse.json({ 
+        error: 'Oyuncu bulunamadı',
+        debug: { playerId, profileId, playerError: playerError?.message }
+      }, { status: 404 });
     }
 
     // ── Yetki kontrolü: oyuncu bu profile mı ait? ──
-    if (player.profile_id !== profileId) {
-      return NextResponse.json({ error: 'Bu oyuncu sizin takımınıza ait değil' }, { status: 403 });
+    // Fallback: profile_id eşleşmezse, team_name ile de kontrol et
+    const profileOwnsPlayer = player.profile_id === profileId;
+    let teamNameOwnsPlayer = false;
+    
+    if (!profileOwnsPlayer && player.team_name) {
+      // Fetch profile's team_name to compare
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('team_name')
+        .eq('id', profileId)
+        .maybeSingle();
+      
+      if (profileData && profileData.team_name && player.team_name.toLowerCase() === profileData.team_name.toLowerCase()) {
+        teamNameOwnsPlayer = true;
+        // Fix: update the player's profile_id since it was missing
+        console.log('[POST /api/loans/list] Fixing missing profile_id for player:', player.id, '→ profileId:', profileId);
+        await supabase.from('players').update({ profile_id: profileId }).eq('id', player.id);
+      }
+    }
+
+    if (!profileOwnsPlayer && !teamNameOwnsPlayer) {
+      console.warn('[POST /api/loans/list] Authorization failed:', {
+        playerId: player.id,
+        playerProfileId: player.profile_id,
+        playerTeamName: player.team_name,
+        requestProfileId: profileId,
+      });
+      return NextResponse.json({ 
+        error: 'Bu oyuncu sizin takımınıza ait değil',
+        debug: { 
+          playerProfileId: player.profile_id, 
+          playerTeamName: player.team_name,
+          requestProfileId: profileId,
+        }
+      }, { status: 403 });
     }
 
     // ── Zaten kiralık pazarında mı? ──

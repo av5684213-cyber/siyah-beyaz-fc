@@ -19,12 +19,13 @@ import { traitDescriptions, getTraitTierLabel } from '@/lib/fm/traits';
 import { TRAIT_LEVELS } from '@/lib/fm/traitsData';
 import { useFM } from '@/lib/fm/GameContext';
 import { getPlayStyleEffect } from '@/lib/fm/playStyles';
-import { localizePos, getPosGroup, getPosDotColor, getPosBadgeStyle } from '@/lib/fm/ui-helpers';
+import { localizePos, localizePosFull, getPosGroup, getPosDotColor, getPosBadgeStyle } from '@/lib/fm/ui-helpers';
 import { POS_TO_GROUP, POS_LABELS } from '@/lib/fm/playerGenerator';
 import { fmStatColor, fmStatBg, formatMoney, cap99, toTitleCase } from '@/lib/fm/ui-helpers';
 import type { Player, TrainingState } from '@/lib/fm/types';
 import type { MarketListing } from '@/lib/fm/multiplayer';
 import PlayerStatsTab from './PlayerStatsTab';
+import PlayerPositionMap from './PlayerPositionMap';
 
 interface PlayerDetailModalProps {
   player: Player;
@@ -494,6 +495,7 @@ export default function PlayerDetailModal({
                 <span className={`px-1.5 py-px rounded-sm border text-[9px] font-bold uppercase tracking-wider ${posBg} ${posColor}`}>
                   {localizePos(sp)}
                 </span>
+                <span className="text-[9px] text-white/30 font-semibold">{localizePosFull(sp)}</span>
                 {player.secondaryPositions && player.secondaryPositions.length > 0 && (
                   <div className="flex items-center gap-1">
                     {player.secondaryPositions.map((sec: string, si: number) => {
@@ -501,7 +503,7 @@ export default function PlayerDetailModal({
                       const secBadge = getPosBadgeStyle(secG);
                       const secColor = secBadge.split(' ').find(c => c.startsWith('text-')) || 'text-[#9B9B9B]';
                       const secBg = secBadge.split(' ').filter(c => !c.startsWith('text-')).join(' ');
-                      return <span key={si} className={`px-1 py-px rounded-sm border text-[8px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{localizePos(sec)}</span>;
+                      return <span key={si} className={`px-1 py-px rounded-sm border text-[8px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{localizePos(sec)} <span className="text-[7px] opacity-50">{localizePosFull(sec)}</span></span>;
                     })}
                     <span className="text-[7px] text-white/20 font-bold uppercase">yan</span>
                   </div>
@@ -657,6 +659,7 @@ export default function PlayerDetailModal({
                     <span className={`px-4 py-1.5 rounded-sm border text-[12px] font-black uppercase tracking-[0.1em] ${posBg} ${posColor}`}>
                       {localizePos(sp)}
                     </span>
+                    <span className="text-[10px] text-white/35 font-bold">{localizePosFull(sp)}</span>
                     {player.secondaryPositions && player.secondaryPositions.length > 0 && (
                       <div className="flex flex-wrap justify-center gap-1">
                         {player.secondaryPositions.map((sec: string, si: number) => {
@@ -664,12 +667,19 @@ export default function PlayerDetailModal({
                           const secBadge = getPosBadgeStyle(secG);
                           const secColor = secBadge.split(' ').find(c => c.startsWith('text-')) || 'text-[#9B9B9B]';
                           const secBg = secBadge.split(' ').filter(c => !c.startsWith('text-')).join(' ');
-                          return <span key={si} className={`px-1.5 py-px rounded-full border text-[8px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{localizePos(sec)}</span>;
+                          return <span key={si} className={`px-1.5 py-px rounded-full border text-[8px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{localizePos(sec)} <span className="text-[6px] opacity-50">{localizePosFull(sec)}</span></span>;
                         })}
                         <span className="text-[7px] text-white/15 font-bold uppercase w-full text-center">yan mevki</span>
                       </div>
                     )}
                   </div>
+
+                  {/* Saha Yerleşimi */}
+                  <PlayerPositionMap
+                    specificPosition={player.specificPosition}
+                    secondaryPositions={player.secondaryPositions}
+                    size="sm"
+                  />
               </div>
 
               {/* Professional Styles / Traits Section */}
@@ -1700,8 +1710,13 @@ export default function PlayerDetailModal({
                       alert('Profil ID bulunamadı. Lütfen sayfayı yenileyin.');
                       return;
                     }
+                    if (!player.id) {
+                      alert('Oyuncu ID bulunamadı.');
+                      return;
+                    }
                     setIsSendingLoan(true);
                     try {
+                      console.log('[Loan] Sending to /api/loans/list:', { playerId: player.id, loanFee: loanFeeEuro, profileId });
                       const res = await fetch('/api/loans/list', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1712,13 +1727,16 @@ export default function PlayerDetailModal({
                         }),
                       });
                       const data = await res.json();
+                      console.log('[Loan] API response:', data);
                       if (data.success) {
                         alert(`${toTitleCase(player.name)} kiralık pazarına çıkarıldı!`);
                         setShowLoanForm(false);
                       } else {
-                        alert(data.error || 'Kiralık pazara çıkarılamadı.');
+                        const debugInfo = data.debug ? `\n\nHata Ayıklama: ${JSON.stringify(data.debug)}` : '';
+                        alert(data.error || 'Kiralık pazara çıkarılamadı.' + debugInfo);
                       }
                     } catch (err) {
+                      console.error('[Loan] Exception:', err);
                       alert('Bir hata oluştu. Lütfen tekrar deneyin.');
                     } finally {
                       setIsSendingLoan(false);

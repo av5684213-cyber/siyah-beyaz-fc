@@ -332,6 +332,11 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
   const handleLoanSubmit = async () => {
     if (!loanModalPlayer || !userId) return;
 
+    if (!loanModalPlayer.id) {
+      alert('Oyuncu ID bulunamadı.');
+      return;
+    }
+
     const loanFee = calculateLoanFeeEuro(
       loanModalPlayer.market_value || (loanModalPlayer.rating || 50) * 50000,
       profile?.current_day || 1
@@ -339,6 +344,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
 
     setLoanSubmitting(true);
     try {
+      console.log('[MultiplayerTab Loan] Sending:', { playerId: loanModalPlayer.id, loanFee, profileId: userId });
       const res = await fetch('/api/loans/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -349,6 +355,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
         }),
       });
       const data = await res.json();
+      console.log('[MultiplayerTab Loan] Response:', data);
       if (data.success) {
         const feeStr = loanFee >= 1_000_000 ? `${(loanFee / 1_000_000).toFixed(1)}M €` : loanFee >= 1_000 ? `${(loanFee / 1_000).toFixed(0)}K €` : `${loanFee} €`;
         alert(`${toTitleCase(loanModalPlayer.name)} kiralık listesine çıkarıldı!\n\nKiralık ücret: ${feeStr}\n10 Kredi komisyon kiracıdan alınacak.`);
@@ -360,9 +367,11 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
         onSetSquad(updatedSquad);
         fetchData();
       } else {
-        alert(data.error || 'Kiralık listesine çıkarılamadı.');
+        const debugInfo = data.debug ? `\n\nHata Ayıklama: ${JSON.stringify(data.debug)}` : '';
+        alert(data.error || 'Kiralık listesine çıkarılamadı.' + debugInfo);
       }
     } catch (err) {
+      console.error('[MultiplayerTab Loan] Exception:', err);
       alert('Bir hata oluştu.');
     } finally {
       setLoanSubmitting(false);

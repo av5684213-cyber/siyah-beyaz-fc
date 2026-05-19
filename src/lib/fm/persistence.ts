@@ -81,6 +81,8 @@ export const loadPlayers = async (userId: string, teamName?: string) => {
         leftFoot: (p.left_foot_detailed as number) ?? 50,
         rightFoot: (p.right_foot_detailed as number) ?? 50,
         workRate: (p.work_rate as number) ?? (p as Record<string, unknown>).workrate as number ?? 50,
+        specificPosition: (p.specific_position as string) || (p as Record<string, unknown>).specificPosition as string || undefined,
+        secondaryPositions: safeJsonParse<string[]>(p.secondary_positions, undefined),
       };
     };
 
@@ -262,6 +264,8 @@ export const savePlayers = async (players: Record<string, unknown>[], userId?: s
         left_foot_detailed: p.leftFoot || 50,
         right_foot_detailed: p.rightFoot || 50,
         photo_url: p.photo_url,
+        specific_position: p.specificPosition || (p as Record<string, unknown>).specific_position || null,
+        secondary_positions: p.secondaryPositions ? JSON.stringify(p.secondaryPositions) : null,
         updated_at: new Date().toISOString()
       };
     });
