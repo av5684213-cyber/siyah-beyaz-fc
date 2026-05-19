@@ -461,6 +461,143 @@ function PlayerStatsTable({
 }
 
 // ═══════════════════════════════════════════════════════════════
+// Alt bileşen: Canlı Maç Strateji Paneli
+// ═══════════════════════════════════════════════════════════════
+
+interface LiveStrategyPanelProps {
+  currentFormation: string;
+  currentTactic: string;
+  onApply: (formation: string, tactic: string) => void;
+  isApplying: boolean;
+  lastApplied: string | null;
+  changeCount: number;
+}
+
+function LiveStrategyPanel({
+  currentFormation,
+  currentTactic,
+  onApply,
+  isApplying,
+  lastApplied,
+  changeCount,
+}: LiveStrategyPanelProps) {
+  const [draftFormation, setDraftFormation] = React.useState(currentFormation);
+  const [draftTactic, setDraftTactic] = React.useState(currentTactic);
+
+  React.useEffect(() => {
+    setDraftFormation(currentFormation);
+  }, [currentFormation]);
+
+  React.useEffect(() => {
+    setDraftTactic(currentTactic);
+  }, [currentTactic]);
+
+  const hasChanges = draftFormation !== currentFormation || draftTactic !== currentTactic;
+  const maxChanges = 3;
+  const remaining = maxChanges - changeCount;
+
+  const STRATEGY_FORMATIONS = ['4-4-2', '4-3-3', '3-5-2', '4-5-1', '4-2-3-1', '5-3-2', '3-4-3'];
+  const STRATEGY_TACTICS = [
+    { id: 'dengeli',  label: 'Dengeli', desc: 'Standart oyun planı', icon: '⚖️' },
+    { id: 'hucum',    label: 'Hücum',   desc: '+%12 Ofans, -%5 Defans', icon: '⚔️' },
+    { id: 'savunma',  label: 'Savunma', desc: '+%15 Defans, -%5 Ofans', icon: '🛡️' },
+    { id: 'kontra',   label: 'Kontra',  desc: '+%8 Kontra Atak gücü', icon: '⚡' },
+    { id: 'tikitaka', label: 'Tiki-Taka', desc: 'Yüksek pas ve oyun kontrolü', icon: '🔥' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {/* Aktif durum paneli */}
+      <div className="flex items-center gap-3 px-4 py-3 bg-red-500/[0.06] border border-red-500/20 rounded-xl">
+        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+        <div className="flex-1">
+          <p className="text-[9px] font-black uppercase tracking-widest text-red-400">Aktif Taktik Planı</p>
+          <p className="text-xs font-bold text-white/70 mt-0.5">
+            {currentFormation} · {STRATEGY_TACTICS.find(t => t.id === currentTactic)?.label || currentTactic}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[8px] text-white/20">Değişiklik Hakkı</p>
+          <p className={`text-sm font-black ${remaining > 0 ? 'text-amber-400' : 'text-red-500'}`}>
+            {remaining}/{maxChanges}
+          </p>
+        </div>
+      </div>
+
+      {remaining === 0 ? (
+        <div className="px-4 py-3 bg-red-500/[0.06] border border-red-500/20 rounded-xl text-center">
+          <p className="text-xs text-red-400/70">Bu maç için kenardan müdahale hakkınız dolmuştur.</p>
+        </div>
+      ) : (
+        <>
+          {/* Formasyon Seçimi */}
+          <div>
+            <label className="text-[8px] font-black uppercase tracking-widest text-white/25 block mb-2">Formasyonu Değiştir</label>
+            <div className="flex flex-wrap gap-2">
+              {STRATEGY_FORMATIONS.map(f => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setDraftFormation(f)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                    draftFormation === f
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                      : 'bg-white/[0.03] text-white/30 border border-white/[0.06] hover:bg-white/[0.06]'
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Stil Seçimi */}
+          <div>
+            <label className="text-[8px] font-black uppercase tracking-widest text-white/25 block mb-2">Oyun Stilini Değiştir</label>
+            <div className="grid grid-cols-2 gap-2">
+              {STRATEGY_TACTICS.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setDraftTactic(t.id)}
+                  className={`px-3 py-3 rounded-xl text-left transition-all border ${
+                    draftTactic === t.id
+                      ? 'bg-amber-500/15 border-amber-500/25'
+                      : 'bg-white/[0.02] border-white/[0.04] hover:bg-white/[0.04]'
+                  }`}
+                >
+                  <span className="text-base">{t.icon}</span>
+                  <p className={`text-[10px] font-black uppercase mt-1 ${draftTactic === t.id ? 'text-amber-300' : 'text-white/40'}`}>{t.label}</p>
+                  <p className={`text-[8px] mt-0.5 ${draftTactic === t.id ? 'text-amber-400/50' : 'text-white/20'}`}>{t.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Uygulama Butonu */}
+          <button
+            type="button"
+            onClick={() => onApply(draftFormation, draftTactic)}
+            disabled={!hasChanges || isApplying}
+            className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+              hasChanges && !isApplying
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30'
+                : 'bg-white/[0.02] text-white/20 border border-white/[0.06] cursor-not-allowed'
+            }`}
+          >
+            {isApplying ? '⏳ Taktiğe müdahale ediliyor...' : hasChanges ? '✅ Kulübeden Talimatı Ver' : '— Değişiklik Yok —'}
+          </button>
+
+          {lastApplied && (
+            <p className="text-[8px] text-center text-white/15">Son talimat saati: {lastApplied}</p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 // ANA SAYFA BİLEŞENİ
 // ═══════════════════════════════════════════════════════════════
 
@@ -475,13 +612,18 @@ export default function MatchPage() {
   const [awayPlayers, setAwayPlayers] = useState<PlayerStatRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'events' | 'stats' | 'chat'>('events');
+  const [activeTab, setActiveTab] = useState<'events' | 'stats' | 'chat' | 'strategy'>('events');
   const [profileId, setProfileId] = useState<string>('');
   const [teamName, setTeamName] = useState<string>('');
 
   // ── Taktik seçimi (maç öncesi) ──
   const [selectedFormation, setSelectedFormation] = useState<string>('4-4-2');
   const [selectedTactic, setSelectedTactic] = useState<string>('normal');
+
+  // ── Canlı maç strateji müdahalesi ──
+  const [isApplyingTactic, setIsApplyingTactic] = useState(false);
+  const [lastTacticApplied, setLastTacticApplied] = useState<string | null>(null);
+  const [tacticChangeCount, setTacticChangeCount] = useState(0);
 
   const FORMATIONS = ['4-4-2', '4-3-3', '3-5-2', '4-5-1', '4-2-3-1', '5-3-2', '3-4-3'];
   const TACTICS: { id: string; label: string; desc: string; goalMod: number }[] = [
@@ -491,6 +633,51 @@ export default function MatchPage() {
     { id: 'counter', label: 'Kontra Atak', desc: 'Gol ihtimali +%5, kontra şansı', goalMod: 0.05 },
     { id: 'press', label: 'Pres', desc: 'Top kazanma +%8, kondisyon -%5', goalMod: 0.03 },
   ];
+
+  // ── Canlı maç taktik müdahalesi callback ──
+  const handleLiveTacticChange = useCallback(async (newFormation: string, newTactic: string) => {
+    if (isApplyingTactic || tacticChangeCount >= 3) return;
+    setIsApplyingTactic(true);
+    try {
+      const currentProfileId = profileId;
+      if (!currentProfileId) throw new Error('Profile ID bulunamadı.');
+
+      const supabaseClient = getSupabase();
+      if (!supabaseClient) throw new Error('Supabase client aktif değil.');
+
+      // active_tactics tablosunu güncelle — profile_id ile eşleştir
+      // Taktik değişikliğini defense_line kolonuna haritala
+      const defenseLineMap: Record<string, string> = {
+        'hucum': 'onde',
+        'savunma': 'geride',
+        'dengeli': 'standart',
+        'kontra': 'standart',
+        'tikitaka': 'standart',
+      };
+
+      const { error } = await supabaseClient
+        .from('active_tactics')
+        .update({
+          formation: newFormation,
+          defense_line: defenseLineMap[newTactic] || 'standart',
+        })
+        .eq('profile_id', currentProfileId);
+
+      if (error) throw error;
+
+      // Local state'leri güncelle
+      setSelectedFormation(newFormation);
+      setSelectedTactic(newTactic);
+      setTacticChangeCount(prev => prev + 1);
+      setLastTacticApplied(new Date().toLocaleTimeString('tr-TR'));
+
+      if (typeof playSound === 'function') playSound('click');
+    } catch (err) {
+      console.error('[MatchPage] Canlı taktik müdahale hatası:', err);
+    } finally {
+      setIsApplyingTactic(false);
+    }
+  }, [isApplyingTactic, tacticChangeCount, profileId]);
 
   // Duygusal katman — gol kutlama state
   const [goalCelebrationTrigger, setGoalCelebrationTrigger] = useState(false);
@@ -988,7 +1175,7 @@ export default function MatchPage() {
                   <>
                     <span className="text-white/10">|</span>
                     <span className="text-[9px] text-emerald-400/60">
-                      Gol mod: {TACTICS.find(t => t.id === selectedTactic)?.goalMod > 0 ? '+' : ''}{((TACTICS.find(t => t.id === selectedTactic)?.goalMod || 0) * 100).toFixed(0)}%
+                      Gol mod: {(TACTICS.find(t => t.id === selectedTactic)?.goalMod ?? 0) > 0 ? '+' : ''}{(((TACTICS.find(t => t.id === selectedTactic)?.goalMod ?? 0)) * 100).toFixed(0)}%
                     </span>
                   </>
                 )}
@@ -1034,6 +1221,7 @@ export default function MatchPage() {
                 { id: 'events' as const, label: 'Olaylar', icon: <CircleDot size={14} /> },
                 { id: 'stats' as const, label: 'İstatistikler', icon: <Users size={14} /> },
                 { id: 'chat' as const, label: 'Sohbet', icon: <MessageSquare size={14} /> },
+                ...(isLive ? [{ id: 'strategy' as const, label: 'Strateji', icon: <Shield size={14} /> }] : []),
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -1156,6 +1344,30 @@ export default function MatchPage() {
                       </p>
                     </div>
                   )}
+                </motion.div>
+              )}
+
+              {activeTab === 'strategy' && isLive && (
+                <motion.div
+                  key="strategy"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                >
+                  <div className="flex items-center gap-2 px-1 mb-3">
+                    <Shield size={14} className="text-amber-400" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/30">
+                      Kenardan Müdahale
+                    </span>
+                  </div>
+                  <LiveStrategyPanel
+                    currentFormation={selectedFormation || '4-4-2'}
+                    currentTactic={selectedTactic === 'normal' ? 'dengeli' : selectedTactic}
+                    onApply={handleLiveTacticChange}
+                    isApplying={isApplyingTactic}
+                    lastApplied={lastTacticApplied}
+                    changeCount={tacticChangeCount}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
