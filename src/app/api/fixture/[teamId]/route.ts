@@ -107,6 +107,7 @@ async function fetchFixturesForTeam(
         away_score,
         home_team_id,
         away_team_id,
+        referee_name,
         home:league_teams!home_team_id (name, id),
         away:league_teams!away_team_id (name, id)
       `)
@@ -136,6 +137,7 @@ async function fetchFixturesForTeam(
       home_team: (f.home as Record<string, string>)?.name || 'Bilinmiyor',
       away_team: (f.away as Record<string, string>)?.name || 'Bilinmiyor',
       is_home: f.home_team_id === leagueTeamId,
+      referee_name: f.referee_name || null,
     }));
 
     const cleanedNextMatch = nextMatch ? {

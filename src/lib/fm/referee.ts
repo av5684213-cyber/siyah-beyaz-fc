@@ -147,37 +147,34 @@ export interface RefereeMatchContext {
   goalsOverturned: number;
 }
 
-// ─── Turkish Referee Names Pool ────────────────────────────────────────────
-const REFEREE_NAMES = [
-  'Cüneyt Çakır', 'Halil Özdemir', 'Fırat Aydınus', 'Hüseyin Göçek',
-  'Mustafa Özbek', 'Ali Palabıyık', 'Yaşar Kemal Ugur', 'Mete Kalkavan',
-  'Zorbay Küçük', 'Arda Kardeşler', 'Volkan Bayarslan', 'Koray Gencer',
-  'Burak Şeker', 'Emre Kargın', 'Alper Ulusoy', 'Serdar Gözübüyük',
-  'Barış Şimşek', 'Mert Güzenoğlu', 'Tugay Kaan Numanoğlu', 'Atilla Karaoğlan',
-  'Esat Kurnaz', 'Oğuzhan Çakır', 'Deniz Ateş', 'Kubilay Öztürk',
-  'Sinan Topal', 'Gökhan Yılmaz', 'Erkan Özdamar', 'Cem Akboy',
+// ─── Procedural Turkish Referee Name Pools ─────────────────────────────────
+// Gerçek hakem isimleri kaldırıldı — her lig için rastgele 18 benzersiz hakem üretilir
+const FIRST_NAMES = [
+  'Mete', 'Alper', 'Halil', 'Arda', 'Zorbay', 'Volkan', 'Atilla', 'Cihan',
+  'Bahattin', 'Kadir', 'Ümit', 'Burak', 'Sarper', 'Tugay', 'Oğuzhan', 'Yasin',
+  'Erkan', 'Yiğit',
+];
+
+const LAST_NAMES = [
+  'Kalkavan', 'Umut Meler', 'Kardeşler', 'Şansalan', 'Bayarslan',
+  'Karaoğlan', 'Aydın', 'Şimşek', 'Sağlam', 'Öztürk', 'Şeker',
+  'Barış Saka', 'Numanoğlu', 'Çakır', 'Kol', 'Özdamar', 'Fidan', 'Akboy',
 ];
 
 // ─── Generate Referees for a League ────────────────────────────────────────
 export function generateLeagueReferees(
   leagueId: string,
-  count: number = 6
+  count: number = 18
 ): Referee[] {
   const personalities: RefereePersonality[] = [
     'katil', 'dengeci', 'hoşgörülü', 'ev_sahibi', 'değişken', 'var_sever',
   ];
 
-  // Shuffle names
-  const shuffledNames = [...REFEREE_NAMES].sort(() => Math.random() - 0.5);
-  // Shuffle personalities for variety
-  const shuffledPersonalities = [...personalities].sort(() => Math.random() - 0.5);
-
   const referees: Referee[] = [];
   for (let i = 0; i < count; i++) {
-    const personality = shuffledPersonalities[i % shuffledPersonalities.length];
-    const config = REFEREE_PERSONALITIES[personality];
-    const experience = Math.floor(Math.random() * 7) + 3; // 3-10
-    const name = shuffledNames[i % shuffledNames.length];
+    const personality = personalities[i % personalities.length];
+    const name = `${FIRST_NAMES[i % FIRST_NAMES.length]} ${LAST_NAMES[i % LAST_NAMES.length]}`;
+    const experience = Math.floor(Math.random() * 5) + 3; // 3-8
 
     // Strictness = personality-based baseline + experience modifier
     const baseStrictness: Record<RefereePersonality, number> = {
@@ -188,12 +185,12 @@ export function generateLeagueReferees(
       değişken: 45,
       var_sever: 40,
     };
-    const strictness = Math.min(99, Math.max(1,
-      baseStrictness[personality] + (experience - 5) * 5 + (Math.random() * 10 - 5)
+    const strictness = Math.min(80, Math.max(40,
+      baseStrictness[personality] + (experience - 5) * 3 + (Math.random() * 10 - 5)
     ));
 
     referees.push({
-      id: `ref-${leagueId}-${i + 1}`,
+      id: `ref-${leagueId}-${i}`,
       name,
       personality,
       experience,
@@ -451,6 +448,90 @@ export function pickRefereeForMatch(
   // Rotating assignment based on week number
   const index = (matchWeek - 1) % referees.length;
   return referees[index];
+}
+
+/**
+ * Sezon için 18 hakem üret ve tüm fikstürlere döndürümlü olarak ata.
+ * Supabase client alır, hakemleri referees tablosuna kaydeder,
+ * fikstürlerdeki referee_id / referee_name / referee_personality / referee_strictness sütunlarını günceller.
+ *
+ * @param supabase - Supabase client instance
+ * @param leagueId - Lig UUID'si
+ * @param seasonId - Sezon UUID'si
+ */
+export async function assignRefereesToSeason(
+  supabase: { from: (table: string) => any },
+  leagueId: string,
+  seasonId: string
+): Promise<{ assigned: number; referees: Referee[] }> {
+  // 1. Bu lig için 18 hakem üret
+  const referees = generateLeagueReferees(leagueId, 18);
+
+  // 2. Hakemleri referees tablosuna kaydet (upsert)
+  const refereeRows = referees.map(r => ({
+    id: r.id,
+    name: r.name,
+    personality: r.personality,
+    experience: r.experience,
+    league_id: r.league_id,
+    strictness: r.strictness,
+    total_matches: r.totalMatches,
+    total_yellows: r.totalYellows,
+    total_reds: r.totalReds,
+    total_penalties: r.totalPenalties,
+  }));
+
+  try {
+    await supabase.from('referees').upsert(refereeRows, { onConflict: 'id' });
+  } catch (err) {
+    console.warn('[assignRefereesToSeason] referees tablosuna yazma başarısız (tablo yoksa devam):', err);
+  }
+
+  // 3. Bu sezondaki tüm fikstürleri çek
+  const { data: fixtures, error: fixturesError } = await supabase
+    .from('fixtures')
+    .select('id, tur')
+    .eq('season_id', seasonId);
+
+  if (fixturesError || !fixtures || fixtures.length === 0) {
+    console.warn('[assignRefereesToSeason] Fikstür bulunamadı:', fixturesError?.message);
+    return { assigned: 0, referees };
+  }
+
+  // 4. Her fikstüre döndürümlü hakem ata
+  // Aynı turdaki maçlara farklı hakemler, farklı turlardaki maçlara döngüsel atama
+  let assigned = 0;
+
+  // Tur bazında grupla — aynı turdaki maçlara arka arkaya farklı hakemler ver
+  const turMap = new Map<number, string[]>();
+  for (const f of fixtures) {
+    const tur = f.tur as number;
+    if (!turMap.has(tur)) turMap.set(tur, []);
+    turMap.get(tur)!.push(f.id as string);
+  }
+
+  for (const [tur, fixtureIds] of turMap) {
+    for (let fi = 0; fi < fixtureIds.length; fi++) {
+      const refIndex = ((tur - 1) * 3 + fi) % referees.length; // Her turda 3 hakem döndür
+      const ref = referees[refIndex];
+
+      const { error: updateErr } = await supabase
+        .from('fixtures')
+        .update({
+          referee_id: ref.id,
+          referee_name: ref.name,
+          referee_personality: ref.personality,
+          referee_strictness: ref.strictness,
+        })
+        .eq('id', fixtureIds[fi]);
+
+      if (!updateErr) assigned++;
+      else console.warn(`[assignRefereesToSeason] Fikstür ${fixtureIds[fi]} güncellenemedi:`, updateErr.message);
+    }
+  }
+
+  console.log(`[assignRefereesToSeason] ${assigned}/${fixtures.length} fikstüre hakem atandı (Lig: ${leagueId})`);
+  return { assigned, referees };
 }
 
 /**

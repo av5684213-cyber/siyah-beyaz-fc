@@ -8,6 +8,7 @@ import {
 } from './persistence';
 import { simulateHistory } from './historySimulator';
 import { isSupabaseConfigured, getSupabase } from '@/lib/supabase';
+import { assignRefereesToSeason } from './referee';
 import { getBrowserLocale, Locale } from './i18n';
 import { showToast } from '@/components/fm/ToastNotifications';
 import { generateLocalizedPlayer, getRegionConfig } from './region-generator';
@@ -245,6 +246,8 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
 
               if (newSeason) {
                 await supabase.rpc('generate_league_fixtures', { p_season_id: newSeason.id });
+                // Hakemleri üret ve fikstürlere ata
+                await assignRefereesToSeason(supabase, leagueData.id, newSeason.id);
               }
             }
           }
@@ -262,6 +265,8 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
               }).select().single();
               if (bSeason) {
                 await supabase.rpc('generate_league_fixtures', { p_season_id: bSeason.id });
+                // Hakemleri üret ve fikstürlere ata
+                await assignRefereesToSeason(supabase, leagueData.id, bSeason.id);
               }
             }
 

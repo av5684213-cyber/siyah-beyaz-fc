@@ -33,6 +33,7 @@ interface FixtureItem {
   home_team: string;
   away_team: string;
   is_home: boolean;
+  referee_name?: string | null;
 }
 
 type FormResult = 'W' | 'D' | 'L';
@@ -141,6 +142,16 @@ function MatchCard({ match, teamName, onNavigate }: { match: FixtureItem; teamNa
     ? getUserResult(isHomeTeam, match.home_score, match.away_score)
     : null;
 
+  // ── Spoiler Kalkanı: Kullanıcının bu maçı izleyip izlemediğini kontrol et ──
+  const [isMatchWatched, setIsMatchWatched] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const watched = localStorage.getItem(`watched_match_${match.id}`);
+      setIsMatchWatched(!!watched);
+    }
+  }, [match.id]);
+
   return (
     <motion.div
       layout
@@ -202,16 +213,33 @@ function MatchCard({ match, teamName, onNavigate }: { match: FixtureItem; teamNa
         {/* Score / Time */}
         <div className="text-center mb-2.5">
           {isFinished ? (
-            <div className="flex items-center justify-center gap-2">
-              <span className={`text-lg font-black tabular-nums ${
-                resultColor === 'emerald' ? 'text-emerald-400' :
-                resultColor === 'amber' ? 'text-amber-400' :
-                resultColor === 'red' ? 'text-red-400' : 'text-white/40'
-              }`}>
-                {match.home_score} - {match.away_score}
-              </span>
-              <ResultPill result={userResult} />
-            </div>
+            !isMatchWatched && isUserMatch ? (
+              // Oynanmış ama henüz izlenmemiş kullanıcı maçı — Spoiler Kalkanı Aktif
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-xs font-black text-amber-400/80 uppercase tracking-widest bg-amber-500/[0.06] border border-amber-500/20 px-2 py-0.5 rounded-md animate-pulse">
+                  Oynandı (Skor Gizli)
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onNavigate(match.id); }}
+                  className="text-[8px] font-black uppercase tracking-widest text-white/50 hover:text-white bg-white/[0.04] border border-white/10 px-1.5 py-0.5 rounded mt-1 transition-all"
+                >
+                  📺 Tekrarı İzle & Skoru Aç
+                </button>
+              </div>
+            ) : (
+              // İzlenmiş maç veya bot maçı — Skoru normal göster
+              <div className="flex items-center justify-center gap-2">
+                <span className={`text-lg font-black tabular-nums ${
+                  resultColor === 'emerald' ? 'text-emerald-400' :
+                  resultColor === 'amber' ? 'text-amber-400' :
+                  resultColor === 'red' ? 'text-red-400' : 'text-white/40'
+                }`}>
+                  {match.home_score} - {match.away_score}
+                </span>
+                {isUserMatch && <ResultPill result={userResult} />}
+              </div>
+            )
           ) : !isUserMatch ? (
             <span className="text-[10px] text-white/25 font-semibold font-mono">
               {match.match_time || '--:--'}
@@ -237,9 +265,16 @@ function MatchCard({ match, teamName, onNavigate }: { match: FixtureItem; teamNa
           </div>
         </div>
 
-        {/* Date */}
+        {/* Date & Referee */}
         <div className="mt-2 pt-1.5 border-t border-white/[0.04] flex items-center justify-between">
-          <span className="text-[8px] text-white/20">{formatDate(match.match_date)}</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[8px] text-white/20">{formatDate(match.match_date)}</span>
+            {match.referee_name && (
+              <span className="text-[7.5px] font-medium text-white/40 flex items-center gap-1">
+                🛑 {match.referee_name}
+              </span>
+            )}
+          </div>
           <ChevronRight className="w-3 h-3 text-white/10" />
         </div>
       </div>

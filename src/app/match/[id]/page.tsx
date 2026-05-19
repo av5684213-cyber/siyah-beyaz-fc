@@ -981,6 +981,13 @@ export default function MatchPage() {
   const isLive = matchStatus === 'live';
   const isFinished = matchStatus === 'completed' || matchStatus === 'finished';
 
+  // ── Spoiler Kalkanı: Bitmiş bir maç sayfasını görüntüleyen kullanıcı izlemiş sayılır ──
+  useEffect(() => {
+    if (isFinished && fixtureId && typeof window !== 'undefined') {
+      localStorage.setItem(`watched_match_${fixtureId}`, 'true');
+    }
+  }, [isFinished, fixtureId]);
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Duygusal katman — global animasyonlar */}

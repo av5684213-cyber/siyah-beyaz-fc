@@ -3,6 +3,7 @@ import { getSupabase } from '@/lib/supabase';
 import { getTeamNamesForDepartment, getRandomTeamNames } from '@/lib/fm/constants';
 import { verifyCronSecret, sanitizeError } from '@/lib/fm/security';
 import { getTomorrowNoon } from '@/lib/fm/league';
+import { assignRefereesToSeason } from '@/lib/fm/referee';
 
 // Takım ismini güvenli şekilde temizle - NULL/undefined/boş isimleri yakala
 function sanitizeTeamName(raw: any): string {
@@ -208,6 +209,8 @@ export async function GET(request: NextRequest) {
           console.error(`Error generating fixtures for league ${league.name}:`, fixtureError);
         } else {
           console.log(`Fixtures generated for ${league.name}`);
+          // Hakemleri üret ve fikstürlere ata
+          await assignRefereesToSeason(supabase, league.id, seasonId);
         }
       }
 

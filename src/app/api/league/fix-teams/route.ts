@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { TIER_TEAM_NAMES, getTeamNamesForDepartment } from '@/lib/fm/constants';
 import { verifyCronSecret, sanitizeError } from '@/lib/fm/security';
+import { assignRefereesToSeason } from '@/lib/fm/referee';
 
 // Bu API, league_teams tablosundaki bozuk isimleri (NULL, "undefined", "Undefined" vb.)
 // doğru isimlerle değiştirir. Ayrıca league_standings ile league_teams arasındaki kopuk bağları da tamir eder.
@@ -209,6 +210,8 @@ export async function GET(request: NextRequest) {
           // Fixtures oluştur
           try {
             await supabase.rpc('generate_league_fixtures', { p_season_id: newSeason.id });
+            // Hakemleri üret ve fikstürlere ata
+            await assignRefereesToSeason(supabase, league.id, newSeason.id);
           } catch (e) {
             console.warn(`[FIX-TEAMS] Fixture üretilemedi (${league.name}):`, e);
           }
