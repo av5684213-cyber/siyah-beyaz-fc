@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useDraggableModal } from '@/hooks/useDraggableModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Coins, Check, Sparkles, Zap, Crown, Star } from 'lucide-react';
 
@@ -129,6 +130,8 @@ export default function CreditPurchaseModal({ currentCredits, userId, onClose, o
     }, 1500);
   };
 
+  const { modalRef, handleRef, position, isDragging } = useDraggableModal();
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
@@ -140,12 +143,27 @@ export default function CreditPurchaseModal({ currentCredits, userId, onClose, o
           className="absolute inset-0 bg-black/80 backdrop-blur-md"
         />
         <motion.div
+          ref={modalRef}
           initial={{ opacity: 0, scale: 0.9, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 30 }}
           transition={{ type: 'spring', damping: 25 }}
           className="relative w-full max-w-lg bg-zinc-900 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl"
+          style={{ transform: `translate(${position.x}px, ${position.y}px)`, userSelect: isDragging ? 'none' : 'auto' }}
         >
+          {/* Drag Handle */}
+          <div
+            ref={handleRef}
+            className="flex items-center justify-center px-4 py-1 bg-zinc-900 border-b border-white/[0.04] cursor-grab active:cursor-grabbing hover:bg-zinc-800/50 transition-colors select-none rounded-t-[2rem]"
+            title="Sürüklemek için tutun · Çift tıklayın: sıfırla"
+          >
+            <div className="flex items-center gap-2 text-white/20">
+              <div className="w-10 h-1 rounded-full bg-white/15" />
+              <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+              <div className="w-10 h-1 rounded-full bg-white/15" />
+            </div>
+          </div>
+
           {/* Header */}
           <div className="relative px-8 pt-8 pb-6 bg-gradient-to-br from-amber-500/10 via-zinc-900 to-amber-500/5 border-b border-white/5">
             <button

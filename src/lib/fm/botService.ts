@@ -162,7 +162,7 @@ export async function processBotTransfers(
             .eq('id', botUserId);
 
           sold = true;
-          details.push(`Sold ${worstPlayer.name} (OVR ${worstPlayer.rating}) for ${sellPrice.toLocaleString()} Kredi`);
+          details.push(`Sold ${worstPlayer.name} (OVR ${worstPlayer.rating}) for ${sellPrice.toLocaleString()} €`);
         }
       }
     }
@@ -243,7 +243,7 @@ export async function processBotTransfers(
           }
 
           bought = true;
-          details.push(`Bought player for ${buyPrice.toLocaleString()} Kredi (budget: ${budget.toLocaleString()} Kredi)`);
+          details.push(`Bought player for ${buyPrice.toLocaleString()} € (budget: ${budget.toLocaleString()} €)`);
         } else {
           details.push('No affordable players on market');
         }

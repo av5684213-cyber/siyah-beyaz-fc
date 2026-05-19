@@ -13,7 +13,8 @@ import {
   List as ListIcon,
   ChevronRight,
   Star,
-  Info
+  Info,
+  Globe
 } from 'lucide-react';
 import type { Player, TrainingState } from '@/lib/fm/types';
 import { calculateMarketValue, formatCurrency } from '@/lib/fm/valuation';
@@ -27,6 +28,7 @@ interface MyTeamTabProps {
   teamName: string;
   teamBudget: number;
   onListPlayer: (player: Player) => void;
+  onLoanPlayer: (player: Player) => void;
   onBenchPlayer: (player: Player) => void;
   onPlayerClick: (player: Player) => void;
   trainingState?: TrainingState;
@@ -39,6 +41,7 @@ export default function MyTeamTab({
   teamName, 
   teamBudget, 
   onListPlayer, 
+  onLoanPlayer,
   onBenchPlayer, 
   onPlayerClick,
   trainingState,
@@ -243,6 +246,7 @@ export default function MyTeamTab({
                     trainingState={trainingState}
                     onTrainingStateChange={onTrainingStateChange}
                     onSell={onListPlayer}
+                    onLoan={onLoanPlayer}
                     isOwnTeam={true}
                     isAdmin={isAdmin}
                   />
@@ -311,6 +315,13 @@ export default function MyTeamTab({
                       className="flex-1 py-3 bg-white/5 border border-white/5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-black transition-all"
                     >
                       SATILIGA CIKAR
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); onLoanPlayer(player); }}
+                      className="flex-1 py-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-[9px] font-black uppercase tracking-widest text-cyan-400 hover:bg-cyan-500 hover:text-white transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <Globe size={12} />
+                      KIRALIK GÖNDER
                     </button>
                     <button 
                       onClick={(e) => { e.stopPropagation(); onBenchPlayer(player); }}

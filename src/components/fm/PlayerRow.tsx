@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { Star, ChevronRight } from 'lucide-react';
+import { Star, ChevronRight, Globe } from 'lucide-react';
 import { calculateMarketValue, formatCurrency } from '@/lib/fm/valuation';
 import { getPosColor, localizePos, localizePosFull, getPosRowStyle, formatPosBadge } from '@/lib/fm/ui-helpers';
 import { getTraitInfo, getPlayStyleInfo, getTraitColor, getTraitBgColor } from '@/lib/fm/traits';
@@ -20,6 +20,7 @@ interface PlayerRowProps {
   trainingState?: TrainingState;
   onTrainingStateChange?: (state: TrainingState) => void;
   onSell?: (player: Player) => void;
+  onLoan?: (player: Player) => void;
   isOwnTeam?: boolean;
   isAdmin?: boolean;
 }
@@ -33,6 +34,7 @@ export default function PlayerRow({
   trainingState,
   onTrainingStateChange,
   onSell,
+  onLoan,
   isOwnTeam,
   isAdmin
 }: PlayerRowProps) {
@@ -193,7 +195,7 @@ export default function PlayerRow({
         })}
       </div>
 
-      <div className="w-16 shrink-0 flex items-center justify-center">
+      <div className="w-32 shrink-0 flex items-center justify-center gap-1">
         {isOwnTeam && onSell && (
           <button
             onClick={(e) => {
@@ -204,6 +206,18 @@ export default function PlayerRow({
             title="Satış Listesine Koy"
           >
             <DollarSign size={14} />
+          </button>
+        )}
+        {isOwnTeam && onLoan && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onLoan(player);
+            }}
+            className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500 hover:text-white transition-all"
+            title="Kiralık Olarak Gönder"
+          >
+            <Globe size={14} />
           </button>
         )}
       </div>

@@ -178,7 +178,7 @@ function LevelComparisonPanel({
                 {currentEffect.key.includes('Multiplier') || currentEffect.key.includes('Bonus') || currentEffect.key.includes('Speed')
                   ? `×${currentEffect.value.toFixed(2)}`
                   : currentEffect.key.includes('Revenue') || currentEffect.key.includes('Income')
-                    ? `${(currentEffect.value / 1000).toFixed(0)}K Kredi`
+                    ? `${(currentEffect.value / 1000).toFixed(0)}K €`
                     : `${(currentEffect.value * 100).toFixed(0)}%`
                 }
               </span>
@@ -214,7 +214,7 @@ function LevelComparisonPanel({
               {targetEffect.key.includes('Multiplier') || targetEffect.key.includes('Bonus') || targetEffect.key.includes('Speed')
                 ? `×${targetEffect.value.toFixed(2)}`
                 : targetEffect.key.includes('Revenue') || targetEffect.key.includes('Income')
-                  ? `${(targetEffect.value / 1000).toFixed(0)}K Kredi`
+                  ? `${(targetEffect.value / 1000).toFixed(0)}K €`
                   : `${(targetEffect.value * 100).toFixed(0)}%`
               }
             </span>
@@ -444,7 +444,7 @@ export default function StadiumTab() {
                             effect.key.includes('Multiplier') || effect.key.includes('Bonus') || effect.key.includes('Speed')
                               ? `×${effect.value.toFixed(2)}`
                               : effect.key.includes('Revenue') || effect.key.includes('Income')
-                                ? `${(effect.value / 1000).toFixed(0)}K Kredi`
+                                ? `${(effect.value / 1000).toFixed(0)}K €`
                                 : `${(effect.value * 100).toFixed(0)}%`
                           }
                         </span>
@@ -580,7 +580,7 @@ export default function StadiumTab() {
                  onChange={(e) => handleUpdateTicketPrice(parseInt(e.target.value) || 0)}
                  className="bg-transparent text-4xl font-black text-white w-20 focus:outline-none"
                />
-               <span className="text-xl font-bold text-white/20 mb-1">Kredi</span>
+               <span className="text-xl font-bold text-white/20 mb-1">€</span>
             </div>
             <div className="flex flex-col gap-1">
                <div className="flex justify-between text-[8px] font-bold text-white/20 uppercase">
@@ -689,7 +689,7 @@ export default function StadiumTab() {
                         currentLevelEffect.key.includes('Multiplier') || currentLevelEffect.key.includes('Bonus') || currentLevelEffect.key.includes('Speed')
                           ? `×${currentLevelEffect.value.toFixed(2)}`
                           : currentLevelEffect.key.includes('Revenue') || currentLevelEffect.key.includes('Income')
-                            ? `${(currentLevelEffect.value / 1000).toFixed(0)}K Kredi`
+                            ? `${(currentLevelEffect.value / 1000).toFixed(0)}K €`
                             : `${(currentLevelEffect.value * 100).toFixed(0)}%`
                       }
                     </span>
@@ -705,7 +705,7 @@ export default function StadiumTab() {
                         nextLevelEffect.key.includes('Multiplier') || nextLevelEffect.key.includes('Bonus') || nextLevelEffect.key.includes('Speed')
                           ? `×${nextLevelEffect.value.toFixed(2)}`
                           : nextLevelEffect.key.includes('Revenue') || nextLevelEffect.key.includes('Income')
-                            ? `${(nextLevelEffect.value / 1000).toFixed(0)}K Kredi`
+                            ? `${(nextLevelEffect.value / 1000).toFixed(0)}K €`
                             : `${(nextLevelEffect.value * 100).toFixed(0)}%`
                       }
                     </span>
@@ -787,7 +787,7 @@ export default function StadiumTab() {
                                       lvlEffect.key.includes('Multiplier') || lvlEffect.key.includes('Bonus') || lvlEffect.key.includes('Speed')
                                         ? `×${lvlEffect.value.toFixed(2)}`
                                         : lvlEffect.key.includes('Revenue') || lvlEffect.key.includes('Income')
-                                          ? `${(lvlEffect.value / 1000).toFixed(0)}K Kredi`
+                                          ? `${(lvlEffect.value / 1000).toFixed(0)}K €`
                                           : `${(lvlEffect.value * 100).toFixed(0)}%`
                                     }
                                   </span>

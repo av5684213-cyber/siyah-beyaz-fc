@@ -16,7 +16,9 @@ export function fmStatBg(value: number): string {
 }
 
 export function formatMoney(amount: number): string {
-  return `${Math.round(amount).toLocaleString('tr-TR')} Kredi`;
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M €`;
+  if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}K €`;
+  return `${Math.round(amount).toLocaleString('tr-TR')} €`;
 }
 
 export function cap99(value: number): number {

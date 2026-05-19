@@ -10,6 +10,7 @@ import { Player } from '@/lib/fm/types';
 import { formatCurrency } from '@/lib/fm/valuation';
 import { syncPlayerStats } from '@/lib/fm/helpers';
 import { toTitleCase } from '@/lib/fm/ui-helpers';
+import { calculateLoanFeeEuro, getInflationSummary } from '@/lib/fm/inflation';
 import { useFM } from '@/lib/fm/GameContext';
 import PlayerRow from './PlayerRow';
 import ContractOfferModal from './ContractOfferModal';
@@ -112,6 +113,9 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
   const [contractMode, setContractMode] = useState<'free-agent' | 'auction-win' | null>(null);
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const [wonAuctions, setWonAuctions] = useState<MarketListing[]>([]);
+  const [loanModalPlayer, setLoanModalPlayer] = useState<Player | null>(null);
+  const [loanFeePercent, setLoanFeePercent] = useState(15);
+  const [loanSubmitting, setLoanSubmitting] = useState(false);
 
   const sortedAndFilteredListings = useMemo(() => {
     const filtered = listings.filter(l => {
@@ -317,6 +321,51 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
       } finally {
         setLoading(false);
       }
+    }
+  };
+
+  const handleLoanPlayer = async (player: Player) => {
+    setLoanModalPlayer(player);
+    setLoanFeePercent(15);
+  };
+
+  const handleLoanSubmit = async () => {
+    if (!loanModalPlayer || !userId) return;
+
+    const loanFee = calculateLoanFeeEuro(
+      loanModalPlayer.market_value || (loanModalPlayer.rating || 50) * 50000,
+      profile?.current_day || 1
+    );
+
+    setLoanSubmitting(true);
+    try {
+      const res = await fetch('/api/loans/list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerId: loanModalPlayer.id,
+          loanFee,
+          profileId: userId,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const feeStr = loanFee >= 1_000_000 ? `${(loanFee / 1_000_000).toFixed(1)}M €` : loanFee >= 1_000 ? `${(loanFee / 1_000).toFixed(0)}K €` : `${loanFee} €`;
+        alert(`${toTitleCase(loanModalPlayer.name)} kiralık listesine çıkarıldı!\n\nKiralık ücret: ${feeStr}\n10 Kredi komisyon kiracıdan alınacak.`);
+        setLoanModalPlayer(null);
+        // Update squad to reflect loan status
+        const updatedSquad = squad.map(p =>
+          p.id === loanModalPlayer.id ? { ...p, is_on_loan_market: true } : p
+        );
+        onSetSquad(updatedSquad);
+        fetchData();
+      } else {
+        alert(data.error || 'Kiralık listesine çıkarılamadı.');
+      }
+    } catch (err) {
+      alert('Bir hata oluştu.');
+    } finally {
+      setLoanSubmitting(false);
     }
   };
 
@@ -665,6 +714,69 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                   </table>
                 </div>
               )}
+
+              {/* ── KİRALIK LİSTESİNE GÖNDER BÖLÜMÜ ── */}
+              <div className="mt-6 border-t border-white/5">
+                <div className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Globe className="text-cyan-500" size={16} />
+                    <h4 className="text-[11px] font-black uppercase tracking-widest text-white/60">Kiralık Listesine Gönder</h4>
+                  </div>
+                  <div className="text-[9px] text-white/25 uppercase tracking-widest">
+                    {squad.filter(p => !p.is_injured && !(p as any).is_on_loan_market && !(p as any).loan_status).length} UYGun OYUNCU
+                  </div>
+                </div>
+                <div className="px-4 pb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+                    {squad
+                      .filter(p => !p.is_injured && !(p as any).is_on_loan_market && !(p as any).loan_status)
+                      .map(player => {
+                        const loanFee = calculateLoanFeeEuro(
+                          player.market_value || (player.rating || 50) * 50000,
+                          profile?.current_day || 1
+                        );
+                        const feeStr = loanFee >= 1_000_000 ? `${(loanFee / 1_000_000).toFixed(1)}M €` : loanFee >= 1_000 ? `${(loanFee / 1_000).toFixed(0)}K €` : `${loanFee} €`;
+                        const posColor = (() => {
+                          const pos = player.specificPosition || player.position;
+                          if (pos === 'GK') return 'border-yellow-500/30 bg-yellow-500/5';
+                          if (['CB','LB','RB','LWB','RWB'].includes(pos || '')) return 'border-blue-500/30 bg-blue-500/5';
+                          if (['CDM','CM','CAM','LM','RM','LW','RW'].includes(pos || '')) return 'border-green-500/30 bg-green-500/5';
+                          return 'border-red-500/30 bg-red-500/5';
+                        })();
+                        return (
+                          <div
+                            key={player.id}
+                            className={`flex items-center gap-2 p-2 rounded-lg border ${posColor} hover:border-cyan-500/50 transition-all group/loan`}
+                          >
+                            <div className="w-8 h-8 rounded-md flex items-center justify-center text-[8px] font-black bg-black/30 shrink-0">
+                              {player.specificPosition || player.position}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[10px] font-black truncate">{toTitleCase(player.name)}</div>
+                              <div className="text-[8px] text-white/30">Klt {player.rating} • {feeStr}</div>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleLoanPlayer(player);
+                              }}
+                              className="shrink-0 px-2 py-1 rounded-md text-[7px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/25 hover:bg-cyan-500 hover:text-white transition-all opacity-60 group-hover/loan:opacity-100"
+                              title="Kiralık Olarak Gönder"
+                            >
+                              <Globe size={10} className="inline mr-0.5" />
+                              Kiralık
+                            </button>
+                          </div>
+                        );
+                      })}
+                    {squad.filter(p => !p.is_injured && !(p as any).is_on_loan_market && !(p as any).loan_status).length === 0 && (
+                      <div className="col-span-full py-6 text-center text-[10px] text-white/20 uppercase">
+                        Kiralığa gönderilecek uygun oyuncu yok
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
           </motion.div>
         ) : activeSubTab === 'auctions' ? (
           <motion.div key="auctions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
@@ -832,70 +944,138 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
 
         ) : activeSubTab === 'loans' ? (
           <motion.div key="loans" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="bg-zinc-900/40 border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-md">
-            <div className="p-6 border-b border-white/5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Globe className="text-cyan-500" size={20} />
-                <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Kiralık Oyuncular</h3>
+            className="space-y-4">
+            {/* Kiralık Oyuncular Listesi */}
+            <div className="bg-zinc-900/40 border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-md">
+              <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Globe className="text-cyan-500" size={20} />
+                  <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Kiralık Oyuncular</h3>
+                </div>
+                <div className="text-[10px] font-black text-white/40 uppercase tracking-widest">
+                  {loanPlayers.length} OYUNCU MEVCUT
+                </div>
               </div>
-              <div className="text-[10px] font-black text-white/40 uppercase tracking-widest">
-                {loanPlayers.length} OYUNCU MEVCUT
+              {loanPlayers.length === 0 ? (
+                <div className="py-20 text-center space-y-4 opacity-50">
+                  <Globe size={48} className="mx-auto" />
+                  <p className="text-xs font-black uppercase tracking-[.2em]">Kiralık oyuncu bulunmuyor.</p>
+                  <p className="text-[10px] text-white/30">Diğer takımlar oyuncularını kiralık pazara çıkardığında burada görünecek.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-white/5">
+                  {loanPlayers.map((lp: any) => {
+                    const p = lp;
+                    const loanFee = calculateLoanFeeEuro(p.market_value || (p.rating || 50) * 50000, profile?.current_day || 1);
+                    const feeStr = loanFee >= 1_000_000 ? `${(loanFee / 1_000_000).toFixed(1)}M €` : loanFee >= 1_000 ? `${(loanFee / 1_000).toFixed(0)}K €` : `${loanFee} €`;
+                    return (
+                      <div key={lp.id} className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors">
+                        <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center text-[10px] font-black border border-cyan-500/20 text-cyan-400">
+                          {p.specific_position || p.position || '??'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p.name)}</div>
+                          <div className="text-[9px] text-white/30">
+                            {toTitleCase(p.team_name || 'Bilinmeyen')} • {p.age} YAŞ • Klt {p.klt || p.rating || 0}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-[11px] font-black text-cyan-400">{feeStr}</div>
+                          <div className="text-[8px] text-white/20 uppercase">Kiralık Ücret (Euro)</div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            if (!confirm(`${toTitleCase(p.name)} oyuncusunu ${feeStr} + 10 Kredi karşılığında kiralamak istiyor musunuz?\n\n• ${feeStr} oyuncu sahibine ödenecek\n• 10 Kredi sistem komisyonu olarak düşülecek`)) return;
+                            try {
+                              const res = await fetch('/api/loans/request', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ playerId: lp.id, profileId: userId }),
+                              });
+                              const data = await res.json();
+                              if (data.success) {
+                                alert(`Oyuncu başarıyla kiralandı!\n• ${data.loanFeeEuroFormatted || ''} oyuncu sahibine ödendi\n• 10 Kredi sistem komisyonu düşüldü\nSezon sonunda oyuncu geri dönecek.`);
+                                fetchData();
+                              } else {
+                                alert(data.error || 'Kiralama başarısız.');
+                              }
+                            } catch (err) {
+                              alert('Bir hata oluştu.');
+                            }
+                          }}
+                          className="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 hover:text-cyan-300 transition-all"
+                        >
+                          Kirala (10 KR + Euro)
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Kendi kadromdan kiralığa gönderme (Kiralık sekmesinde de göster) */}
+            <div className="bg-zinc-900/40 border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-md">
+              <div className="p-4 border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Globe className="text-cyan-400" size={16} />
+                  <h4 className="text-[11px] font-black uppercase tracking-widest text-white/60">Kiralık Listesine Gönder</h4>
+                </div>
+                <div className="text-[9px] text-white/25 uppercase tracking-widest">
+                  {squad.filter(p => !p.is_injured && !(p as any).is_on_loan_market && !(p as any).loan_status).length} UYGUN OYUNCU
+                </div>
+              </div>
+              <div className="p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+                  {squad
+                    .filter(p => !p.is_injured && !(p as any).is_on_loan_market && !(p as any).loan_status)
+                    .map(player => {
+                      const loanFee = calculateLoanFeeEuro(
+                        player.market_value || (player.rating || 50) * 50000,
+                        profile?.current_day || 1
+                      );
+                      const feeStr = loanFee >= 1_000_000 ? `${(loanFee / 1_000_000).toFixed(1)}M €` : loanFee >= 1_000 ? `${(loanFee / 1_000).toFixed(0)}K €` : `${loanFee} €`;
+                      const posColor = (() => {
+                        const pos = player.specificPosition || player.position;
+                        if (pos === 'GK') return 'border-yellow-500/30 bg-yellow-500/5';
+                        if (['CB','LB','RB','LWB','RWB'].includes(pos || '')) return 'border-blue-500/30 bg-blue-500/5';
+                        if (['CDM','CM','CAM','LM','RM','LW','RW'].includes(pos || '')) return 'border-green-500/30 bg-green-500/5';
+                        return 'border-red-500/30 bg-red-500/5';
+                      })();
+                      return (
+                        <div
+                          key={player.id}
+                          className={`flex items-center gap-2 p-2.5 rounded-lg border ${posColor} hover:border-cyan-500/50 transition-all group/loan`}
+                        >
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[9px] font-black bg-black/30 shrink-0">
+                            {player.specificPosition || player.position}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[10px] font-black truncate">{toTitleCase(player.name)}</div>
+                            <div className="text-[8px] text-white/30">Klt {player.rating} • {feeStr}</div>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLoanPlayer(player);
+                            }}
+                            className="shrink-0 px-2.5 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/25 hover:bg-cyan-500 hover:text-white transition-all"
+                            title="Kiralık Olarak Gönder"
+                          >
+                            <Globe size={10} className="inline mr-0.5" />
+                            Kiralık Gönder
+                          </button>
+                        </div>
+                      );
+                    })}
+                  {squad.filter(p => !p.is_injured && !(p as any).is_on_loan_market && !(p as any).loan_status).length === 0 && (
+                    <div className="col-span-full py-8 text-center text-[10px] text-white/20 uppercase">
+                      Kiralığa gönderilecek uygun oyuncu yok
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            {loanPlayers.length === 0 ? (
-              <div className="py-20 text-center space-y-4 opacity-50">
-                <Globe size={48} className="mx-auto" />
-                <p className="text-xs font-black uppercase tracking-[.2em]">Kiralık oyuncu bulunmuyor.</p>
-                <p className="text-[10px] text-white/30">Diğer takımlar oyuncularını kiralık pazara çıkardığında burada görünecek.</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-white/5">
-                {loanPlayers.map((lp: any) => {
-                  const p = lp;
-                  return (
-                    <div key={lp.id} className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors">
-                      <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center text-[10px] font-black border border-cyan-500/20 text-cyan-400">
-                        {p.specific_position || p.position || '??'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p.name)}</div>
-                        <div className="text-[9px] text-white/30">
-                          {toTitleCase(p.team_name || 'Bilinmeyen')} • {p.age} YAŞ • Klt {p.klt || p.rating || 0}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-[11px] font-black text-cyan-400">{lp.loan_fee || 0} Kredi</div>
-                        <div className="text-[8px] text-white/20 uppercase">Kiralık Ücret</div>
-                      </div>
-                      <button
-                        onClick={async () => {
-                          if (!confirm(`${toTitleCase(p.name)} oyuncusunu 10 Kredi karşılığında kiralamak istiyor musunuz?`)) return;
-                          try {
-                            const res = await fetch('/api/loans/request', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ playerId: lp.id, profileId: userId }),
-                            });
-                            const data = await res.json();
-                            if (data.success) {
-                              alert('Oyuncu başarıyla kiralandı! Sezon sonunda geri dönecek.');
-                              fetchData();
-                            } else {
-                              alert(data.error || 'Kiralama başarısız.');
-                            }
-                          } catch (err) {
-                            alert('Bir hata oluştu.');
-                          }
-                        }}
-                        className="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 hover:text-cyan-300 transition-all"
-                      >
-                        Kirala (10 Kredi)
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </motion.div>
         ) : null}
       </AnimatePresence>
@@ -941,6 +1121,95 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
             }
           }}
         />
+      )}
+
+      {/* ── KİRALIK LİSTESİNE GÖNDER MODALI ── */}
+      {loanModalPlayer && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={() => setLoanModalPlayer(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, y: 20 }}
+            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-cyan-500/15 rounded-xl flex items-center justify-center text-sm font-black border border-cyan-500/30 text-cyan-400">
+                {loanModalPlayer.specificPosition || loanModalPlayer.position}
+              </div>
+              <div>
+                <h3 className="text-lg font-black">{toTitleCase(loanModalPlayer.name)}</h3>
+                <div className="text-xs text-white/40">
+                  Klt {loanModalPlayer.rating} • {loanModalPlayer.age} YAŞ • {loanModalPlayer.specificPosition || loanModalPlayer.position}
+                </div>
+              </div>
+            </div>
+
+            {/* Bilgi kutusu */}
+            <div className="bg-cyan-500/5 border border-cyan-500/15 rounded-xl p-3 mb-4 space-y-1.5">
+              <div className="flex items-center gap-2 text-[10px] text-cyan-300/80">
+                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full shrink-0" />
+                Kiralık ücret: Oyuncu piyasasına göre otomatik hesaplanır
+              </div>
+              <div className="flex items-center gap-2 text-[10px] text-cyan-300/80">
+                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full shrink-0" />
+                10 Kredi komisyon kiracıdan alınır
+              </div>
+              <div className="flex items-center gap-2 text-[10px] text-cyan-300/80">
+                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full shrink-0" />
+                Kiralık ücret (Euro) oyuncu sahibine ödenir
+              </div>
+              <div className="flex items-center gap-2 text-[10px] text-cyan-300/80">
+                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full shrink-0" />
+                Sezon sonunda oyuncu otomatik olarak geri döner
+              </div>
+            </div>
+
+            {/* Hesaplanan ücret */}
+            {(() => {
+              const fee = calculateLoanFeeEuro(
+                loanModalPlayer.market_value || (loanModalPlayer.rating || 50) * 50000,
+                profile?.current_day || 1
+              );
+              const feeStr = fee >= 1_000_000 ? `${(fee / 1_000_000).toFixed(1)}M €` : fee >= 1_000 ? `${(fee / 1_000).toFixed(0)}K €` : `${fee} €`;
+              return (
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 mb-4 text-center">
+                  <div className="text-[8px] font-black text-white/30 uppercase tracking-widest mb-1">Hesaplanan Kiralık Ücret</div>
+                  <div className="text-xl font-black text-cyan-400">{feeStr}</div>
+                  <div className="text-[8px] text-white/20 mt-1">
+                    Piyasa değeri: {(() => {
+                      const mv = loanModalPlayer.market_value || (loanModalPlayer.rating || 50) * 50000;
+                      return mv >= 1_000_000 ? `${(mv / 1_000_000).toFixed(1)}M €` : mv >= 1_000 ? `${(mv / 1_000).toFixed(0)}K €` : `${mv} €`;
+                    })()} × 15% × enflasyon
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Butonlar */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setLoanModalPlayer(null)}
+                className="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10 transition-all"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleLoanSubmit}
+                disabled={loanSubmitting}
+                className="flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loanSubmitting ? 'Gönderiliyor...' : 'Kiralık Listesine Gönder'}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
       )}
     </motion.div>
   );

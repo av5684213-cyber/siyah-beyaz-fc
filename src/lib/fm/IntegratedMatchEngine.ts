@@ -429,9 +429,14 @@ class IntegratedMatchEngine {
     
     const startMin = options.startMinute || 0;
 
-    const detailedHomePlayerStats: Record<string, { goalDetails: Record<string, number>, saveDetails: Record<string, number> }> = {};
+    const detailedHomePlayerStats: Record<string, { goals?: number, goalDetails: Record<string, number>, saveDetails: Record<string, number> }> = {};
     homeSquad.forEach(p => {
-      detailedHomePlayerStats[p.id] = { goalDetails: {}, saveDetails: {} };
+      detailedHomePlayerStats[p.id] = { goals: 0, goalDetails: {}, saveDetails: {} };
+    });
+
+    const detailedAwayPlayerStats: Record<string, { goals?: number, goalDetails: Record<string, number>, saveDetails: Record<string, number> }> = {};
+    awaySquad.forEach(p => {
+      detailedAwayPlayerStats[p.id] = { goals: 0, goalDetails: {}, saveDetails: {} };
     });
 
     const determineGoalType = (p: Player | null, isPenalty: boolean = false, isFreekick: boolean = false): string => {
@@ -602,9 +607,16 @@ class IntegratedMatchEngine {
               else if (seq.type === 'TIKITAKA') gType = 'plase';
               else if (seq.type === 'COUNTER') gType = 'sprint_finish';
 
-              if (isHomeSeq && scorer) {
-                 const gd = detailedHomePlayerStats[scorer.id].goalDetails;
-                 gd[gType] = (gd[gType] || 0) + 1;
+              if (scorer) {
+                if (isHomeSeq) {
+                  const gd = detailedHomePlayerStats[scorer.id].goalDetails;
+                  gd[gType] = (gd[gType] || 0) + 1;
+                  detailedHomePlayerStats[scorer.id].goals = (detailedHomePlayerStats[scorer.id].goals || 0) + 1;
+                } else {
+                  const gd = detailedAwayPlayerStats[scorer.id].goalDetails;
+                  gd[gType] = (gd[gType] || 0) + 1;
+                  detailedAwayPlayerStats[scorer.id].goals = (detailedAwayPlayerStats[scorer.id].goals || 0) + 1;
+                }
               }
 
               const goalTexts: Record<string, string> = {
@@ -619,7 +631,15 @@ class IntegratedMatchEngine {
                 type: 'GOAL',
                 team: currentTeam,
                 player: scorer?.name,
-                text: goalTexts[seq.type] || `GOL! {${currentTeam}:${scorer?.name}} ağları havalandırıyor!`
+                text: goalTexts[seq.type] || `GOL! {${currentTeam}:${scorer?.name}} ağları havalandırıyor!`,
+                goalType: gType as any,
+                homeScore: isHomeSeq ? homeScore : homeScore,
+                awayScore: isHomeSeq ? awayScore : awayScore,
+                playerTraits: scorer?.traits,
+                playerPersonality: scorer?.personalityTraits,
+                playerGoalCount: isHomeSeq
+                  ? (detailedHomePlayerStats[scorer?.id || '']?.goals || 0) + 1
+                  : (detailedAwayPlayerStats[scorer?.id || '']?.goals || 0) + 1,
               });
             }
           } else {
@@ -635,7 +655,12 @@ class IntegratedMatchEngine {
                   type: 'GOAL',
                   team: 'AWAY',
                   player: scorer?.name,
-                  text: `OFSAYT TUZAĞI BOZULDU! Savunma hattı yarılınca {AWAY:${scorer?.name}} ceza sahasına tek başına girdi ve skoru buldu!`
+                  text: `OFSAYT TUZAĞI BOZULDU! Savunma hattı yarılınca {AWAY:${scorer?.name}} ceza sahasına tek başına girdi ve skoru buldu!`,
+                  goalType: 'sprint_finish' as any,
+                  homeScore,
+                  awayScore,
+                  playerTraits: scorer?.traits,
+                  playerPersonality: scorer?.personalityTraits,
                 });
                 activeSequence = null;
                 eventOccurred = true;

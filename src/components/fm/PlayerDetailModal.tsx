@@ -1,17 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useDraggableModal } from '@/hooks/useDraggableModal';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import {
   X as XIcon, Star, ChevronDown, ChevronRight, User, Activity,
-  Target, Shield, Footprints, ShoppingCart, BarChart2, Dumbbell, TrendingUp, AlertTriangle, Zap,
-  Ruler, Scale, Eye, Gavel, Timer, XCircle
+  Target, Shield, Footprints, ShoppingCart, BarChart2, Dumbbell, TrendingUp, AlertTriangle, AlertCircle, Zap,
+  Ruler, Scale, Eye, Gavel, Timer, XCircle, Globe
 } from 'lucide-react';
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer
 } from 'recharts';
 import { calculateMarketValue, getTransferCorridor, formatCurrency } from '@/lib/fm/valuation';
+import { calculateLoanFeeEuro } from '@/lib/fm/inflation';
 import { getPerformanceStats } from '@/lib/fm/engine';
 import { traitDescriptions, getTraitTierLabel } from '@/lib/fm/traits';
 import { TRAIT_LEVELS } from '@/lib/fm/traitsData';
@@ -37,6 +39,7 @@ interface PlayerDetailModalProps {
   onTrainingStateChange?: (state: TrainingState) => void;
   profileMoney?: number;
   profileTeamName?: string;
+  profileId?: string;
   isAdmin?: boolean;
 }
 
@@ -182,7 +185,7 @@ function PitchPositionDot({ position, specificPosition }: { position?: string; s
 }
 
 export default function PlayerDetailModal({ 
-  player: initialPlayer, onClose, teamStats, onSell, marketListing, onBuy, onBid, onSign, trainingState, onTrainingStateChange, profileMoney, profileTeamName, isAdmin 
+  player: initialPlayer, onClose, teamStats, onSell, marketListing, onBuy, onBid, onSign, trainingState, onTrainingStateChange, profileMoney, profileTeamName, profileId, isAdmin 
 }: PlayerDetailModalProps) {
   const { scoutPlayer, watchlist, toggleWatchlist } = useFM();
   const [player, setPlayer] = useState<Player>(initialPlayer);
@@ -199,6 +202,12 @@ export default function PlayerDetailModal({
   const [sellPrice, setSellPrice] = useState<number>(0);
   const [isSelling, setIsSelling] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
+
+  // ── Kiralama form state ──
+  const [showLoanForm, setShowLoanForm] = useState(false);
+  const [loanWeeks, setLoanWeeks] = useState<number>(17);
+  const [loanFeeEuro, setLoanFeeEuro] = useState<number>(Math.round((player.market_value || 500000) * 0.15));
+  const [isSendingLoan, setIsSendingLoan] = useState(false);
 
   // ── Auction countdown timer ──
   const [auctionTimeLeft, setAuctionTimeLeft] = React.useState('');
@@ -415,6 +424,8 @@ export default function PlayerDetailModal({
     { id: 'market' as const, label: marketListing ? 'Satın Al' : 'Global Transfer' },
   ];
 
+  const { modalRef, handleRef, position, isDragging } = useDraggableModal();
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -424,20 +435,36 @@ export default function PlayerDetailModal({
       onClick={onClose}
     >
       <motion.div
+        ref={modalRef}
         initial={{ scale: 0.95, y: 10 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-        className="bg-[#111820] w-full max-w-[960px] max-h-[90vh] overflow-y-auto border border-white/[0.08] shadow-[0_0_120px_rgba(0,0,0,0.9)] font-sans text-white rounded-sm"
+        className="bg-[#111820] w-full max-w-[960px] max-h-[90vh] overflow-y-auto border border-white/[0.08] shadow-[0_0_120px_rgba(0,0,0,0.9)] font-sans text-white rounded-sm relative"
         onClick={e => e.stopPropagation()}
-        style={{ scrollbarWidth: 'thin', scrollbarColor: '#ffffff15 transparent' }}
+        style={{ transform: `translate(${position.x}px, ${position.y}px)`, scrollbarWidth: 'thin', scrollbarColor: '#ffffff15 transparent', userSelect: isDragging ? 'none' : 'auto' }}
       >
         {/* Floating close button */}
         <button 
           onClick={onClose}
-          className="fixed top-4 right-4 z-[220] p-3 bg-red-600/20 text-red-500 rounded-full hover:bg-red-600 hover:text-white transition-all shadow-2xl backdrop-blur-md border border-red-500/30"
+          className="absolute top-3 right-3 z-[220] p-3 bg-red-600/20 text-red-500 rounded-full hover:bg-red-600 hover:text-white transition-all shadow-2xl backdrop-blur-md border border-red-500/30"
         >
           <XIcon size={24} />
         </button>
+
+        {/* ══════════════════════════════════════════════
+            DRAG HANDLE — Modal'ı sürüklemek için tutun
+        ══════════════════════════════════════════════ */}
+        <div
+          ref={handleRef}
+          className="flex items-center justify-center px-4 py-1.5 bg-[#0d1218] border-b border-white/[0.04] cursor-grab active:cursor-grabbing hover:bg-[#0d1218]/80 transition-colors select-none"
+          title="Sürüklemek için tutun · Çift tıklayın: sıfırla"
+        >
+          <div className="flex items-center gap-2 text-white/20">
+            <div className="w-10 h-1 rounded-full bg-white/15" />
+            <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+            <div className="w-10 h-1 rounded-full bg-white/15" />
+          </div>
+        </div>
 
         {/* ══════════════════════════════════════════════
             SECTION 1 — TOP HEADER BAR
@@ -575,6 +602,15 @@ export default function PlayerDetailModal({
                     <Eye size={14} className={isWatched ? "text-amber-400" : "text-white/40"} /> 
                     {isWatched ? 'İzleme Listesinden Çıkar' : 'İzleme Listesine Ekle'}
                   </button>
+                  {isOwned && (
+                    <button 
+                      onClick={() => { setShowLoanForm(true); setShowActions(false); }}
+                      className="w-full px-4 py-2 text-left text-[10px] font-bold uppercase tracking-wider hover:bg-white/5 text-cyan-400/70 hover:text-cyan-300 transition-all flex items-center gap-2 border-t border-white/5"
+                    >
+                      <Globe size={14} className="text-cyan-400" /> 
+                      Kiralık Olarak Gönder
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -1541,6 +1577,27 @@ export default function PlayerDetailModal({
                        isOwned ? <><Gavel size={16} /> AÇIK ARTIRMAYA GÖNDER</> : 'RESMİ TEKLİFİ İLET'
                      )}
                    </button>
+
+                   {/* ─── KİRALIK LİSTESİNE GÖNDER BUTONU ─── */}
+                   {isOwned && (
+                     <div className="pt-2">
+                       <div className="flex items-center gap-3 mb-3">
+                         <div className="flex-1 h-px bg-white/[0.06]" />
+                         <span className="text-[8px] font-black uppercase tracking-[0.3em] text-white/20">veya</span>
+                         <div className="flex-1 h-px bg-white/[0.06]" />
+                       </div>
+                       <button
+                         onClick={() => setShowLoanForm(true)}
+                         className="w-full py-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl flex items-center justify-center gap-2 bg-cyan-500/15 border-2 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/25 hover:border-cyan-500/50 hover:text-cyan-300 shadow-cyan-500/10"
+                       >
+                         <Globe size={16} />
+                         KİRALIK LİSTESİNE GÖNDER
+                       </button>
+                       <p className="text-[8px] text-cyan-400/40 font-bold uppercase tracking-wider text-center mt-2">
+                         Oyuncuyu kiralık pazara çıkarın · 10 KR komisyon kiracıdan alınır
+                       </p>
+                     </div>
+                   )}
                 </div>
               </div>
             )}
@@ -1562,6 +1619,130 @@ export default function PlayerDetailModal({
             Kapat
           </button>
         </div>
+
+        {/* ══════════════════════════════════════════════
+            LOAN FORM OVERLAY — Kiralık Olarak Gönder
+        ══════════════════════════════════════════════ */}
+        {showLoanForm && isOwned && (
+          <div className="absolute inset-0 z-[300] bg-black/90 backdrop-blur-md flex items-center justify-center p-6">
+            <div className="bg-[#111820] border border-cyan-500/20 rounded-2xl p-6 w-full max-w-md space-y-5 shadow-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center border border-cyan-500/20">
+                    <Globe size={20} className="text-cyan-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-cyan-400">Kiralık Olarak Gönder</h3>
+                    <p className="text-[9px] text-white/30 font-bold uppercase tracking-wider">{toTitleCase(player.name)} • {localizePos(sp)} • {rating} OVR</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowLoanForm(false)} className="p-2 text-white/30 hover:text-white transition-colors">
+                  <XIcon size={18} />
+                </button>
+              </div>
+
+              {/* Loan Fee (Euro) */}
+              <div className="space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block">
+                  Kiralık Ücret (Euro) — Alıcıdan satıcıya ödenecek
+                </label>
+                <input
+                  type="number"
+                  value={loanFeeEuro}
+                  onChange={(e) => setLoanFeeEuro(Number(e.target.value))}
+                  className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-base font-black text-cyan-400 focus:outline-none focus:border-cyan-500 transition-all"
+                />
+                <div className="flex gap-2">
+                  {[0.10, 0.15, 0.20, 0.30].map(pct => {
+                    const suggested = calculateLoanFeeEuro(marketValue, 1, pct);
+                    return (
+                      <button
+                        key={pct}
+                        onClick={() => setLoanFeeEuro(suggested)}
+                        className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-[8px] font-black uppercase tracking-wider rounded-lg border border-white/5 transition-all"
+                      >
+                        %{Math.round(pct * 100)} = {formatCurrency(suggested)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Info Box */}
+              <div className="bg-cyan-500/5 border border-cyan-500/10 rounded-xl p-3 space-y-1.5">
+                <div className="flex items-start gap-2">
+                  <AlertCircle size={12} className="text-cyan-400 mt-0.5 shrink-0" />
+                  <p className="text-[9px] text-white/50 leading-relaxed">
+                    Oyuncunuz kiralık pazarına çıkacak. Diğer takımlar bu oyuncuyu kiralayabilir.
+                    Kiralama gerçekleştiğinde <span className="text-cyan-400 font-bold">10 Kredi</span> sistem komisyonu olarak kiracıdan düşülecek.
+                    <span className="text-cyan-400 font-bold"> Kiralık ücret (Euro)</span> alıcıdan size ödenecek.
+                  </p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Timer size={12} className="text-amber-400 mt-0.5 shrink-0" />
+                  <p className="text-[9px] text-white/50 leading-relaxed">
+                    Sezon sonunda oyuncu otomatik olarak takımınıza geri dönecek.
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLoanForm(false)}
+                  className="flex-1 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!profileId) {
+                      alert('Profil ID bulunamadı. Lütfen sayfayı yenileyin.');
+                      return;
+                    }
+                    setIsSendingLoan(true);
+                    try {
+                      const res = await fetch('/api/loans/list', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          playerId: player.id,
+                          loanFee: loanFeeEuro,
+                          profileId: profileId,
+                        }),
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        alert(`${toTitleCase(player.name)} kiralık pazarına çıkarıldı!`);
+                        setShowLoanForm(false);
+                      } else {
+                        alert(data.error || 'Kiralık pazara çıkarılamadı.');
+                      }
+                    } catch (err) {
+                      alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                    } finally {
+                      setIsSendingLoan(false);
+                    }
+                  }}
+                  disabled={isSendingLoan}
+                  className="flex-1 py-3 bg-cyan-500/20 border border-cyan-500/40 rounded-xl text-[10px] font-black uppercase tracking-widest text-cyan-400 hover:bg-cyan-500/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSendingLoan ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+                      Gönderiliyor...
+                    </>
+                  ) : (
+                    <>
+                      <Globe size={14} />
+                      Kiralık Pazara Çıkar
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );

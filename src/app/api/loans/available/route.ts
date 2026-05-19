@@ -61,6 +61,7 @@ export async function GET(request: NextRequest) {
           morale,
           team_name,
           profile_id,
+          market_value,
           is_on_loan_market,
           loan_fee,
           loan_owner_profile_id,

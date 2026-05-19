@@ -10,11 +10,9 @@ import {
   Timer,
   CircleDot,
   Zap,
-  Activity,
   Users,
   MessageSquare,
   Calendar,
-  ChevronRight,
   Shield,
   Bot,
   Target,
@@ -22,6 +20,7 @@ import {
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import MatchChat from '@/components/Chat/MatchChat';
 import type { MatchEvent } from '@/lib/fm/types';
+import { getMatchType } from '@/lib/fm/matchTypeUtils';
 
 // Duygusal katman — animasyonlar, ses efektleri, heyecanlı anlatım
 import { Confetti, GoalCelebration, RecordBreak } from '@/components/animations';
@@ -29,578 +28,20 @@ import { playSound, isSoundEnabled, setSoundEnabled } from '@/utils/sound';
 import { emitEmotionalEvent, type EmotionalEvent } from '@/lib/fm/emotionalEvents';
 import MatchCommentary from '@/components/match/MatchCommentary';
 
-// ═══════════════════════════════════════════════════════════════
-// Types
-// ═══════════════════════════════════════════════════════════════
-
-interface FixtureData {
-  id: string;
-  tur: number;
-  match_date: string;
-  match_time: string;
-  status: string;
-  home_score: number | null;
-  away_score: number | null;
-  home_team_id: string;
-  away_team_id: string;
-  home: { name: string; id: string; is_bot?: boolean; profile_id?: string } | null;
-  away: { name: string; id: string; is_bot?: boolean; profile_id?: string } | null;
-  season_id?: string;
-  is_friendly?: boolean;
-  is_quick_match?: boolean;
-}
-
-interface MatchEventRow {
-  id: string;
-  fixture_id: string;
-  event_type: string;
-  minute: number;
-  player_name: string | null;
-  team: string | null;
-  detail: string | null;
-  created_at: string;
-}
-
-interface PlayerStatRow {
-  id: string;
-  name: string;
-  position: string;
-  rating: number;
-  goals: number;
-  assists: number;
-  yellow_cards: number;
-  red_cards: number;
-  team_name: string;
-}
+// Ayrıştırılmış alt bileşenler
+import CountdownTimer from '@/components/match/CountdownTimer';
+import ScoreBoard from '@/components/match/ScoreBoard';
+import EventList from '@/components/match/EventList';
+import PlayerStatsTable from '@/components/match/PlayerStatsTable';
+import LiveStrategyPanel from '@/components/match/LiveStrategyPanel';
+import type { FixtureData, MatchEventRow, PlayerStatRow } from '@/components/match/matchTypes';
 
 // ═══════════════════════════════════════════════════════════════
-// Helper: Geri sayım hesaplama
+// Types (sadece MatchPage'e özel olanlar burada kalır)
 // ═══════════════════════════════════════════════════════════════
-
-interface CountdownResult {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  isPast: boolean;
-}
-
-function calculateCountdown(targetDate: string, targetTime: string): CountdownResult {
-  try {
-    const dateStr = targetTime ? `${targetDate}T${targetTime}:00` : `${targetDate}T18:00:00`;
-    const target = new Date(dateStr).getTime();
-    const now = Date.now();
-    const diff = target - now;
-
-    if (diff <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true };
-    }
-
-    return {
-      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-      seconds: Math.floor((diff % (1000 * 60)) / 1000),
-      isPast: false,
-    };
-  } catch {
-    return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true };
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// Helper: Event tipine göre ikon ve renk
-// ═══════════════════════════════════════════════════════════════
-
-function getEventStyle(eventType: string): { icon: string; colorClass: string; label: string } {
-  switch (eventType) {
-    case 'goal':
-    case 'GOAL':
-      return { icon: '⚽', colorClass: 'bg-yellow-500/15 border-yellow-500/30 text-yellow-200', label: 'GOL' };
-    case 'penalty_goal':
-      return { icon: '⚽', colorClass: 'bg-yellow-500/15 border-yellow-500/30 text-yellow-200', label: 'PENALTI GOLU' };
-    case 'own_goal':
-      return { icon: '⚽', colorClass: 'bg-red-500/15 border-red-500/30 text-red-200', label: 'KENDİ KALESİNE' };
-    case 'yellow_card':
-    case 'YELLOW':
-      return { icon: '🟨', colorClass: 'bg-yellow-600/10 border-yellow-600/20 text-yellow-300', label: 'SARI KART' };
-    case 'red_card':
-    case 'RED':
-      return { icon: '🟥', colorClass: 'bg-red-600/15 border-red-600/30 text-red-200', label: 'KIRMIZI KART' };
-    case 'second_yellow':
-      return { icon: '🟥', colorClass: 'bg-orange-500/15 border-orange-500/30 text-orange-200', label: '2. SARI → KIRMIZI' };
-    case 'injury':
-    case 'INJURY':
-      return { icon: '🏥', colorClass: 'bg-red-500/10 border-red-500/20 text-red-300', label: 'SAKATLIK' };
-    case 'substitution':
-    case 'SUB':
-      return { icon: '🔄', colorClass: 'bg-blue-500/10 border-blue-500/20 text-blue-300', label: 'DEĞİŞİKLİK' };
-    case 'halftime':
-    case 'HALFTIME':
-      return { icon: '⏱️', colorClass: 'bg-white/5 border-white/10 text-white/60', label: 'DEVRE ARASI' };
-    case 'fulltime':
-    case 'FULLTIME':
-      return { icon: '🏁', colorClass: 'bg-white/5 border-white/10 text-white/60', label: 'MAÇ SONU' };
-    case 'save':
-      return { icon: '🧤', colorClass: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300', label: 'KURTARIŞ' };
-    case 'offside':
-    case 'OFFSIDE':
-      return { icon: '🚩', colorClass: 'bg-orange-500/10 border-orange-500/20 text-orange-300', label: 'OFSAYT' };
-    case 'corner':
-    case 'CORNER':
-      return { icon: '🚩', colorClass: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-300', label: 'KÖŞE VURUŞU' };
-    default:
-      return { icon: '📝', colorClass: 'bg-white/5 border-white/10 text-white/50', label: 'OLAY' };
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// Alt bileşen: Geri Sayım Sayacı
-// ═══════════════════════════════════════════════════════════════
-
-function CountdownTimer({ targetDate, targetTime }: { targetDate: string; targetTime: string }) {
-  const [countdown, setCountdown] = useState<CountdownResult>(() =>
-    calculateCountdown(targetDate, targetTime)
-  );
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCountdown(calculateCountdown(targetDate, targetTime));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [targetDate, targetTime]);
-
-  if (countdown.isPast) {
-    return (
-      <div className="text-center">
-        <p className="text-amber-400 text-sm font-bold uppercase tracking-widest animate-pulse">
-          Maç başlamak üzere!
-        </p>
-      </div>
-    );
-  }
-
-  const blocks = [
-    { value: countdown.days, label: 'Gün' },
-    { value: countdown.hours, label: 'Saat' },
-    { value: countdown.minutes, label: 'Dakika' },
-    { value: countdown.seconds, label: 'Saniye' },
-  ];
-
-  return (
-    <div className="flex items-center justify-center gap-3">
-      {blocks.map((block, idx) => (
-        <React.Fragment key={block.label}>
-          {idx > 0 && <span className="text-white/20 text-lg font-black">:</span>}
-          <div className="flex flex-col items-center">
-            <div className="bg-white/[0.06] border border-white/10 rounded-lg px-3 py-2 min-w-[52px] text-center">
-              <span className="text-xl font-black text-white tabular-nums">
-                {String(block.value).padStart(2, '0')}
-              </span>
-            </div>
-            <span className="text-[8px] font-bold uppercase tracking-widest text-white/25 mt-1">
-              {block.label}
-            </span>
-          </div>
-        </React.Fragment>
-      ))}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// Alt bileşen: Skor Tablosu
-// ═══════════════════════════════════════════════════════════════
-
-function ScoreBoard({
-  homeName,
-  awayName,
-  homeScore,
-  awayScore,
-  status,
-  minute,
-}: {
-  homeName: string;
-  awayName: string;
-  homeScore: number | null;
-  awayScore: number | null;
-  status: string;
-  minute?: number;
-}) {
-  const isLive = status === 'live';
-
-  return (
-    <div className="bg-gradient-to-b from-zinc-900/90 to-black/90 border border-white/10 rounded-2xl p-6 md:p-8 text-center">
-      {/* Canlı etiketi */}
-      {isLive && (
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-          <span className="text-red-400 text-[10px] font-black uppercase tracking-widest">CANLI</span>
-          {minute != null && (
-            <span className="text-white/40 text-xs font-bold ml-2">{minute}&apos;</span>
-          )}
-        </div>
-      )}
-
-      {/* Takımlar ve skor */}
-      <div className="flex items-center justify-center gap-6 md:gap-12">
-        {/* Ev sahibi */}
-        <div className="flex flex-col items-center gap-2 min-w-[100px]">
-          <div className="w-14 h-14 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center">
-            <span className="text-lg font-black text-white/80">
-              {homeName.slice(0, 2).toUpperCase()}
-            </span>
-          </div>
-          <span className="text-xs font-bold text-white/70 uppercase tracking-wider truncate max-w-[120px]">
-            {homeName}
-          </span>
-        </div>
-
-        {/* Skor */}
-        <div className="flex items-center gap-4">
-          <span className={`text-5xl md:text-7xl font-black tabular-nums ${isLive ? 'text-white' : 'text-white/80'}`}>
-            {homeScore ?? '-'}
-          </span>
-          <span className="text-xl md:text-3xl font-black text-white/15">:</span>
-          <span className={`text-5xl md:text-7xl font-black tabular-nums ${isLive ? 'text-white' : 'text-white/80'}`}>
-            {awayScore ?? '-'}
-          </span>
-        </div>
-
-        {/* Deplasman */}
-        <div className="flex flex-col items-center gap-2 min-w-[100px]">
-          <div className="w-14 h-14 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center">
-            <span className="text-lg font-black text-white/80">
-              {awayName.slice(0, 2).toUpperCase()}
-            </span>
-          </div>
-          <span className="text-xs font-bold text-white/70 uppercase tracking-wider truncate max-w-[120px]">
-            {awayName}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// Alt bileşen: Olay Listesi
-// ═══════════════════════════════════════════════════════════════
-
-function EventList({ events }: { events: MatchEventRow[] }) {
-  if (events.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <Activity className="w-8 h-8 text-white/10 mx-auto mb-3" />
-        <p className="text-xs text-white/25">Henüz olay kaydedilmedi</p>
-      </div>
-    );
-  }
-
-  // Dakikaya göre sırala
-  const sorted = [...events].sort((a, b) => (a.minute || 0) - (b.minute || 0));
-
-  return (
-    <div className="space-y-2">
-      {sorted.map((event, idx) => {
-        const style = getEventStyle(event.event_type);
-        return (
-          <motion.div
-            key={event.id || idx}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: idx * 0.03 }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${style.colorClass}`}
-          >
-            {/* Dakika */}
-            <div className="w-10 text-center flex-shrink-0">
-              <span className="text-xs font-black tabular-nums">{event.minute}&apos;</span>
-            </div>
-
-            {/* İkon */}
-            <span className="text-base flex-shrink-0">{style.icon}</span>
-
-            {/* İçerik */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-[9px] font-black uppercase tracking-widest opacity-60">
-                  {style.label}
-                </span>
-                {event.team && (
-                  <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded ${
-                    event.team === 'home' || event.team === 'HOME'
-                      ? 'bg-white/10 text-white/50'
-                      : 'bg-yellow-500/10 text-yellow-400/70'
-                  }`}>
-                    {event.team === 'home' || event.team === 'HOME' ? 'EV' : 'DEP'}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs font-semibold mt-0.5 truncate">
-                {event.player_name || event.detail || style.label}
-              </p>
-            </div>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// Alt bileşen: Oyuncu İstatistik Tablosu (Bitmiş maç için)
-// ═══════════════════════════════════════════════════════════════
-
-function PlayerStatsTable({
-  players,
-  teamName,
-  label,
-}: {
-  players: PlayerStatRow[];
-  teamName: string;
-  label: string;
-}) {
-  if (players.length === 0) return null;
-
-  // Gol, asist, kart öncelikli sıralama
-  const sorted = [...players].sort((a, b) => {
-    if (b.goals !== a.goals) return b.goals - a.goals;
-    if (b.assists !== a.assists) return b.assists - a.assists;
-    return b.rating - a.rating;
-  });
-
-  return (
-    <div className="rounded-xl border border-white/[0.06] overflow-hidden">
-      <div className="px-4 py-3 bg-white/[0.02] border-b border-white/[0.06] flex items-center gap-2">
-        <div className="w-6 h-6 rounded-md bg-white/[0.06] flex items-center justify-center">
-          <span className="text-[8px] font-black text-white/50">
-            {teamName.slice(0, 2).toUpperCase()}
-          </span>
-        </div>
-        <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
-          {label} — {teamName}
-        </span>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[400px]">
-          <thead>
-            <tr className="border-b border-white/[0.04]">
-              <th className="text-left px-3 py-2 text-[8px] font-bold uppercase tracking-widest text-white/25">
-                Oyuncu
-              </th>
-              <th className="text-center px-2 py-2 text-[8px] font-bold uppercase tracking-widest text-white/25 w-10">
-                Poz
-              </th>
-              <th className="text-center px-2 py-2 text-[8px] font-bold uppercase tracking-widest text-white/25 w-10">
-                OVR
-              </th>
-              <th className="text-center px-2 py-2 text-[8px] font-bold uppercase tracking-widest text-yellow-400/50 w-8">
-                G
-              </th>
-              <th className="text-center px-2 py-2 text-[8px] font-bold uppercase tracking-widest text-blue-400/50 w-8">
-                A
-              </th>
-              <th className="text-center px-2 py-2 text-[8px] font-bold uppercase tracking-widest text-yellow-500/50 w-8">
-                SK
-              </th>
-              <th className="text-center px-2 py-2 text-[8px] font-bold uppercase tracking-widest text-red-500/50 w-8">
-                KK
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((player, idx) => (
-              <tr
-                key={player.id || idx}
-                className="border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors"
-              >
-                <td className="px-3 py-2 text-[11px] font-semibold text-white/70 truncate max-w-[150px]">
-                  {player.name}
-                </td>
-                <td className="text-center px-2 py-2 text-[10px] font-bold text-white/30">
-                  {player.position}
-                </td>
-                <td className="text-center px-2 py-2 text-[11px] font-black text-white/50">
-                  {player.rating}
-                </td>
-                <td className="text-center px-2 py-2">
-                  {player.goals > 0 ? (
-                    <span className="text-[11px] font-black text-yellow-400">{player.goals}</span>
-                  ) : (
-                    <span className="text-[10px] text-white/15">-</span>
-                  )}
-                </td>
-                <td className="text-center px-2 py-2">
-                  {player.assists > 0 ? (
-                    <span className="text-[11px] font-black text-blue-400">{player.assists}</span>
-                  ) : (
-                    <span className="text-[10px] text-white/15">-</span>
-                  )}
-                </td>
-                <td className="text-center px-2 py-2">
-                  {player.yellow_cards > 0 ? (
-                    <span className="text-[11px] font-bold text-yellow-500">{player.yellow_cards}</span>
-                  ) : (
-                    <span className="text-[10px] text-white/15">-</span>
-                  )}
-                </td>
-                <td className="text-center px-2 py-2">
-                  {player.red_cards > 0 ? (
-                    <span className="text-[11px] font-bold text-red-500">{player.red_cards}</span>
-                  ) : (
-                    <span className="text-[10px] text-white/15">-</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// Alt bileşen: Canlı Maç Strateji Paneli
-// ═══════════════════════════════════════════════════════════════
-
-interface LiveStrategyPanelProps {
-  currentFormation: string;
-  currentTactic: string;
-  onApply: (formation: string, tactic: string) => void;
-  isApplying: boolean;
-  lastApplied: string | null;
-  changeCount: number;
-}
-
-function LiveStrategyPanel({
-  currentFormation,
-  currentTactic,
-  onApply,
-  isApplying,
-  lastApplied,
-  changeCount,
-}: LiveStrategyPanelProps) {
-  const [draftFormation, setDraftFormation] = React.useState(currentFormation);
-  const [draftTactic, setDraftTactic] = React.useState(currentTactic);
-
-  React.useEffect(() => {
-    setDraftFormation(currentFormation);
-  }, [currentFormation]);
-
-  React.useEffect(() => {
-    setDraftTactic(currentTactic);
-  }, [currentTactic]);
-
-  const hasChanges = draftFormation !== currentFormation || draftTactic !== currentTactic;
-  const maxChanges = 3;
-  const remaining = maxChanges - changeCount;
-
-  const STRATEGY_FORMATIONS = ['4-4-2', '4-3-3', '3-5-2', '4-5-1', '4-2-3-1', '5-3-2', '3-4-3'];
-  const STRATEGY_TACTICS = [
-    { id: 'dengeli',  label: 'Dengeli', desc: 'Standart oyun planı', icon: '⚖️' },
-    { id: 'hucum',    label: 'Hücum',   desc: '+%12 Ofans, -%5 Defans', icon: '⚔️' },
-    { id: 'savunma',  label: 'Savunma', desc: '+%15 Defans, -%5 Ofans', icon: '🛡️' },
-    { id: 'kontra',   label: 'Kontra',  desc: '+%8 Kontra Atak gücü', icon: '⚡' },
-    { id: 'tikitaka', label: 'Tiki-Taka', desc: 'Yüksek pas ve oyun kontrolü', icon: '🔥' },
-  ];
-
-  return (
-    <div className="space-y-4">
-      {/* Aktif durum paneli */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-red-500/[0.06] border border-red-500/20 rounded-xl">
-        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
-        <div className="flex-1">
-          <p className="text-[9px] font-black uppercase tracking-widest text-red-400">Aktif Taktik Planı</p>
-          <p className="text-xs font-bold text-white/70 mt-0.5">
-            {currentFormation} · {STRATEGY_TACTICS.find(t => t.id === currentTactic)?.label || currentTactic}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-[8px] text-white/20">Değişiklik Hakkı</p>
-          <p className={`text-sm font-black ${remaining > 0 ? 'text-amber-400' : 'text-red-500'}`}>
-            {remaining}/{maxChanges}
-          </p>
-        </div>
-      </div>
-
-      {remaining === 0 ? (
-        <div className="px-4 py-3 bg-red-500/[0.06] border border-red-500/20 rounded-xl text-center">
-          <p className="text-xs text-red-400/70">Bu maç için kenardan müdahale hakkınız dolmuştur.</p>
-        </div>
-      ) : (
-        <>
-          {/* Formasyon Seçimi */}
-          <div>
-            <label className="text-[8px] font-black uppercase tracking-widest text-white/25 block mb-2">Formasyonu Değiştir</label>
-            <div className="flex flex-wrap gap-2">
-              {STRATEGY_FORMATIONS.map(f => (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => setDraftFormation(f)}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
-                    draftFormation === f
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                      : 'bg-white/[0.03] text-white/30 border border-white/[0.06] hover:bg-white/[0.06]'
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Stil Seçimi */}
-          <div>
-            <label className="text-[8px] font-black uppercase tracking-widest text-white/25 block mb-2">Oyun Stilini Değiştir</label>
-            <div className="grid grid-cols-2 gap-2">
-              {STRATEGY_TACTICS.map(t => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setDraftTactic(t.id)}
-                  className={`px-3 py-3 rounded-xl text-left transition-all border ${
-                    draftTactic === t.id
-                      ? 'bg-amber-500/15 border-amber-500/25'
-                      : 'bg-white/[0.02] border-white/[0.04] hover:bg-white/[0.04]'
-                  }`}
-                >
-                  <span className="text-base">{t.icon}</span>
-                  <p className={`text-[10px] font-black uppercase mt-1 ${draftTactic === t.id ? 'text-amber-300' : 'text-white/40'}`}>{t.label}</p>
-                  <p className={`text-[8px] mt-0.5 ${draftTactic === t.id ? 'text-amber-400/50' : 'text-white/20'}`}>{t.desc}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Uygulama Butonu */}
-          <button
-            type="button"
-            onClick={() => onApply(draftFormation, draftTactic)}
-            disabled={!hasChanges || isApplying}
-            className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-              hasChanges && !isApplying
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30'
-                : 'bg-white/[0.02] text-white/20 border border-white/[0.06] cursor-not-allowed'
-            }`}
-          >
-            {isApplying ? '⏳ Taktiğe müdahale ediliyor...' : hasChanges ? '✅ Kulübeden Talimatı Ver' : '— Değişiklik Yok —'}
-          </button>
-
-          {lastApplied && (
-            <p className="text-[8px] text-center text-white/15">Son talimat saati: {lastApplied}</p>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
 
 // ═══════════════════════════════════════════════════════════════
 // ANA SAYFA BİLEŞENİ
-// ═══════════════════════════════════════════════════════════════
-
 export default function MatchPage() {
   const params = useParams();
   const router = useRouter();
@@ -1255,22 +696,15 @@ export default function MatchPage() {
                   exit={{ opacity: 0, y: -8 }}
                   className="space-y-3"
                 >
-                  <div className="flex items-center gap-2 px-1 mb-2">
-                    <Zap size={14} className="text-amber-400" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/30">
-                      Maç Anlatımı
-                    </span>
-                    <span className="text-[9px] text-white/15">({events.length} olay)</span>
-                  </div>
                   {events.length > 0 ? (
                     <MatchCommentary
                       events={events.map((e): MatchEvent => ({
                         minute: e.minute,
-                        type: (e.event_type?.toUpperCase() === 'PENALTY_GOAL' ? 'GOAL'
-                          : e.event_type?.toUpperCase() === 'OWN_GOAL' ? 'GOAL'
+                        type: (e.event_type?.toUpperCase() === 'PENALTY_GOAL' ? 'PENALTY_GOAL'
+                          : e.event_type?.toUpperCase() === 'OWN_GOAL' ? 'OWN_GOAL'
                           : e.event_type?.toUpperCase() === 'YELLOW_CARD' ? 'YELLOW'
                           : e.event_type?.toUpperCase() === 'RED_CARD' ? 'RED'
-                          : e.event_type?.toUpperCase() === 'SECOND_YELLOW' ? 'RED'
+                          : e.event_type?.toUpperCase() === 'SECOND_YELLOW' ? 'SECOND_YELLOW'
                           : e.event_type?.toUpperCase() === 'INJURY' ? 'INJURY'
                           : e.event_type?.toUpperCase() === 'SUBSTITUTION' ? 'SUB'
                           : e.event_type?.toUpperCase() === 'HALFTIME' ? 'HALFTIME'
@@ -1283,9 +717,25 @@ export default function MatchPage() {
                         team: (e.team?.toUpperCase() === 'HOME' || e.team?.toLowerCase() === 'home') ? 'HOME' as const
                           : (e.team?.toUpperCase() === 'AWAY' || e.team?.toLowerCase() === 'away') ? 'AWAY' as const
                           : undefined,
+                        // Trait tabanlı yorum üretimi için bağlam verileri
+                        detail: e.detail || undefined,
+                        homeTeamName: homeName,
+                        awayTeamName: awayName,
+                        matchType: getMatchType({
+                          tur: fixture?.tur || 1,
+                          home_team_id: fixture?.home_team_id || '',
+                          away_team_id: fixture?.away_team_id || '',
+                          is_friendly: fixture?.is_friendly,
+                        }),
                       }))}
                       homeTeam={homeName}
                       awayTeam={awayName}
+                      matchType={getMatchType({
+                        tur: fixture?.tur || 1,
+                        home_team_id: fixture?.home_team_id || '',
+                        away_team_id: fixture?.away_team_id || '',
+                        is_friendly: fixture?.is_friendly,
+                      })}
                     />
                   ) : (
                     <div className="text-center py-8">

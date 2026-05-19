@@ -60,7 +60,7 @@ export default function OperationRoom({ trainingState, budget, onUpdateState, on
         </div>
         <div className="text-right">
           <div className="text-[10px] text-white/20 font-black uppercase mb-1">Operasyon Bütçesi</div>
-          <div className="text-xl font-mono font-bold text-emerald-400 tracking-tighter">{budget.toLocaleString()} Kredi</div>
+          <div className="text-xl font-mono font-bold text-emerald-400 tracking-tighter">{budget.toLocaleString()} €</div>
         </div>
       </div>
 
@@ -142,7 +142,7 @@ export default function OperationRoom({ trainingState, budget, onUpdateState, on
                 <div className={`px-2 py-0.5 border text-[8px] font-black uppercase ${tierStyle}`}>
                   TIER {op.tier} {isDefense ? '// DEFENSIVE' : '// OFFENSIVE'}
                 </div>
-                <div className="text-[10px] font-mono font-bold text-white/40 mr-6">{op.cost.toLocaleString()} Kredi</div>
+                <div className="text-[10px] font-mono font-bold text-white/40 mr-6">{op.cost.toLocaleString()} €</div>
               </div>
               
               <div className="flex items-start gap-3">

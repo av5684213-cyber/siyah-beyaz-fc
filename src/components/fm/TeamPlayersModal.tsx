@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Shield, Users, Info } from 'lucide-react';
+import { useDraggableModal } from '@/hooks/useDraggableModal';
 import type { Player } from '@/lib/fm/types';
 import PlayerRow from './PlayerRow';
 import { toTitleCase } from '@/lib/fm/ui-helpers';
@@ -16,6 +17,8 @@ interface TeamPlayersModalProps {
 }
 
 export default function TeamPlayersModal({ teamName, players, loading, onClose, onPlayerClick }: TeamPlayersModalProps) {
+  const { modalRef, handleRef, position, isDragging } = useDraggableModal();
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
@@ -26,13 +29,28 @@ export default function TeamPlayersModal({ teamName, players, loading, onClose, 
           onClick={onClose}
           className="absolute inset-0 bg-black/90 backdrop-blur-md"
         />
-        
+
         <motion.div
+          ref={modalRef}
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           className="relative w-full max-w-5xl max-h-[90vh] bg-zinc-900 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col"
+          style={{ transform: `translate(${position.x}px, ${position.y}px)`, userSelect: isDragging ? 'none' : 'auto' }}
         >
+          {/* Drag Handle */}
+          <div
+            ref={handleRef}
+            className="flex items-center justify-center px-4 py-1 bg-zinc-900 border-b border-white/[0.04] cursor-grab active:cursor-grabbing hover:bg-zinc-800/50 transition-colors select-none rounded-t-[2rem]"
+            title="Sürüklemek için tutun · Çift tıklayın: sıfırla"
+          >
+            <div className="flex items-center gap-2 text-white/20">
+              <div className="w-10 h-1 rounded-full bg-white/15" />
+              <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+              <div className="w-10 h-1 rounded-full bg-white/15" />
+            </div>
+          </div>
+
           {/* Header */}
           <div className="p-6 border-b border-white/5 bg-gradient-to-r from-zinc-900 to-black shrink-0">
             <div className="flex items-center justify-between">

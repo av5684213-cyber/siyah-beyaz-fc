@@ -143,7 +143,7 @@ export function calculateWeeklyRevenue(
       amount: ticketRevenue,
       frequency: 'per_match',
       isVariable: true,
-      calculation: `seyirci (${actualAttendance.toLocaleString('tr-TR')}) × bilet fiyatı (${ticketPrice} Kredi)`,
+      calculation: `seyirci (${actualAttendance.toLocaleString('tr-TR')}) × bilet fiyatı (${ticketPrice} €)`,
     });
 
     // VIP / Hospitality revenue ≈ 8 % of ticket revenue
@@ -170,7 +170,7 @@ export function calculateWeeklyRevenue(
       amount: merchRevenue,
       frequency: 'per_match',
       isVariable: true,
-      calculation: `temel matrah ${merchBase.toLocaleString('tr-TR')} Kredi × itibar çarpanı (${(profile.reputation / 50).toFixed(2)})`,
+      calculation: `temel matrah ${merchBase.toLocaleString('tr-TR')} € × itibar çarpanı (${(profile.reputation / 50).toFixed(2)})`,
     });
 
     // Parking & F&B
@@ -183,7 +183,7 @@ export function calculateWeeklyRevenue(
       amount: parkingFbRevenue,
       frequency: 'per_match',
       isVariable: true,
-      calculation: `seyirci (${actualAttendance.toLocaleString('tr-TR')}) × ortalama 12 Kredi`,
+      calculation: `seyirci (${actualAttendance.toLocaleString('tr-TR')}) × ortalama 12 €`,
     });
   }
 
@@ -233,7 +233,7 @@ export function calculateWeeklyRevenue(
     amount: kitWeekly,
     frequency: 'weekly',
     isVariable: true,
-    calculation: `temel 8.000 Kredi × itibar çarpanı (${(profile.reputation / 50).toFixed(2)})`,
+    calculation: `temel 8.000 € × itibar çarpanı (${(profile.reputation / 50).toFixed(2)})`,
   });
 
   // Commercial partner income based on reputation
@@ -247,7 +247,7 @@ export function calculateWeeklyRevenue(
       amount: partnerIncome,
       frequency: 'weekly',
       isVariable: true,
-      calculation: `itibar (${profile.reputation}) × 200 Kredi`,
+      calculation: `itibar (${profile.reputation}) × 200 €`,
     });
   }
 
@@ -265,7 +265,7 @@ export function calculateWeeklyRevenue(
     amount: baseWeeklyBroadcast,
     frequency: 'weekly',
     isVariable: false,
-    calculation: `temel 350.000 Kredi × lig seviye çarpanı (${tierMultiplier})`,
+    calculation: `temel 350.000 € × lig seviye çarpanı (${tierMultiplier})`,
   });
 
   // Per-match broadcast bonus
@@ -279,7 +279,7 @@ export function calculateWeeklyRevenue(
       amount: matchBonus,
       frequency: 'per_match',
       isVariable: true,
-      calculation: `120.000 Kredi × lig seviye çarpanı (${tierMultiplier})`,
+      calculation: `120.000 € × lig seviye çarpanı (${tierMultiplier})`,
     });
   }
 
@@ -294,7 +294,7 @@ export function calculateWeeklyRevenue(
       amount: posBonus,
       frequency: 'weekly',
       isVariable: true,
-      calculation: `lig pozisyonu ${leaguePosition} → 30.000 Kredi × (10 - ${leaguePosition}) × seviye çarpanı`,
+      calculation: `lig pozisyonu ${leaguePosition} → 30.000 € × (10 - ${leaguePosition}) × seviye çarpanı`,
     });
   }
 
@@ -314,7 +314,7 @@ export function calculateWeeklyRevenue(
       amount: weeklyAmortisedTransfer,
       frequency: 'weekly',
       isVariable: true,
-      calculation: `ortalama satış ${avgTransferIncomePerSale.toLocaleString('tr-TR')} Kredi × sezon başı ${estimatedSalesPerSeason} satış / 42 hafta`,
+      calculation: `ortalama satış ${avgTransferIncomePerSale.toLocaleString('tr-TR')} € × sezon başı ${estimatedSalesPerSeason} satış / 42 hafta`,
     });
   }
 
@@ -337,7 +337,7 @@ export function calculateWeeklyRevenue(
         amount: weeklyPrize,
         frequency: 'weekly',
         isVariable: true,
-        calculation: `lig ${tier}. seviye havuz ${pool.toLocaleString('tr-TR')} Kredi × pozisyon payı ${(positionShare * 100).toFixed(1)}% / 42 hafta`,
+        calculation: `lig ${tier}. seviye havuz ${pool.toLocaleString('tr-TR')} € × pozisyon payı ${(positionShare * 100).toFixed(1)}% / 42 hafta`,
       });
     }
   }
@@ -354,7 +354,7 @@ export function calculateWeeklyRevenue(
       amount: weeklyCupPrize,
       frequency: 'weekly',
       isVariable: true,
-      calculation: `itibar çarpanı (${(profile.reputation / 50).toFixed(2)}) × temel 200.000 Kredi / 42 hafta`,
+      calculation: `itibar çarpanı (${(profile.reputation / 50).toFixed(2)}) × temel 200.000 € / 42 hafta`,
     });
   }
 

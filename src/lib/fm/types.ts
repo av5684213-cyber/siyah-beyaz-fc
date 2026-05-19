@@ -294,12 +294,44 @@ export interface SeasonAwardCeremony {
   badge: SeasonBadge | null;
 }
 
+export type MatchEventType = 'GOAL' | 'YELLOW' | 'RED' | 'SUB' | 'INJURY' | 'COMMENTARY' | 'HALFTIME' | 'FULLTIME' | 'OFFSIDE' | 'CORNER' | 'PENALTY_GOAL' | 'OWN_GOAL' | 'SECOND_YELLOW';
+
+export type MatchType = 'normal' | 'derby' | 'cup' | 'friendly' | 'cup_final';
+
+export type GoalType = 'plase' | 'header' | 'one_touch' | 'long_shot' | 'sprint_finish' | 'postup_turn' | 'penalty' | 'freekick' | 'own_goal' | 'unknown';
+
 export interface MatchEvent {
   minute: number;
-  type: 'GOAL' | 'YELLOW' | 'RED' | 'SUB' | 'INJURY' | 'COMMENTARY' | 'HALFTIME' | 'FULLTIME' | 'OFFSIDE' | 'CORNER';
+  type: MatchEventType;
   text: string;
   player?: string;
   team?: 'HOME' | 'AWAY';
+  /** Maç türü (derbi, kupa, hazırlık vs.) - yorum üretimi için */
+  matchType?: MatchType;
+  /** Oyuncunun pozitif trait'leri - yorum üretimi için */
+  playerTraits?: string[];
+  /** Oyuncunun negatif trait'leri - yorum üretimi için */
+  playerNegTraits?: string[];
+  /** Oyuncunun kişilik trait'leri - yorum üretimi için */
+  playerPersonality?: string[];
+  /** Ev sahibi skor (olay sonrası) */
+  homeScore?: number;
+  /** Deplasman skor (olay sonrası) */
+  awayScore?: number;
+  /** Gol tipi (GOAL olaylarında) */
+  goalType?: GoalType;
+  /** Eski takımına karşı mı oynuyor? */
+  isFormerPlayer?: boolean;
+  /** Ev sahibi takım adı */
+  homeTeamName?: string;
+  /** Deplasman takım adı */
+  awayTeamName?: string;
+  /** Oyuncunun maçtaki gol sayısı (hat-trick vs. için) */
+  playerGoalCount?: number;
+  /** Asist yapan oyuncu adı */
+  assistPlayer?: string;
+  /** Detay metni (kart nedeni, sakatlık tipi vs.) */
+  detail?: string;
 }
 
 export interface MatchResult {

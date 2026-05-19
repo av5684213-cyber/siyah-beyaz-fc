@@ -367,13 +367,13 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
             </div>
             <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 text-center">
               <span className="text-[8px] text-emerald-400/40 uppercase font-bold tracking-widest">Bilet Geliri</span>
-              <p className="text-sm font-black font-mono text-emerald-400 mt-1">{attendancePreview.revenue.toLocaleString('tr-TR')} Kredi</p>
+              <p className="text-sm font-black font-mono text-emerald-400 mt-1">{attendancePreview.revenue.toLocaleString('tr-TR')} €</p>
             </div>
           </div>
           <div className="mt-2 flex items-center gap-2">
-            <span className="text-[7px] text-white/15 uppercase tracking-widest">Bilet: {attendancePreview.ticketPrice} Kredi</span>
+            <span className="text-[7px] text-white/15 uppercase tracking-widest">Bilet: {attendancePreview.ticketPrice} €</span>
             <span className="text-[7px] text-white/10">•</span>
-            <span className="text-[7px] text-white/15 uppercase tracking-widest">Yiyecek/İçecek: 15 Kredi/kişi</span>
+            <span className="text-[7px] text-white/15 uppercase tracking-widest">Yiyecek/İçecek: 15 €/kişi</span>
           </div>
         </div>
       )}
@@ -481,12 +481,12 @@ export function DashboardTab({
                onClick={() => {
                  if (profile) {
                    setProfile({ ...profile, money: (profile.money || 0) + 100000000 });
-                   alert('HESABA 100M Kredi EKLENDİ!');
+                   alert('HESABA 100M € EKLENDİ!');
                  }
                }}
                className="bg-black/40 border border-red-600/20 p-4 rounded-2xl flex flex-col items-center gap-2 hover:bg-red-600/20 transition-all text-xs font-black uppercase tracking-widest text-red-400"
              >
-               <Wallet size={16} /> +100M Kredi
+               <Wallet size={16} /> +100M €
              </button>
              <button 
                onClick={() => {
@@ -587,7 +587,7 @@ export function DashboardTab({
          {[
            { label: 'Kadro Genişliği', value: squad.length, icon: Users, sub: 'Oyuncu' },
            { label: 'Takım Kalitesi', value: teamAvgStats.rating, icon: TrendingUp, sub: 'Genel Ort.' },
-           { label: 'Finansal Durum', value: `${((profile?.money || 0) / 1000000).toFixed(1)}M Kredi`, icon: Wallet, sub: 'Kullanılabilir' },
+           { label: 'Finansal Durum', value: `${((profile?.money || 0) / 1000000).toFixed(1)}M €`, icon: Wallet, sub: 'Kullanılabilir' },
            { label: 'Sezon İlerlemesi', value: profile?.current_day || 1, icon: CalendarDays, sub: 'Mevcut Gün' }
          ].map((stat, i) => (
            <div key={i} className="fm-card p-5 group relative overflow-hidden">
@@ -644,7 +644,7 @@ export function DashboardTab({
                      </div>
                    </div>
                    <div className="flex items-center gap-3 shrink-0">
-                     <span className="text-xs font-black text-emerald-400">{(offer.amount / 1000000).toFixed(1)}M Kredi</span>
+                     <span className="text-xs font-black text-emerald-400">{(offer.amount / 1000000).toFixed(1)}M €</span>
                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider border rounded-full ${sc.color}`}>
                        {sc.icon} {sc.label}
                      </span>

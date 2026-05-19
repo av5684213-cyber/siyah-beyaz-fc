@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useDraggableModal } from '@/hooks/useDraggableModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Trophy, Star, Shield, Target, Users, Award, TrendingUp, ArrowDown, ChevronRight } from 'lucide-react';
 import type { SeasonAwardCeremony, SeasonAward, SeasonSummary, SeasonBadge, AwardType } from '@/lib/fm/types';
@@ -211,6 +212,8 @@ export default function SeasonAwardsModal({
 
   if (!isOpen) return null;
 
+  const { modalRef, handleRef, position, isDragging } = useDraggableModal();
+
   return (
     <AnimatePresence>
       <motion.div
@@ -221,13 +224,28 @@ export default function SeasonAwardsModal({
         onClick={onClose}
       >
         <motion.div
+          ref={modalRef}
           initial={{ scale: 0.8, y: 50 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.8, y: 50 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="bg-[#0a0e14] border border-white/[0.08] rounded-[2rem] w-full max-w-lg max-h-[85vh] overflow-hidden"
+          className="bg-[#0a0e14] border border-white/[0.08] rounded-[2rem] w-full max-w-lg max-h-[85vh] overflow-hidden relative"
           onClick={e => e.stopPropagation()}
+          style={{ transform: `translate(${position.x}px, ${position.y}px)`, userSelect: isDragging ? 'none' : 'auto' }}
         >
+          {/* Drag Handle */}
+          <div
+            ref={handleRef}
+            className="flex items-center justify-center px-4 py-1 bg-[#0a0e14] border-b border-white/[0.04] cursor-grab active:cursor-grabbing hover:bg-white/[0.02] transition-colors select-none"
+            title="Sürüklemek için tutun · Çift tıklayın: sıfırla"
+          >
+            <div className="flex items-center gap-2 text-white/20">
+              <div className="w-10 h-1 rounded-full bg-white/15" />
+              <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+              <div className="w-10 h-1 rounded-full bg-white/15" />
+            </div>
+          </div>
+
           {/* Header */}
           <div className="relative bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-amber-500/10 border-b border-white/[0.06] p-6">
             <button

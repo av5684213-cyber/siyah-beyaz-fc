@@ -133,7 +133,7 @@ function generateArticles(profile: Profile, squad: Player[]): NewsArticle[] {
         id: 'rumor-top',
         category: 'rumor',
         title: `${club.toUpperCase()} ${topPlayer.name?.toUpperCase() || 'YILDIZ'} İÇİN DEVREDE!`,
-        summary: `${club}, ${teamName}'nın yıldız oyuncusu ${topPlayer.name || 'isimsiz'} için gizli görüşme başlattığı iddia edildi. Oyuncunun piyasası ${((topPlayer.market_value || 0) / 1000000).toFixed(1)}M Kredi seviyesinde.`,
+        summary: `${club}, ${teamName}'nın yıldız oyuncusu ${topPlayer.name || 'isimsiz'} için gizli görüşme başlattığı iddia edildi. Oyuncunun piyasası ${((topPlayer.market_value || 0) / 1000000).toFixed(1)}M € seviyesinde.`,
         importance: 4,
         timestamp: new Date().toISOString(),
         impact: { morale: -3, reputation: 2 },

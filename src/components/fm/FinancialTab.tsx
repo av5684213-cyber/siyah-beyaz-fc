@@ -59,13 +59,13 @@ interface FinancialTabProps {
 // ─── Helpers ────────────────────────────────────────────────────────
 
 function fmtMoney(n: number): string {
-  if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M Kredi`;
-  if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(0)}K Kredi`;
-  return `${n.toLocaleString('tr-TR')} Kredi`;
+  if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M €`;
+  if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(0)}K €`;
+  return `${n.toLocaleString('tr-TR')} €`;
 }
 
 function fmtMoneyFull(n: number): string {
-  return `${n.toLocaleString('tr-TR')} Kredi`;
+  return `${n.toLocaleString('tr-TR')} €`;
 }
 
 function healthConfig(status: FinancialHealthStatus) {

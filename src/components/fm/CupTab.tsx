@@ -41,9 +41,9 @@ interface CupTabProps {
 // ─── Helpers ────────────────────────────────────────────────────────
 
 function fmtMoney(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M Kredi`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K Kredi`;
-  return `${n.toLocaleString('tr-TR')} Kredi`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M €`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K €`;
+  return `${n.toLocaleString('tr-TR')} €`;
 }
 
 function importanceColor(importance: string): string {

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useDraggableModal } from '@/hooks/useDraggableModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, FlaskConical, Wind, CloudRain, Snowflake, 
@@ -500,6 +501,8 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
     setSelectingPlayerFor(null);
   };
 
+  const { modalRef, handleRef, position, isDragging } = useDraggableModal();
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -507,9 +510,25 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 md:p-8"
     >
-      <div className="w-full h-full max-w-7xl bg-zinc-950 border border-white/10 rounded-[2rem] overflow-hidden flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.8)]">
-        
-        <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between bg-gradient-to-r from-blue-950/20 to-transparent">
+      <div
+        ref={modalRef}
+        className="w-full h-full max-w-7xl bg-zinc-950 border border-white/10 rounded-[2rem] overflow-hidden flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.8)]"
+        style={{ transform: `translate(${position.x}px, ${position.y}px)`, userSelect: isDragging ? 'none' : 'auto' }}
+      >
+        {/* Drag Handle */}
+        <div
+          ref={handleRef}
+          className="flex items-center justify-center px-4 py-1 bg-gradient-to-r from-blue-950/20 to-transparent border-b border-white/[0.04] cursor-grab active:cursor-grabbing hover:bg-blue-950/30 transition-colors select-none"
+          title="Sürüklemek için tutun · Çift tıklayın: sıfırla"
+        >
+          <div className="flex items-center gap-2 text-white/20">
+            <div className="w-10 h-1 rounded-full bg-white/15" />
+            <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+            <div className="w-10 h-1 rounded-full bg-white/15" />
+          </div>
+        </div>
+
+        <div className="px-8 py-4 border-b border-white/5 flex items-center justify-between bg-gradient-to-r from-blue-950/20 to-transparent">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-[0_0_30px_rgba(37,99,235,0.3)]">
               <FlaskConical className="text-white" size={24} />

@@ -25,13 +25,15 @@ import {
   Repeat,
   CircleDollarSign,
   TrendingUp,
-  ShieldCheck
+  ShieldCheck,
+  Globe
 } from 'lucide-react';
 import { useFM } from '@/lib/fm/GameContext';
 import { Player, Sponsor } from '@/lib/fm/types';
 import { formatCurrency } from '@/lib/fm/valuation';
-import { toTitleCase } from '@/lib/fm/ui-helpers';
+import { toTitleCase, localizePosFull, getPosBadgeStyle, getPosGroup } from '@/lib/fm/ui-helpers';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { calculateLoanFeeEuro } from '@/lib/fm/inflation';
 
 // ─── Suggested salary based on rating ───
 function getSuggestedSalary(rating: number): number {
@@ -48,8 +50,9 @@ function getSalaryRange(rating: number): { min: number; max: number } {
 
 export default function MarketTab() {
   const { league, profile, negotiatePurchase, addSponsor } = useFM();
-  const [activeSubTab, setActiveSubTab] = useState<'transfers' | 'sponsors'>('transfers');
+  const [activeSubTab, setActiveSubTab] = useState<'transfers' | 'sponsors' | 'kiralik'>('transfers');
   const [searchTerm, setSearchTerm] = useState('');
+  const [positionFilter, setPositionFilter] = useState('ALL');
   const [negotiatingPlayer, setNegotiatingPlayer] = useState<Player | null>(null);
   const [offerAmount, setOfferAmount] = useState<number>(0);
   const [negotiationResult, setNegotiationResult] = useState<{ success: boolean; message: string; counterOffer?: number } | null>(null);
@@ -73,6 +76,10 @@ export default function MarketTab() {
     if (player.market_value && player.market_value > 0) return player.market_value;
     return Math.round(Math.pow(player.rating || 60, 2.5) * 5000);
   };
+
+  // ── Kiralık oyuncular state ──
+  const [loanPlayers, setLoanPlayers] = useState<any[]>([]);
+  const [loanLoading, setLoanLoading] = useState(false);
 
   // ── Fetch transfer market listings + free agents ──
   const [transferListings, setTransferListings] = useState<Player[]>([]);
@@ -106,6 +113,7 @@ export default function MarketTab() {
             return {
               ...pd,
               id: l.player_id as string,
+              specificPosition: (pd.specific_position as string) || (pd.specificPosition as string) || pd.position as string,
               market_value: l.price as number,
               is_for_sale: true,
               is_auction: l.is_auction as boolean,
@@ -130,6 +138,7 @@ export default function MarketTab() {
           id: p.id as string,
           name: p.name as string,
           position: p.position as string,
+          specificPosition: (p.specific_position as string) || (p.specificPosition as string) || p.position as string,
           rating: (p.rating as number) ?? 60,
           potential: (p.potential as number) ?? (p.rating as number) ?? 70,
           age: p.age as number,
@@ -151,6 +160,35 @@ export default function MarketTab() {
     fetchMarketPlayers();
   }, [fetchMarketPlayers]);
 
+  // ── Fetch loan players when Kiralık tab is active ──
+  const fetchLoanPlayers = useCallback(async () => {
+    if (!isSupabaseConfigured() || !profile) return;
+    setLoanLoading(true);
+    try {
+      const res = await fetch(`/api/loans/available?profileId=${profile.id}`);
+      const data = await res.json();
+      if (data.players && Array.isArray(data.players)) {
+        setLoanPlayers(data.players);
+      } else if (data.error) {
+        console.error('[fetchLoanPlayers] API error:', data.error);
+        setLoanPlayers([]);
+      } else {
+        setLoanPlayers([]);
+      }
+    } catch (err) {
+      console.error('[fetchLoanPlayers] Error:', err);
+      setLoanPlayers([]);
+    } finally {
+      setLoanLoading(false);
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    if (activeSubTab === 'kiralik') {
+      fetchLoanPlayers();
+    }
+  }, [activeSubTab, fetchLoanPlayers]);
+
   // Combine transfer-listed + free agents, filter by search
   const availablePlayers = useMemo(() => {
     const myTeam = profile?.team_name || '';
@@ -165,12 +203,31 @@ export default function MarketTab() {
       return true;
     });
 
-    return unique.filter((p: Player) =>
-      !p?.club?.includes(myTeam) &&
-      !p?.team_name?.includes(myTeam) &&
-      (p?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-    ).slice(0, 50);
-  }, [transferListings, freeAgents, profile?.team_name, searchTerm]);
+    return unique.filter((p: Player) => {
+      if (p?.club?.includes(myTeam) || p?.team_name?.includes(myTeam)) return false;
+      const term = searchTerm.toLowerCase();
+      const nameMatch = (p?.name || '').toLowerCase().includes(term);
+      const posDisplay = (p as any).specificPosition || (p as any).specific_position || p.position || '';
+      const posMatch = posDisplay.toLowerCase().includes(term) || localizePosFull(posDisplay).toLowerCase().includes(term);
+      if (term && !nameMatch && !posMatch) return false;
+      if (positionFilter !== 'ALL') {
+        const bigPosMap: Record<string, string> = {
+          'GK': 'GK', 'CB': 'DEF', 'LB': 'DEF', 'RB': 'DEF', 'LWB': 'DEF', 'RWB': 'DEF', 'DEF': 'DEF',
+          'CDM': 'MID', 'CM': 'MID', 'CAM': 'MID', 'LM': 'MID', 'RM': 'MID', 'LW': 'MID', 'RW': 'MID', 'MID': 'MID',
+          'ST': 'FWD', 'CF': 'FWD', 'FWD': 'FWD'
+        };
+        const playerPos = posDisplay;
+        const filterGroup = bigPosMap[positionFilter];
+        if (filterGroup) {
+          const playerBigPos = bigPosMap[playerPos] || playerPos;
+          if (playerBigPos !== filterGroup) return false;
+        } else {
+          if (playerPos !== positionFilter) return false;
+        }
+      }
+      return true;
+    }).slice(0, 50);
+  }, [transferListings, freeAgents, profile?.team_name, searchTerm, positionFilter]);
 
   const handleOpenNegotiation = (player: Player) => {
     setNegotiatingPlayer(player);
@@ -258,6 +315,13 @@ export default function MarketTab() {
             Transfer Pazarı
           </button>
           <button 
+            onClick={() => setActiveSubTab('kiralik')}
+            className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 ${activeSubTab === 'kiralik' ? 'bg-cyan-500 text-white' : 'text-white/40 hover:text-white'}`}
+          >
+            <Globe size={12} />
+            Kiralık
+          </button>
+          <button 
             onClick={() => setActiveSubTab('sponsors')}
             className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeSubTab === 'sponsors' ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}
           >
@@ -268,16 +332,53 @@ export default function MarketTab() {
 
       {activeSubTab === 'transfers' ? (
         <div className="space-y-6">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-            <input 
-              type="text" 
-              placeholder="OYUNCU ARA..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-xs font-black uppercase tracking-widest focus:outline-none focus:border-white/30 transition-all"
-            />
+          {/* Search Bar & Position Filter */}
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
+              <input 
+                type="text" 
+                placeholder="OYUNCU ARA..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-xs font-black uppercase tracking-widest focus:outline-none focus:border-white/30 transition-all"
+              />
+            </div>
+            <div className="w-full md:w-56">
+              <select 
+                value={positionFilter}
+                onChange={(e) => setPositionFilter(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-4 text-xs font-black uppercase tracking-widest focus:outline-none focus:border-white/30 transition-all appearance-none cursor-pointer text-white/60"
+              >
+                <option value="ALL">Tüm Mevkiler</option>
+                <optgroup label="Kaleci">
+                  <option value="GK">GK — Kaleci</option>
+                </optgroup>
+                <optgroup label="Defans">
+                  <option value="DEF">Tüm Defans</option>
+                  <option value="CB">CB — Stoper</option>
+                  <option value="LB">LB — Sol Bek</option>
+                  <option value="RB">RB — Sağ Bek</option>
+                  <option value="LWB">LWB — Sol Kanat Bek</option>
+                  <option value="RWB">RWB — Sağ Kanat Bek</option>
+                </optgroup>
+                <optgroup label="Orta Saha">
+                  <option value="MID">Tüm Orta Saha</option>
+                  <option value="CDM">CDM — Defansif Orta Saha</option>
+                  <option value="CM">CM — Merkez Orta Saha</option>
+                  <option value="CAM">CAM — Ofansif Orta Saha</option>
+                  <option value="LM">LM — Sol Açık</option>
+                  <option value="RM">RM — Sağ Açık</option>
+                  <option value="LW">LW — Sol Kanat</option>
+                  <option value="RW">RW — Sağ Kanat</option>
+                </optgroup>
+                <optgroup label="Forvet">
+                  <option value="FWD">Tüm Forvet</option>
+                  <option value="CF">CF — İkinci Forvet</option>
+                  <option value="ST">ST — Santrfor</option>
+                </optgroup>
+              </select>
+            </div>
           </div>
 
           {/* Player Grid */}
@@ -312,7 +413,7 @@ export default function MarketTab() {
                         <span className="px-1.5 py-0.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[7px] font-black uppercase tracking-widest rounded">LİSTEDE</span>
                       ) : null}
                     </div>
-                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">{player.position} • {player.age} YAŞ • {player.nation}</p>
+                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">{(player as any).specificPosition || (player as any).specific_position || player.position} • {player.age} YAŞ • {player.nation}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{formatCurrency(getEffectiveMarketValue(player))}</p>
@@ -320,7 +421,11 @@ export default function MarketTab() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 mb-4 text-center">
+                <div className="grid grid-cols-4 gap-2 mb-4 text-center">
+                  <div className={`p-2 rounded-lg border ${getPosBadgeStyle((player as any).specificPosition || (player as any).specific_position || player.position)} border`}>
+                    <p className="text-[8px] uppercase font-black opacity-60">{localizePosFull((player as any).specificPosition || (player as any).specific_position || player.position)}</p>
+                    <p className="text-xs font-black">{(player as any).specificPosition || (player as any).specific_position || player.position}</p>
+                  </div>
                   <div className="bg-white/5 p-2 rounded-lg">
                     <p className="text-[8px] text-white/30 uppercase font-black">Rating</p>
                     <p className="text-xs font-black text-white">{player.rating}</p>
@@ -345,6 +450,117 @@ export default function MarketTab() {
             ))
             )}
           </div>
+        </div>
+      ) : activeSubTab === 'kiralik' ? (
+        <div className="space-y-6">
+          {/* Kiralık Oyuncular Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center border border-cyan-500/20">
+                <Globe size={20} className="text-cyan-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Kiralık Oyuncular</h3>
+                <p className="text-[9px] text-white/30 font-bold uppercase tracking-wider">Diğer takımların kiralık pazara çıkardığı oyuncular</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => fetchLoanPlayers()}
+              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-[9px] font-bold uppercase tracking-wider text-white/40 hover:text-white transition-all rounded-lg border border-white/5"
+            >
+              Yenile
+            </button>
+          </div>
+
+          {/* Loan Players Grid */}
+          {loanLoading ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500/40 rounded-full animate-spin" />
+              <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Kiralık oyuncular yükleniyor</p>
+            </div>
+          ) : loanPlayers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <Globe size={48} className="text-cyan-500/20" />
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-white/30">Kiralık oyuncu bulunmuyor</p>
+              <p className="text-[10px] text-white/20 text-center max-w-xs">
+                Diğer takımlar oyuncularını kiralık pazara çıkardığında burada görünecek.
+                Kendi oyuncularınızı da "Kiralık Olarak Gönder" seçeneği ile pazara çıkarabilirsiniz.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {loanPlayers.map((lp: any) => {
+                const loanFee = calculateLoanFeeEuro(lp.market_value || (lp.rating || 50) * 50000, profile?.current_day || 1);
+                const feeStr = loanFee >= 1_000_000 ? `${(loanFee / 1_000_000).toFixed(1)}M €` : loanFee >= 1_000 ? `${(loanFee / 1_000).toFixed(0)}K €` : `${loanFee} €`;
+                return (
+                  <motion.div
+                    key={lp.id}
+                    layout
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="fm-card p-5 group hover:border-cyan-500/20"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="text-sm font-black italic uppercase tracking-tighter text-white">{toTitleCase(lp.name)}</h4>
+                          <span className="px-1.5 py-0.5 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-[7px] font-black uppercase tracking-widest rounded">KİRALIK</span>
+                        </div>
+                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">
+                          {lp.specific_position || lp.position || '??'} • {lp.age || '?'} YAŞ • {lp.team_name || 'Bilinmeyen'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">{feeStr}</p>
+                        <p className="text-[9px] text-white/20 uppercase font-bold">Kiralık Ücret</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 mb-4 text-center">
+                      <div className="bg-white/5 p-2 rounded-lg">
+                        <p className="text-[8px] text-white/30 uppercase font-black">Rating</p>
+                        <p className="text-xs font-black text-white">{lp.rating || '?'}</p>
+                      </div>
+                      <div className="bg-white/5 p-2 rounded-lg">
+                        <p className="text-[8px] text-white/30 uppercase font-black">Pot.</p>
+                        <p className="text-xs font-black text-emerald-500">{lp.potential || '?'}</p>
+                      </div>
+                      <div className="bg-white/5 p-2 rounded-lg">
+                        <p className="text-[8px] text-white/30 uppercase font-black">Sahip</p>
+                        <p className="text-[8px] font-black text-white/60 truncate">{lp.owner_team_name || lp.team_name || '?'}</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={async () => {
+                        if (!profile?.id) return;
+                        if (!confirm(`${toTitleCase(lp.name)} oyuncusunu ${feeStr} + 10 Kredi karşılığında kiralamak istiyor musunuz?\n\n• ${feeStr} oyuncu sahibine ödenecek\n• 10 Kredi sistem komisyonu olarak düşülecek\n• Sezon sonunda oyuncu geri dönecek`)) return;
+                        try {
+                          const res = await fetch('/api/loans/request', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ playerId: lp.id, profileId: profile.id }),
+                          });
+                          const data = await res.json();
+                          if (data.success) {
+                            alert(`Oyuncu başarıyla kiralandı!\n• ${data.loanFeeEuroFormatted || feeStr} oyuncu sahibine ödendi\n• 10 Kredi sistem komisyonu düşüldü\nSezon sonunda oyuncu geri dönecek.`);
+                            fetchLoanPlayers();
+                          } else {
+                            alert(data.error || 'Kiralama başarısız.');
+                          }
+                        } catch (err) {
+                          alert('Bir hata oluştu.');
+                        }
+                      }}
+                      className="w-full py-3 bg-cyan-500/10 group-hover:bg-cyan-500 group-hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 text-cyan-400 border border-cyan-500/20 group-hover:border-cyan-500"
+                    >
+                      <Globe size={14} /> KİRALA (10 KR + Euro)
+                    </button>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </div>
       ) : activeSubTab === 'sponsors' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -436,7 +652,7 @@ export default function MarketTab() {
                 <div className="flex-1">
                    <h3 className="text-2xl font-black italic tracking-tighter text-white uppercase">{toTitleCase(negotiatingPlayer.name)}</h3>
                    <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">
-                     {negotiatingPlayer.position} • {negotiatingPlayer.age} YAŞ • {negotiatingPlayer.nation} • ⭐ {negotiatingPlayer.rating}
+                     {(negotiatingPlayer as any).specificPosition || (negotiatingPlayer as any).specific_position || negotiatingPlayer.position} • {localizePosFull((negotiatingPlayer as any).specificPosition || (negotiatingPlayer as any).specific_position || negotiatingPlayer.position)} • {negotiatingPlayer.age} YAŞ • {negotiatingPlayer.nation} • ⭐ {negotiatingPlayer.rating}
                    </p>
                 </div>
                 <div className="text-right">
@@ -520,7 +736,7 @@ export default function MarketTab() {
                           onChange={(e) => setWeeklySalary(Number(e.target.value))}
                           className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-base font-black text-amber-400 focus:outline-none focus:border-amber-500 transition-all pr-14"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-white/20 uppercase">Kredi / Hafta</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-white/20 uppercase">€ / Hafta</span>
                       </div>
                       <div className="flex gap-2 mt-3">
                         <button

@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'motion/react';
-import { Users, Search, Filter, ArrowLeft } from 'lucide-react';
+import { Users, Search, Filter, ArrowLeft, ShoppingCart, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { isSupabaseConfigured, getSupabase } from '@/lib/supabase';
 import { toTitleCase, formatPosBadge, getPosBadgeStyle, getPosGroup } from '@/lib/fm/ui-helpers';
+import { useFM } from '@/lib/fm/GameContext';
 import Link from 'next/link';
 
 interface FreeAgent {
@@ -38,10 +39,22 @@ export default function FreeAgentsPage() {
   const [search, setSearch] = useState('');
   const [posFilter, setPosFilter] = useState('ALL');
   const [sortBy, setSortBy] = useState<'rating' | 'age' | 'value'>('rating');
+  const [buyingPlayerId, setBuyingPlayerId] = useState<string | null>(null);
+  const [buyResult, setBuyResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const { profile, userId, onSetProfile } = useFM();
 
   useEffect(() => {
     fetchFreeAgents();
   }, []);
+
+  // Auto-dismiss buy result after 4 seconds
+  useEffect(() => {
+    if (buyResult) {
+      const timer = setTimeout(() => setBuyResult(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [buyResult]);
 
   const fetchFreeAgents = async () => {
     if (!isSupabaseConfigured()) return;
@@ -67,6 +80,44 @@ export default function FreeAgentsPage() {
       console.error('Free agents error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBuyFreeAgent = async (player: FreeAgent) => {
+    if (!userId) {
+      setBuyResult({ success: false, message: 'Oturum açmanız gerekiyor.' });
+      return;
+    }
+
+    const transferFee = player.market_value || (player.rating || 50) * 50000;
+    const feeStr = formatCurrency(transferFee);
+
+    if (!confirm(`${toTitleCase(player.name)} oyuncusunu ${feeStr} € karşılığında kadronuza katmak istiyor musunuz?`)) return;
+
+    setBuyingPlayerId(player.id);
+    try {
+      const res = await fetch('/api/free-agents/buy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId: player.id, profileId: userId }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setBuyResult({ success: true, message: `${toTitleCase(player.name)} kadroya katıldı! (${feeStr} €)` });
+        // Update local profile money
+        if (profile && onSetProfile) {
+          onSetProfile({ ...profile, money: data.moneyRemaining });
+        }
+        // Remove bought player from list
+        setPlayers(prev => prev.filter(p => p.id !== player.id));
+      } else {
+        setBuyResult({ success: false, message: data.error || 'Transfer başarısız.' });
+      }
+    } catch (err) {
+      setBuyResult({ success: false, message: 'Bir hata oluştu.' });
+    } finally {
+      setBuyingPlayerId(null);
     }
   };
 
@@ -103,10 +154,34 @@ export default function FreeAgentsPage() {
               <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Kadro dışı oyuncular — transfer pazarından kadroya katın</p>
             </div>
           </div>
-          <div className="text-[10px] font-black text-white/30 uppercase tracking-widest">
-            {filtered.length} OYUNCU
+          <div className="flex items-center gap-4">
+            {profile && (
+              <div className="text-[10px] font-black text-emerald-400/80 uppercase tracking-widest">
+                Bakiye: {formatCurrency(profile.money || 0)} €
+              </div>
+            )}
+            <div className="text-[10px] font-black text-white/30 uppercase tracking-widest">
+              {filtered.length} OYUNCU
+            </div>
           </div>
         </div>
+
+        {/* Buy Result Toast */}
+        {buyResult && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className={`flex items-center gap-3 p-4 rounded-xl border ${
+              buyResult.success
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                : 'bg-red-500/10 border-red-500/20 text-red-400'
+            }`}
+          >
+            {buyResult.success ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+            <span className="text-[11px] font-bold">{buyResult.message}</span>
+          </motion.div>
+        )}
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3 bg-zinc-900/50 p-4 rounded-2xl border border-white/5">
@@ -165,6 +240,9 @@ export default function FreeAgentsPage() {
                   secondaryPositions: player.secondary_positions,
                 });
                 const posStyle = getPosBadgeStyle(player.specific_position || player.position);
+                const transferFee = player.market_value || (player.rating || 50) * 50000;
+                const canAfford = (profile?.money || 0) >= transferFee;
+                const isBuying = buyingPlayerId === player.id;
 
                 return (
                   <motion.div
@@ -195,15 +273,39 @@ export default function FreeAgentsPage() {
                     </div>
                     <div className="text-right px-3">
                       <div className="text-[11px] font-black font-mono text-emerald-500/80">
-                        {formatCurrency(player.market_value || 0)}
+                        {formatCurrency(player.market_value || 0)} €
                       </div>
                       <div className="text-[7px] text-white/20 font-bold uppercase">Değer</div>
                     </div>
                     <div className="text-right px-2">
                       <div className="text-[11px] font-black font-mono text-white/40">
-                        {formatCurrency(player.salary || 0)}/ay
+                        {formatCurrency(player.salary || 0)} €/ay
                       </div>
                     </div>
+                    {/* Buy Button */}
+                    <button
+                      onClick={() => handleBuyFreeAgent(player)}
+                      disabled={isBuying || !canAfford}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${
+                        isBuying
+                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 opacity-70'
+                          : canAfford
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:text-emerald-300'
+                            : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
+                      }`}
+                    >
+                      {isBuying ? (
+                        <>
+                          <Loader2 size={12} className="animate-spin" />
+                          Alınıyor...
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart size={12} />
+                          Kadroya Kat
+                        </>
+                      )}
+                    </button>
                   </motion.div>
                 );
               })}

@@ -460,7 +460,7 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
            <div className="px-4 py-2 bg-black/40 border border-white/10 rounded-xl">
              <span className="text-[10px] font-black text-white/20 uppercase block leading-none mb-1">Bütçe</span>
              <span className="text-sm font-mono font-bold text-emerald-400 leading-none">
-               ${(profile?.money || 0).toLocaleString()}
+               €{(profile?.money || 0).toLocaleString()}
              </span>
            </div>
            <div className="px-4 py-2 bg-black/40 border border-white/10 rounded-xl">

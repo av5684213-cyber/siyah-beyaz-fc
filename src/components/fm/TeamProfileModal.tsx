@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useDraggableModal } from '@/hooks/useDraggableModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, 
@@ -243,22 +244,39 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
     return `${rowStyle} ${textColor}`;
   };
 
+  const { modalRef, handleRef, position, isDragging } = useDraggableModal();
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
         className="absolute inset-0 bg-black/80 backdrop-blur-md"
       />
-      
-      <motion.div 
+
+      <motion.div
+        ref={modalRef}
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
         className="w-full max-w-5xl bg-zinc-950 border border-white/10 rounded-[2rem] overflow-hidden relative z-10 flex flex-col max-h-[90vh]"
+        style={{ transform: `translate(${position.x}px, ${position.y}px)`, userSelect: isDragging ? 'none' : 'auto' }}
       >
+        {/* ═══ DRAG HANDLE ═══ */}
+        <div
+          ref={handleRef}
+          className="flex items-center justify-center px-4 py-1 bg-zinc-900 border-b border-white/[0.04] cursor-grab active:cursor-grabbing hover:bg-zinc-800/50 transition-colors select-none"
+          title="Sürüklemek için tutun · Çift tıklayın: sıfırla"
+        >
+          <div className="flex items-center gap-2 text-white/20">
+            <div className="w-10 h-1 rounded-full bg-white/15" />
+            <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+            <div className="w-10 h-1 rounded-full bg-white/15" />
+          </div>
+        </div>
+
         {/* ═══ HEADER PANEL ═══ */}
         <div className="p-8 bg-zinc-900 border-b border-white/5 relative">
           <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/5 blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />

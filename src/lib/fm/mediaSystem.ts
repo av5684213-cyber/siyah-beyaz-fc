@@ -630,7 +630,7 @@ export function generateWeeklyNews(options: WeeklyNewsOptions): MediaMessage[] {
           id: uid(),
           type: 'transfer',
           headline: headlines[Math.floor(Math.random() * headlines.length)],
-          body: `${teamName}, ${tr.club} kulübünden ${tr.playerName}'ı kadrosuna kattı${tr.fee ? ` (${tr.fee.toLocaleString('tr-TR')} Kredi)` : ''}. Taraftarlar transferden memnun.`,
+          body: `${teamName}, ${tr.club} kulübünden ${tr.playerName}'ı kadrosuna kattı${tr.fee ? ` (${tr.fee.toLocaleString('tr-TR')} €)` : ''}. Taraftarlar transferden memnun.`,
           date: now,
           importance: 4,
           teamImpact: { morale: 5, reputation: 3, fanMood: 8 },
@@ -645,7 +645,7 @@ export function generateWeeklyNews(options: WeeklyNewsOptions): MediaMessage[] {
           id: uid(),
           type: 'transfer',
           headline: headlines[Math.floor(Math.random() * headlines.length)],
-          body: `${teamName}, ${tr.playerName} ile yollarını ayırdı. Oyuncu ${tr.club} kulübüne${tr.fee ? ` ${tr.fee.toLocaleString('tr-TR')} Kredi karşılığında` : ''} transfer oldu.`,
+          body: `${teamName}, ${tr.playerName} ile yollarını ayırdı. Oyuncu ${tr.club} kulübüne${tr.fee ? ` ${tr.fee.toLocaleString('tr-TR')} € karşılığında` : ''} transfer oldu.`,
           date: now,
           importance: 3,
           teamImpact: { morale: -3, reputation: -1, fanMood: -5 },
@@ -1015,7 +1015,7 @@ export function generateMediaHeadline(event: HeadlineEvent): string {
     }
 
     case 'transfer_out': {
-      const feeText = event.fee ? ` ${event.fee.toLocaleString('tr-TR')} Kredi'ye` : '';
+      const feeText = event.fee ? ` ${event.fee.toLocaleString('tr-TR')} €'ye` : '';
       const headlines = [
         `${event.playerName?.toUpperCase()} ${teamName}'DAN AYRILIYOR!`,
         `VEDALAŞMA: ${event.playerName} GİDİYOR${feeText}!`,

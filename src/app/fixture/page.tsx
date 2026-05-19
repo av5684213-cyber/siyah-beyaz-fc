@@ -1,28 +1,32 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Calendar,
   Trophy,
-  Clock,
-  ChevronRight,
   ArrowLeft,
-  Shield,
-  Play,
-  Eye,
   MapPin,
-  ChevronLeft,
-  ChevronRight as ChevronRightIcon,
+  ChevronRight,
+  Clock,
+  CircleDot,
+  Loader2,
+  AlertTriangle,
+  Ban,
+  Swords,
+  Shield,
+  Users,
+  Circle,
 } from 'lucide-react';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { toTitleCase } from '@/lib/fm/ui-helpers';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════════════════════════════════
 
-interface FixtureItem {
+interface FixtureListItem {
   id: string;
   tur: number;
   match_date: string;
@@ -32,11 +36,67 @@ interface FixtureItem {
   away_score: number | null;
   home_team: string;
   away_team: string;
+  home_team_id: string;
+  away_team_id: string;
   is_home: boolean;
+  is_friendly?: boolean;
   referee_name?: string | null;
+  season_id?: string;
+}
+
+interface MatchEventRow {
+  id: string;
+  fixture_id: string;
+  minute: number;
+  event_type: string;
+  player_name: string | null;
+  team: string | null;
+  detail: string | null;
 }
 
 type FormResult = 'W' | 'D' | 'L';
+type FilterType = 'all' | 'upcoming' | 'past';
+
+// ═══════════════════════════════════════════════════════════════════════
+// Constants
+// ═══════════════════════════════════════════════════════════════════════
+
+const TURKISH_MONTHS: Record<number, string> = {
+  1: 'OCAK',
+  2: 'ŞUBAT',
+  3: 'MART',
+  4: 'NİSAN',
+  5: 'MAYIS',
+  6: 'HAZİRAN',
+  7: 'TEMMUZ',
+  8: 'AĞUSTOS',
+  9: 'EYLÜL',
+  10: 'EKİM',
+  11: 'KASIM',
+  12: 'ARALIK',
+};
+
+const STADIUM_NAMES: Record<string, string> = {
+  'Galatasaray': 'RAMS Park',
+  'Fenerbahçe': 'Ülker Stadyumu',
+  'Beşiktaş': 'Tüpraş Stadyumu',
+  'Trabzonspor': 'Papara Park',
+  'İstanbul Başakşehir': 'Başakşehir Fatih Terim Stadyumu',
+  'Kasımpaşa': 'Recep Tayyip Erdoğan Stadyumu',
+  'Antalyaspor': 'Corendon Airlines Park',
+  'Adana Demirspor': 'Yeni Adana Stadyumu',
+  'Konyaspor': 'MEDAŞ Konya Büyükşehir Stadyumu',
+  'Sivasspor': 'BG Group 4 Eylül Stadyumu',
+  'Kayserispor': 'RHG Enertürk Enerji Stadyumu',
+  'Alanyaspor': 'Gain Park Alanya',
+  'Ankaragücü': 'Eryaman Stadyumu',
+  'Karagümrük': 'Atatürk Olimpiyat Stadyumu',
+  'Gaziantep FK': 'Kalyon Stadyumu',
+  'Hatayspor': 'Yeni Hatay Stadyumu',
+  'Pendikspor': 'Pendik Stadyumu',
+  'Rizespor': 'Çaykur Didi Stadyumu',
+  'İstanbulspor': 'Esenyurt Necmi Kadıoğlu Stadyumu',
+};
 
 // ═══════════════════════════════════════════════════════════════════════
 // Helpers
@@ -50,22 +110,26 @@ function formatDate(dateStr: string): string {
   }
 }
 
-function getResultColor(isHome: boolean, homeScore: number | null, awayScore: number | null): string | null {
-  if (homeScore === null || awayScore === null) return null;
-  const myScore = isHome ? homeScore : awayScore;
-  const oppScore = isHome ? awayScore : homeScore;
-  if (myScore > oppScore) return 'emerald';
-  if (myScore === oppScore) return 'amber';
-  return 'red';
+function formatDateFull(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString('tr-TR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  } catch {
+    return dateStr;
+  }
 }
 
-function getTeamInitials(name: string): string {
+function getMonthYear(dateStr: string): string {
   try {
-    const words = name.split(' ').filter(Boolean);
-    if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
-    return name.slice(0, 2).toUpperCase();
+    const d = new Date(dateStr);
+    const month = TURKISH_MONTHS[d.getMonth() + 1] || 'BİLİNMİYOR';
+    return `${month} ${d.getFullYear()}`;
   } catch {
-    return '??';
+    return 'BİLİNMİYOR';
   }
 }
 
@@ -78,21 +142,55 @@ function getUserResult(isHome: boolean, homeScore: number | null, awayScore: num
   return 'L';
 }
 
+function getCompetitionType(fixture: FixtureListItem): { label: string; icon: string; color: string } {
+  if (fixture.is_friendly) {
+    return { label: 'Hazırlık Maçı', icon: '🤝', color: 'text-green-400' };
+  }
+  if (fixture.tur >= 34) {
+    return { label: 'Kupa Finali', icon: '🏆', color: 'text-yellow-300' };
+  }
+  if (fixture.tur >= 30) {
+    return { label: 'Kupa Maçı', icon: '🏆', color: 'text-amber-400' };
+  }
+  return { label: 'Lig Maçı', icon: '⚽', color: 'text-white/60' };
+}
+
+function getStadiumName(teamName: string): string {
+  return STADIUM_NAMES[teamName] || `${toTitleCase(teamName)} Stadyumu`;
+}
+
+function getShortTeamName(name: string): string {
+  if (!name) return '???';
+  const words = name.split(' ').filter(Boolean);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return name.slice(0, 3).toUpperCase();
+}
+
+function isMatchFinished(fixture: FixtureListItem): boolean {
+  return fixture.status === 'completed' || fixture.status === 'finished' || fixture.home_score !== null;
+}
+
+function isMatchLive(fixture: FixtureListItem): boolean {
+  return fixture.status === 'live';
+}
+
 // ═══════════════════════════════════════════════════════════════════════
-// Sub-Components
+// Sub-Components: Badges & Pills
 // ═══════════════════════════════════════════════════════════════════════
 
-function TeamShield({ name, isUser }: { name: string; isUser: boolean }) {
+function VenueBadge({ isHome }: { isHome: boolean }) {
   return (
-    <div
-      className={`w-7 h-7 rounded-md flex items-center justify-center text-[8px] font-black shrink-0 ${
-        isUser
-          ? 'bg-gradient-to-br from-amber-500/30 to-amber-700/20 text-amber-300 border border-amber-500/40 shadow-[0_0_8px_rgba(245,158,11,0.15)]'
-          : 'bg-white/[0.06] text-white/40 border border-white/10'
+    <span
+      className={`px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded ${
+        isHome
+          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+          : 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
       }`}
     >
-      {getTeamInitials(name)}
-    </div>
+      {isHome ? 'EV' : 'DEP'}
+    </span>
   );
 }
 
@@ -105,208 +203,656 @@ function ResultPill({ result }: { result: FormResult | null }) {
   };
   const c = config[result];
   return (
-    <span className={`${c.bg} ${c.text} text-[8px] font-black px-1 py-0.5 rounded`}>
+    <span className={`${c.bg} ${c.text} text-[9px] font-black px-1.5 py-0.5 rounded`}>
       {c.label}
     </span>
   );
 }
 
-function VenueBadge({ isHome }: { isHome: boolean }) {
+function StatusBadge({ fixture }: { fixture: FixtureListItem }) {
+  const finished = isMatchFinished(fixture);
+  const live = isMatchLive(fixture);
+
+  if (live) {
+    return (
+      <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/15 border border-red-500/30">
+        <Circle size={6} className="text-red-400 fill-red-400 animate-pulse" />
+        <span className="text-[8px] font-black text-red-400 uppercase">Canlı</span>
+      </span>
+    );
+  }
+  if (finished) {
+    return (
+      <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[8px] font-bold text-white/40 uppercase">
+        Bitti
+      </span>
+    );
+  }
   return (
-    <span
-      className={`px-1 py-0.5 text-[6px] font-black uppercase tracking-widest rounded ${
-        isHome
-          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-          : 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
-      }`}
-    >
-      {isHome ? 'EV' : 'DEP'}
+    <span className="px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[8px] font-bold text-amber-400 uppercase">
+      Planlanmış
     </span>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Match Card Component (grid-friendly, ~300px)
+// MonthGroupHeader — Ay gruplama başlığı
 // ═══════════════════════════════════════════════════════════════════════
 
-function MatchCard({ match, teamName, onNavigate }: { match: FixtureItem; teamName: string; onNavigate: (id: string) => void }) {
-  const isFinished = match.status === 'completed' || match.status === 'finished' || match.home_score !== null;
-  const isLive = match.status === 'live';
-  const isScheduled = !isFinished && !isLive;
-  const isUserMatch = match.is_home || match.home_team === teamName || match.away_team === teamName;
-  const isHomeTeam = match.is_home || match.home_team === teamName;
-  const resultColor = isFinished && isUserMatch
-    ? getResultColor(isHomeTeam, match.home_score, match.away_score)
-    : null;
-  const userResult = isFinished && isUserMatch
-    ? getUserResult(isHomeTeam, match.home_score, match.away_score)
-    : null;
-
-  // ── Spoiler Kalkanı: Kullanıcının bu maçı izleyip izlemediğini kontrol et ──
-  const [isMatchWatched, setIsMatchWatched] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const watched = localStorage.getItem(`watched_match_${match.id}`);
-      setIsMatchWatched(!!watched);
-    }
-  }, [match.id]);
-
+function MonthGroupHeader({ monthYear, count }: { monthYear: string; count: number }) {
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className={`rounded-xl border cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${
-        isUserMatch
-          ? isLive
-            ? 'border-red-500/30 bg-red-500/[0.04] shadow-[0_0_12px_rgba(239,68,68,0.1)]'
-            : isScheduled
-              ? 'border-amber-500/25 bg-amber-500/[0.03] shadow-[0_0_12px_rgba(245,158,11,0.06)]'
-              : userResult === 'W'
-                ? 'border-emerald-500/20 bg-emerald-500/[0.03]'
-                : userResult === 'L'
-                  ? 'border-red-500/15 bg-red-500/[0.02]'
-                  : 'border-amber-500/15 bg-amber-500/[0.02]'
-          : 'border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.03]'
-      }`}
-      onClick={() => onNavigate(match.id)}
-    >
-      {/* Live / Status indicator */}
-      {(isLive || isScheduled) && isUserMatch && (
-        <div className={`px-3 py-1.5 border-b flex items-center justify-between ${
-          isLive ? 'border-red-500/20 bg-red-500/[0.06]' : 'border-amber-500/15 bg-amber-500/[0.04]'
-        }`}>
-          <div className="flex items-center gap-1.5">
-            {isLive ? (
-              <>
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-[8px] font-black text-red-400 uppercase tracking-wider">CANLI</span>
-              </>
-            ) : (
-              <>
-                <Clock size={8} className="text-amber-400" />
-                <span className="text-[8px] font-black text-amber-400 uppercase tracking-wider">{match.match_time || '--:--'}</span>
-              </>
-            )}
-          </div>
-          {isScheduled && isUserMatch && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onNavigate(match.id); }}
-              className="flex items-center gap-1 px-2 py-0.5 bg-emerald-600/80 hover:bg-emerald-500 text-white text-[7px] font-black uppercase tracking-widest rounded-md transition-all"
-            >
-              <Play size={7} className="fill-current" /> İzle
-            </button>
-          )}
-          {isLive && isUserMatch && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onNavigate(match.id); }}
-              className="flex items-center gap-1 px-2 py-0.5 bg-red-600/80 hover:bg-red-500 text-white text-[7px] font-black uppercase tracking-widest rounded-md transition-all animate-pulse"
-            >
-              <Eye size={7} /> İzle
-            </button>
-          )}
-        </div>
-      )}
-
-      <div className="p-3">
-        {/* Score / Time */}
-        <div className="text-center mb-2.5">
-          {isFinished ? (
-            !isMatchWatched && isUserMatch ? (
-              // Oynanmış ama henüz izlenmemiş kullanıcı maçı — Spoiler Kalkanı Aktif
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-xs font-black text-amber-400/80 uppercase tracking-widest bg-amber-500/[0.06] border border-amber-500/20 px-2 py-0.5 rounded-md animate-pulse">
-                  Oynandı (Skor Gizli)
-                </span>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onNavigate(match.id); }}
-                  className="text-[8px] font-black uppercase tracking-widest text-white/50 hover:text-white bg-white/[0.04] border border-white/10 px-1.5 py-0.5 rounded mt-1 transition-all"
-                >
-                  📺 Tekrarı İzle & Skoru Aç
-                </button>
-              </div>
-            ) : (
-              // İzlenmiş maç veya bot maçı — Skoru normal göster
-              <div className="flex items-center justify-center gap-2">
-                <span className={`text-lg font-black tabular-nums ${
-                  resultColor === 'emerald' ? 'text-emerald-400' :
-                  resultColor === 'amber' ? 'text-amber-400' :
-                  resultColor === 'red' ? 'text-red-400' : 'text-white/40'
-                }`}>
-                  {match.home_score} - {match.away_score}
-                </span>
-                {isUserMatch && <ResultPill result={userResult} />}
-              </div>
-            )
-          ) : !isUserMatch ? (
-            <span className="text-[10px] text-white/25 font-semibold font-mono">
-              {match.match_time || '--:--'}
-            </span>
-          ) : null}
-        </div>
-
-        {/* Teams */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <TeamShield name={match.home_team} isUser={match.home_team === teamName} />
-            <span className={`text-[11px] font-bold truncate flex-1 ${match.home_team === teamName ? 'text-amber-300' : 'text-white/60'}`}>
-              {match.home_team}
-            </span>
-            {isUserMatch && match.home_team === teamName && <VenueBadge isHome={true} />}
-          </div>
-          <div className="flex items-center gap-2">
-            <TeamShield name={match.away_team} isUser={match.away_team === teamName} />
-            <span className={`text-[11px] font-bold truncate flex-1 ${match.away_team === teamName ? 'text-amber-300' : 'text-white/60'}`}>
-              {match.away_team}
-            </span>
-            {isUserMatch && match.away_team === teamName && <VenueBadge isHome={false} />}
-          </div>
-        </div>
-
-        {/* Date & Referee */}
-        <div className="mt-2 pt-1.5 border-t border-white/[0.04] flex items-center justify-between">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[8px] text-white/20">{formatDate(match.match_date)}</span>
-            {match.referee_name && (
-              <span className="text-[7.5px] font-medium text-white/40 flex items-center gap-1">
-                🛑 {match.referee_name}
-              </span>
-            )}
-          </div>
-          <ChevronRight className="w-3 h-3 text-white/10" />
-        </div>
+    <div className="sticky top-0 z-10 backdrop-blur-md bg-[#0a0e17]/90 border-b border-white/[0.06] px-3 py-2 flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <Calendar size={12} className="text-amber-400/70" />
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400/80">
+          {monthYear}
+        </span>
       </div>
-    </motion.div>
+      <span className="text-[9px] text-white/20 font-semibold">{count} maç</span>
+    </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Ana Bileşen
+// FixtureList — Sol panel, maç listesi
+// ═══════════════════════════════════════════════════════════════════════
+
+function FixtureListRow({
+  match,
+  teamName,
+  isSelected,
+  onSelect,
+}: {
+  match: FixtureListItem;
+  teamName: string;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  const finished = isMatchFinished(match);
+  const live = isMatchLive(match);
+  const isHomeTeam = match.is_home || match.home_team === teamName;
+  const opponent = isHomeTeam ? match.away_team : match.home_team;
+  const result = finished && (match.is_home || match.home_team === teamName || match.away_team === teamName)
+    ? getUserResult(isHomeTeam, match.home_score, match.away_score)
+    : null;
+
+  return (
+    <button
+      onClick={onSelect}
+      className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all duration-200 hover:scale-[1.005] active:scale-[0.995] overflow-hidden ${
+        isSelected
+          ? 'border-amber-500/40 bg-amber-500/[0.07] shadow-[0_0_16px_rgba(245,158,11,0.06)]'
+          : 'border-white/[0.04] bg-white/[0.015] hover:bg-white/[0.03] hover:border-white/10'
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        {/* Date & Time */}
+        <div className="flex flex-col items-center min-w-[40px] shrink-0">
+          <span className="text-[10px] text-white/40 font-semibold">
+            {formatDate(match.match_date)}
+          </span>
+          <span className="text-[9px] text-white/25 font-mono">
+            {match.match_time || '--:--'}
+          </span>
+        </div>
+
+        {/* Divider */}
+        <div className="w-px h-8 bg-white/[0.06] shrink-0" />
+
+        {/* Opponent + badges */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <VenueBadge isHome={match.is_home} />
+            <span className="text-xs font-bold text-white/80 truncate">
+              {toTitleCase(opponent)}
+            </span>
+          </div>
+        </div>
+
+        {/* Score / VS / Live */}
+        <div className="flex items-center gap-2 shrink-0">
+          {live && (
+            <span className="flex items-center gap-1">
+              <Circle size={4} className="text-red-500 fill-red-500 animate-pulse" />
+              <span className="text-[8px] font-black text-red-400 uppercase">CANLI</span>
+            </span>
+          )}
+          {finished ? (
+            <span className={`text-sm font-black tabular-nums ${
+              result === 'W' ? 'text-emerald-400' :
+              result === 'D' ? 'text-amber-400' :
+              result === 'L' ? 'text-red-400' : 'text-white/40'
+            }`}>
+              {match.home_score} - {match.away_score}
+            </span>
+          ) : !live ? (
+            <span className="text-[10px] font-black text-amber-400/50 uppercase tracking-wider">
+              VS
+            </span>
+          ) : null}
+          {result && <ResultPill result={result} />}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function FixtureList({
+  groupedFixtures,
+  monthKeys,
+  teamName,
+  selectedFixtureId,
+  onSelect,
+}: {
+  groupedFixtures: Map<string, FixtureListItem[]>;
+  monthKeys: string[];
+  teamName: string;
+  selectedFixtureId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  if (monthKeys.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <Calendar size={32} className="text-white/10 mb-3" />
+        <p className="text-xs text-white/25 font-medium">Fikstür bulunamadı</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full overflow-y-auto custom-scrollbar">
+      <div className="space-y-1">
+        {monthKeys.map((monthKey) => {
+          const matches = groupedFixtures.get(monthKey) || [];
+          return (
+            <div key={monthKey}>
+              <MonthGroupHeader monthYear={monthKey} count={matches.length} />
+              <div className="px-2 py-1.5 space-y-1">
+                {matches.map((match) => (
+                  <FixtureListRow
+                    key={match.id}
+                    match={match}
+                    teamName={teamName}
+                    isSelected={selectedFixtureId === match.id}
+                    onSelect={() => onSelect(match.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MatchDetailsPanel — Sağ panel, seçilen maç detayı
+// ═══════════════════════════════════════════════════════════════════════
+
+function MatchEventIcon({ eventType }: { eventType: string }) {
+  const type = eventType.toUpperCase();
+  if (type === 'GOAL' || type === 'PENALTY_GOAL') return <CircleDot size={12} className="text-emerald-400" />;
+  if (type === 'OWN_GOAL') return <CircleDot size={12} className="text-red-400" />;
+  if (type === 'YELLOW_CARD' || type === 'SECOND_YELLOW') return <AlertTriangle size={12} className="text-yellow-400" />;
+  if (type === 'RED_CARD') return <Ban size={12} className="text-red-500" />;
+  if (type === 'SUBSTITUTION') return <Users size={12} className="text-sky-400" />;
+  if (type === 'INJURY') return <AlertTriangle size={12} className="text-orange-400" />;
+  return <CircleDot size={12} className="text-white/30" />;
+}
+
+function GoalSummary({ events, homeTeam, awayTeam }: { events: MatchEventRow[]; homeTeam: string; awayTeam: string }) {
+  const goalEvents = events.filter(
+    (e) => ['GOAL', 'PENALTY_GOAL', 'OWN_GOAL'].includes(e.event_type?.toUpperCase())
+  );
+
+  if (goalEvents.length === 0) return null;
+
+  return (
+    <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <CircleDot size={14} className="text-emerald-400" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Goller</span>
+      </div>
+      <div className="space-y-1.5">
+        {goalEvents.map((evt, i) => {
+          const isOwn = evt.event_type?.toUpperCase() === 'OWN_GOAL';
+          const isPenalty = evt.event_type?.toUpperCase() === 'PENALTY_GOAL';
+          const teamLabel = evt.team?.toLowerCase() === 'home' ? homeTeam : awayTeam;
+          const isHome = evt.team?.toLowerCase() === 'home';
+
+          return (
+            <div
+              key={evt.id || i}
+              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white/[0.02] border border-white/[0.04]"
+            >
+              <MatchEventIcon eventType={evt.event_type} />
+              <span className="text-[10px] text-white/30 font-mono shrink-0">{evt.minute}&apos;</span>
+              <span className="text-[11px] font-semibold text-white/70 truncate flex-1">
+                {evt.player_name ? toTitleCase(evt.player_name) : 'Bilinmiyor'}
+                {isPenalty && <span className="text-amber-400/60 ml-1 text-[9px]">(Penaltı)</span>}
+                {isOwn && <span className="text-red-400/60 ml-1 text-[9px]">(K.K.)</span>}
+              </span>
+              <span className={`text-[8px] font-bold shrink-0 ${
+                isHome ? 'text-emerald-400/60' : 'text-sky-400/60'
+              }`}>
+                {getShortTeamName(teamLabel)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function CardSummary({ events }: { events: MatchEventRow[] }) {
+  const cardEvents = events.filter(
+    (e) => ['YELLOW_CARD', 'SECOND_YELLOW', 'RED_CARD'].includes(e.event_type?.toUpperCase())
+  );
+
+  if (cardEvents.length === 0) return null;
+
+  return (
+    <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Ban size={14} className="text-yellow-400" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Kartlar</span>
+        <span className="text-[9px] text-white/25 bg-white/5 px-1.5 py-0.5 rounded-full">{cardEvents.length}</span>
+      </div>
+      <div className="space-y-1.5">
+        {cardEvents.map((evt, i) => {
+          const isRed = evt.event_type?.toUpperCase() === 'RED_CARD';
+          const isSecondYellow = evt.event_type?.toUpperCase() === 'SECOND_YELLOW';
+
+          return (
+            <div
+              key={evt.id || i}
+              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white/[0.02] border border-white/[0.04]"
+            >
+              <MatchEventIcon eventType={evt.event_type} />
+              <span className="text-[10px] text-white/30 font-mono shrink-0">{evt.minute}&apos;</span>
+              <span className="text-[11px] font-semibold text-white/70 truncate flex-1">
+                {evt.player_name ? toTitleCase(evt.player_name) : 'Bilinmiyor'}
+              </span>
+              <span className={`text-[8px] font-bold shrink-0 ${
+                isRed ? 'text-red-400' : isSecondYellow ? 'text-orange-400' : 'text-yellow-400'
+              }`}>
+                {isRed ? 'Kırmızı' : isSecondYellow ? '2. Sarı' : 'Sarı'}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MatchNotPlayed() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-gradient-to-b from-amber-500/[0.04] to-transparent border border-amber-500/10 rounded-2xl p-6 text-center"
+    >
+      <div className="w-14 h-14 rounded-2xl bg-amber-500/[0.08] border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
+        <Clock size={24} className="text-amber-400/60" />
+      </div>
+      <p className="text-sm font-bold text-white/50 mb-1">Maç Henüz Oynanmadı</p>
+      <p className="text-[11px] text-white/25 leading-relaxed">
+        Bu maç planlanmış durumda. Maç başladığında canlı olarak takip edebilirsiniz.
+      </p>
+    </motion.div>
+  );
+}
+
+function PreviousEncounters({
+  fixture,
+}: {
+  fixture: FixtureListItem;
+}) {
+  const [matches, setMatches] = useState<{ id: string; match_date: string; home_team: string; away_team: string; home_score: number | null; away_score: number | null }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPrevious = async () => {
+      const supabase = getSupabase();
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('fixtures')
+          .select('id, match_date, home_team:league_teams!home_team_id(name), away_team:league_teams!away_team_id(name), home_score, away_score')
+          .or(`home_team_id.eq.${fixture.home_team_id},away_team_id.eq.${fixture.away_team_id}`)
+          .order('match_date', { ascending: false })
+          .limit(10);
+
+        if (error) {
+          setMatches([]);
+        } else {
+          const teamIds = new Set([fixture.home_team_id, fixture.away_team_id]);
+          const filtered = (data || [])
+            .filter((m: any) => {
+              const homeId = m.home_team?.id;
+              const awayId = m.away_team?.id;
+              return teamIds.has(homeId) && teamIds.has(awayId) && m.id !== fixture.id;
+            })
+            .slice(0, 5)
+            .map((m: any) => ({
+              id: m.id,
+              match_date: m.match_date,
+              home_team: m.home_team?.name || '?',
+              away_team: m.away_team?.name || '?',
+              home_score: m.home_score,
+              away_score: m.away_score,
+            }));
+          setMatches(filtered);
+        }
+      } catch {
+        setMatches([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPrevious();
+  }, [fixture.home_team_id, fixture.away_team_id, fixture.id]);
+
+  if (loading) {
+    return (
+      <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Swords size={14} className="text-amber-400" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Önceki Karşılaşmalar</span>
+        </div>
+        <div className="flex items-center justify-center py-4">
+          <Loader2 size={16} className="animate-spin text-white/20" />
+        </div>
+      </div>
+    );
+  }
+
+  if (matches.length === 0) return null;
+
+  return (
+    <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Swords size={14} className="text-amber-400" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Önceki Karşılaşmalar</span>
+        <span className="text-[9px] text-white/25 bg-white/5 px-1.5 py-0.5 rounded-full">{matches.length}</span>
+      </div>
+      <div className="space-y-1.5">
+        {matches.map((m) => (
+          <div
+            key={m.id}
+            className="flex items-center gap-3 px-2.5 py-2 rounded-lg bg-white/[0.02] border border-white/[0.04]"
+          >
+            <span className="text-[9px] text-white/25 min-w-[55px] shrink-0 font-mono">
+              {formatDate(m.match_date)}
+            </span>
+            <div className="flex-1 flex items-center justify-between overflow-hidden">
+              <span className="text-[11px] text-white/60 font-medium truncate">
+                {toTitleCase(m.home_team)}
+              </span>
+              <span className="text-xs font-black text-white/70 tabular-nums px-2 shrink-0">
+                {m.home_score !== null ? `${m.home_score} - ${m.away_score}` : '- - -'}
+              </span>
+              <span className="text-[11px] text-white/60 font-medium truncate text-right">
+                {toTitleCase(m.away_team)}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MatchDetailsPanel({
+  fixture,
+  teamName,
+}: {
+  fixture: FixtureListItem;
+  teamName: string;
+}) {
+  const [events, setEvents] = useState<MatchEventRow[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const finished = isMatchFinished(fixture);
+  const live = isMatchLive(fixture);
+  const competition = getCompetitionType(fixture);
+  const stadium = getStadiumName(fixture.is_home ? fixture.home_team : fixture.away_team);
+
+  // Fetch match events for finished/live matches
+  useEffect(() => {
+    const fetchEvents = async () => {
+      if (!finished && !live) {
+        setEventsLoading(false);
+        return;
+      }
+
+      const supabase = getSupabase();
+      if (!supabase) {
+        setEventsLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('match_events')
+          .select('id, fixture_id, minute, event_type, player_name, team, detail')
+          .eq('fixture_id', fixture.id)
+          .order('minute', { ascending: true });
+
+        if (!error && data) {
+          setEvents(data as MatchEventRow[]);
+        }
+      } catch {
+        // silent
+      } finally {
+        setEventsLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [fixture.id, finished, live]);
+
+  return (
+    <motion.div
+      key={fixture.id}
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.25 }}
+      className="space-y-4"
+    >
+      {/* ── Match Header Card ── */}
+      <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-5">
+        {/* Competition & Status */}
+        <div className="flex items-center justify-between mb-4">
+          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border bg-white/[0.03] ${competition.color} border-white/[0.08]`}>
+            {competition.icon} {competition.label}
+          </span>
+          <StatusBadge fixture={fixture} />
+        </div>
+
+        {/* Teams & Score */}
+        <div className="flex items-center justify-center gap-4 sm:gap-6 py-4">
+          {/* Home Team */}
+          <div className="flex flex-col items-center gap-2 min-w-0 flex-1">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black ${
+              fixture.home_team === teamName
+                ? 'bg-gradient-to-br from-amber-500/30 to-amber-700/20 text-amber-300 border border-amber-500/40 shadow-[0_0_16px_rgba(245,158,11,0.12)]'
+                : 'bg-white/[0.06] text-white/40 border border-white/10'
+            }`}>
+              {getShortTeamName(fixture.home_team)}
+            </div>
+            <span className={`text-[11px] font-bold text-center truncate max-w-[100px] ${
+              fixture.home_team === teamName ? 'text-amber-300' : 'text-white/60'
+            }`}>
+              {toTitleCase(fixture.home_team)}
+            </span>
+            <VenueBadge isHome={true} />
+          </div>
+
+          {/* Score / VS / Live */}
+          <div className="flex flex-col items-center gap-1 shrink-0">
+            {fixture.home_score !== null ? (
+              <span className="text-3xl font-black text-white/80 tabular-nums">
+                {fixture.home_score} - {fixture.away_score}
+              </span>
+            ) : live ? (
+              <div className="flex items-center gap-2">
+                <Circle size={6} className="text-red-500 fill-red-500 animate-pulse" />
+                <span className="text-sm font-black text-red-400 uppercase">CANLI</span>
+              </div>
+            ) : (
+              <span className="text-2xl font-black text-amber-400/40">VS</span>
+            )}
+            <span className="text-[9px] text-white/25 font-mono">
+              {fixture.match_time || '--:--'}
+            </span>
+          </div>
+
+          {/* Away Team */}
+          <div className="flex flex-col items-center gap-2 min-w-0 flex-1">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black ${
+              fixture.away_team === teamName
+                ? 'bg-gradient-to-br from-amber-500/30 to-amber-700/20 text-amber-300 border border-amber-500/40 shadow-[0_0_16px_rgba(245,158,11,0.12)]'
+                : 'bg-white/[0.06] text-white/40 border border-white/10'
+            }`}>
+              {getShortTeamName(fixture.away_team)}
+            </div>
+            <span className={`text-[11px] font-bold text-center truncate max-w-[100px] ${
+              fixture.away_team === teamName ? 'text-amber-300' : 'text-white/60'
+            }`}>
+              {toTitleCase(fixture.away_team)}
+            </span>
+            <VenueBadge isHome={false} />
+          </div>
+        </div>
+
+        {/* Match Info Row */}
+        <div className="flex items-center justify-between pt-3 border-t border-white/[0.04]">
+          <div className="flex items-center gap-2">
+            <Calendar size={12} className="text-white/25" />
+            <span className="text-[11px] text-white/40 font-medium">
+              {formatDateFull(fixture.match_date)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <MapPin size={12} className="text-amber-400/60" />
+            <span className="text-[11px] text-white/40 font-medium">{stadium}</span>
+          </div>
+        </div>
+
+        {/* Referee */}
+        {fixture.referee_name && (
+          <div className="flex items-center gap-2 mt-2">
+            <Shield size={12} className="text-white/20" />
+            <span className="text-[10px] text-white/25">Hakem: {fixture.referee_name}</span>
+          </div>
+        )}
+
+        {/* Hafta */}
+        <div className="mt-2">
+          <span className="text-[9px] text-white/15 font-mono">Hafta {fixture.tur}</span>
+        </div>
+      </div>
+
+      {/* ── Match Not Played ── */}
+      {!finished && !live && <MatchNotPlayed />}
+
+      {/* ── Match Events (finished or live) ── */}
+      {(finished || live) && eventsLoading && (
+        <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-4">
+          <div className="flex items-center justify-center py-6">
+            <Loader2 size={18} className="animate-spin text-white/20" />
+            <span className="ml-2 text-[10px] text-white/30">Maç olayları yükleniyor...</span>
+          </div>
+        </div>
+      )}
+
+      {(finished || live) && !eventsLoading && events.length > 0 && (
+        <>
+          <GoalSummary events={events} homeTeam={fixture.home_team} awayTeam={fixture.away_team} />
+          <CardSummary events={events} />
+        </>
+      )}
+
+      {(finished || live) && !eventsLoading && events.length === 0 && (
+        <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-4 text-center">
+          <p className="text-[11px] text-white/25">Bu maç için olay kaydı bulunamadı.</p>
+        </div>
+      )}
+
+      {/* ── Previous Encounters ── */}
+      <PreviousEncounters fixture={fixture} />
+
+      {/* ── Go to Match Page Button ── */}
+      {finished && (
+        <div className="pt-1">
+          <GoToMatchButton fixtureId={fixture.id} />
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function GoToMatchButton({ fixtureId }: { fixtureId: string }) {
+  const router = useRouter();
+  return (
+    <button
+      onClick={() => router.push(`/match/${fixtureId}`)}
+      className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/25 text-amber-400 text-xs font-black uppercase tracking-widest hover:from-amber-500/20 hover:to-amber-600/20 transition-all active:scale-[0.98]"
+    >
+      <Trophy size={14} />
+      Maç Detayına Git
+    </button>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-4">
+        <ChevronRight size={24} className="text-white/10" />
+      </div>
+      <p className="text-sm text-white/25 font-medium">Bir maç seçin</p>
+      <p className="text-[11px] text-white/15 mt-1">Detayları görüntülemek için soldaki listeden bir maç seçin</p>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Main Component
 // ═══════════════════════════════════════════════════════════════════════
 
 export default function FixturePage() {
   const router = useRouter();
-  const [fixtures, setFixtures] = useState<FixtureItem[]>([]);
+  const [fixtures, setFixtures] = useState<FixtureListItem[]>([]);
   const [teamName, setTeamName] = useState<string>('');
+  const [profileId, setProfileId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeWeekFilter, setActiveWeekFilter] = useState<'all' | 'upcoming' | 'played'>('all');
-  const [selectedTur, setSelectedTur] = useState<number | null>(null);
+  const [filter, setFilter] = useState<FilterType>('all');
+  const [selectedFixtureId, setSelectedFixtureId] = useState<string | null>(null);
 
+  // ── Load data ──
   useEffect(() => {
     const loadData = async () => {
       try {
         const profileStr = localStorage.getItem('fm_profile');
         if (!profileStr) {
-          setError('Profil bulunamadı.');
+          setError('Profil bulunamadı. Lütfen giriş yapın.');
           setLoading(false);
           return;
         }
         const profile = JSON.parse(profileStr);
-        const profileId = profile.id;
+        const pId = profile.id;
         setTeamName(profile.team_name || '');
+        setProfileId(pId);
 
         if (!isSupabaseConfigured()) {
           setError('Supabase yapılandırılmamış.');
@@ -314,16 +860,43 @@ export default function FixturePage() {
           return;
         }
 
-        const res = await fetch(`/api/fixture/${profileId}`);
+        const res = await fetch(`/api/fixture/${pId}`);
         if (!res.ok) {
           setError('Fikstür yüklenirken hata oluştu.');
           setLoading(false);
           return;
         }
         const data = await res.json();
-        setFixtures(data.fixtures || []);
-      } catch (err) {
-        console.error('[FixturePage] Error:', err);
+
+        const supabase = getSupabase();
+        let enrichedFixtures = data.fixtures || [];
+
+        if (supabase && enrichedFixtures.length > 0) {
+          const teamNames = new Set<string>();
+          enrichedFixtures.forEach((f: any) => {
+            if (f.home_team) teamNames.add(f.home_team);
+            if (f.away_team) teamNames.add(f.away_team);
+          });
+
+          const { data: teams } = await supabase
+            .from('league_teams')
+            .select('id, name')
+            .in('name', Array.from(teamNames));
+
+          const teamIdMap = new Map<string, string>();
+          (teams || []).forEach((t: any) => {
+            teamIdMap.set(t.name, t.id);
+          });
+
+          enrichedFixtures = enrichedFixtures.map((f: any) => ({
+            ...f,
+            home_team_id: f.home_team_id || teamIdMap.get(f.home_team) || '',
+            away_team_id: f.away_team_id || teamIdMap.get(f.away_team) || '',
+          }));
+        }
+
+        setFixtures(enrichedFixtures);
+      } catch {
         setError('Bir hata oluştu.');
       } finally {
         setLoading(false);
@@ -333,63 +906,65 @@ export default function FixturePage() {
     loadData();
   }, []);
 
-  // Haftalara göre grupla
-  const fixturesByTur = useMemo(() => {
-    const map = new Map<number, FixtureItem[]>();
-    for (const f of fixtures) {
-      const list = map.get(f.tur) ?? [];
+  // ── Group by month ──
+  const groupedFixtures = useMemo(() => {
+    const filtered = fixtures.filter((f) => {
+      const finished = isMatchFinished(f);
+      if (filter === 'upcoming') return !finished;
+      if (filter === 'past') return finished;
+      return true;
+    });
+
+    const groups = new Map<string, FixtureListItem[]>();
+    for (const f of filtered) {
+      const key = getMonthYear(f.match_date);
+      const list = groups.get(key) ?? [];
       list.push(f);
-      map.set(f.tur, list);
+      groups.set(key, list);
     }
-    return map;
-  }, [fixtures]);
 
-  const sortedTurs = useMemo(() => {
-    return [...fixturesByTur.entries()].sort((a, b) => a[0] - b[0]);
-  }, [fixturesByTur]);
+    const sorted = new Map<string, FixtureListItem[]>();
+    for (const [key, list] of groups) {
+      sorted.set(key, [...list].sort((a, b) => a.match_date.localeCompare(b.match_date)));
+    }
 
-  // Filter fixtures based on activeWeekFilter
-  const filteredTurs = useMemo(() => {
-    if (activeWeekFilter === 'all') return sortedTurs;
-    return sortedTurs.map(([tur, matches]) => {
-      const filtered = matches.filter(m => {
-        const isFinished = m.status === 'completed' || m.status === 'finished' || m.home_score !== null;
-        return activeWeekFilter === 'upcoming' ? !isFinished : isFinished;
-      });
-      return [tur, filtered] as [number, FixtureItem[]];
-    }).filter(([, matches]) => matches.length > 0);
-  }, [sortedTurs, activeWeekFilter]);
+    return sorted;
+  }, [fixtures, filter]);
 
-  // Auto-select first available tur
+  const monthKeys = useMemo(() => {
+    return [...groupedFixtures.entries()]
+      .sort((a, b) => {
+        const dateA = a[1][0]?.match_date || '';
+        const dateB = b[1][0]?.match_date || '';
+        return dateA.localeCompare(dateB);
+      })
+      .map(([key]) => key);
+  }, [groupedFixtures]);
+
+  // ── Selected fixture ──
+  const selectedFixture = useMemo(() => {
+    if (!selectedFixtureId) return null;
+    return fixtures.find((f) => f.id === selectedFixtureId) || null;
+  }, [fixtures, selectedFixtureId]);
+
+  // ── Auto-select first match on load ──
   useEffect(() => {
-    if (filteredTurs.length > 0 && selectedTur === null) {
-      // Find the first tur with scheduled matches, otherwise first tur
-      const currentTur = filteredTurs.find(([, matches]) =>
-        matches.some(m => m.status === 'scheduled')
+    if (fixtures.length > 0 && !selectedFixtureId) {
+      const upcoming = fixtures.find(
+        (f) => f.status === 'scheduled' && f.home_score === null
       );
-      setSelectedTur(currentTur ? currentTur[0] : filteredTurs[0][0]);
+      setSelectedFixtureId(upcoming?.id || fixtures[0]?.id || null);
     }
-  }, [filteredTurs, selectedTur]);
+  }, [fixtures, selectedFixtureId]);
 
-  // Get matches for selected tur
-  const selectedMatches = useMemo(() => {
-    if (selectedTur === null) return [];
-    return fixturesByTur.get(selectedTur) ?? [];
-  }, [selectedTur, fixturesByTur]);
+  const handleSelect = useCallback((id: string) => {
+    setSelectedFixtureId(id);
+  }, []);
 
-  // Navigation helpers
-  const turList = filteredTurs.map(([tur]) => tur);
-  const currentTurIdx = turList.indexOf(selectedTur ?? -1);
-  const prevTur = currentTurIdx > 0 ? turList[currentTurIdx - 1] : null;
-  const nextTur = currentTurIdx < turList.length - 1 ? turList[currentTurIdx + 1] : null;
-
-  const handleNavigate = (id: string) => {
-    router.push(`/match/${id}`);
-  };
-
+  // ── Loading ──
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0e17] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-2 border-white/10 border-t-amber-500/40 rounded-full animate-spin" />
           <p className="text-white/30 text-xs font-bold uppercase tracking-widest">Fikstür Yükleniyor</p>
@@ -398,9 +973,10 @@ export default function FixturePage() {
     );
   }
 
+  // ── Error ──
   if (error) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0e17] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-center px-6">
           <p className="text-white/50 text-sm">{error}</p>
           <button
@@ -414,11 +990,12 @@ export default function FixturePage() {
     );
   }
 
+  // ── Main Render ──
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Üst Bar */}
-      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/[0.06] px-4 py-3">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+    <div className="min-h-screen bg-[#0a0e17] text-white flex flex-col overflow-x-hidden">
+      {/* ── Top Bar ── */}
+      <div className="sticky top-0 z-50 bg-[#0a0e17]/80 backdrop-blur-md border-b border-white/[0.06] px-4 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <button
             onClick={() => router.push('/')}
             className="flex items-center gap-2 text-white/40 hover:text-white/70 transition-colors"
@@ -437,131 +1014,57 @@ export default function FixturePage() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 pt-4 space-y-4">
-        {/* Filter tabs */}
+      {/* ── Filter Tabs ── */}
+      <div className="px-4 pt-4 max-w-7xl mx-auto w-full">
         <div className="flex gap-1 p-1 bg-white/[0.03] rounded-xl border border-white/[0.06]">
-          {(['all', 'upcoming', 'played'] as const).map((f) => (
+          {([
+            { key: 'all' as FilterType, label: 'Tümü' },
+            { key: 'upcoming' as FilterType, label: 'Gelen' },
+            { key: 'past' as FilterType, label: 'Geçmiş' },
+          ]).map(({ key, label }) => (
             <button
-              key={f}
-              onClick={() => { setActiveWeekFilter(f); setSelectedTur(null); }}
+              key={key}
+              onClick={() => { setFilter(key); setSelectedFixtureId(null); }}
               className={`flex-1 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
-                activeWeekFilter === f
+                filter === key
                   ? 'bg-amber-500/15 text-amber-300 shadow-md shadow-amber-500/5'
                   : 'text-white/30 hover:text-white/50 hover:bg-white/[0.03]'
               }`}
             >
-              {f === 'all' ? 'Tümü' : f === 'upcoming' ? 'Gelen Maçlar' : 'Geçmiş'}
+              {label}
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Week selector buttons — horizontal scroll-free */}
-        {filteredTurs.length > 0 && (
-          <div className="flex items-center gap-2">
-            {/* Prev button */}
-            <button
-              onClick={() => prevTur !== null && setSelectedTur(prevTur)}
-              disabled={prevTur === null}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all shrink-0 ${
-                prevTur !== null
-                  ? 'border-white/10 bg-white/[0.03] text-white/40 hover:bg-white/[0.06] hover:text-white/60'
-                  : 'border-white/[0.04] bg-transparent text-white/10 cursor-not-allowed'
-              }`}
-            >
-              <ChevronLeft size={16} />
-            </button>
-
-            {/* Week buttons — flex-wrap, no horizontal scroll */}
-            <div className="flex-1 flex flex-wrap gap-1.5 justify-center">
-              {filteredTurs.map(([tur, matches]) => {
-                const hasScheduled = matches.some(m => m.status === 'scheduled');
-                const hasUserMatch = matches.some(m => m.is_home || m.home_team === teamName || m.away_team === teamName);
-                const allCompleted = matches.every(m => m.home_score !== null && m.away_score !== null);
-
-                return (
-                  <button
-                    key={tur}
-                    onClick={() => setSelectedTur(tur)}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all relative ${
-                      selectedTur === tur
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.12)]'
-                        : hasScheduled && !allCompleted
-                          ? 'bg-amber-500/[0.05] text-amber-400/50 border border-amber-500/10 hover:bg-amber-500/10'
-                          : 'bg-white/[0.02] text-white/25 border border-white/[0.05] hover:bg-white/[0.04]'
-                    }`}
-                  >
-                    H{tur}
-                    {hasScheduled && !allCompleted && selectedTur !== tur && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-500" />
-                    )}
-                    {hasUserMatch && allCompleted && selectedTur !== tur && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-500" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Next button */}
-            <button
-              onClick={() => nextTur !== null && setSelectedTur(nextTur)}
-              disabled={nextTur === null}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all shrink-0 ${
-                nextTur !== null
-                  ? 'border-white/10 bg-white/[0.03] text-white/40 hover:bg-white/[0.06] hover:text-white/60'
-                  : 'border-white/[0.04] bg-transparent text-white/10 cursor-not-allowed'
-              }`}
-            >
-              <ChevronRightIcon size={16} />
-            </button>
+      {/* ── Main Content: Left List + Right Detail ── */}
+      <div className="flex-1 max-w-7xl mx-auto w-full px-4 pt-4 pb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 h-full">
+          {/* Left Panel — Fixture List */}
+          <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.06] rounded-2xl overflow-hidden lg:max-h-[calc(100vh-180px)]">
+            <FixtureList
+              groupedFixtures={groupedFixtures}
+              monthKeys={monthKeys}
+              teamName={teamName}
+              selectedFixtureId={selectedFixtureId}
+              onSelect={handleSelect}
+            />
           </div>
-        )}
 
-        {/* Selected week header */}
-        {selectedTur !== null && selectedMatches.length > 0 && (
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <Shield className={`w-4 h-4 ${
-                selectedMatches.some(m => m.status === 'scheduled')
-                  ? 'text-amber-400'
-                  : 'text-white/20'
-              }`} />
-              <span className={`text-xs font-black uppercase tracking-widest ${
-                selectedMatches.some(m => m.status === 'scheduled')
-                  ? 'text-amber-300'
-                  : 'text-white/30'
-              }`}>
-                {selectedTur}. Hafta
-              </span>
-              <span className="text-[9px] text-white/15 font-semibold">— {selectedMatches.length} Maç</span>
-            </div>
-            <span className="text-[8px] text-white/15">
-              {formatDate(selectedMatches[0]?.match_date || '')}
-            </span>
-          </div>
-        )}
-
-        {/* Match cards grid — NO horizontal scroll */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-24">
-          <AnimatePresence mode="popLayout">
-            {selectedTur === null || selectedMatches.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <Calendar className="w-8 h-8 text-white/10 mx-auto mb-3" />
-                <p className="text-xs text-white/25">
-                  {filteredTurs.length === 0 ? 'Fikstür bulunamadı' : 'Bir hafta seçin'}
-                </p>
-              </div>
-            ) : (
-              selectedMatches.map((match) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
+          {/* Right Panel — Match Details */}
+          <div className="bg-white/[0.02] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-4 overflow-y-auto lg:max-h-[calc(100vh-180px)] custom-scrollbar">
+            <AnimatePresence mode="wait">
+              {selectedFixture ? (
+                <MatchDetailsPanel
+                  key={selectedFixture.id}
+                  fixture={selectedFixture}
                   teamName={teamName}
-                  onNavigate={handleNavigate}
                 />
-              ))
-            )}
-          </AnimatePresence>
+              ) : (
+                <EmptyState key="empty" />
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>

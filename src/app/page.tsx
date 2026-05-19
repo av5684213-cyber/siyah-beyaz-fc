@@ -4,6 +4,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react';
 
 import { calculateMarketValue, getTransferCorridor, formatCurrency } from '@/lib/fm/valuation';
+import { calculateLoanFeeEuro } from '@/lib/fm/inflation';
+import { toTitleCase } from '@/lib/fm/ui-helpers';
 import { INITIAL_TEAM_STATS, INITIAL_SLOTS } from '@/lib/fm/teamStats';
 import { processTacticalGrowth, processTacticalDecay } from '@/lib/fm/tacticsEngine';
 import TrainingAcademy from '@/components/fm/TrainingAcademy';
@@ -37,7 +39,6 @@ import { AppHeader } from '@/components/fm/AppHeader';
 import { ToastNotifications } from '@/components/fm/ToastNotifications';
 import { DashboardTab } from '@/components/fm/DashboardTab';
 import MyTeamTab from '@/components/fm/MyTeamTab';
-import SquadBoard from '@/components/fm/SquadBoard';
 import FixtureTab from '@/components/fm/FixtureTab';
 import { FriendlyMatchTab } from '@/components/fm/FriendlyMatchTab';
 
@@ -1068,7 +1069,7 @@ export default function Home() {
                         
                         if (revenue > 0) {
                           setProfile((prev: any) => ({ ...prev, money: (prev.money || 0) + revenue }));
-                          alert(`Maç Sonu Özeti:\nSeyirci: ${attendance}\nBilet Geliri: ${Math.round(revenue).toLocaleString('tr-TR')} Kredi`);
+                          alert(`Maç Sonu Özeti:\nSeyirci: ${attendance}\nBilet Geliri: ${Math.round(revenue).toLocaleString('tr-TR')} €`);
                         }
                         if (isFriendly && isSupabaseConfigured()) {
                           import('@/lib/supabase').then(({ getSupabase }) => {
@@ -1139,13 +1140,62 @@ export default function Home() {
               {activeTab === 'squad' && (
                 <motion.div key="squad" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <div className="pb-20">
-                    <div className="mb-6">
-                      <h2 className="text-2xl font-black uppercase tracking-tighter text-white">Kadro Yönetimi</h2>
-                      <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mt-1">
-                        Pozisyon Bazlı Gruplama &bull; Sürükle & Bırak &bull; Mevki Değişikliği
-                      </p>
-                    </div>
-                    <SquadBoard onPlayerClick={setSelectedPlayer} />
+                    <MyTeamTab
+                      userId={userId || ''}
+                      squad={squad}
+                      teamName={profile?.team_name || 'Siyah Beyaz FC'}
+                      teamBudget={profile?.money || 0}
+                      onListPlayer={(player) => {
+                        const mv = calculateMarketValue(player);
+                        const corridor = getTransferCorridor(mv);
+                        const price = Math.round(corridor.min + (corridor.max - corridor.min) * 0.5);
+                        if (confirm(`${toTitleCase(player.name)} oyuncusunu ${formatCurrency(price)} fiyattan transfer listesine koymak istiyor musunuz?`)) {
+                          sellPlayer(player, price);
+                        }
+                      }}
+                      onLoanPlayer={async (player) => {
+                        if (!profile) return;
+                        const mv = calculateMarketValue(player);
+                        const loanFee = calculateLoanFeeEuro(mv, profile.current_day || 1);
+                        const feeStr = loanFee >= 1_000_000 ? `${(loanFee / 1_000_000).toFixed(1)}M €` : loanFee >= 1_000 ? `${(loanFee / 1_000).toFixed(0)}K €` : `${loanFee} €`;
+                        if (!confirm(`${toTitleCase(player.name)} oyuncusunu ${feeStr} kiralık ücretiyle kiralık pazarına çıkarmak istiyor musunuz?\n\n• ${feeStr} kiralama gerçekleştiğinde size ödenecek\n• 10 Kredi sistem komisyonu olarak kiracıdan düşülecek`)) return;
+                        try {
+                          const res = await fetch('/api/loans/list', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              playerId: player.id,
+                              loanFee: loanFee,
+                              profileId: profile.id,
+                            }),
+                          });
+                          const data = await res.json();
+                          if (data.success) {
+                            alert(`${toTitleCase(player.name)} kiralık pazarına çıkarıldı!`);
+                            refreshData?.();
+                          } else {
+                            alert(data.error || 'Kiralık pazara çıkarılamadı.');
+                          }
+                        } catch (err) {
+                          alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                        }
+                      }}
+                      onBenchPlayer={(player) => {
+                        setSquad(prev => {
+                          const idx = prev.findIndex(p => p.id === player.id);
+                          if (idx === -1) return prev;
+                          const benchIdx = prev.findIndex((p, i) => i >= 11 && (!p.is_starter));
+                          if (benchIdx === -1) return prev;
+                          const newSquad = [...prev];
+                          [newSquad[idx], newSquad[benchIdx]] = [newSquad[benchIdx], newSquad[idx]];
+                          return newSquad;
+                        });
+                      }}
+                      onPlayerClick={setSelectedPlayer}
+                      trainingState={trainingState}
+                      onTrainingStateChange={setTrainingState}
+                      isAdmin={isAdmin}
+                    />
                   </div>
                 </motion.div>
               )}
@@ -1360,6 +1410,7 @@ export default function Home() {
             onTrainingStateChange={setTrainingState}
             profileMoney={profile?.money}
             profileTeamName={profile?.team_name}
+            profileId={profile?.id}
             isAdmin={isAdmin}
           />
         )}

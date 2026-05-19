@@ -76,9 +76,19 @@ async function completeTransfer(
   }
 
   // Transfer player ownership
+  // Alıcının takım adını da güncelle (buyPlayerFromMarket ile tutarlı)
+  const { data: buyerProfile } = await supabase
+    .from('profiles')
+    .select('team_name')
+    .eq('id', buyerId)
+    .maybeSingle();
+
   await supabase
     .from('players')
-    .update({ profile_id: buyerId })
+    .update({
+      profile_id: buyerId,
+      team_name: buyerProfile?.team_name || buyerId,
+    })
     .eq('id', listing.player_id);
 
   // Deactivate listing
@@ -380,6 +390,8 @@ export const resolveExpiredAuctions = async () => {
   if (error || !expiredListings?.length) return { resolved: 0 };
 
   let resolved = 0;
+  const SIGNING_DEADLINE_HOURS = 24;
+  const PENALTY_RATE = 0.05;
 
   for (const listing of expiredListings) {
     const reserveThreshold = listing.reserve_price ?? listing.min_price ?? 0;
@@ -387,34 +399,82 @@ export const resolveExpiredAuctions = async () => {
     const hasValidBid = currentBid >= reserveThreshold && listing.highest_bidder_id;
 
     if (hasValidBid) {
-      // Deduct money from highest bidder
-      const { data: bidderProfile } = await supabase
-        .from('profiles')
-        .select('money')
-        .eq('id', listing.highest_bidder_id)
-        .single();
+      // İmzalanmış mı kontrol et
+      const { data: playerData } = await supabase
+        .from('players')
+        .select('profile_id')
+        .eq('id', listing.player_id)
+        .maybeSingle();
 
-      if (bidderProfile && Number(bidderProfile.money) >= currentBid) {
-        await supabase
-          .from('profiles')
-          .update({ money: Number(bidderProfile.money) - currentBid })
-          .eq('id', listing.highest_bidder_id);
+      const isSigned = playerData?.profile_id === listing.highest_bidder_id;
 
-        // Complete transfer to highest bidder
-        await completeTransfer(
-          supabase,
-          listing as MarketListing,
-          listing.highest_bidder_id,
-          currentBid,
-        );
-        resolved++;
-      } else {
-        // Bidder no longer has funds — deactivate with no sale
+      if (isSigned) {
+        // ── Kazanan imzalamış → listing deaktif ──
         await supabase
           .from('transfer_market')
           .update({ is_active: false })
           .eq('id', listing.id);
         resolved++;
+      } else {
+        // ── İmzalamamış → 24 saat sonrasını bekle (tazminat sistemi) ──
+        // Bu durum /api/market/expire tarafından işlenir
+        // Burada sadece çok eski (48 saat+) imzalanmamış kazananları cezalandır
+        const auctionEnd = new Date(listing.expires_at);
+        const penaltyDeadline = new Date(auctionEnd.getTime() + SIGNING_DEADLINE_HOURS * 60 * 60 * 1000);
+        const isPastDeadline = new Date() > penaltyDeadline;
+
+        if (isPastDeadline) {
+          // Tazminat: teklifin %5'i satıcıya, listing yeniden açılır
+          const penaltyAmount = Math.round(currentBid * PENALTY_RATE);
+
+          const { data: winnerProfile } = await supabase
+            .from('profiles')
+            .select('money')
+            .eq('id', listing.highest_bidder_id)
+            .maybeSingle();
+
+          if (winnerProfile) {
+            await supabase
+              .from('profiles')
+              .update({ money: Math.max(0, Number(winnerProfile.money) - penaltyAmount) })
+              .eq('id', listing.highest_bidder_id);
+
+            const { data: sellerProfile } = await supabase
+              .from('profiles')
+              .select('money')
+              .eq('id', listing.seller_id)
+              .maybeSingle();
+
+            if (sellerProfile) {
+              await supabase
+                .from('profiles')
+                .update({ money: Number(sellerProfile.money) + penaltyAmount })
+                .eq('id', listing.seller_id);
+            }
+          }
+
+          // Listing'i sıfırla ve yeniden aç (satıcı gerçek kullanıcıysa)
+          if (listing.seller_id && listing.seller_id !== 'free-agent-system') {
+            const newExpiry = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+            await supabase
+              .from('transfer_market')
+              .update({
+                current_bid: null,
+                highest_bidder_id: null,
+                highest_bidder_name: null,
+                bid_count: 0,
+                expires_at: newExpiry.toISOString(),
+              })
+              .eq('id', listing.id);
+          } else {
+            await supabase
+              .from('transfer_market')
+              .update({ is_active: false })
+              .eq('id', listing.id);
+          }
+          resolved++;
+        }
+        // Henüz 24 saat dolmamışsa — bekle, resolve etme
       }
     } else {
       // No valid bid — deactivate listing (no sale)
@@ -446,7 +506,41 @@ export const getMarketListings = async (): Promise<MarketListing[]> => {
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
-  const listings: MarketListing[] = (data ?? []) as MarketListing[];
+  let listings: MarketListing[] = (data ?? []) as MarketListing[];
+
+  // ── Sahipli oyuncuları filtrele ──
+  // transfer_market is_active=true olsa bile, oyuncunun profile_id'si null değilse
+  // bu oyuncu zaten satın alınmış demektir — listeden çıkar
+  if (listings.length > 0) {
+    const playerIds = listings.map(l => l.player_id).filter(Boolean);
+    if (playerIds.length > 0) {
+      const { data: ownedPlayers } = await supabase
+        .from('players')
+        .select('id')
+        .in('id', playerIds)
+        .not('profile_id', 'is', null);
+
+      const ownedIds = new Set((ownedPlayers || []).map((p: { id: string }) => p.id));
+
+      if (ownedIds.size > 0) {
+        // Sahipli oyuncuların listelerini deaktif et (temizlik)
+        const ownedListingIds = listings
+          .filter(l => ownedIds.has(l.player_id))
+          .map(l => l.id);
+
+        if (ownedListingIds.length > 0) {
+          await supabase
+            .from('transfer_market')
+            .update({ is_active: false })
+            .in('id', ownedListingIds);
+        }
+
+        // Listeden kaldır
+        listings = listings.filter(l => !ownedIds.has(l.player_id));
+      }
+    }
+  }
+
   const now = new Date();
 
   // Mark auction listings that have expired (for UI display purposes)

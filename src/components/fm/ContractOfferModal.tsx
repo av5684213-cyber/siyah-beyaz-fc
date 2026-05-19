@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useDraggableModal } from '@/hooks/useDraggableModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, FileText, Euro, Coins, Calendar, AlertTriangle, CheckCircle2, XCircle, Loader2, Handshake } from 'lucide-react';
 import { MarketListing } from '@/lib/fm/multiplayer';
@@ -169,6 +170,8 @@ export default function ContractOfferModal({
 
   const totalSalaryCost = weeklySalary * contractWeeks;
 
+  const { modalRef, handleRef, position, isDragging } = useDraggableModal();
+
   return (
     <AnimatePresence>
       <motion.div
@@ -179,13 +182,28 @@ export default function ContractOfferModal({
         onClick={onClose}
       >
         <motion.div
+          ref={modalRef}
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="bg-zinc-900 border border-white/10 rounded-[2rem] w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
+          className="bg-zinc-900 border border-white/10 rounded-[2rem] w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl relative"
           onClick={(e) => e.stopPropagation()}
+          style={{ transform: `translate(${position.x}px, ${position.y}px)`, userSelect: isDragging ? 'none' : 'auto' }}
         >
+          {/* Drag Handle */}
+          <div
+            ref={handleRef}
+            className="flex items-center justify-center px-4 py-1 bg-zinc-900 border-b border-white/[0.04] cursor-grab active:cursor-grabbing hover:bg-zinc-800/50 transition-colors select-none rounded-t-[2rem]"
+            title="Sürüklemek için tutun · Çift tıklayın: sıfırla"
+          >
+            <div className="flex items-center gap-2 text-white/20">
+              <div className="w-10 h-1 rounded-full bg-white/15" />
+              <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+              <div className="w-10 h-1 rounded-full bg-white/15" />
+            </div>
+          </div>
+
           {/* Header */}
           <div className="p-6 border-b border-white/5 flex items-center justify-between">
             <div className="flex items-center gap-3">
