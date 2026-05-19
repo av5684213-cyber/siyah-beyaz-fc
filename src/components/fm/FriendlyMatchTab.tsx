@@ -408,6 +408,76 @@ export function FriendlyMatchTab() {
     }
   };
 
+  // ── JOIN PRIORITY QUEUE (1 Credit) ──
+  const handleJoinPriorityQueue = async () => {
+    if (!profile) return;
+    if (inQueue || isMatched) return;
+    if ((profile.credits || 0) < 1) {
+      toast.error('Yetersiz kredi! Öncelikli eşleşme için 1 KR gereklidir.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (isSupabaseConfigured()) {
+        const supabase = getSupabase();
+        if (!supabase) {
+          setLoading(false);
+          return;
+        }
+
+        // Check if already in queue
+        const { data: existing } = await supabase
+          .from('friendly_queue')
+          .select('user_id')
+          .eq('user_id', profile.id)
+          .maybeSingle();
+
+        if (existing) {
+          setInQueue(true);
+          setLoading(false);
+          return;
+        }
+
+        const expiresAt = new Date(Date.now() + QUEUE_DURATION_SECONDS * 1000).toISOString();
+
+        const { error } = await supabase.from('friendly_queue').insert({
+          user_id: profile.id,
+          team_name: profile.team_name || 'Bilinmeyen',
+          expires_at: expiresAt,
+          is_priority: true
+        });
+
+        if (error) {
+          console.error('[handleJoinPriorityQueue] Insert error:', error.message);
+          setLoading(false);
+          toast.error('Sıraya girilemedi. Tekrar deneyin.');
+          return;
+        }
+
+        // Deduct 1 credit
+        const newCredits = Math.max(0, (profile.credits || 0) - 1);
+        await supabase.from('profiles').update({ credits: newCredits }).eq('id', profile.id);
+        setProfile((prev: any) => {
+          if (!prev) return prev;
+          return { ...prev, credits: newCredits };
+        });
+      }
+
+      setInQueue(true);
+      setTimeLeft(QUEUE_DURATION_SECONDS);
+      fetchQueue();
+
+      // Immediately check for match after joining
+      setTimeout(() => checkForMatch(), 500);
+    } catch (err) {
+      console.error('[handleJoinPriorityQueue] Exception:', err);
+      toast.error('Bir hata oluştu. Tekrar deneyin.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ── LEAVE QUEUE ──
   const handleLeaveQueue = async () => {
     try {
@@ -538,8 +608,9 @@ export function FriendlyMatchTab() {
             </div>
           </div>
 
-          {/* ── Main Action Button ── */}
-          <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+          {/* ── Main Action Buttons ── */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            {/* Free Queue Button */}
             <button
               onClick={inQueue ? handleLeaveQueue : handleJoinQueue}
               disabled={loading || isMatched}
@@ -562,6 +633,32 @@ export function FriendlyMatchTab() {
                 </div>
               </div>
             </button>
+
+            {/* Priority Queue Button (1 Credit) */}
+            {!inQueue && !isMatched && (
+              <button
+                onClick={handleJoinPriorityQueue}
+                disabled={loading || isMatched || (profile?.credits || 0) < 1}
+                className={`flex-1 lg:flex-none flex items-center gap-3 px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all relative overflow-hidden group ${
+                  (profile?.credits || 0) < 1
+                    ? 'bg-white/5 text-white/20 border border-white/10 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-purple-600 to-violet-600 text-white hover:from-purple-500 hover:to-violet-500 hover:scale-105 active:scale-95 shadow-[0_10px_30px_rgba(139,92,246,0.25)]'
+                } disabled:opacity-30 disabled:hover:scale-100`}
+              >
+                <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors" />
+                <div className="relative flex items-center gap-3">
+                  <div className={`p-1.5 rounded-lg ${(profile?.credits || 0) < 1 ? 'bg-white/10' : 'bg-white/20'}`}>
+                    <Zap size={16} />
+                  </div>
+                  <div className="flex flex-col leading-none">
+                    <span className="text-[11px]">1 KR İLE ÖNCELİKLİ EŞLEŞME</span>
+                    <span className="text-[7px] opacity-60 font-bold">
+                      {(profile?.credits || 0) < 1 ? 'YETERSİZ KREDİ' : 'ÖNCELİKLİ SIRA — DAHA HIZLI EŞLEŞME'}
+                    </span>
+                  </div>
+                </div>
+              </button>
+            )}
           </div>
         </div>
       </div>

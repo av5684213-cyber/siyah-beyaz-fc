@@ -928,23 +928,37 @@ function MatchDetailsPanel({
             onClick={async () => {
               setFriendlyLoading(true);
               try {
+                const { getSupabase: getSB, isSupabaseConfigured: isConfigured } = await import('@/lib/supabase');
+                if (!isConfigured()) {
+                  alert('Supabase yapılandırılmamış');
+                  return;
+                }
+                const supabase = getSB();
+                if (!supabase) return;
+
                 const profileStr = localStorage.getItem('fm_profile');
                 const profile = profileStr ? JSON.parse(profileStr) : null;
-                const res = await fetch('/api/friendly-matches/queue', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    profileId: profile?.id,
-                    teamName: profile?.team_name,
-                  }),
-                });
-                const data = await res.json();
-                if (data.success) {
-                  alert('Hazırlık maçı sıraya eklendi! Eşleşme bulunduğunda bildirim alacaksınız.');
-                } else {
-                  alert(data.error || 'Hazırlık maçı ayarlanamadı.');
+                if (!profile?.id) {
+                  alert('Profil bulunamadı');
+                  return;
                 }
-              } catch {
+
+                const expiresAt = new Date(Date.now() + 300 * 1000).toISOString();
+                const { error } = await supabase.from('friendly_queue').upsert({
+                  user_id: profile.id,
+                  team_name: profile.team_name || 'Bilinmeyen',
+                  expires_at: expiresAt,
+                  is_priority: false
+                }, { onConflict: 'user_id' });
+
+                if (error) {
+                  console.error('[FixturePage] Friendly queue error:', error.message);
+                  alert('Sıraya girilemedi: ' + error.message);
+                } else {
+                  alert('Hazırlık maçı sıraya eklendi! Eşleşme bulunduğunda bildirim alacaksınız.');
+                }
+              } catch (err) {
+                console.error('[FixturePage] Friendly queue exception:', err);
                 alert('Bir hata oluştu.');
               } finally {
                 setFriendlyLoading(false);

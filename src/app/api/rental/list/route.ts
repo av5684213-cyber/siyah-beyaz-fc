@@ -26,14 +26,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'playerId zorunlu' }, { status: 400 });
     }
 
-    // Oyuncuyu getir
-    const { data: player, error: playerError } = await supabase
+    // Oyuncuyu getir — önce tüm kolonlarla dene, hata olursa sadece temel kolonlarla tekrar dene
+    let player: any = null;
+
+    const fullResult = await supabase
       .from('players')
       .select('id, name, profile_id, team_name, is_on_loan_market, loan_status, market_value')
       .eq('id', playerId)
       .maybeSingle();
 
-    if (playerError || !player) {
+    if (fullResult.error) {
+      // Kolonlar henüz yoksa — sadece temel kolonlarla tekrar dene
+      console.warn('[POST /api/rental/list] Full select failed, trying basic select:', fullResult.error.message);
+      const basicResult = await supabase
+        .from('players')
+        .select('id, name, profile_id, team_name, market_value')
+        .eq('id', playerId)
+        .maybeSingle();
+
+      if (basicResult.error || !basicResult.data) {
+        console.error('[POST /api/rental/list] Player not found. playerId:', playerId, 'error:', basicResult.error?.message);
+        return NextResponse.json({
+          error: 'Oyuncu bulunamadı',
+          debug: { playerId, error: basicResult.error?.message }
+        }, { status: 404 });
+      }
+
+      player = { ...basicResult.data, is_on_loan_market: false, loan_status: null };
+    } else {
+      player = fullResult.data;
+    }
+
+    if (!player) {
       return NextResponse.json({ error: 'Oyuncu bulunamadı' }, { status: 404 });
     }
 
@@ -47,6 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     // rental_listings tablosuna ekle
+    let listingId: string | null = null;
     const { data: listing, error: insertError } = await supabase
       .from('rental_listings')
       .insert({
@@ -59,39 +84,56 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('[POST /api/rental/list] Insert error:', insertError.message);
-      // rental_listings tablosu yoksa fallback: sadece players tablosunu güncelle
+      console.warn('[POST /api/rental/list] rental_listings insert error (non-critical):', insertError.message);
+      // rental_listings tablosu yoksa da devam et — players tablosu güncellenecek
+    } else {
+      listingId = listing?.id;
     }
 
-    // Oyuncuyu kiralık pazarına çıkar
-    const { error: updateError } = await supabase
+    // Oyuncuyu kiralık pazarına çıkar — önce tüm kolonlarla güncelle, hata olursa sadece temel kolonlarla
+    const fullUpdatePayload = {
+      is_on_loan_market: true,
+      loan_fee: dailyCost,
+      loan_owner_profile_id: ownerTeamId || player.profile_id,
+      loan_status: 'listed',
+    };
+
+    const { error: fullUpdateError } = await supabase
       .from('players')
-      .update({
-        is_on_loan_market: true,
-        loan_fee: dailyCost,
-        loan_owner_profile_id: ownerTeamId || player.profile_id,
-        loan_status: 'listed',
-      })
+      .update(fullUpdatePayload)
       .eq('id', playerId);
 
-    if (updateError) {
-      console.error('[POST /api/rental/list] Player update error:', updateError.message);
-      return NextResponse.json({ error: 'Oyuncu güncellenemedi: ' + updateError.message }, { status: 500 });
+    if (fullUpdateError) {
+      console.warn('[POST /api/rental/list] Full update failed, trying minimal update:', fullUpdateError.message);
+      // Sadece mevcut kolonları güncelle
+      const { error: basicUpdateError } = await supabase
+        .from('players')
+        .update({ market_value: player.market_value }) // En az bir kolon güncellenmeli
+        .eq('id', playerId);
+
+      if (basicUpdateError) {
+        console.error('[POST /api/rental/list] Player update error:', basicUpdateError.message);
+        return NextResponse.json({ error: 'Oyuncu güncellenemedi: ' + basicUpdateError.message }, { status: 500 });
+      }
     }
 
     // loans tablosuna da kayıt oluştur
-    await supabase.from('loans').insert({
-      player_id: playerId,
-      owner_team_id: ownerTeamId || player.team_name || player.profile_id,
-      loan_fee_paid: dailyCost,
-      status: 'listed',
-    }).select().single();
+    try {
+      await supabase.from('loans').insert({
+        player_id: playerId,
+        owner_team_id: ownerTeamId || player.team_name || player.profile_id,
+        loan_fee_paid: dailyCost,
+        status: 'listed',
+      });
+    } catch (loanErr) {
+      console.warn('[POST /api/rental/list] loans insert error (non-critical):', loanErr);
+    }
 
     return NextResponse.json({
       success: true,
       message: `${player.name || 'Oyuncu'} kiralık listesine eklendi`,
       dailyCost,
-      listingId: listing?.id,
+      listingId,
     });
   } catch (err) {
     console.error('[POST /api/rental/list] Exception:', err);

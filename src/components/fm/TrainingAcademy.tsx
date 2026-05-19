@@ -11,7 +11,7 @@ import {
 import type { Player, TrainingState, TrainingAssignment, TrainingProgramId } from '@/lib/fm/types';
 import { TRAINING_PROGRAMS } from '@/lib/fm/constants';
 import { runTrainingSession } from '@/lib/fm/trainingEngine';
-import { toTitleCase, getPosRowStyle } from '@/lib/fm/ui-helpers';
+import { toTitleCase, getPosRowStyle, getPosGroup, getPlayerPos } from '@/lib/fm/ui-helpers';
 import { useFM } from '@/lib/fm/GameContext';
 import TacticLab from './TacticLab';
 
@@ -142,12 +142,24 @@ export default function TrainingAcademy({
     return map;
   }, [trainingState?.assignments]);
 
+  // ── Position group sort order ──
+  const POS_GROUP_ORDER: Record<string, number> = { GK: 0, DEF: 1, MID: 2, FWD: 3, SUB: 4 };
+
   // ── Filtered & sorted players ──
   const filteredSquad = useMemo(() => {
     let list = [...(squad || [])];
     if (filterPos !== 'ALL') list = list.filter(p => p.position === filterPos);
     
+    // Primary sort: position group (GK → DEF → MID → FWD), secondary: user-selected sort
     list.sort((a, b) => {
+      // First: sort by position group
+      const posA = getPlayerPos(a as Record<string, unknown>);
+      const posB = getPlayerPos(b as Record<string, unknown>);
+      const groupA = POS_GROUP_ORDER[getPosGroup(posA)] ?? 4;
+      const groupB = POS_GROUP_ORDER[getPosGroup(posB)] ?? 4;
+      if (groupA !== groupB) return groupA - groupB;
+
+      // Then: within same group, sort by user-selected criteria
       let valA: any = a[sortBy as keyof Player] || 0;
       let valB: any = b[sortBy as keyof Player] || 0;
 

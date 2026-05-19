@@ -282,6 +282,9 @@ export default function MarketTab() {
     }).slice(0, 50);
   }, [transferListings, freeAgents, profile?.team_name, searchTerm, positionFilter]);
 
+  // ─── Player demands (randomly generated when opening negotiation) ───
+  const [playerDemands, setPlayerDemands] = useState<{ minSalary: number; minWeeks: number } | null>(null);
+
   const handleOpenNegotiation = (player: Player) => {
     setNegotiatingPlayer(player);
     const mv = getEffectiveMarketValue(player);
@@ -299,6 +302,11 @@ export default function MarketTab() {
     setSellOnClause(0);
     setNegotiationResult(null);
     setIsNegotiating(false);
+    // Generate player demands based on rating
+    const range = getSalaryRange(player.rating);
+    const minSalary = Math.round(range.min + Math.random() * (range.max - range.min) * 0.5);
+    const minWeeks = 12 + Math.floor(Math.random() * 40); // 12-52 weeks
+    setPlayerDemands({ minSalary, minWeeks });
   };
 
   const handleNegotiate = async () => {
@@ -307,6 +315,23 @@ export default function MarketTab() {
     try {
       // For loan mode, the effective offer is the loan fee (or 0 if no buy clause)
       const effectiveOffer = isLoan ? loanFee : offerAmount;
+
+      // Check player demands
+      if (playerDemands) {
+        const salaryMeetsDemand = weeklySalary >= playerDemands.minSalary * 0.8; // ±20% tolerance
+        const durationWeeks = contractYears * 12;
+        const durationMeetsDemand = durationWeeks >= playerDemands.minWeeks * 0.8;
+
+        if (!salaryMeetsDemand && !durationMeetsDemand) {
+          setNegotiationResult({
+            success: false,
+            message: `Oyuncu teklifinizi reddetti. Maaş talebi: ${playerDemands.minSalary.toLocaleString('tr-TR')} €/hafta, Minimum süre: ${playerDemands.minWeeks} hafta. Teklifiniz bu taleplerden çok uzak.`
+          });
+          setIsNegotiating(false);
+          return;
+        }
+      }
+
       const res = await negotiatePurchase(negotiatingPlayer, effectiveOffer);
       setNegotiationResult({
         success: res.success,
@@ -317,6 +342,7 @@ export default function MarketTab() {
         setTimeout(() => {
           setNegotiatingPlayer(null);
           setIsNegotiating(false);
+          setPlayerDemands(null);
         }, 2000);
       }
     } catch (err: any) {
@@ -1228,6 +1254,25 @@ export default function MarketTab() {
                       <FileText size={14} className="text-white/40" />
                       <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Sözleşme Detayları</p>
                     </div>
+
+                    {/* Player Demands Box */}
+                    {playerDemands && (
+                      <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl p-3 space-y-1.5">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Star size={12} className="text-amber-400" />
+                          <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">Oyuncu Talepleri</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] text-white/40 font-bold uppercase">Minimum Haftalık Ücret</span>
+                          <span className="text-[10px] font-black text-amber-300">{playerDemands.minSalary.toLocaleString('tr-TR')} €</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] text-white/40 font-bold uppercase">Minimum Sözleşme Süresi</span>
+                          <span className="text-[10px] font-black text-amber-300">{playerDemands.minWeeks} hafta (~{Math.ceil(playerDemands.minWeeks / 12)} yıl)</span>
+                        </div>
+                        <p className="text-[8px] text-white/20 mt-1 italic">Teklifiniz oyuncunun taleplerine yakınsa anlaşma şansı artar.</p>
+                      </div>
+                    )}
 
                     {/* Contract Length */}
                     <div>
