@@ -2,6 +2,7 @@
  * Web Push Bildirim Yardımcı Fonksiyonları
  *
  * VAPID anahtarları ile push bildirim gönderme
+ * auth_key sütun adı kullanılır (master migration şemasına uygun)
  */
 
 export interface PushSubscription {
@@ -72,6 +73,7 @@ export async function removeSubscription(
 
 /**
  * Belirli bir profile push bildirim gönder
+ * web-push kütüphanesi ile gerçek gönderim yapar
  */
 export async function sendPushToProfile(
   profileId: string,
@@ -88,17 +90,55 @@ export async function sendPushToProfile(
 
   if (!subs || subs.length === 0) return 0;
 
-  // web-push kütüphanesi olmadan basit bildirim (Service Worker'a bırakılır)
-  // Gerçek push gönderimi için 'web-push' npm paketi gerekir
+  // web-push kütüphanesini kullan
+  let webpush: typeof import('web-push') | null = null;
+  try {
+    webpush = (await import('web-push')).default;
+    const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || '';
+    const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '';
+    const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@siyahbeyazfc.com';
+
+    if (vapidPublicKey && vapidPrivateKey) {
+      webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+    } else {
+      console.warn('[push] VAPID keys not configured, skipping real push');
+      return 0;
+    }
+  } catch {
+    console.warn('[push] web-push kütüphanesi yüklenemedi, stub modunda');
+    return 0;
+  }
+
   let sent = 0;
   for (const sub of subs) {
     try {
-      // Basit fetch ile push gönderimi (VAPID imzasız — geliştirme aşaması)
-      // Prodüksiyonda web-push kütüphanesi kullanılmalı
-      console.log(`[push] Bildirim gönderildi: ${payload.title} → ${profileId}`);
+      const pushSubscription = {
+        endpoint: sub.endpoint,
+        keys: {
+          p256dh: sub.p256dh,
+          auth: sub.auth_key || '',
+        },
+      };
+
+      await webpush.sendNotification(pushSubscription, JSON.stringify({
+        title: payload.title,
+        body: payload.body,
+        icon: payload.icon || '/favicon.ico',
+        url: payload.url || '/fixture',
+      }));
+
       sent++;
-    } catch {
-      // Subscription geçersiz olabilir
+    } catch (pushErr: unknown) {
+      const statusCode = (pushErr as { statusCode?: number })?.statusCode;
+      if (statusCode === 404 || statusCode === 410) {
+        // Abonelik geçersiz, sil
+        await supabase
+          .from('push_subscriptions')
+          .delete()
+          .eq('endpoint', sub.endpoint)
+          .eq('profile_id', profileId);
+      }
+      console.error('[push] Gönderim hatası:', pushErr);
     }
   }
 
@@ -110,15 +150,15 @@ export async function sendPushToProfile(
  */
 export async function sendMatchReminder(
   profileId: string,
-  matchInfo: { opponent: string; isHome: boolean; matchTime: string; stadium: string }
+  matchInfo: { opponent: string; isHome: boolean; matchTime: string; stadium: string; matchId?: string }
 ): Promise<number> {
   const venue = matchInfo.isHome ? 'EV' : 'DEP';
-  const title = `⚽ Maç Hatırlatması!`;
+  const title = '⚽ Maç Hatırlatması!';
   const body = `${venue}: ${matchInfo.opponent} - ${matchInfo.matchTime} | ${matchInfo.stadium}`;
 
   return sendPushToProfile(profileId, {
     title,
     body,
-    url: '/fixture',
+    url: matchInfo.matchId ? `/match/${matchInfo.matchId}` : '/fixture',
   });
 }

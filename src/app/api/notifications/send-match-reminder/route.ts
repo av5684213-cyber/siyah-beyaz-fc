@@ -120,11 +120,13 @@ export async function GET(request: NextRequest) {
 
       for (const sub of subscriptions) {
         try {
+          // auth_key sütununu kullan (master migration şemasına uygun)
+          const authValue = (sub as Record<string, unknown>).auth_key || (sub as Record<string, unknown>).auth || '';
           const pushSubscription = {
             endpoint: sub.endpoint,
             keys: {
               p256dh: sub.p256dh,
-              auth: sub.auth,
+              auth: authValue,
             },
           };
 

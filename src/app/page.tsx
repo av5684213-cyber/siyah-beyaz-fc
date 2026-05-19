@@ -78,10 +78,13 @@ import {
   ShieldAlert,
   RefreshCw,
   DollarSign,
-  Award
+  Award,
+  Bell,
+  Cog
 } from 'lucide-react';
 
 import { useFM } from '@/lib/fm/GameContext';
+import NotificationSettings from '@/components/fm/NotificationSettings';
 
 // ── Upgrade Countdown Component for global banner ──
 function UpgradeCountdown({ endAt }: { endAt: string }) {
@@ -925,7 +928,10 @@ export default function Home() {
                <NavButton icon={<Building2 size={18} />} label="EFSANELER" active={activeTab === 'hof'} onClick={() => setActiveTab('hof')} />
             </div>
             
-            <div className="mt-6 pt-4 border-t border-white/5 space-y-1">
+            <div className="mt-4 pt-4 border-t border-white/5 space-y-1">
+              <NavButton icon={<Cog size={18} />} label="AYARLAR" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+            </div>
+            <div className="mt-2 pt-2 border-t border-white/5 space-y-1">
               <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest text-white/30 hover:text-white hover:bg-white/5 transition-all"><LogOut size={14} /> ÇIKIŞ YAP</button>
             </div>
           </nav>
@@ -1387,6 +1393,20 @@ export default function Home() {
               {activeTab === 'hof' && profile && (
                 <motion.div key="hof" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <HallOfFameTab profileId={profile.id} teamName={profile.team_name} />
+                </motion.div>
+              )}
+              {activeTab === 'settings' && profile && (
+                <motion.div key="settings" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-14 h-14 bg-zinc-800 border border-white/10 rounded-2xl flex items-center justify-center">
+                      <Cog size={24} className="text-white/60" />
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-black text-white uppercase tracking-tighter">Ayarlar</h1>
+                      <p className="text-sm text-white/40">Bildirimler ve tercihlerini yönet</p>
+                    </div>
+                  </div>
+                  <NotificationSettings profileId={profile.id} />
                 </motion.div>
               )}
             </AnimatePresence>
