@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- Siyah Beyaz FC — Supabase Migration SQL
+-- Siyah Beyaz FC — Supabase Migration SQL (GÜNCEL)
 -- Bu SQL'i Supabase Dashboard → SQL Editor'de çalıştırın
 -- Tarih: 2026-05-20
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -26,7 +26,7 @@ BEGIN
     );
   END IF;
 END $$;
-ALTER TABLE players ADD COLUMN IF NOT EXISTS secondary_positions text[];
+ALTER TABLE players ADD COLUMN IF NOT EXISTS secondary_positions TEXT[];
 
 -- 1c. Kiralama sistemi kolonları
 ALTER TABLE players ADD COLUMN IF NOT EXISTS is_on_loan_market BOOLEAN DEFAULT FALSE;
@@ -83,7 +83,105 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS scouting_stars INTEGER;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS scouting_count INTEGER;
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- BÖLÜM 2: LOANS TABLOSUNU OLUŞTUR
+-- BÖLÜM 2: MEVCUT OYUNCULARIN specific_position'INI GÜNCELLE
+-- ═══════════════════════════════════════════════════════════════════════════
+
+UPDATE players SET specific_position = 'GK'
+WHERE specific_position IS NULL AND position = 'GK';
+
+UPDATE players SET specific_position = (ARRAY['CB','LB','RB','LWB','RWB'])[floor(random()*5+1)::int]
+WHERE (specific_position IS NULL OR specific_position IN ('DEF','MID','FWD'))
+  AND position = 'DEF';
+
+UPDATE players SET specific_position = (ARRAY['CDM','CM','CAM','LM','RM','LW','RW'])[floor(random()*7+1)::int]
+WHERE (specific_position IS NULL OR specific_position IN ('DEF','MID','FWD'))
+  AND position = 'MID';
+
+UPDATE players SET specific_position = (ARRAY['CF','ST'])[floor(random()*2+1)::int]
+WHERE (specific_position IS NULL OR specific_position IN ('DEF','MID','FWD'))
+  AND position = 'FWD';
+
+UPDATE players SET specific_position = 'CM'
+WHERE specific_position IS NULL;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- BÖLÜM 3: YAN MEVKİLERİ ATA (GK hariç, ARRAY[]::text[] — JSONB DEĞİL!)
+-- ═══════════════════════════════════════════════════════════════════════════
+
+UPDATE players SET secondary_positions =
+  CASE
+    WHEN specific_position = 'CB' THEN
+      CASE WHEN random() < 0.06 THEN ARRAY[(ARRAY['LB','RB','CDM'])[floor(random()*3+1)::int], (ARRAY['LB','RB','CDM'])[floor(random()*3+1)::int]]::text[]
+           WHEN random() < 0.24 THEN ARRAY[(ARRAY['LB','RB','CDM'])[floor(random()*3+1)::int]]::text[]
+           ELSE NULL END
+    WHEN specific_position = 'LB' THEN
+      CASE WHEN random() < 0.06 THEN ARRAY[(ARRAY['CB','LWB','LM'])[floor(random()*3+1)::int], (ARRAY['CB','LWB','LM'])[floor(random()*3+1)::int]]::text[]
+           WHEN random() < 0.24 THEN ARRAY[(ARRAY['CB','LWB','LM'])[floor(random()*3+1)::int]]::text[]
+           ELSE NULL END
+    WHEN specific_position = 'RB' THEN
+      CASE WHEN random() < 0.06 THEN ARRAY[(ARRAY['CB','RWB','RM'])[floor(random()*3+1)::int], (ARRAY['CB','RWB','RM'])[floor(random()*3+1)::int]]::text[]
+           WHEN random() < 0.24 THEN ARRAY[(ARRAY['CB','RWB','RM'])[floor(random()*3+1)::int]]::text[]
+           ELSE NULL END
+    WHEN specific_position = 'LWB' THEN
+      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['LB','LM'])[floor(random()*2+1)::int]]::text[]
+           ELSE NULL END
+    WHEN specific_position = 'RWB' THEN
+      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['RB','RM'])[floor(random()*2+1)::int]]::text[]
+           ELSE NULL END
+    WHEN specific_position = 'CDM' THEN
+      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['CM','CB'])[floor(random()*2+1)::int]]::text[]
+           ELSE NULL END
+    WHEN specific_position = 'CM' THEN
+      CASE WHEN random() < 0.06 THEN ARRAY[(ARRAY['CDM','CAM'])[floor(random()*2+1)::int], (ARRAY['CDM','CAM'])[floor(random()*2+1)::int]]::text[]
+           WHEN random() < 0.24 THEN ARRAY[(ARRAY['CDM','CAM'])[floor(random()*2+1)::int]]::text[]
+           ELSE NULL END
+    WHEN specific_position = 'CAM' THEN
+      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['CM','CF'])[floor(random()*2+1)::int]]::text[]
+           ELSE NULL END
+    WHEN specific_position = 'LM' THEN
+      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['LW','LB','CM'])[floor(random()*3+1)::int]]::text[]
+           ELSE NULL END
+    WHEN specific_position = 'RM' THEN
+      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['RW','RB','CM'])[floor(random()*3+1)::int]]::text[]
+           ELSE NULL END
+    WHEN specific_position = 'LW' THEN
+      CASE WHEN random() < 0.06 THEN ARRAY[(ARRAY['LM','ST','CF'])[floor(random()*3+1)::int], (ARRAY['LM','ST','CF'])[floor(random()*3+1)::int]]::text[]
+           WHEN random() < 0.24 THEN ARRAY[(ARRAY['LM','ST','CF'])[floor(random()*3+1)::int]]::text[]
+           ELSE NULL END
+    WHEN specific_position = 'RW' THEN
+      CASE WHEN random() < 0.06 THEN ARRAY[(ARRAY['RM','ST','CF'])[floor(random()*3+1)::int], (ARRAY['RM','ST','CF'])[floor(random()*3+1)::int]]::text[]
+           WHEN random() < 0.24 THEN ARRAY[(ARRAY['RM','ST','CF'])[floor(random()*3+1)::int]]::text[]
+           ELSE NULL END
+    WHEN specific_position = 'CF' THEN
+      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['ST','CAM','LW'])[floor(random()*3+1)::int]]::text[]
+           ELSE NULL END
+    WHEN specific_position = 'ST' THEN
+      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['CF','LW','RW'])[floor(random()*3+1)::int]]::text[]
+           ELSE NULL END
+    ELSE NULL
+  END
+WHERE secondary_positions IS NULL
+  AND specific_position IS NOT NULL
+  AND specific_position != 'GK';
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- BÖLÜM 4: KİRALAMA KOLONLARININ VARSAYILAN DEĞERLERİ
+-- ═══════════════════════════════════════════════════════════════════════════
+
+UPDATE players SET
+  is_on_loan_market = COALESCE(is_on_loan_market, FALSE),
+  loan_fee = COALESCE(loan_fee, 0),
+  loan_status = COALESCE(loan_status, NULL)
+WHERE is_on_loan_market IS NULL;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- BÖLÜM 5: İNDEKSLER
+-- ═══════════════════════════════════════════════════════════════════════════
+
+CREATE INDEX IF NOT EXISTS idx_players_specific_position ON players(specific_position);
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- BÖLÜM 6: LOANS TABLOSU
 -- ═══════════════════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS loans (
@@ -98,10 +196,8 @@ CREATE TABLE IF NOT EXISTS loans (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Loans tablosu için RLS (Row Level Security)
 ALTER TABLE loans ENABLE ROW LEVEL SECURITY;
 
--- Anon erişim politikası (RLS = true, tüm işlemlere izin verir)
 DO $$ BEGIN
   CREATE POLICY "Allow anon full access on loans" ON loans
     FOR ALL USING (true) WITH CHECK (true);
@@ -110,108 +206,89 @@ EXCEPTION WHEN duplicate_object THEN
 END $$;
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- BÖLÜM 3: MEVCUT OYUNCULARIN specific_position'INI GÜNCELLE
+-- BÖLÜM 7: RENTAL_LISTINGS TABLOSU (kiralama sistemi)
 -- ═══════════════════════════════════════════════════════════════════════════
 
--- position='GK' olanlara specific_position='GK' ata
-UPDATE players SET specific_position = 'GK'
-WHERE specific_position IS NULL AND position = 'GK';
+CREATE TABLE IF NOT EXISTS rental_listings (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  player_id TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  owner_team_id TEXT NOT NULL,
+  daily_cost INT NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'active',
+  listed_at TIMESTAMPTZ DEFAULT now()
+);
 
--- position='DEF' olanlara rastgele defans pozisyonu ata
-UPDATE players SET specific_position = (ARRAY['CB','LB','RB','LWB','RWB'])[floor(random()*5+1)::int]
-WHERE (specific_position IS NULL OR specific_position IN ('DEF', 'MID', 'FWD'))
-  AND position = 'DEF';
+CREATE INDEX IF NOT EXISTS idx_rental_listings_player ON rental_listings(player_id);
+CREATE INDEX IF NOT EXISTS idx_rental_listings_status ON rental_listings(status);
+CREATE INDEX IF NOT EXISTS idx_rental_listings_owner ON rental_listings(owner_team_id);
 
--- position='MID' olanlara rastgele orta saha pozisyonu ata
-UPDATE players SET specific_position = (ARRAY['CDM','CM','CAM','LM','RM','LW','RW'])[floor(random()*7+1)::int]
-WHERE (specific_position IS NULL OR specific_position IN ('DEF', 'MID', 'FWD'))
-  AND position = 'MID';
+ALTER TABLE rental_listings ENABLE ROW LEVEL SECURITY;
 
--- position='FWD' olanlara rastgele forvet pozisyonu ata
-UPDATE players SET specific_position = (ARRAY['CF','ST'])[floor(random()*2+1)::int]
-WHERE (specific_position IS NULL OR specific_position IN ('DEF', 'MID', 'FWD'))
-  AND position = 'FWD';
-
--- Diğer tüm null kayıtlar
-UPDATE players SET specific_position = 'CM'
-WHERE specific_position IS NULL;
-
--- ═══════════════════════════════════════════════════════════════════════════
--- BÖLÜM 4: YAN MEVKİLERİ ATA (GK hariç)
--- ═══════════════════════════════════════════════════════════════════════════
-
--- GK hariç, secondary_positions NULL olan oyunculara yan mevki ata
--- %24 şansla 1 yan mevki, %6 şansla 2 yan mevki atanır
-UPDATE players SET secondary_positions = 
-  CASE 
-    WHEN specific_position = 'CB' THEN 
-      CASE WHEN random() < 0.06 THEN ARRAY[(ARRAY['LB','RB','CDM'])[floor(random()*3+1)::int], (ARRAY['LB','RB','CDM'])[floor(random()*3+1)::int]]
-           WHEN random() < 0.24 THEN ARRAY[(ARRAY['LB','RB','CDM'])[floor(random()*3+1)::int]]
-           ELSE NULL END
-    WHEN specific_position = 'LB' THEN 
-      CASE WHEN random() < 0.06 THEN ARRAY[(ARRAY['CB','LWB','LM'])[floor(random()*3+1)::int], (ARRAY['CB','LWB','LM'])[floor(random()*3+1)::int]]
-           WHEN random() < 0.24 THEN ARRAY[(ARRAY['CB','LWB','LM'])[floor(random()*3+1)::int]]
-           ELSE NULL END
-    WHEN specific_position = 'RB' THEN 
-      CASE WHEN random() < 0.06 THEN ARRAY[(ARRAY['CB','RWB','RM'])[floor(random()*3+1)::int], (ARRAY['CB','RWB','RM'])[floor(random()*3+1)::int]]
-           WHEN random() < 0.24 THEN ARRAY[(ARRAY['CB','RWB','RM'])[floor(random()*3+1)::int]]
-           ELSE NULL END
-    WHEN specific_position = 'LWB' THEN 
-      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['LB','LM'])[floor(random()*2+1)::int]]
-           ELSE NULL END
-    WHEN specific_position = 'RWB' THEN 
-      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['RB','RM'])[floor(random()*2+1)::int]]
-           ELSE NULL END
-    WHEN specific_position = 'CDM' THEN 
-      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['CM','CB'])[floor(random()*2+1)::int]]
-           ELSE NULL END
-    WHEN specific_position = 'CM' THEN 
-      CASE WHEN random() < 0.06 THEN ARRAY[(ARRAY['CDM','CAM'])[floor(random()*2+1)::int], (ARRAY['CDM','CAM'])[floor(random()*2+1)::int]]
-           WHEN random() < 0.24 THEN ARRAY[(ARRAY['CDM','CAM'])[floor(random()*2+1)::int]]
-           ELSE NULL END
-    WHEN specific_position = 'CAM' THEN 
-      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['CM','CF'])[floor(random()*2+1)::int]]
-           ELSE NULL END
-    WHEN specific_position = 'LM' THEN 
-      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['LW','LB','CM'])[floor(random()*3+1)::int]]
-           ELSE NULL END
-    WHEN specific_position = 'RM' THEN 
-      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['RW','RB','CM'])[floor(random()*3+1)::int]]
-           ELSE NULL END
-    WHEN specific_position = 'LW' THEN 
-      CASE WHEN random() < 0.06 THEN ARRAY[(ARRAY['LM','ST','CF'])[floor(random()*3+1)::int], (ARRAY['LM','ST','CF'])[floor(random()*3+1)::int]]
-           WHEN random() < 0.24 THEN ARRAY[(ARRAY['LM','ST','CF'])[floor(random()*3+1)::int]]
-           ELSE NULL END
-    WHEN specific_position = 'RW' THEN 
-      CASE WHEN random() < 0.06 THEN ARRAY[(ARRAY['RM','ST','CF'])[floor(random()*3+1)::int], (ARRAY['RM','ST','CF'])[floor(random()*3+1)::int]]
-           WHEN random() < 0.24 THEN ARRAY[(ARRAY['RM','ST','CF'])[floor(random()*3+1)::int]]
-           ELSE NULL END
-    WHEN specific_position = 'CF' THEN 
-      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['ST','CAM','LW'])[floor(random()*3+1)::int]]
-           ELSE NULL END
-    WHEN specific_position = 'ST' THEN 
-      CASE WHEN random() < 0.24 THEN ARRAY[(ARRAY['CF','LW','RW'])[floor(random()*3+1)::int]]
-           ELSE NULL END
-    ELSE NULL
-  END
-WHERE secondary_positions IS NULL 
-  AND specific_position IS NOT NULL 
-  AND specific_position != 'GK';
+DO $$ BEGIN
+  CREATE POLICY "rental_select_all" ON rental_listings FOR SELECT USING (true);
+  CREATE POLICY "rental_insert_all" ON rental_listings FOR INSERT WITH CHECK (true);
+  CREATE POLICY "rental_update_all" ON rental_listings FOR UPDATE USING (true);
+  CREATE POLICY "rental_delete_all" ON rental_listings FOR DELETE USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- BÖLÜM 5: KİRALAMA KOLONLARININ VARSAYILAN DEĞERLERİ
+-- BÖLÜM 8: PUSH_SUBSCRIPTIONS TABLOSU (Web Push bildirimleri)
 -- ═══════════════════════════════════════════════════════════════════════════
 
-UPDATE players SET 
-  is_on_loan_market = COALESCE(is_on_loan_market, FALSE),
-  loan_fee = COALESCE(loan_fee, 0),
-  loan_status = COALESCE(loan_status, NULL)
-WHERE is_on_loan_market IS NULL;
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  profile_id TEXT NOT NULL,
+  endpoint TEXT NOT NULL,
+  p256dh TEXT,
+  auth_key TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(profile_id, endpoint)
+);
+
+CREATE INDEX IF NOT EXISTS idx_push_subs_profile ON push_subscriptions(profile_id);
+CREATE INDEX IF NOT EXISTS idx_push_subs_endpoint ON push_subscriptions(endpoint);
+
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  CREATE POLICY "push_subs_select_all" ON push_subscriptions FOR SELECT USING (true);
+  CREATE POLICY "push_subs_insert_all" ON push_subscriptions FOR INSERT WITH CHECK (true);
+  CREATE POLICY "push_subs_update_all" ON push_subscriptions FOR UPDATE USING (true);
+  CREATE POLICY "push_subs_delete_all" ON push_subscriptions FOR DELETE USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- BÖLÜM 9: SEASON_AWARDS TABLOSU (sezon sonu ödülleri)
+-- ═══════════════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS season_awards (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  season_id UUID,
+  award_type TEXT NOT NULL,
+  team_name TEXT,
+  player_id TEXT,
+  player_name TEXT,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE season_awards ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  CREATE POLICY "season_awards_select_all" ON season_awards FOR SELECT USING (true);
+  CREATE POLICY "season_awards_insert_all" ON season_awards FOR INSERT WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- BİTTİ! Bu SQL'i çalıştırdıktan sonra:
 -- 1. Tüm oyunculara specific_position atanmış olacak
--- 2. Yan mevkiler (secondary_positions) doldurulmuş olacak
--- 3. Kiralama sistemi (loans tablosu) hazır olacak
--- 4. Detaylı istatistik kolonları eklenmiş olacak
+-- 2. Yan mevkiler (secondary_positions) text[] olarak doldurulmuş olacak
+-- 3. Kiralama sistemi (loans + rental_listings) hazır olacak
+-- 4. Push bildirimleri (push_subscriptions) hazır olacak
+-- 5. Sezon sonu ödülleri (season_awards) hazır olacak
+-- 6. Detaylı istatistik kolonları eklenmiş olacak
 -- ═══════════════════════════════════════════════════════════════════════════
