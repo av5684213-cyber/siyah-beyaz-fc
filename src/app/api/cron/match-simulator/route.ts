@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { simulateEnhancedMatch } from '@/lib/fm/enhancedMatchEngine';
+import { integratedMatchEngine } from '@/lib/fm/IntegratedMatchEngine';
 import { applyCardSuspensions, applyMatchInjuries, saveMatchEvents } from '@/lib/fm/matchConsequencesService';
 import { verifyCronSecret, sanitizeError } from '@/lib/fm/security';
 import { pickRefereeForMatch, generateLeagueReferees, getRefereeDisplayInfo, type Referee } from '@/lib/fm/referee';
@@ -129,6 +130,36 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
+        // ── EV SAHİBİ VE DEPLASMAN GERÇEK TAKTİKLERİNİ ÇEK (active_tactics tablosundan) ──
+        let homeTacticsData: Record<string, any> | null = null;
+        let awayTacticsData: Record<string, any> | null = null;
+
+        try {
+          if (homeTeamData.profile_id) {
+            const { data: tHome } = await supabase
+              .from('active_tactics')
+              .select('*')
+              .eq('id', homeTeamData.profile_id)
+              .maybeSingle();
+            if (tHome) homeTacticsData = tHome;
+          }
+        } catch (err) {
+          console.warn(`[cron/match-simulator] Ev sahibi taktik çekilemedi, default kullanılacak:`, err);
+        }
+
+        try {
+          if (awayTeamData.profile_id) {
+            const { data: tAway } = await supabase
+              .from('active_tactics')
+              .select('*')
+              .eq('id', awayTeamData.profile_id)
+              .maybeSingle();
+            if (tAway) awayTacticsData = tAway;
+          }
+        } catch (err) {
+          console.warn(`[cron/match-simulator] Deplasman taktik çekilemedi, default kullanılacak:`, err);
+        }
+
         // 3. Hakem ata (lig bazlı rotasyon)
         let refereeForMatch: Referee | null = null;
         try {
@@ -181,65 +212,69 @@ export async function GET(request: NextRequest) {
 
         const refInfo = refereeForMatch ? getRefereeDisplayInfo(refereeForMatch) : null;
 
-        // 4. Simülasyonu çalıştır (SUNUCU TARAFINDA)
-        const matchResult = simulateEnhancedMatch(
-          availableHome.slice(0, 11), // İlk 11
+        // 4. Simülasyonu çalıştır — YENİ ENHANCED & INTEGRATED MATCH ENGINE
+        const matchResult = await integratedMatchEngine.runScheduledMatch(
+          availableHome.slice(0, 11), // İlk 11 oyuncuları
           availableAway.slice(0, 11),
           {
-            formation: '4-4-2',
-            mentality: 3,
-            pressing: false,
-            passingStyle: 'Karışık',
-            intensity: 'normal',
-            lineHeight: 50,
-            width: 50,
-            aggression: 50,
-            passingIntensity: 50,
-            screenKeeper: false,
-            wasteTime: false,
-            parkTheBus: false,
-            crossGame: false,
-            loneStrikerCounter: false,
-            offsideTrap: false,
-          },
-          {
-            formation: '4-4-2',
-            mentality: 3,
-            pressing: false,
-            passingStyle: 'Karışık',
-            intensity: 'normal',
-            lineHeight: 50,
-            width: 50,
-            aggression: 50,
-            passingIntensity: 50,
-            screenKeeper: false,
-            wasteTime: false,
-            parkTheBus: false,
-            crossGame: false,
-            loneStrikerCounter: false,
-            offsideTrap: false,
-          },
-          {
+            homeTactics: {
+              formation: homeTacticsData?.formation || '4-4-2',
+              playStyle: homeTacticsData?.playStyle || homeTacticsData?.tactic || 'dengeli',
+              mentality: Number(homeTacticsData?.mentality || 3),
+              pressing: homeTacticsData?.pressing || false,
+              intensity: homeTacticsData?.intensity || 'normal',
+              passingStyle: homeTacticsData?.passingStyle || homeTacticsData?.passing_style || 'Karışık',
+              lineHeight: homeTacticsData?.lineHeight || 50,
+              width: homeTacticsData?.width || 50,
+              aggression: homeTacticsData?.aggression || 50,
+              passingIntensity: homeTacticsData?.passingIntensity || homeTacticsData?.passing_intensity || 50,
+              screenKeeper: homeTacticsData?.screenKeeper || false,
+              wasteTime: homeTacticsData?.wasteTime || false,
+              parkTheBus: homeTacticsData?.parkTheBus || false,
+              crossGame: homeTacticsData?.crossGame || false,
+              loneStrikerCounter: homeTacticsData?.loneStrikerCounter || false,
+              offsideTrap: homeTacticsData?.offsideTrap || homeTacticsData?.pressing || false,
+            },
+            activeTactic: {
+              formation: homeTacticsData?.formation || '4-4-2',
+              mentality: Number(homeTacticsData?.mentality || 3),
+              pressing: homeTacticsData?.pressing || false,
+              passingStyle: homeTacticsData?.passingStyle || homeTacticsData?.passing_style || 'Karışık',
+              intensity: homeTacticsData?.intensity || 'normal',
+              lineHeight: homeTacticsData?.lineHeight || 50,
+              width: homeTacticsData?.width || 50,
+              aggression: homeTacticsData?.aggression || 50,
+              passingIntensity: homeTacticsData?.passingIntensity || homeTacticsData?.passing_intensity || 50,
+              screenKeeper: homeTacticsData?.screenKeeper || false,
+              wasteTime: homeTacticsData?.wasteTime || false,
+              parkTheBus: homeTacticsData?.parkTheBus || false,
+              crossGame: homeTacticsData?.crossGame || false,
+              loneStrikerCounter: homeTacticsData?.loneStrikerCounter || false,
+              offsideTrap: homeTacticsData?.offsideTrap || false,
+              playStyle: homeTacticsData?.playStyle || 'dengeli',
+              tempo: homeTacticsData?.tempo || 'normal',
+              defensiveLine: homeTacticsData?.defensiveLine || 'normal',
+            } as any,
+            homeOperations: [], // Gelecekteki operasyon kartları altyapısı
             homeTeamName: homeTeamData.name,
             awayTeamName: awayTeamData.name,
-            substitutes: {
-              home: availableHome.slice(11, 18),
-              away: availableAway.slice(11, 18),
-            },
-            // Referee integration
-            refereeStrictness: refereeForMatch?.strictness ?? 50,
-            refereePersonality: refereeForMatch?.personality ?? 'dengeci',
-            refereeName: refereeForMatch?.name ?? undefined,
+            isDerby: false, // Lig fikstür durumuna göre ileride true çekilebilir
+            isBigMatch: false,
+            stadiumUpgrades: {}, // Gelecekte kulüp stadyum tablosundan join edilebilir
           }
         );
+
+        // Skor uyumluluğu: MatchResult.score.home/away → finalHomeScore/finalAwayScore
+        const finalHomeScore = matchResult.score?.home ?? (matchResult as any).homeScore ?? 0;
+        const finalAwayScore = matchResult.score?.away ?? (matchResult as any).awayScore ?? 0;
 
         // 4. Sonucu kaydet (hakem bilgisiyle)
         const { error: updateError } = await supabase
           .from('fixtures')
           .update({
             status: 'completed',
-            home_score: matchResult.homeScore,
-            away_score: matchResult.awayScore,
+            home_score: finalHomeScore,
+            away_score: finalAwayScore,
             referee_id: refereeForMatch?.id ?? null,
             referee_name: refereeForMatch?.name ?? null,
             referee_personality: refereeForMatch?.personality ?? null,
@@ -255,32 +290,70 @@ export async function GET(request: NextRequest) {
         // 5. Maç olaylarını kaydet
         await saveMatchEvents(fixture.id, matchResult.events);
 
-        // 6. Kart cezalarını uygula
+        // 6. Kart cezalarını uygula (büyük/küçük harf uyumlu)
         const cardEvents = matchResult.events
-          .filter((e: any) => e.type === 'yellow_card' || e.type === 'red_card')
-          .map((e: any) => ({ type: e.type, playerId: e.playerId, team: e.team }));
+          .filter((e: any) => {
+            const t = (e.type || '').toLowerCase();
+            return t === 'yellow_card' || t === 'yellow' || t === 'red_card' || t === 'red';
+          })
+          .map((e: any) => {
+            const t = (e.type || '').toLowerCase();
+            const normalizedType = (t === 'yellow_card' || t === 'yellow') ? 'yellow_card' : 'red_card';
+            return { type: normalizedType, playerId: e.playerId || e.player, team: e.team };
+          });
 
         if (cardEvents.length > 0) {
           await applyCardSuspensions(cardEvents);
         }
 
-        // 7. Sakatlıkları uygula
+        // 7. Sakatlıkları uygula (büyük/küçük harf uyumlu + IntegratedMatchEngine direkt oyuncu injury desteği)
         const injuryEvents = matchResult.events
-          .filter((e: any) => e.type === 'injury')
-          .map((e: any) => ({ playerId: e.playerId, playerName: e.playerName }));
+          .filter((e: any) => {
+            const t = (e.type || '').toLowerCase();
+            return t === 'injury';
+          })
+          .map((e: any) => ({ playerId: e.playerId || e.player, playerName: e.playerName || e.player }));
 
         if (injuryEvents.length > 0) {
           await applyMatchInjuries(injuryEvents);
         }
 
+        // 7b. IntegratedMatchEngine sakatlıkları doğrudan oyuncu objelerine yazar (event değil)
+        // Bu motor kullanıldığında sakat oyuncuları yakala ve DB'ye kaydet
+        const allMatchPlayers = [...availableHome.slice(0, 11), ...availableAway.slice(0, 11)];
+        const playersWithNewInjury = allMatchPlayers.filter((p: any) => {
+          // Sadece maç sırasında yeni sakatlık alan oyuncuları yakala
+          // homePlayers/awayPlayers çekilirken is_injured=false olanlar filtrelendi,
+          // şimdi injury varsa → maç sırasında sakatlandı
+          return p.injury && p.injury.remaining_days > 0;
+        });
+
+        if (playersWithNewInjury.length > 0) {
+          const engineInjuryEvents = playersWithNewInjury.map((p: any) => ({
+            playerId: p.id,
+            playerName: p.name,
+          }));
+          await applyMatchInjuries(engineInjuryEvents);
+          console.log(`[cron/match-simulator] ${playersWithNewInjury.length} oyuncu maç sırasında sakatlandı (IntegratedMatchEngine)`);
+        }
+
         // 8. Lig puanlarını güncelle
-        await updateLeagueStandings(supabase, fixture.season_id, homeTeamData.id, awayTeamData.id, matchResult.homeScore, matchResult.awayScore);
+        await updateLeagueStandings(supabase, fixture.season_id, homeTeamData.id, awayTeamData.id, finalHomeScore, finalAwayScore);
 
         // 9. Hakem istatistiklerini güncelle
         if (refereeForMatch) {
-          const yellowCount = matchResult.events.filter((e: any) => e.type === 'yellow_card').length;
-          const redCount = matchResult.events.filter((e: any) => e.type === 'red_card').length;
-          const penaltyCount = matchResult.events.filter((e: any) => e.type === 'penalty').length;
+          const yellowCount = matchResult.events.filter((e: any) => {
+            const t = (e.type || '').toLowerCase();
+            return t === 'yellow_card' || t === 'yellow';
+          }).length;
+          const redCount = matchResult.events.filter((e: any) => {
+            const t = (e.type || '').toLowerCase();
+            return t === 'red_card' || t === 'red';
+          }).length;
+          const penaltyCount = matchResult.events.filter((e: any) => {
+            const t = (e.type || '').toLowerCase();
+            return t === 'penalty';
+          }).length;
           await supabase.from('referees').update({
             total_matches: (refereeForMatch.totalMatches || 0) + 1,
             total_yellows: (refereeForMatch.totalYellows || 0) + yellowCount,
@@ -293,10 +366,10 @@ export async function GET(request: NextRequest) {
           fixtureId: fixture.id,
           homeTeam: homeTeamData.name,
           awayTeam: awayTeamData.name,
-          score: `${matchResult.homeScore}-${matchResult.awayScore}`,
+          score: `${finalHomeScore}-${finalAwayScore}`,
         });
 
-        console.log(`[cron/match-simulator] ${homeTeamData.name} ${matchResult.homeScore}-${matchResult.awayScore} ${awayTeamData.name}`);
+        console.log(`[cron/match-simulator] ${homeTeamData.name} ${finalHomeScore}-${finalAwayScore} ${awayTeamData.name}`);
 
       } catch (err) {
         errors.push(`Fixture ${fixture.id}: ${err}`);
