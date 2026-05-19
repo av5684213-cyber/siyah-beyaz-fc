@@ -63,7 +63,7 @@ const SCOUT_LEVEL_INFO: Record<number, { label: string; desc: string; color: str
 };
 
 export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?: (p: Player) => void, isAdmin?: boolean }) {
-  const { profile, setProfile, squad, trainingState, setTrainingState, setSelectedTeamProfile, watchlist, toggleWatchlist, league } = useFM();
+  const { profile, setProfile, squad, trainingState, setTrainingState, setSelectedTeamProfile, watchlist, toggleWatchlist, league, setActiveTab } = useFM();
   const scouting = useMemo(() => trainingState?.scouting || { scouts: [], foundPlayersPool: [], history: [], watchlist: [] }, [trainingState?.scouting]);
   const [showRecruitModal, setShowRecruitModal] = useState(false);
   const [selectedScoutSlot, setSelectedScoutSlot] = useState<number | null>(null);
@@ -84,10 +84,11 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
       const supabase = getSupabase();
       if (!supabase) return;
       try {
+        // staff tablosu user_id kullanır (profile_id değil)
         const { count } = await supabase
           .from('staff')
           .select('*', { count: 'exact', head: true })
-          .eq('profile_id', profile.id)
+          .eq('user_id', profile.id)
           .eq('type', 'scout');
         if (count && count > 0) setStaffScoutCount(count);
       } catch {
@@ -485,15 +486,15 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
           <div>
             <h3 className="text-sm font-black uppercase tracking-wider text-red-400 mb-1">Gözlemci Yok</h3>
             <p className="text-xs text-red-300/70 leading-relaxed">
-              Gözlemciniz bulunmuyor. Personel sekmesinden gözlemci satın alabilirsiniz.
+              Gözlemciniz bulunmuyor. Yerleşke {'>'} Personel sekmesinden gözlemci satın alabilirsiniz.
             </p>
-            <a 
-              href="/staff" 
+            <button 
+              onClick={() => setActiveTab('stadium')}
               className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-500/30 transition-all"
             >
               <Users size={12} />
-              Personel Sayfasına Git
-            </a>
+              Yerleşke Sekmesine Git
+            </button>
           </div>
         </motion.div>
       )}

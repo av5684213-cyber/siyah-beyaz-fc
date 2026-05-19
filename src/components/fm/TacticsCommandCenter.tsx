@@ -117,8 +117,8 @@ export default function TacticsCommandCenter({
 }: TacticsCommandCenterProps) {
   const [hoveredInfo, setHoveredInfo] = useState<string | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
-  const [sortBy, setSortBy] = useState<string>('rating');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<string>('Poz');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const getStatValue = (player: Player, key: string): number => {
     const rating = player.rating || 50;
@@ -144,20 +144,26 @@ export default function TacticsCommandCenter({
 
   const sortedSquad = useMemo(() => {
     const list = [...squad];
+    const posOrder = POS_ORDER;
     if (sortBy === 'Oyuncu') {
       list.sort((a, b) => sortDirection === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
     } else if (sortBy === 'Poz') {
-      const posOrder = POS_ORDER;
       list.sort((a, b) => {
         const oA = posOrder[a.specificPosition || a.position] ?? 99;
         const oB = posOrder[b.specificPosition || b.position] ?? 99;
+        // Aynı grupta OVR'ye göre azalan
+        if (oA === oB) return b.rating - a.rating;
         return sortDirection === 'asc' ? oA - oB : oB - oA;
       });
     } else {
       list.sort((a, b) => {
         const vA = getStatValue(a, sortBy);
         const vB = getStatValue(b, sortBy);
-        return sortDirection === 'asc' ? vA - vB : vB - vA;
+        if (vA !== vB) return sortDirection === 'asc' ? vA - vB : vB - vA;
+        // Eşitse mevki grubu sırasına göre
+        const oA = posOrder[a.specificPosition || a.position] ?? 99;
+        const oB = posOrder[b.specificPosition || b.position] ?? 99;
+        return oA - oB;
       });
     }
     return list;
@@ -409,7 +415,11 @@ export default function TacticsCommandCenter({
                <Users size={14} /> KADRO LİSTESİ
             </h4>
             <div className="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
-                {bench.sort((a, b) => b.rating - a.rating).map((player) => (
+                {bench.sort((a, b) => {
+                  const oA = POS_ORDER[a.specificPosition || a.position] ?? 99;
+                  const oB = POS_ORDER[b.specificPosition || b.position] ?? 99;
+                  return oA !== oB ? oA - oB : b.rating - a.rating;
+                }).map((player) => (
                   <div 
                       key={player.id}
                       draggable
@@ -574,7 +584,18 @@ export default function TacticsCommandCenter({
                       <span className="text-[6px] text-white/25 font-normal">/{player.secondaryPositions.join('/')}</span>
                     )}
                   </div>
-                  <div className="text-left text-[9px] font-bold text-white/80 truncate flex items-center">{toTitleCase(player.name)}</div>
+                  <div className="text-left text-[9px] font-bold text-white/80 truncate flex items-center gap-1">
+                    {toTitleCase(player.name)}
+                    {(player.archetype || player.playStyle) && (
+                      <span className="relative group/arch inline-flex items-center">
+                        <Info size={10} className="text-amber-400/40 group-hover/arch:text-amber-400 transition-colors cursor-help" />
+                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 rounded-lg bg-zinc-900/95 border border-amber-500/20 shadow-2xl text-[9px] font-bold text-amber-300 whitespace-nowrap pointer-events-none opacity-0 group-hover/arch:opacity-100 transition-all z-50 backdrop-blur-xl">
+                          {player.archetype || player.playStyle}
+                          <span className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-900/95 border-r border-b border-amber-500/20 rotate-45 -mt-1" />
+                        </span>
+                      </span>
+                    )}
+                  </div>
                   {statKeys.map(key => {
                     const val = getStatValue(player, key);
                     return (

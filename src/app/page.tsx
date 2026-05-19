@@ -38,7 +38,6 @@ import { generateFixtureId } from '@/lib/fm/matchChatService';
 import { AppHeader } from '@/components/fm/AppHeader';
 import { ToastNotifications } from '@/components/fm/ToastNotifications';
 import { DashboardTab } from '@/components/fm/DashboardTab';
-import MyTeamTab from '@/components/fm/MyTeamTab';
 import FixtureTab from '@/components/fm/FixtureTab';
 import { FriendlyMatchTab } from '@/components/fm/FriendlyMatchTab';
 
@@ -901,7 +900,6 @@ export default function Home() {
             )}
             <NavButton icon={<Building2 size={18} />} label="YERLEŞKE" active={activeTab === 'stadium'} onClick={() => setActiveTab('stadium')} />
             <NavButton icon={<Binoculars size={18} />} label="GÖZLEMCİLİK" active={activeTab === 'scouting'} onClick={() => setActiveTab('scouting')} />
-            <NavButton icon={<Users size={18} />} label="KADRO" active={activeTab === 'squad'} onClick={() => setActiveTab('squad')} />
             <NavButton icon={<Settings size={18} />} label="TAKTİK&TAKIMIM" active={activeTab === 'tactics'} onClick={() => setActiveTab('tactics')} />
             <NavButton icon={<Dumbbell size={18} />} label="ANTRENMAN" active={activeTab === 'training'} onClick={() => setActiveTab('training')} />
 
@@ -1142,68 +1140,6 @@ export default function Home() {
               )}
               {activeTab === 'friendly' && (
                 <FriendlyMatchTab />
-              )}
-              {activeTab === 'squad' && (
-                <motion.div key="squad" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                  <div className="pb-20">
-                    <MyTeamTab
-                      userId={userId || ''}
-                      squad={squad}
-                      teamName={profile?.team_name || 'Siyah Beyaz FC'}
-                      teamBudget={profile?.money || 0}
-                      onListPlayer={(player) => {
-                        const mv = calculateMarketValue(player);
-                        const corridor = getTransferCorridor(mv);
-                        const price = Math.round(corridor.min + (corridor.max - corridor.min) * 0.5);
-                        if (confirm(`${toTitleCase(player.name)} oyuncusunu ${formatCurrency(price)} fiyattan transfer listesine koymak istiyor musunuz?`)) {
-                          sellPlayer(player, price);
-                        }
-                      }}
-                      onLoanPlayer={async (player) => {
-                        if (!profile) return;
-                        const mv = calculateMarketValue(player);
-                        const loanFee = calculateLoanFeeEuro(mv, profile.current_day || 1);
-                        const feeStr = loanFee >= 1_000_000 ? `${(loanFee / 1_000_000).toFixed(1)}M €` : loanFee >= 1_000 ? `${(loanFee / 1_000).toFixed(0)}K €` : `${loanFee} €`;
-                        if (!confirm(`${toTitleCase(player.name)} oyuncusunu ${feeStr} kiralık ücretiyle kiralık pazarına çıkarmak istiyor musunuz?\n\n• ${feeStr} kiralama gerçekleştiğinde size ödenecek\n• 10 Kredi sistem komisyonu olarak kiracıdan düşülecek`)) return;
-                        try {
-                          const res = await fetch('/api/loans/list', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              playerId: player.id,
-                              loanFee: loanFee,
-                              profileId: profile.id,
-                            }),
-                          });
-                          const data = await res.json();
-                          if (data.success) {
-                            alert(`${toTitleCase(player.name)} kiralık pazarına çıkarıldı!`);
-                            refreshData?.();
-                          } else {
-                            alert(data.error || 'Kiralık pazara çıkarılamadı.');
-                          }
-                        } catch (err) {
-                          alert('Bir hata oluştu. Lütfen tekrar deneyin.');
-                        }
-                      }}
-                      onBenchPlayer={(player) => {
-                        setSquad(prev => {
-                          const idx = prev.findIndex(p => p.id === player.id);
-                          if (idx === -1) return prev;
-                          const benchIdx = prev.findIndex((p, i) => i >= 11 && (!p.is_starter));
-                          if (benchIdx === -1) return prev;
-                          const newSquad = [...prev];
-                          [newSquad[idx], newSquad[benchIdx]] = [newSquad[benchIdx], newSquad[idx]];
-                          return newSquad;
-                        });
-                      }}
-                      onPlayerClick={setSelectedPlayer}
-                      trainingState={trainingState}
-                      onTrainingStateChange={setTrainingState}
-                      isAdmin={isAdmin}
-                    />
-                  </div>
-                </motion.div>
               )}
               {activeTab === 'tactics' && (
                 <motion.div key="tactics" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
