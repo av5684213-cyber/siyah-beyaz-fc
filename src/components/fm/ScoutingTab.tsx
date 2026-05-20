@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Map, Users, Star, Target, Zap, Shield, Activity, TrendingUp, Filter, AlertCircle, Eye, History, LayoutList, ChevronRight, X, Database, Lock, Ban } from 'lucide-react';
+import { Search, Map, Users, Star, Target, Zap, Shield, Activity, TrendingUp, Filter, AlertCircle, Eye, History, LayoutList, ChevronRight, X, Database, Lock, Ban, Check, ChevronDown } from 'lucide-react';
 import { useFM } from '@/lib/fm/GameContext';
 import { Player, Scout } from '@/lib/fm/types';
 import { toTitleCase, localizePos, getPlayerPos } from '@/lib/fm/ui-helpers';
@@ -17,7 +17,7 @@ interface AdvancedFilters {
   ovrMin: number;
   ovrMax: number;
   rarity: string;
-  archetype: string;
+  archetypes: string[];
   Klt: number;
   Klc: number;
   Sav: number;
@@ -40,7 +40,7 @@ const getDefaultFilters = (): AdvancedFilters => ({
   ovrMin: 0,
   ovrMax: 0,
   rarity: '',
-  archetype: '',
+  archetypes: [],
   Klt: 0,
   Klc: 0,
   Sav: 0,
@@ -61,6 +61,104 @@ const SCOUT_LEVEL_INFO: Record<number, { label: string; desc: string; color: str
   2: { label: 'Genişletilmiş', desc: '+ OVR aralığı, nadirlik filtreleri', color: 'text-amber-400' },
   3: { label: 'Detaylı Arama', desc: '+ Arketip, yetenekler, potansiyel', color: 'text-emerald-400' },
 };
+
+// ─── Archetype Options (from playerGenerator.ts traitBoosts) ──────
+const ARCHETYPE_OPTIONS = [
+  // Kaleci
+  'Refleks canavarı', 'Güvenli eller', '1v1 ustası', 'Hava hakimiyeti',
+  // Defans
+  'Kale gibi', 'Lider stoper', 'Topla çıkan stoper', 'Hızlı stoper', 'Markajcı', 'Gölge Markajcı',
+  'Kanat bekçisi', 'Uzun pas ustası', 'Süpürücü (libero)', 'Top saklayan',
+  // Orta Saha
+  'Pres ustası', 'Tempo kontrolcüsü', 'Regista', 'Oyun Bozan', 'Oyun kurucu',
+  'Box-to-box', 'Top dağıtıcı', 'Uzaktan şutçu', 'Pas arası ustası',
+  '10 numara', 'Boşluk bulucu', 'Oyun görüşü yüksek', 'Koşu ustası',
+  // Forvet
+  'Hızlı forvet', 'Boşluk avcısı', 'Kontra canavarı', 'Bitirici',
+  'Sahte 9', 'Pozisyoncu', 'Fırsatçı', 'Gol makinesi', 'Fiziksel santrafor', 'Kafacı (forvet)',
+];
+
+// ─── Archetype Multi-Select Component ─────────────────────────────
+function ArchetypeMultiSelect({ selected, onChange, scoutLevel }: {
+  selected: string[];
+  onChange: (val: string[]) => void;
+  scoutLevel: number;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleArchetype = (name: string) => {
+    if (selected.includes(name)) {
+      onChange(selected.filter(a => a !== name));
+    } else {
+      onChange([...selected, name]);
+    }
+  };
+
+  return (
+    <div className="space-y-1.5 relative">
+      <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Arketip</label>
+      <button
+        type="button"
+        onClick={() => { if (scoutLevel >= 3) setIsOpen(!isOpen); }}
+        className={`w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white focus:border-amber-500 outline-none transition-all flex items-center justify-between ${
+          scoutLevel < 3 ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:bg-white/[0.07]'
+        }`}
+      >
+        <span className={selected.length > 0 ? 'text-white' : 'text-white/30'}>
+          {selected.length > 0 ? `${selected.length} arketip seçili` : 'Arketip Seç'}
+        </span>
+        <ChevronDown size={14} className={`text-white/30 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      <AnimatePresence>
+        {isOpen && scoutLevel >= 3 && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-50 top-full mt-1 left-0 right-0 bg-zinc-800 border border-white/10 rounded-xl shadow-2xl max-h-64 overflow-y-auto custom-scrollbar"
+          >
+            <div className="p-2 space-y-0.5">
+              {selected.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onChange([])}
+                  className="w-full text-left px-2 py-1.5 text-[9px] font-bold text-red-400/60 uppercase tracking-widest hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  Seçimleri Temizle
+                </button>
+              )}
+              {ARCHETYPE_OPTIONS.map((name) => {
+                const isSelected = selected.includes(name);
+                return (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => toggleArchetype(name)}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
+                      isSelected
+                        ? 'bg-amber-500/15 text-amber-300 border border-amber-500/20'
+                        : 'text-white/50 hover:bg-white/5 hover:text-white/70 border border-transparent'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded flex items-center justify-center shrink-0 border transition-all ${
+                      isSelected
+                        ? 'bg-amber-500 border-amber-500'
+                        : 'border-white/20'
+                    }`}>
+                      {isSelected && <Check size={10} className="text-black" />}
+                    </div>
+                    {name}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?: (p: Player) => void, isAdmin?: boolean }) {
   const { profile, setProfile, squad, trainingState, setTrainingState, setSelectedTeamProfile, watchlist, toggleWatchlist, league, setActiveTab } = useFM();
@@ -345,10 +443,11 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
           if (potentialValue < advancedFilters.potentialMin) return false;
         }
 
-        // ── LEVEL 3: Archetype filter ──
-        if (scoutLevel >= 3 && advancedFilters.archetype && advancedFilters.archetype.trim().length > 0) {
+        // ── LEVEL 3: Archetype filter (multi-select OR logic) ──
+        if (scoutLevel >= 3 && advancedFilters.archetypes && advancedFilters.archetypes.length > 0) {
           const playerArchetype = (p.archetype as string) ?? (p.play_style as string) ?? '';
-          if (!playerArchetype.toLowerCase().includes(advancedFilters.archetype.toLowerCase())) return false;
+          const matchesAny = advancedFilters.archetypes.some(a => playerArchetype.toLowerCase().includes(a.toLowerCase()));
+          if (!matchesAny) return false;
         }
 
         // ── LEVEL 2: Rarity filter ──
@@ -799,16 +898,11 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
                {scoutLevel < 3 && <Lock size={10} className="text-white/20 ml-1" />}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-               <div className="space-y-1.5">
-                   <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Arketip</label>
-                   <input 
-                     type="text"
-                     value={advancedFilters.archetype || ''}
-                     onChange={(e) => setAdvancedFilters({ ...advancedFilters, archetype: e.target.value })}
-                     placeholder="Örn: Playmaker, Tank..."
-                     className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white focus:border-amber-500 outline-none transition-all"
-                   />
-               </div>
+               <ArchetypeMultiSelect
+                 selected={advancedFilters.archetypes}
+                 onChange={(val) => setAdvancedFilters({ ...advancedFilters, archetypes: val })}
+                 scoutLevel={scoutLevel}
+               />
                <div className="space-y-1.5">
                    <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Min Potansiyel</label>
                    <input 

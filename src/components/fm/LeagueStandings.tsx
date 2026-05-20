@@ -82,7 +82,7 @@ const TIER_LABELS: Record<number, string> = {
 
 export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
   const { profile, squad, setSelectedTeamProfile, league: allPlayers = [] } = useFM();
-  const [activeLeague, setActiveLeague] = useState<string | number>('');
+  const [activeLeague, setActiveLeague] = useState<string | number>(''); // UUID veya numeric ID
   const [viewMode, setViewMode] = useState<'table' | 'players' | 'fixtures'>('table');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPos, setFilterPos] = useState('ALL');
@@ -128,7 +128,7 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
     }
   }, [sortKey]);
 
-  const fetchStandings = useCallback(async (leagueId: number, showRefresh = false) => {
+  const fetchStandings = useCallback(async (leagueId: string | number, showRefresh = false) => {
     if (showRefresh) setIsRefreshing(true);
     setLoading(true);
     try {
@@ -180,7 +180,7 @@ export default function LeagueStandings({ isAdmin }: { isAdmin?: boolean }) {
   // activeLeague değiştiğinde o ligi getir
   useEffect(() => {
     if (activeLeague) {
-      fetchStandings(Number(activeLeague));
+      fetchStandings(activeLeague); // UUID veya number olabilir — Number'a çevirmeyelim
     }
   }, [activeLeague, fetchStandings]);
 

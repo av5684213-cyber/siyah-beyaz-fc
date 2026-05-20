@@ -78,7 +78,7 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
          const finalProfile = { ...prev };
          if (finalProfile.active_upgrade_type === 'academy') {
            finalProfile.academy_level = (finalProfile.academy_level || 0) + 1;
-         } else if (finalProfile.active_upgrade_type === 'stadium') {
+         } else if (finalProfile.active_upgrade_type === 'stadium' || finalProfile.active_upgrade_type === 'stadium_matrix') {
            const upId = finalProfile.active_upgrade_id;
            if (upId) {
              const currentUps = { ...(finalProfile.stadium_upgrades || {}) };
@@ -100,11 +100,24 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [profile?.current_day, profile?.active_upgrade_type, profile?.active_upgrade_finish_day, setProfile, profile]);
 
-  // Sync to database
+  // Sync to database (with localStorage backup and await)
   useEffect(() => {
-    if (isSupabaseConfigured() && profile?.id) {
-      const supabase = getSupabase();
-      supabase.from('profiles').update(profile).eq('id', profile.id);
+    if (profile?.id) {
+      // Always save to localStorage first as backup
+      try {
+        localStorage.setItem('fm_profile', JSON.stringify(profile));
+      } catch (e) { /* ignore */ }
+      
+      // Then persist to Supabase with await
+      if (isSupabaseConfigured()) {
+        const supabase = getSupabase();
+        if (supabase) {
+          supabase.from('profiles').update(profile).eq('id', profile.id)
+            .then(({ error }) => {
+              if (error) console.error('[GameContext] Profile sync error:', error.message);
+            });
+        }
+      }
     }
   }, [profile]);
   const [locale, setLocale] = useState<Locale>(getBrowserLocale());

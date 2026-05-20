@@ -185,6 +185,7 @@ export interface Profile {
   philosophy?: string;
   primary_color?: string;
   secondary_color?: string;
+  stadium_name?: string;
   is_bot?: boolean;
   bot_difficulty?: number;
   academy_weekly_budget?: number;

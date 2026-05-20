@@ -57,6 +57,10 @@ export default function MatchPage() {
   const [profileId, setProfileId] = useState<string>('');
   const [teamName, setTeamName] = useState<string>('');
 
+  // ── Stadyum duyuru state ──
+  const [showStadiumAnnouncement, setShowStadiumAnnouncement] = useState(false);
+  const [stadiumDisplayName, setStadiumDisplayName] = useState<string>('');
+
   // ── Taktik seçimi (maç öncesi) ──
   const [selectedFormation, setSelectedFormation] = useState<string>('4-4-2');
   const [selectedTactic, setSelectedTactic] = useState<string>('normal');
@@ -205,6 +209,9 @@ export default function MatchPage() {
         const parsed = JSON.parse(profileStr);
         setTeamName(parsed.team_name || '');
         if (parsed.id) setProfileId(parsed.id);
+        if (parsed.stadium_name) {
+          setStadiumDisplayName(parsed.stadium_name);
+        }
       }
     } catch (err) {
       console.error('[MatchPage] Profil yükleme hatası:', err);
@@ -435,6 +442,15 @@ export default function MatchPage() {
   const awayName = useMemo(() => fixture?.away?.name || 'Deplasman', [fixture]);
   const matchStatus = useMemo(() => fixture?.status || 'scheduled', [fixture]);
 
+  // ── Stadyum duyurusu: Canlı veya bitmiş maçta göster ──
+  useEffect(() => {
+    if ((matchStatus === 'live' || matchStatus === 'completed' || matchStatus === 'finished') && !showStadiumAnnouncement) {
+      setShowStadiumAnnouncement(true);
+      const timer = setTimeout(() => setShowStadiumAnnouncement(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [matchStatus]);
+
   // Bot maçı tespiti — rakip bot takım mı?
   const isBotMatch = useMemo(() => {
     if (!fixture) return false;
@@ -498,6 +514,27 @@ export default function MatchPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* ── Stadyum Duyuru Banner ── */}
+      <AnimatePresence>
+        {showStadiumAnnouncement && (
+          <motion.div
+            initial={{ opacity: 0, y: -40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -40 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-amber-600/95 via-amber-500/95 to-amber-600/95 text-black text-center py-3 px-4 backdrop-blur-sm shadow-lg shadow-amber-500/20"
+          >
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-lg">🏟️</span>
+              <p className="text-sm font-black uppercase tracking-wider">
+                Hoş geldiniz! Bugünkü maçınız {stadiumDisplayName || homeName + ' Stadyumu'} Stadyumu'nda oynanacak.
+              </p>
+              <span className="text-lg">🏟️</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Duygusal katman — global animasyonlar */}
       <Confetti autoListen />
       <GoalCelebration trigger={goalCelebrationTrigger} scorer={goalScorer} minute={goalMinute} />

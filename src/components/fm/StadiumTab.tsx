@@ -255,6 +255,7 @@ export default function StadiumTab() {
   const stadiumUpgrades = profile?.stadium_upgrades || {};
   
   const [ticketPrice, setTicketPrice] = useState(profile?.ticket_price || 20);
+  const [stadiumNameInput, setStadiumNameInput] = useState(profile?.stadium_name || '');
   const [previewLevels, setPreviewLevels] = useState<Record<string, number>>({});
   const [expandedFacility, setExpandedFacility] = useState<string | null>(null);
   const currentAcademyLevel = profile?.academy_level || 0;
@@ -559,6 +560,57 @@ export default function StadiumTab() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ── Stadium Name Change ── */}
+      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/5 p-6 rounded-[2rem] relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-1/4 h-full bg-gradient-to-l from-amber-500/[0.03] to-transparent pointer-events-none" />
+        <div className="flex flex-col md:flex-row items-center gap-4 relative z-10">
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-11 h-11 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/20">
+              <Building2 size={20} className="text-amber-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black italic uppercase tracking-tighter text-white">Stadyum İsmi</h3>
+              <p className="text-[8px] font-black text-white/30 uppercase tracking-widest">5 Kredi karşılığında değiştir</p>
+            </div>
+          </div>
+          <div className="flex-1 flex items-center gap-3 w-full md:w-auto">
+            <input 
+              type="text"
+              value={stadiumNameInput}
+              onChange={(e) => setStadiumNameInput(e.target.value)}
+              placeholder="Stadyum ismi girin..."
+              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-mono text-white focus:border-amber-500 outline-none transition-all placeholder:text-white/20"
+            />
+            <button
+              onClick={() => {
+                if (!profile) return;
+                if ((profile.credits || 0) < 5) {
+                  error('Yetersiz kredi! Stadyum ismi değiştirmek için 5 kredi gereklidir.');
+                  return;
+                }
+                if (!stadiumNameInput.trim()) {
+                  warning('Stadyum ismi boş olamaz!');
+                  return;
+                }
+                setProfile({ ...profile, credits: (profile.credits || 0) - 5, stadium_name: stadiumNameInput.trim() });
+                success(`Stadyum ismi "${stadiumNameInput.trim()}" olarak değiştirildi! 5 kredi harcandı.`);
+              }}
+              className="shrink-0 flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(251,191,36,0.2)]"
+            >
+              <Coins size={14} className="fill-black" />
+              Stadyum İsmini Değiştir (5 KR)
+            </button>
+          </div>
+        </div>
+        {profile?.stadium_name && (
+          <div className="mt-3 pt-3 border-t border-white/5 relative z-10">
+            <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">
+              Mevcut İsim: <span className="text-amber-400/80 normal-case tracking-normal">{profile.stadium_name}</span>
+            </p>
+          </div>
+        )}
       </div>
 
       {/* ── Facility Cards Grid ── */}

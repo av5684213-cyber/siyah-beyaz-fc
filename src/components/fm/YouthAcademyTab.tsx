@@ -39,6 +39,7 @@ interface YouthAcademyTabProps {
   credits?: number;
   onStartUpgrade?: () => Promise<void>;
   onSpeedUp?: () => Promise<void>;
+  onDeductCredits?: (amount: number) => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────
@@ -56,10 +57,17 @@ function getFacilityLevel(state: FacilityState, facilityId: string): number {
     const found = state.find(f => f.facilityId === facilityId);
     return found?.currentLevel ?? 1;
   }
-  if (state && typeof state === 'object' && 'facilityId' in state) {
-    return (state as FacilityState).facilityId === facilityId
-      ? (state as FacilityState).currentLevel
-      : 1;
+  if (state && typeof state === 'object') {
+    // Handle FacilityState single object
+    if ('facilityId' in state) {
+      return (state as FacilityState).facilityId === facilityId
+        ? (state as FacilityState).currentLevel
+        : 1;
+    }
+    // Handle Record<string, number> (key-value map from parent)
+    if (facilityId in state) {
+      return (state as Record<string, number>)[facilityId] ?? 1;
+    }
   }
   return 1;
 }
@@ -68,8 +76,18 @@ function getAllFacilityLevels(state: FacilityState): Record<string, number> {
   const levels: Record<string, number> = {};
   if (Array.isArray(state)) {
     state.forEach(f => { levels[f.facilityId] = f.currentLevel; });
-  } else if (state && typeof state === 'object' && 'facilityId' in state) {
-    levels[(state as FacilityState).facilityId] = (state as FacilityState).currentLevel;
+  } else if (state && typeof state === 'object') {
+    if ('facilityId' in state) {
+      // Single FacilityState object
+      levels[(state as FacilityState).facilityId] = (state as FacilityState).currentLevel;
+    } else {
+      // Record<string, number> (key-value map from parent)
+      Object.entries(state as Record<string, unknown>).forEach(([key, val]) => {
+        if (typeof val === 'number') {
+          levels[key] = val;
+        }
+      });
+    }
   }
   return levels;
 }
@@ -154,6 +172,7 @@ export default function YouthAcademyTab({
   credits,
   onStartUpgrade,
   onSpeedUp,
+  onDeductCredits,
 }: YouthAcademyTabProps) {
   // ─── State: External (controlled) or Internal ──────────────────────
   // Eğer parent bileşen youthPlayers prop'u veriyorsa, onu kullan; yoksa internal state
@@ -233,6 +252,17 @@ export default function YouthAcademyTab({
 
   // ─── Actions ────────────────────────────────────────────────────────
   const handleIntake = useCallback(() => {
+    // Check if user has enough credits (10 KR required)
+    const currentCredits = credits || 0;
+    if (currentCredits < 10) {
+      alert('Yetersiz kredi! 10 Kredi gerekli.');
+      setShowIntakeConfirm(false);
+      return;
+    }
+    // Deduct 10 credits
+    if (onDeductCredits) {
+      onDeductCredits(10);
+    }
     const newPlayers = generateYouthIntake(academyLevel);
     // Generate scout reports for each
     const playersWithReports = newPlayers.map(p => ({
@@ -241,7 +271,7 @@ export default function YouthAcademyTab({
     }));
     setYouthPlayers(prev => [...prev, ...playersWithReports]);
     setShowIntakeConfirm(false);
-  }, [academyLevel]);
+  }, [academyLevel, credits, onDeductCredits]);
 
   const handleScoutPlayer = useCallback((player: YouthPlayer) => {
     const report = generateScoutReport(player);
@@ -408,11 +438,17 @@ export default function YouthAcademyTab({
 
             <button
               onClick={() => setShowIntakeConfirm(true)}
-              className="px-5 py-2.5 bg-amber-500 text-black rounded-xl text-[11px] font-black uppercase tracking-wider
-                hover:bg-amber-400 active:scale-95 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.15)]"
+              disabled={(credits || 0) < 10}
+              className={`px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider
+                flex items-center gap-2 transition-all ${
+                  (credits || 0) >= 10
+                    ? 'bg-amber-500 text-black hover:bg-amber-400 active:scale-95 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
+                    : 'bg-white/5 border border-white/10 text-white/20 cursor-not-allowed'
+                }`}
             >
               <RefreshCw size={14} />
               Yeni Sezon Alımı
+              <span className="text-[9px] font-mono opacity-70">(10 KR)</span>
             </button>
           </div>
         </div>
@@ -625,9 +661,14 @@ export default function YouthAcademyTab({
                       </p>
                       <button
                         onClick={() => setShowIntakeConfirm(true)}
-                        className="mt-2 px-6 py-2 bg-amber-500 text-black text-[10px] font-black uppercase tracking-wider rounded-xl hover:bg-amber-400 transition-all"
+                        disabled={(credits || 0) < 10}
+                        className={`mt-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
+                          (credits || 0) >= 10
+                            ? 'bg-amber-500 text-black hover:bg-amber-400'
+                            : 'bg-white/5 border border-white/10 text-white/20 cursor-not-allowed'
+                        }`}
                       >
-                        İlk Alımı Yap
+                        İlk Alımı Yap (10 KR)
                       </button>
                     </div>
                   </td>
@@ -1230,7 +1271,7 @@ export default function YouthAcademyTab({
                 <div className="bg-black/30 border border-white/[0.04] rounded-xl p-4 mb-6 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-white/30 font-bold uppercase">Beklenen Oyuncu</span>
-                    <span className="text-[12px] font-mono font-bold text-white">6-10</span>
+                    <span className="text-[12px] font-mono font-bold text-white">1-3</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-white/30 font-bold uppercase">Yaş Aralığı</span>
@@ -1245,9 +1286,15 @@ export default function YouthAcademyTab({
                     </div>
                   </div>
                   <div className="border-t border-white/[0.04] pt-3 flex items-center justify-between">
-                    <span className="text-[10px] text-amber-400/60 font-bold uppercase">Maliyet</span>
+                    <span className="text-[10px] text-amber-400/60 font-bold uppercase">Kredi Maliyeti</span>
                     <span className="text-[12px] font-mono font-bold text-amber-400">
-                      {formatCurrency(200_000 * academyLevel)}
+                      10 KR
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-white/30 font-bold uppercase">Mevcut Kredi</span>
+                    <span className={`text-[12px] font-mono font-bold ${(credits || 0) >= 10 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {credits || 0} KR
                     </span>
                   </div>
                 </div>
@@ -1261,10 +1308,15 @@ export default function YouthAcademyTab({
                   </button>
                   <button
                     onClick={handleIntake}
-                    className="flex-1 py-3 bg-amber-500 text-black text-[10px] font-black uppercase tracking-wider rounded-xl hover:bg-amber-400 active:scale-95 transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] flex items-center justify-center gap-2"
+                    disabled={(credits || 0) < 10}
+                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                      (credits || 0) >= 10
+                        ? 'bg-amber-500 text-black hover:bg-amber-400 active:scale-95 shadow-[0_0_20px_rgba(245,158,11,0.3)]'
+                        : 'bg-white/5 border border-white/10 text-white/20 cursor-not-allowed'
+                    }`}
                   >
                     <RefreshCw size={14} />
-                    Alımı Gerçekleştir
+                    Alımı Gerçekleştir (10 KR)
                   </button>
                 </div>
               </div>

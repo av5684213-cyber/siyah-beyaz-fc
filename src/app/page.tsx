@@ -120,7 +120,7 @@ import TeamProfileModal from '@/components/fm/TeamProfileModal';
 import MatchReportPanel from '@/components/fm/MatchReportPanel';
 import YouthAcademyTab from '@/components/fm/YouthAcademyTab';
 import { generateYouthPlayer, generateScoutReport, YouthPlayer, processYouthWeeklyTraining, YOUTH_FACILITIES, getDefaultFacilityState } from '@/lib/fm/youthAcademy';
-import { loadYouthPlayers, saveYouthPlayers, loadYouthFacilities, saveYouthFacilities } from '@/lib/fm/persistence';
+import { loadYouthPlayers, saveYouthPlayers, loadYouthFacilities, saveYouthFacilities, saveCredits } from '@/lib/fm/persistence';
 import { computeSeasonAwardsWithCareerStats, computeSeasonSummary, computeSeasonBadge, saveSeasonAwardsAndSummary, getSeasonId } from '@/lib/fm/seasonAwardsService';
 import SeasonAwardsModal from '@/components/fm/SeasonAwardsModal';
 import CupTab from '@/components/fm/CupTab';
@@ -195,6 +195,7 @@ export default function Home() {
   const { toast } = useToast();
 
   // ADIM 3: Youth Academy verilerini profile yüklendiğinde çek
+  const youthFacilitiesLoadedRef = useRef(false);
   useEffect(() => {
     if (!profile?.id) return;
     let cancelled = false;
@@ -206,7 +207,9 @@ export default function Home() {
         ]);
         if (!cancelled) {
           if (loadedPlayers.length > 0) setYouthPlayers(loadedPlayers);
-          if (Object.keys(loadedFacilities).length > 0) setYouthFacilities(loadedFacilities);
+          // Always set loaded facilities (even empty) to sync state with DB
+          setYouthFacilities(loadedFacilities);
+          youthFacilitiesLoadedRef.current = true;
         }
       } catch (err) {
         console.error('[Youth Academy] Veri yükleme hatası:', err);
@@ -214,6 +217,14 @@ export default function Home() {
     })();
     return () => { cancelled = true; };
   }, [profile?.id]);
+
+  // Auto-sync youthFacilities to Supabase when state changes (after initial load)
+  useEffect(() => {
+    if (!profile?.id) return;
+    if (!youthFacilitiesLoadedRef.current) return; // Don't save before initial load completes
+    if (Object.keys(youthFacilities).length === 0) return; // Don't save empty state
+    saveYouthFacilities(youthFacilities, profile.id);
+  }, [youthFacilities, profile?.id]);
 
   const sellPlayer = async (player: Player, price: number) => {
     if (!profile) return;
@@ -1155,6 +1166,8 @@ export default function Home() {
                       playerConditions={matchState.playerConditions}
                       onPlayerClick={setSelectedPlayer}
                       transferOffers={transferOffers}
+                      teamPrimaryColor={profile?.primary_color}
+                      teamSecondaryColor={profile?.secondary_color}
                     />
                   </div>
                 </motion.div>
@@ -1226,17 +1239,19 @@ export default function Home() {
                     academyLevel={profile.academy_level || 1}
                     facilities={youthFacilities as any}
                     onUpgradeFacility={(id, cost) => {
-                      if ((profile.money || 0) >= cost) {
-                        // Bütçeden düş
-                        setProfile(p => ({ ...p, money: (p.money || 0) - cost }));
-                        // Tesis seviyesini güncelle
-                        const newFacilities = { ...youthFacilities, [id]: (youthFacilities[id] || 1) + 1 };
-                        setYouthFacilities(newFacilities);
+                      if ((profile.money || 0) < cost) return;
+                      // Bütçeden düş
+                      setProfile(p => ({ ...p, money: (p.money || 0) - cost }));
+                      // Tesis seviyesini güncelle (functional update to avoid stale closure)
+                      setYouthFacilities(prev => {
+                        const newLevel = (prev[id] || 1) + 1;
+                        const newFacilities = { ...prev, [id]: newLevel };
                         // Supabase'e kaydet
                         if (profile.id) {
                           saveYouthFacilities(newFacilities, profile.id);
                         }
-                      }
+                        return newFacilities;
+                      });
                     }}
                     onPromotePlayer={(youthPlayer: YouthPlayer) => {
                       // Genç oyuncuyu A takım oyuncusuna dönüştür
@@ -1306,6 +1321,18 @@ export default function Home() {
                       setYouthPlayers(prev => prev.filter(p => p.id !== youthPlayer.id));
                     }}
                     budget={profile.money || 0}
+                    credits={profile.credits || 0}
+                    onDeductCredits={(amount: number) => {
+                      setProfile(p => {
+                        if (!p) return p;
+                        const newCredits = (p.credits || 0) - amount;
+                        // Save credits to Supabase immediately
+                        if (p.id) {
+                          saveCredits(newCredits, p.id);
+                        }
+                        return { ...p, credits: newCredits };
+                      });
+                    }}
                     youthPlayers={youthPlayers}
                     onYouthPlayersChange={(newPlayers) => {
                       setYouthPlayers(newPlayers);

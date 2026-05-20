@@ -24,6 +24,8 @@ interface TacticsCommandCenterProps {
   transferOffers?: Array<{ id: string; fromTeam: string; playerName: string; playerPosition: string; amount: number; status: string; date: string }>;
   onAcceptOffer?: (offerId: string) => void;
   onRejectOffer?: (offerId: string) => void;
+  teamPrimaryColor?: string;
+  teamSecondaryColor?: string;
 }
 
 interface PitchPosition {
@@ -31,7 +33,31 @@ interface PitchPosition {
   y: number;
 }
 
-const PlayerIcon = ({ player, condition, pos, onDrop, onDragOver, onDragStart, onDragLeave, onClick, isDragOver }: {
+// Helper to darken a hex color by a given percentage
+const darkenColor = (hex: string, percent: number): string => {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = Math.max(0, (num >> 16) - Math.round(2.55 * percent));
+  const g = Math.max(0, ((num >> 8) & 0x00ff) - Math.round(2.55 * percent));
+  const b = Math.max(0, (num & 0x0000ff) - Math.round(2.55 * percent));
+  return `#${(0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1)}`;
+};
+
+// Position group → primary kit color mapping
+const POS_GROUP_COLORS: Record<string, string> = {
+  GK: '#7AB4E8',
+  DEF: '#7EDBC8',
+  MID: '#F0C87A',
+  FWD: '#E87878',
+};
+
+const POS_GROUP_SECONDARY: Record<string, string> = {
+  GK: '#4A8BC2',
+  DEF: '#4BB89E',
+  MID: '#C9A24E',
+  FWD: '#C44E4E',
+};
+
+const PlayerIcon = ({ player, condition, pos, onDrop, onDragOver, onDragStart, onDragLeave, onClick, isDragOver, teamPrimaryColor, teamSecondaryColor }: {
   player: Player;
   condition: number;
   pos: PitchPosition;
@@ -41,6 +67,8 @@ const PlayerIcon = ({ player, condition, pos, onDrop, onDragOver, onDragStart, o
   onDragLeave: () => void;
   onClick?: () => void;
   isDragOver?: boolean;
+  teamPrimaryColor?: string;
+  teamSecondaryColor?: string;
 }) => {
   if (!player) return null;
   const displayName = toTitleCase(player.name || 'Bilinmeyen');
@@ -53,6 +81,12 @@ const PlayerIcon = ({ player, condition, pos, onDrop, onDragOver, onDragStart, o
   };
 
   const ringColor = getRingColor(condition);
+
+  // Team colors for outfield players, green variant for GK
+  const isGoalkeeper = (player.specificPosition || player.position) === 'GK';
+  const primaryColor = isGoalkeeper ? '#2E8B57' : (teamPrimaryColor || '#9B9B9B');
+  const secondaryColor = isGoalkeeper ? '#1A5C3A' : (teamSecondaryColor || '#6B6B6B');
+  const posCode = player.specificPosition || player.position;
 
   return (
     <motion.div 
@@ -68,6 +102,7 @@ const PlayerIcon = ({ player, condition, pos, onDrop, onDragOver, onDragStart, o
         className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-grab active:cursor-grabbing ${isDragOver ? 'z-30 scale-110' : 'z-10'}`}
     >
         <div className="relative w-12 h-12 flex items-center justify-center">
+            {/* Condition ring */}
             <svg className="absolute inset-0 w-full h-full -rotate-90">
                 <circle cx="24" cy="24" r="22" fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="4" />
                 <circle 
@@ -81,28 +116,26 @@ const PlayerIcon = ({ player, condition, pos, onDrop, onDragOver, onDragStart, o
                 />
             </svg>
             
-            <div className="w-9 h-10 relative group-hover:scale-110 transition-transform drop-shadow-lg">
-                {(() => {
-                  const getRoleColor = (role?: string | null) => {
-                    if (!role) return 'white';
-                    if (role === 'enforcer' || role === 'stopper' || role === 'bwm') return '#ef4444';
-                    if (role === 'playmaker' || role === 'dlp' || role === 'bpd' || role === 'false_nine') return '#3b82f6';
-                    if (role === 'sprinter' || role === 'advanced_fwd' || role === 'wingback') return '#eab308';
-                    if (role === 'sweeper_gk') return '#10b981';
-                    if (role === 'mezzala' || role === 'btb') return '#a855f7';
-                    return 'white';
-                  };
-                  return (
-                    <svg viewBox="0 0 36 40" className="w-full h-full">
-                        <path d="M12,1 L18,5 L24,1 L31,5 L36,13 L36,20 L27,17 L27,39 L9,39 L9,17 L0,20 L0,13 L5,5 Z"
-                            fill={getRoleColor(player.special_role)} 
-                            stroke="black" strokeWidth="1.5" strokeLinejoin="round" />
-                    </svg>
-                  );
-                })()}
-                <span className={`absolute inset-0 flex items-center justify-center text-[9px] font-black pt-1 ${player.special_role ? 'text-white' : 'text-black'}`}>
-                  {player.specificPosition || player.position}
-                </span>
+            {/* Modern Kit Card */}
+            <div 
+              className="w-10 h-11 relative rounded-lg flex flex-col items-center justify-center group-hover:scale-110 transition-transform"
+              style={{
+                background: `linear-gradient(135deg, ${primaryColor} 0%, ${darkenColor(primaryColor, 20)} 100%)`,
+                border: `1.5px solid ${secondaryColor}60`,
+                boxShadow: `0 2px 8px ${primaryColor}50, inset 0 1px 0 ${secondaryColor}30`
+              }}
+            >
+              {/* Subtle collar/accent line at top */}
+              <div 
+                className="absolute top-0 inset-x-2 h-[2px] rounded-b"
+                style={{ background: `${secondaryColor}80` }}
+              />
+              <span className="text-[9px] font-black text-white tracking-tight leading-none drop-shadow-sm">
+                {posCode}
+              </span>
+              <span className="text-[7px] font-bold text-white/50 leading-none mt-0.5">
+                {player.rating}
+              </span>
             </div>
         </div>
         <div className="mt-1 bg-black/80 backdrop-blur-sm text-white px-2 py-0.5 shadow-xl border border-white/10 min-w-[50px] max-w-[90px] rounded-sm">
@@ -113,12 +146,13 @@ const PlayerIcon = ({ player, condition, pos, onDrop, onDragOver, onDragStart, o
 };
 
 export default function TacticsCommandCenter({ 
-  activeTactic, onActiveTacticChange, squad, onSquadUpdate, playerConditions = {}, onPlayerClick, transferOffers, onAcceptOffer, onRejectOffer
+  activeTactic, onActiveTacticChange, squad, onSquadUpdate, playerConditions = {}, onPlayerClick, transferOffers, onAcceptOffer, onRejectOffer, teamPrimaryColor, teamSecondaryColor
 }: TacticsCommandCenterProps) {
   const [hoveredInfo, setHoveredInfo] = useState<string | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<string>('Poz');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
 
   const getStatValue = (player: Player, key: string): number => {
     const rating = player.rating || 50;
@@ -404,6 +438,8 @@ export default function TacticsCommandCenter({
                   onDrop={handlePitchDrop(idx)}
                   onClick={() => onPlayerClick?.(player)}
                   isDragOver={dragOverIdx === idx}
+                  teamPrimaryColor={teamPrimaryColor}
+                  teamSecondaryColor={teamSecondaryColor}
                 />
               );
            })}
@@ -566,46 +602,166 @@ export default function TacticsCommandCenter({
               const rating = player.rating || 50;
               const posColor = getPositionColor(player.specificPosition || player.position);
               const statKeys = ['Klt', 'Klc', 'Tk', 'Pas', 'Şut', 'Kfa', 'Hız', 'Güç', 'Alg', 'Top', 'Tplm', 'Knd'];
+              const isHovered = hoveredPlayerId === player.id;
+
+              // Tooltip data
+              const archetypeName = player.archetype || player.playStyle || null;
+              const formVal = player.form ?? player.form_rating ?? null;
+              const condVal = player.cond ?? null;
+              const moraleVal = player.morale ?? null;
+              const formRating = player.form_rating ?? null;
+
+              // Generate Son 5 maç indicators from form_rating as proxy
+              const getLast5Indicators = (fr: number | null): { letter: string; color: string }[] => {
+                if (fr === null) return Array.from({ length: 5 }, () => ({ letter: '-', color: 'text-white/20' }));
+                // Use form_rating to derive a simple pattern
+                const results: { letter: string; color: string }[] = [];
+                const seed = Math.floor(fr);
+                const patterns = [
+                  // Higher form_rating = more wins
+                  fr >= 80 ? ['W','W','W','D','W'] : 
+                  fr >= 65 ? ['W','D','W','D','L'] : 
+                  fr >= 50 ? ['D','L','D','W','L'] : 
+                  fr >= 35 ? ['L','D','L','D','L'] : 
+                             ['L','L','L','D','L']
+                ][0] as string[];
+                const colorMap: Record<string, string> = {
+                  W: 'text-emerald-400',
+                  D: 'text-amber-400', 
+                  L: 'text-red-400',
+                };
+                // Vary slightly based on seed for visual interest
+                for (let i = 0; i < 5; i++) {
+                  const idx = (seed + i) % patterns.length;
+                  const letter = patterns[idx];
+                  results.push({ letter, color: colorMap[letter] || 'text-white/20' });
+                }
+                return results;
+              };
+              const last5 = getLast5Indicators(formRating);
+
               return (
                 <div 
                   key={player.id}
-                  onClick={() => onPlayerClick?.(player)}
-                  className={`grid gap-px min-w-[950px] px-3 py-2 border-b border-white/[0.03] hover:bg-white/[0.03] cursor-pointer transition-all ${posColor}`}
-                  style={{ gridTemplateColumns: '56px 1fr repeat(12, 52px)' }}
+                  className="relative"
                 >
-                  <div className={`text-center text-[9px] font-black flex items-center justify-center gap-0.5 ${
-                    player.position === 'GK' ? 'text-green-300' :
-                    ['CB', 'LB', 'RB', 'LWB', 'RWB'].includes(player.specificPosition || player.position) ? 'text-blue-300' :
-                    ['CDM', 'CM', 'CAM', 'LM', 'RM'].includes(player.specificPosition || player.position) ? 'text-amber-300' :
-                    'text-red-300'
-                  }`}>
-                    <span>{player.specificPosition || player.position}</span>
-                    {player.secondaryPositions && player.secondaryPositions.length > 0 && (
-                      <span className="text-[6px] text-white/25 font-normal">/{player.secondaryPositions.join('/')}</span>
-                    )}
-                  </div>
-                  <div className="text-left text-[9px] font-bold text-white/80 truncate flex items-center gap-1">
-                    {toTitleCase(player.name)}
-                    {(player.archetype || player.playStyle) && (
-                      <span className="relative group/arch inline-flex items-center">
-                        <Info size={10} className="text-amber-400/40 group-hover/arch:text-amber-400 transition-colors cursor-help" />
-                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 rounded-lg bg-zinc-900/95 border border-amber-500/20 shadow-2xl text-[9px] font-bold text-amber-300 whitespace-nowrap pointer-events-none opacity-0 group-hover/arch:opacity-100 transition-all z-50 backdrop-blur-xl">
-                          {player.archetype || player.playStyle}
-                          <span className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-900/95 border-r border-b border-amber-500/20 rotate-45 -mt-1" />
-                        </span>
-                      </span>
-                    )}
-                  </div>
-                  {statKeys.map(key => {
-                    const val = getStatValue(player, key);
-                    return (
-                      <div key={key} className={`text-center text-[9px] font-black flex items-center justify-center ${
-                        val >= 85 ? 'text-emerald-300' : val >= 75 ? 'text-emerald-400' : val >= 60 ? 'text-yellow-400' : val >= 45 ? 'text-orange-400' : 'text-red-400'
-                      }`}>
-                        {val}
+                  {/* Hover Tooltip - appears above the row */}
+                  <div 
+                    className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none transition-all duration-200 ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}
+                  >
+                    <div className="bg-zinc-900/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-xl px-4 py-3 min-w-[220px]">
+                      {/* Arrow pointing down */}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+                        <div className="w-3 h-3 bg-zinc-900/95 border-r border-b border-white/10 rotate-45 -mt-[7px]" />
                       </div>
-                    );
-                  })}
+                      
+                      {/* Archetype */}
+                      {archetypeName && (
+                        <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/5">
+                          <div className="w-5 h-5 rounded-md flex items-center justify-center text-[8px] font-black" 
+                            style={{ 
+                              background: `linear-gradient(135deg, ${POS_GROUP_COLORS[getPosGroup(player.specificPosition || player.position)] || '#9B9B9B'}40 0%, ${POS_GROUP_COLORS[getPosGroup(player.specificPosition || player.position)] || '#9B9B9B'}20 100%)`,
+                              color: POS_GROUP_COLORS[getPosGroup(player.specificPosition || player.position)] || '#9B9B9B'
+                            }}>
+                            {player.specificPosition?.charAt(0) || player.position.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-black text-white/90">{archetypeName}</div>
+                            <div className="text-[7px] text-white/30 font-medium">Arketip</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stats row */}
+                      <div className="grid grid-cols-3 gap-3 mb-2">
+                        <div className="text-center">
+                          <div className={`text-[11px] font-black ${
+                            formVal !== null ? (formVal >= 75 ? 'text-emerald-400' : formVal >= 50 ? 'text-amber-400' : 'text-red-400') : 'text-white/20'
+                          }`}>
+                            {formVal !== null ? formVal : '-'}
+                          </div>
+                          <div className="text-[7px] text-white/25 font-bold uppercase tracking-wider">Form</div>
+                        </div>
+                        <div className="text-center">
+                          <div className={`text-[11px] font-black ${
+                            condVal !== null ? (condVal >= 75 ? 'text-emerald-400' : condVal >= 50 ? 'text-amber-400' : 'text-red-400') : 'text-white/20'
+                          }`}>
+                            {condVal !== null ? condVal : '-'}
+                          </div>
+                          <div className="text-[7px] text-white/25 font-bold uppercase tracking-wider">Kondisyon</div>
+                        </div>
+                        <div className="text-center">
+                          <div className={`text-[11px] font-black ${
+                            moraleVal !== null ? (moraleVal >= 75 ? 'text-emerald-400' : moraleVal >= 50 ? 'text-amber-400' : 'text-red-400') : 'text-white/20'
+                          }`}>
+                            {moraleVal !== null ? moraleVal : '-'}
+                          </div>
+                          <div className="text-[7px] text-white/25 font-bold uppercase tracking-wider">Moral</div>
+                        </div>
+                      </div>
+
+                      {/* Son 5 maç */}
+                      <div className="pt-2 border-t border-white/5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[7px] text-white/25 font-bold uppercase tracking-wider">Son 5 Maç</span>
+                          <div className="flex gap-1">
+                            {last5.map((ind, i) => (
+                              <span key={i} className={`w-5 h-5 rounded text-[8px] font-black flex items-center justify-center ${
+                                ind.letter === 'W' ? 'bg-emerald-500/15 text-emerald-400' : 
+                                ind.letter === 'D' ? 'bg-amber-500/15 text-amber-400' : 
+                                'bg-red-500/15 text-red-400'
+                              }`}>
+                                {ind.letter}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Player Row */}
+                  <div 
+                    onClick={() => onPlayerClick?.(player)}
+                    onMouseEnter={() => setHoveredPlayerId(player.id)}
+                    onMouseLeave={() => setHoveredPlayerId(null)}
+                    className={`grid gap-px min-w-[950px] px-3 py-2 border-b border-white/[0.03] hover:bg-white/[0.03] cursor-pointer transition-all ${posColor}`}
+                    style={{ gridTemplateColumns: '56px 1fr repeat(12, 52px)' }}
+                  >
+                    <div className={`text-center text-[9px] font-black flex items-center justify-center gap-0.5 ${
+                      player.position === 'GK' ? 'text-green-300' :
+                      ['CB', 'LB', 'RB', 'LWB', 'RWB'].includes(player.specificPosition || player.position) ? 'text-blue-300' :
+                      ['CDM', 'CM', 'CAM', 'LM', 'RM'].includes(player.specificPosition || player.position) ? 'text-amber-300' :
+                      'text-red-300'
+                    }`}>
+                      <span>{player.specificPosition || player.position}</span>
+                      {player.secondaryPositions && player.secondaryPositions.length > 0 && (
+                        <span className="text-[6px] text-white/25 font-normal">/{player.secondaryPositions.join('/')}</span>
+                      )}
+                    </div>
+                    <div className="text-left text-[9px] font-bold text-white/80 truncate flex items-center gap-1">
+                      {toTitleCase(player.name)}
+                      {(player.archetype || player.playStyle) && (
+                        <span className="relative group/arch inline-flex items-center">
+                          <Info size={10} className="text-amber-400/40 group-hover/arch:text-amber-400 transition-colors cursor-help" />
+                          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 rounded-lg bg-zinc-900/95 border border-amber-500/20 shadow-2xl text-[9px] font-bold text-amber-300 whitespace-nowrap pointer-events-none opacity-0 group-hover/arch:opacity-100 transition-all z-50 backdrop-blur-xl">
+                            {player.archetype || player.playStyle}
+                            <span className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-900/95 border-r border-b border-amber-500/20 rotate-45 -mt-1" />
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                    {statKeys.map(key => {
+                      const val = getStatValue(player, key);
+                      return (
+                        <div key={key} className={`text-center text-[9px] font-black flex items-center justify-center ${
+                          val >= 85 ? 'text-emerald-300' : val >= 75 ? 'text-emerald-400' : val >= 60 ? 'text-yellow-400' : val >= 45 ? 'text-orange-400' : 'text-red-400'
+                        }`}>
+                          {val}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             })}

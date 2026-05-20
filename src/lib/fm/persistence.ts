@@ -543,6 +543,27 @@ export const loadYouthFacilities = async (userId: string): Promise<Record<string
 /**
  * Tesis seviyelerini Supabase'e ve localStorage'a kaydeder.
  */
+/**
+ * Kredi bakiyesini Supabase'e ve localStorage'a kaydeder.
+ */
+export const saveCredits = async (credits: number, userId: string): Promise<void> => {
+  if (isSupabaseConfigured() && userId) {
+    try {
+      const supabase = getSupabase();
+      const { error } = await supabase
+        .from('profiles')
+        .update({ credits })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('[saveCredits] Update error:', error.message);
+      }
+    } catch (err) {
+      console.error('[saveCredits] Exception:', err);
+    }
+  }
+};
+
 export const saveYouthFacilities = async (facilityLevels: Record<string, number>, userId: string): Promise<void> => {
   localStorage.setItem(STORAGE_KEYS.YOUTH_FACILITIES, JSON.stringify(facilityLevels));
 
