@@ -119,7 +119,7 @@ export default function ManagerRegistration() {
                                     type="text" 
                                     value={teamName}
                                     onChange={(e) => setTeamName(e.target.value)}
-                                    placeholder="örn: Beşiktaş JK"
+                                    placeholder="örn: Yıldırım Spor"
                                     className="w-full bg-black/50 border border-white/10 rounded-2xl px-6 py-4 text-sm font-bold focus:outline-none focus:border-white/30 transition-all placeholder:text-white/10"
                                 />
                             </div>

@@ -214,17 +214,29 @@ export type AwardType =
   | 'top_assists'      // En çok asist yapan
   | 'best_young'       // En iyi genç oyuncu (U21)
   | 'fair_play'        // En az kart gören
-  | 'champion';        // Şampiyon takım
+  | 'champion'         // Şampiyon takım
+  | 'fastest_goal'     // En hızlı gol
+  | 'most_saves'       // En çok kurtarış
+  | 'best_defender'    // En iyi savunmacı
+  | 'most_motm'        // En çok maçın adamı
+  | 'clean_sheet_win'  // Gol yemeden kazanma
+  | 'longest_streak';  // En uzun galibiyet serisi
 
 /** Ödül görüntü etiketleri (Türkçe) */
 export const AWARD_LABELS: Record<AwardType, { title: string; icon: string; color: string }> = {
-  golden_boot:  { title: 'Altın Krampon',     icon: '👢', color: 'text-yellow-400' },
-  mvp:          { title: 'En Değerli Oyuncu',  icon: '⭐', color: 'text-amber-300' },
-  best_gk:      { title: 'En İyi Kaleci',      icon: '🧤', color: 'text-emerald-400' },
-  top_assists:  { title: 'Asist Kralı',        icon: '🎯', color: 'text-blue-400' },
-  best_young:   { title: 'En İyi Genç',        icon: '🌟', color: 'text-purple-400' },
-  fair_play:    { title: 'Fair Play',           icon: '🤝', color: 'text-green-400' },
-  champion:     { title: 'Şampiyon',            icon: '🏆', color: 'text-yellow-300' },
+  golden_boot:     { title: 'Altın Krampon',          icon: '👢', color: 'text-yellow-400' },
+  mvp:             { title: 'En Değerli Oyuncu',       icon: '⭐', color: 'text-amber-300' },
+  best_gk:         { title: 'En İyi Kaleci',           icon: '🧤', color: 'text-emerald-400' },
+  top_assists:     { title: 'Asist Kralı',             icon: '🎯', color: 'text-blue-400' },
+  best_young:      { title: 'En İyi Genç',             icon: '🌟', color: 'text-purple-400' },
+  fair_play:       { title: 'Fair Play',                icon: '🤝', color: 'text-green-400' },
+  champion:        { title: 'Şampiyon',                 icon: '🏆', color: 'text-yellow-300' },
+  fastest_goal:    { title: 'En Hızlı Gol',             icon: '⚡', color: 'text-cyan-400' },
+  most_saves:      { title: 'En Çok Kurtarış',          icon: '🛡️', color: 'text-teal-400' },
+  best_defender:   { title: 'En İyi Savunmacı',         icon: '🧱', color: 'text-lime-400' },
+  most_motm:       { title: 'En Çok Maçın Adamı',       icon: '🎖️', color: 'text-rose-400' },
+  clean_sheet_win: { title: 'Gol Yemeden Kazanma',      icon: '🔒', color: 'text-indigo-400' },
+  longest_streak:  { title: 'En Uzun Galibiyet Serisi', icon: '🔥', color: 'text-orange-400' },
 };
 
 /** Sezon ödülü (DB: season_awards tablosu) */

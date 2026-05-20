@@ -1537,8 +1537,8 @@ export default function PlayerDetailModal({
                     }
                     setIsSendingLoan(true);
                     try {
-                      console.log('[Loan] Sending to /api/rental/list:', { playerId: player.id, dailyCost: loanFeeEuro, ownerTeamId: profileId, durationWeeks: loanWeeks });
-                      const res = await fetch('/api/rental/list', {
+                      console.log('[Loan] Sending to /api/rental/create-listing:', { playerId: player.id, dailyCost: loanFeeEuro, ownerTeamId: profileId, durationWeeks: loanWeeks });
+                      const res = await fetch('/api/rental/create-listing', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

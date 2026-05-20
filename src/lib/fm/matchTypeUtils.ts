@@ -52,14 +52,16 @@ export const CUP_FINAL_TUR = 34;
  */
 export const DERBY_REGIONS: Record<string, string[]> = {
   istanbul: [
-    'Galatasaray', 'Fenerbahçe', 'Beşiktaş', 'Trabzonspor',
-    // Add Istanbul-based team IDs as they're discovered
+    'Boğaz Kalesi', 'Marmara Gücü', 'Altın Şahin',
   ],
   ankara: [
-    'Ankaragücü', 'Gençlerbirliği', 'Ankaraspor',
+    'Başkent Birlik', 'Orta Anadolu FK',
   ],
   izmir: [
-    'Karşıyaka', 'Göztepe', 'İzmirspor',
+    'Ege Fırtınası', 'Akdeniz Kılıcı',
+  ],
+  karadeniz: [
+    'Karadeniz Fırtınası', 'Doğu Yıldızı',
   ],
 };
 

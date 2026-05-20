@@ -260,6 +260,7 @@ interface NextMatchData {
   match_time: string;
   opponent: string;
   is_home: boolean;
+  status?: string; // 'scheduled' | 'live' | 'finished'
 }
 
 function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigate: (tab: string) => void }) {
@@ -335,14 +336,20 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
             <span className="text-[10px] text-white/30">{formattedDate} • {nextMatch.match_time || '--:--'}</span>
           </div>
         </div>
-        <button
-          onClick={() => {
-            window.location.href = `/match/${nextMatch.id}`;
-          }}
-          className="px-4 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 rounded-xl text-[10px] font-black uppercase tracking-widest text-amber-300 transition-all active:scale-95 shrink-0"
-        >
-          Maçı İzle
-        </button>
+        {nextMatch.status === 'live' || nextMatch.status === 'finished' ? (
+          <button
+            onClick={() => {
+              window.location.href = `/match/${nextMatch.id}`;
+            }}
+            className="px-4 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 rounded-xl text-[10px] font-black uppercase tracking-widest text-amber-300 transition-all active:scale-95 shrink-0"
+          >
+            {nextMatch.status === 'live' ? 'Canlı İzle' : 'Maçı İzle'}
+          </button>
+        ) : (
+          <span className="px-4 py-2.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-[10px] font-bold uppercase tracking-widest text-white/20 shrink-0">
+            Planlanmış
+          </span>
+        )}
       </div>
 
       {/* ── Attendance & Revenue Preview (Ev sahibi maçlar için) ── */}

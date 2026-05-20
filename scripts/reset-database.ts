@@ -4,7 +4,7 @@
  *
  * Tüm tabloları temizler ve başlangıç verilerini oluşturur:
  * - 18 takım (ligler, league_teams, profiles)
- * - Her takıma 15 oyuncu (players)
+ * - Her takıma 18 oyuncu (players)
  * - 1 sezon (seasons)
  * - 34 haftalık fikstür (fixtures) yarın 12:00'den başlayan
  * - Tüm takımlara 5.000 KR + 100.000.000 €
@@ -25,48 +25,48 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// TAKIM İSİMLERİ (Süper Lig + Kurgusal)
+// TAKIM İSİMLERİ (Tamamen Kurgusal — Gerçek takım ismi YOK)
 // ═══════════════════════════════════════════════════════════════
 
 const TEAM_NAMES = [
-  'Galatasaray', 'Fenerbahçe', 'Beşiktaş', 'Trabzonspor',
-  'İstanbul Başakşehir', 'Kasımpaşa', 'Antalyaspor', 'Adana Demirspor',
-  'Konyaspor', 'Sivasspor', 'Kayserispor', 'Alanyaspor',
-  'Ankaragücü', 'Karagümrük', 'Gaziantep FK', 'Hatayspor',
-  'Pendikspor', 'Rizespor',
+  'Anadolu Kartalı', 'Bozkır Gücü', 'Yıldız Spor', 'Karadeniz Fırtınası',
+  'Altın Şahin', 'Çelik Kale', 'Akdeniz Yıldızı', 'Ateş Parıltısı',
+  'Orta Anadolu FK', 'Yıldırım Spor', 'Erciyes Gücü', 'Akdeniz Kılıcı',
+  'Başkent Birlik', 'Marmara Gücü', 'Güney Rüzgarı', 'Doğu Yıldızı',
+  'Boğaz Kalesi', 'Ege Fırtınası',
 ];
 
 const STADIUMS: Record<string, string> = {
-  'Galatasaray': 'RAMS Park',
-  'Fenerbahçe': 'Ülker Stadyumu',
-  'Beşiktaş': 'Tüpraş Stadyumu',
-  'Trabzonspor': 'Papara Park',
-  'İstanbul Başakşehir': 'Başakşehir Fatih Terim Stadyumu',
-  'Kasımpaşa': 'Recep Tayyip Erdoğan Stadyumu',
-  'Antalyaspor': 'Corendon Airlines Park',
-  'Adana Demirspor': 'Yeni Adana Stadyumu',
-  'Konyaspor': 'MEDAŞ Konya Büyükşehir Stadyumu',
-  'Sivasspor': 'BG Group 4 Eylül Stadyumu',
-  'Kayserispor': 'RHG Enertürk Enerji Stadyumu',
-  'Alanyaspor': 'Gain Park Alanya',
-  'Ankaragücü': 'Eryaman Stadyumu',
-  'Karagümrük': 'Atatürk Olimpiyat Stadyumu',
-  'Gaziantep FK': 'Kalyon Stadyumu',
-  'Hatayspor': 'Yeni Hatay Stadyumu',
-  'Pendikspor': 'Pendik Stadyumu',
-  'Rizespor': 'Çaykur Didi Stadyumu',
+  'Anadolu Kartalı': 'Kartal Yuvası Stadyumu',
+  'Bozkır Gücü': 'Bozkır Arenası',
+  'Yıldız Spor': 'Yıldız Park Stadyumu',
+  'Karadeniz Fırtınası': 'Fırtına Arenası',
+  'Altın Şahin': 'Şahin Yuvası Stadyumu',
+  'Çelik Kale': 'Çelik Stadyumu',
+  'Akdeniz Yıldızı': 'Akdeniz Parkı',
+  'Ateş Parıltısı': 'Ateş Arenası',
+  'Orta Anadolu FK': 'Anadolu Stadyumu',
+  'Yıldırım Spor': 'Yıldırım Parkı',
+  'Erciyes Gücü': 'Erciyes Stadyumu',
+  'Akdeniz Kılıcı': 'Kılıç Arenası',
+  'Başkent Birlik': 'Başkent Stadyumu',
+  'Marmara Gücü': 'Marmara Parkı',
+  'Güney Rüzgarı': 'Rüzgar Stadyumu',
+  'Doğu Yıldızı': 'Doğu Arenası',
+  'Boğaz Kalesi': 'Kale Stadyumu',
+  'Ege Fırtınası': 'Ege Parkı',
 };
 
 // ═══════════════════════════════════════════════════════════════
-// POSİTİON ŞABLONU (15 oyuncu)
+// POSİTİON ŞABLONU (18 oyuncu)
 // ═══════════════════════════════════════════════════════════════
 
 const SQUAD_TEMPLATE = [
   'GK', 'GK',
-  'CB', 'CB', 'CB', 'LB', 'RB',
+  'CB', 'CB', 'CB', 'CB', 'LB', 'RB',
   'CDM', 'CM', 'CM', 'CAM',
   'LW', 'RW',
-  'ST', 'CF',
+  'ST', 'ST', 'CF', 'LW',
 ];
 
 const COMPATIBLE_SECONDARY: Record<string, string[]> = {
@@ -303,7 +303,7 @@ async function resetDatabase() {
     }
     leagueTeamIds.push(leagueTeam.id);
 
-    // 15 oyuncu oluştur
+    // 18 oyuncu oluştur
     const players = SQUAD_TEMPLATE.map((pos, i) => {
       const baseRating = 72 - Math.floor(t / 6) * 5; // Tier bazlı rating
       const rating = Math.max(55, Math.min(90, baseRating + Math.floor(Math.random() * 12) - 4));
@@ -439,12 +439,12 @@ async function resetDatabase() {
   }
   console.log(`✅ ${fixtures.length} fikstür oluşturuldu (${totalRounds} hafta)`);
 
-  // ── 6. Hakemler oluştur ──
+  // ── 6. Hakemler oluştur (tamamen kurgusal isimler) ──
   console.log('\n👨‍⚖️ Hakemler oluşturuluyor...');
   const refereeNames = [
-    'Cüneyt Çakır', 'Halil Umut Meler', 'Ali Şansalan', 'Atilla Karaoğlan',
-    'Arda Kardeşler', 'Yaşar Kemal Yorgun', 'Zorbay Küçük', 'Koray Gençerler',
-    'Mehmet Türkmenoğlu', 'Volkan Bayarslan',
+    'Berkay Tunç', 'Emrullah Karakuş', 'Şafak Özbek', 'Tolga Batur',
+    'Ufuk Akduman', 'Onur Kılınçer', 'Sadık Gültekin', 'Levent Bozkurt',
+    'Civan Bilgin', 'Baran Ünal',
   ];
   const refereeRows = refereeNames.map((name, i) => ({
     name,

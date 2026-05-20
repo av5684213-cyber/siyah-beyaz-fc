@@ -217,6 +217,12 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
   const topAssistsCount = allAwards.filter(a => a.award_type === 'top_assists').length;
   const bestYoungCount = allAwards.filter(a => a.award_type === 'best_young').length;
   const fairPlayCount = allAwards.filter(a => a.award_type === 'fair_play').length;
+  const fastestGoalCount = allAwards.filter(a => a.award_type === 'fastest_goal').length;
+  const mostSavesCount = allAwards.filter(a => a.award_type === 'most_saves').length;
+  const bestDefenderCount = allAwards.filter(a => a.award_type === 'best_defender').length;
+  const mostMotmCount = allAwards.filter(a => a.award_type === 'most_motm').length;
+  const cleanSheetWinCount = allAwards.filter(a => a.award_type === 'clean_sheet_win').length;
+  const longestStreakCount = allAwards.filter(a => a.award_type === 'longest_streak').length;
   const totalAwards = allAwards.length;
   const seasonsPlayed = summaries.length;
 
@@ -255,7 +261,7 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
       {/* Ödül Dağılımı */}
       <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4">
         <h3 className="text-white/60 text-xs uppercase tracking-wider mb-3">Ödül Dağılımı</h3>
-        <div className="grid grid-cols-6 gap-2">
+        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
           {[
             { type: 'golden_boot' as AwardType, count: goldenBootCount },
             { type: 'mvp' as AwardType, count: mvpCount },
@@ -263,6 +269,12 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
             { type: 'top_assists' as AwardType, count: topAssistsCount },
             { type: 'best_young' as AwardType, count: bestYoungCount },
             { type: 'fair_play' as AwardType, count: fairPlayCount },
+            { type: 'fastest_goal' as AwardType, count: fastestGoalCount },
+            { type: 'most_saves' as AwardType, count: mostSavesCount },
+            { type: 'best_defender' as AwardType, count: bestDefenderCount },
+            { type: 'most_motm' as AwardType, count: mostMotmCount },
+            { type: 'clean_sheet_win' as AwardType, count: cleanSheetWinCount },
+            { type: 'longest_streak' as AwardType, count: longestStreakCount },
           ].map(item => {
             const label = AWARD_LABELS[item.type];
             return (

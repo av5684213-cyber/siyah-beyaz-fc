@@ -66,10 +66,10 @@ interface UserLeagueInfo {
 // ═══════════════════════════════════════════════════
 
 const FAKE_OPPONENTS = [
-  'Karagümrük SK', 'Sivasspor', 'Kayserispor', 'Alanyaspor',
-  'Hatayspor', 'Gaziantep FK', 'Adana Demirspor', 'Kasımpaşa',
-  'Antalyaspor', 'Konyaspor', 'Rizespor', 'Pendikspor',
-  'İstanbulspor', 'Altay SK', 'Bandırmaspor', 'Boluspor',
+  'Kızıl Kurt', 'Gök Bozkurt', 'Sönmez Spor', 'Kartal Yuvası',
+  'Boz Ayı FK', 'Altın Boynuz', 'Demirpençe', 'Ateş Parıltısı',
+  'Çelik Kale', 'Akdeniz Kılıcı', 'Doğu Yıldızı', 'Güney Rüzgarı',
+  'Yıldırım Spor', 'Erciyes Gücü', 'Marmara Gücü', 'Ege Fırtınası',
 ];
 
 // ═══════════════════════════════════════════════════

@@ -16,11 +16,11 @@ const REGION_DATA = {
     firstNames: ["Ahmet", "Mehmet", "Mustafa", "Can", "Burak", "Emre", "Arda", "Omer", "Yigit", "Mert"],
     lastNames: ["Yilmaz", "Kaya", "Demir", "Celik", "Sahin", "Yildiz", "Erdogan", "Aydin", "Ozdemir", "Arslan"],
     teams: [
-      "Fenerbahçe", "Galatasaray", "Beşiktaş", "Trabzonspor", "Başakşehir",
-      "Konyaspor", "Antalyaspor", "Kayserispor", "Adana Demir", "Ankaragücü",
-      "Göztepe", "Rizespor", "Samsunspor", "Gaziantep", "Sivasspor",
-      "Eyüpspor", "Bodrumspor", "Pendikspor", "Karagümrük", "Kasımpaşa",
-      "Altay", "Gençlerbirliği", "Sakaryaspor", "Kocaelispor", "Bursaspor"
+      "Anadolu Kartalı", "Bozkır Gücü", "Yıldız Spor", "Karadeniz Fırtınası", "Altın Şahin",
+      "Çelik Kale", "Akdeniz Yıldızı", "Ateş Parıltısı", "Orta Anadolu FK", "Başkent Birlik",
+      "Yıldırım Spor", "Erciyes Gücü", "Akdeniz Kılıcı", "Marmara Gücü", "Güney Rüzgarı",
+      "Doğu Yıldızı", "Boğaz Kalesi", "Ege Fırtınası", "Kızıl Kurt", "Gök Bozkurt",
+      "Sönmez Spor", "Kartal Yuvası", "Boz Ayı FK", "Altın Boynuz", "Demirpençe"
     ],
     leagueNames: ["Super Lig", "1. Lig", "2. Lig", "3. Lig"]
   }

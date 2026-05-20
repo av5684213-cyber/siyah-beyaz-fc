@@ -183,6 +183,7 @@ export default function Home() {
   // ADIM 4: Sezon sonu ödülleri
   const [showSeasonAwards, setShowSeasonAwards] = useState(false);
   const [lastCompletedSeasonId, setLastCompletedSeasonId] = useState<string>('');
+  const [showComingSoon, setShowComingSoon] = useState(false);
 
   // ─── Duygusal katman: Gol kutlama state ────────────────────────────
   const [goalCelebrationTrigger, setGoalCelebrationTrigger] = useState(false);
@@ -903,7 +904,7 @@ export default function Home() {
             <NavButton icon={<Settings size={18} />} label="TAKTİK&TAKIMIM" active={activeTab === 'tactics'} onClick={() => setActiveTab('tactics')} />
             <NavButton icon={<Dumbbell size={18} />} label="ANTRENMAN" active={activeTab === 'training'} onClick={() => setActiveTab('training')} />
 
-            <NavButton icon={<Zap size={18} />} label="OPERASYON ODASI" active={activeTab === 'operations'} onClick={() => setActiveTab('operations')} />
+            <NavButton icon={<Zap size={18} />} label="OPERASYON ODASI" active={false} onClick={() => setShowComingSoon(true)} />
             <NavButton icon={<Archive size={18} />} label="ARŞİV & ENVANTER" active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} />
             <NavButton icon={<Newspaper size={18} />} label="HABERLER" active={activeTab === 'newspaper'} onClick={() => setActiveTab('newspaper')} />
 
@@ -1395,6 +1396,25 @@ export default function Home() {
           seasonId={lastCompletedSeasonId}
           teamName={profile.team_name}
         />
+      )}
+
+      {/* Yakında Modal — Operasyon Odası vb. */}
+      {showComingSoon && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setShowComingSoon(false)}>
+          <div className="bg-[#111820] border border-white/10 rounded-2xl p-8 text-center max-w-sm mx-4" onClick={e => e.stopPropagation()}>
+            <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Zap size={28} className="text-amber-400" />
+            </div>
+            <h3 className="text-lg font-black uppercase tracking-tighter text-white mb-2">Yakında!</h3>
+            <p className="text-sm text-white/50 mb-6">Bu bölüm şu anda geliştirme aşamasındadır. Yakında aktif olacaktır.</p>
+            <button
+              onClick={() => setShowComingSoon(false)}
+              className="px-6 py-2 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 rounded-xl text-[10px] font-black uppercase tracking-widest text-amber-300 transition-all"
+            >
+              Tamam
+            </button>
+          </div>
+        </div>
       )}
 
       {userId && profile && (

@@ -156,9 +156,10 @@ const FIRST_NAMES = [
 ];
 
 const LAST_NAMES = [
-  'Kalkavan', 'Umut Meler', 'Kardeşler', 'Şansalan', 'Bayarslan',
-  'Karaoğlan', 'Aydın', 'Şimşek', 'Sağlam', 'Öztürk', 'Şeker',
-  'Barış Saka', 'Numanoğlu', 'Çakır', 'Kol', 'Özdamar', 'Fidan', 'Akboy',
+  'Tunç', 'Karakuş', 'Özbek', 'Batur', 'Akduman',
+  'Kılınçer', 'Gültekin', 'Bozkurt', 'Bilgin', 'Ünal',
+  'Dağdeviren', 'Akansel', 'Erbay', 'Kılavuz', 'Sazak',
+  'Demirel', 'Yörükoğlu', 'Akça', 'Koçyiğit', 'Badem',
 ];
 
 // ─── Generate Referees for a League ────────────────────────────────────────

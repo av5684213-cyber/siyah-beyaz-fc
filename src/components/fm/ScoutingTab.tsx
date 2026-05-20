@@ -679,13 +679,13 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
                      value={advancedFilters.position}
                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, position: e.target.value })}
                      disabled={activeScoutSlots < 1}
-                     className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white focus:border-amber-500 outline-none transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                     className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-gray-200 focus:border-amber-500 outline-none transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                    >
-                     <option value="">Tümü</option>
-                     <option value="GK">Kaleci (GK)</option>
-                     <option value="DEF">Defans (DEF)</option>
-                     <option value="MID">Orta Saha (MID)</option>
-                     <option value="FWD">Forvet (FWD)</option>
+                     <option value="" className="bg-zinc-800 text-gray-200">Tümü</option>
+                     <option value="GK" className="bg-zinc-800 text-gray-200">Kaleci (GK)</option>
+                     <option value="DEF" className="bg-zinc-800 text-gray-200">Defans (DEF)</option>
+                     <option value="MID" className="bg-zinc-800 text-gray-200">Orta Saha (MID)</option>
+                     <option value="FWD" className="bg-zinc-800 text-gray-200">Forvet (FWD)</option>
                    </select>
                </div>
                <div className="grid grid-cols-2 gap-2">
@@ -752,14 +752,14 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
                    <select
                      value={advancedFilters.rarity}
                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, rarity: e.target.value })}
-                     className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white focus:border-amber-500 outline-none transition-all"
+                     className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-gray-200 focus:border-amber-500 outline-none transition-all"
                    >
-                     <option value="all">Tümü</option>
-                     <option value="common">Yaygın (0-64)</option>
-                     <option value="uncommon">Sıra Dışı (65-74)</option>
-                     <option value="rare">Nadir (75-84)</option>
-                     <option value="epic">Epik (85-89)</option>
-                     <option value="legendary">Efsanevi (90+)</option>
+                     <option value="all" className="bg-zinc-800 text-gray-200">Tümü</option>
+                     <option value="common" className="bg-zinc-800 text-gray-200">Yaygın (0-64)</option>
+                     <option value="uncommon" className="bg-zinc-800 text-gray-200">Sıra Dışı (65-74)</option>
+                     <option value="rare" className="bg-zinc-800 text-gray-200">Nadir (75-84)</option>
+                     <option value="epic" className="bg-zinc-800 text-gray-200">Epik (85-89)</option>
+                     <option value="legendary" className="bg-zinc-800 text-gray-200">Efsanevi (90+)</option>
                    </select>
                </div>
                {[

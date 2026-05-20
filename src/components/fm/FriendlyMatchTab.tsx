@@ -610,7 +610,7 @@ export function FriendlyMatchTab() {
 
           {/* ── Main Action Buttons ── */}
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            {/* Free Queue Button */}
+            {/* Free Queue Button — SIRAYA GİR (ücretsiz, is_priority: false) */}
             <button
               onClick={inQueue ? handleLeaveQueue : handleJoinQueue}
               disabled={loading || isMatched}
@@ -623,10 +623,10 @@ export function FriendlyMatchTab() {
               <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors" />
               <div className="relative flex items-center gap-3">
                 <div className={`p-1.5 rounded-lg ${inQueue ? 'bg-red-500/20' : 'bg-black/20'}`}>
-                  {inQueue ? <RotateCcw size={16} /> : <Swords size={16} />}
+                  {inQueue ? <RotateCcw size={16} /> : <Users size={16} />}
                 </div>
                 <div className="flex flex-col leading-none">
-                  <span className="text-[11px]">{inQueue ? 'SIRADAN ÇIK' : 'HAZIRLIK MAÇI TEKLİFİ VER'}</span>
+                  <span className="text-[11px]">{inQueue ? 'SIRADAN ÇIK' : 'SIRAYA GİR'}</span>
                   <span className="text-[7px] opacity-60 font-bold">
                     {inQueue ? 'BEKLEMEYİ İPTAL ET' : 'ÜCRETSİZ — OTOMATİK EŞLEŞME'}
                   </span>
@@ -634,7 +634,7 @@ export function FriendlyMatchTab() {
               </div>
             </button>
 
-            {/* Priority Queue Button (1 Credit) */}
+            {/* Paid Priority Button — HAZIRLIK MAÇI TEKLİFİ VER (1 kredi, is_priority: true) */}
             {!inQueue && !isMatched && (
               <button
                 onClick={handleJoinPriorityQueue}
@@ -651,9 +651,9 @@ export function FriendlyMatchTab() {
                     <Zap size={16} />
                   </div>
                   <div className="flex flex-col leading-none">
-                    <span className="text-[11px]">⚡ 1 KREDİ İLE ÖNCELİKLİ EŞLEŞME</span>
+                    <span className="text-[11px]">HAZIRLIK MAÇI TEKLİFİ VER</span>
                     <span className="text-[7px] opacity-60 font-bold">
-                      {(profile?.credits || 0) < 1 ? 'YETERSİZ KREDİ' : 'ÖNCELİKLİ SIRA — DAHA HIZLI EŞLEŞME'}
+                      {(profile?.credits || 0) < 1 ? 'YETERSİZ KREDİ' : '⚡ 1 KREDİ — ÖNCELİKLİ EŞLEŞME'}
                     </span>
                   </div>
                 </div>
