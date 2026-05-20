@@ -11,6 +11,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { randomUUID } from 'crypto';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://jmxbyaamwbpnvgbnjbmo.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -232,7 +233,7 @@ async function resetDatabase() {
   console.log('\n🏆 Lig oluşturuluyor...');
   const { data: league, error: leagueError } = await supabase
     .from('leagues')
-    .insert({ name: 'Süper Lig', tier: 1, country: 'Türkiye' })
+    .insert({ name: 'Süper Lig', tier: 1 })
     .select()
     .single();
 
@@ -246,7 +247,7 @@ async function resetDatabase() {
   console.log('\n📅 Sezon oluşturuluyor...');
   const { data: season, error: seasonError } = await supabase
     .from('seasons')
-    .insert({ league_id: league.id, name: 'Sezon 1', status: 'active' })
+    .insert({ league_id: league.id, year: new Date().getFullYear(), start_date: new Date().toISOString().split('T')[0] })
     .select()
     .single();
 
@@ -254,7 +255,7 @@ async function resetDatabase() {
     console.error('❌ Sezon oluşturulamadı:', seasonError?.message);
     process.exit(1);
   }
-  console.log(`✅ Sezon oluşturuldu: ${season.name} (ID: ${season.id})`);
+  console.log(`✅ Sezon oluşturuldu (ID: ${season.id})`);
 
   // ── 4. Takımlar ve oyuncular oluştur ──
   console.log('\n⚽ Takımlar ve oyuncular oluşturuluyor...');
@@ -264,10 +265,12 @@ async function resetDatabase() {
   for (let t = 0; t < TEAM_NAMES.length; t++) {
     const teamName = TEAM_NAMES[t];
 
-    // Profile oluştur
+    // Profile oluştur (UUID zorunlu)
+    const profileId = randomUUID();
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .insert({
+        id: profileId,
         team_name: teamName,
         money: 100000000,     // 100.000.000 €
         credits: 5000,        // 5.000 KR
@@ -289,8 +292,6 @@ async function resetDatabase() {
         name: teamName,
         league_id: league.id,
         profile_id: profile.id,
-        stadium_name: STADIUMS[teamName] || `${teamName} Stadyumu`,
-        is_user_team: t === 0,
         is_bot: t > 0,
         strength: 40 + Math.floor(Math.random() * 15),
       })
@@ -298,10 +299,25 @@ async function resetDatabase() {
       .single();
 
     if (ltError || !leagueTeam) {
-      console.warn(`⚠️  ${teamName} league_team oluşturulamadı: ${ltError?.message}`);
-      continue;
+      // Fallback: daha az kolonla tekrar dene
+      const { data: fallbackTeam, error: fbError } = await supabase
+        .from('league_teams')
+        .insert({
+          name: teamName,
+          league_id: league.id,
+          profile_id: profile.id,
+        })
+        .select()
+        .single();
+
+      if (fbError || !fallbackTeam) {
+        console.warn(`⚠️  ${teamName} league_team oluşturulamadı: ${fbError?.message || ltError?.message}`);
+        continue;
+      }
+      leagueTeamIds.push(fallbackTeam.id);
+    } else {
+      leagueTeamIds.push(leagueTeam.id);
     }
-    leagueTeamIds.push(leagueTeam.id);
 
     // 18 oyuncu oluştur
     const players = SQUAD_TEMPLATE.map((pos, i) => {
@@ -325,26 +341,19 @@ async function resetDatabase() {
         potential: Math.min(99, rating + Math.floor(Math.random() * 15)),
         age,
         nation: 'Türkiye',
-        club: teamName,
         team_name: teamName,
         profile_id: profile.id,
         market_value: marketValue,
         salary,
-        preferred_foot: Math.random() > 0.75 ? 'Left' : 'Right',
         ...stats,
         cond: 100,
         morale: 70 + Math.floor(Math.random() * 20),
         form: 50 + Math.floor(Math.random() * 30),
         is_injured: false,
-        is_on_loan_market: false,
-        loan_status: null,
-        loan_fee: 0,
-        is_free_agent: false,
         scouted: false,
         scouting_stars: 0,
         scouting_count: 0,
         is_legend: false,
-        is_starter: i < 11,
       };
     });
 
@@ -446,9 +455,12 @@ async function resetDatabase() {
     'Ufuk Akduman', 'Onur Kılınçer', 'Sadık Gültekin', 'Levent Bozkurt',
     'Civan Bilgin', 'Baran Ünal',
   ];
+  const refereePersonalities = ['katil', 'dengeci', 'hoşgörülü', 'ev_sahibi', 'değişken', 'var_sever', 'kart_sever'];
   const refereeRows = refereeNames.map((name, i) => ({
+    id: randomUUID(),
     name,
-    rating: 70 + Math.floor(Math.random() * 20),
+    personality: 'dengeci',
+    league_id: league.id,
     strictness: 3 + Math.floor(Math.random() * 5),
   }));
   const { error: refError } = await supabase.from('referees').insert(refereeRows);
