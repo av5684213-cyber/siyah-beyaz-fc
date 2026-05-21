@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Calendar,
   Clock,
-  ChevronLeft,
   ChevronRight,
   Zap,
   RefreshCw,
@@ -15,7 +14,6 @@ import {
   Eye,
   Radio,
   Play,
-  ArrowRight,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { loadFixtures, loadMatchHistory } from '@/lib/fm/persistence';
@@ -79,6 +77,22 @@ function getTeamInitials(name: string): string {
     return name.slice(0, 2).toUpperCase();
   } catch {
     return '??';
+  }
+}
+
+// ─── Turkish Month Names ─────────────────────────────────────────
+const TURKISH_MONTHS: Record<number, string> = {
+  1: 'OCAK', 2: 'ŞUBAT', 3: 'MART', 4: 'NİSAN', 5: 'MAYIS', 6: 'HAZİRAN',
+  7: 'TEMMUZ', 8: 'AĞUSTOS', 9: 'EYLÜL', 10: 'EKİM', 11: 'KASIM', 12: 'ARALIK',
+};
+
+function getMonthYear(dateStr: string): string {
+  try {
+    const d = new Date(dateStr);
+    const month = TURKISH_MONTHS[d.getMonth() + 1] || 'BİLİNMİYOR';
+    return `${month} ${d.getFullYear()}`;
+  } catch {
+    return 'BİLİNMİYOR';
   }
 }
 
@@ -206,9 +220,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'played'>('all');
-  const [selectedTur, setSelectedTur] = useState<number>(1);
   const [userTeamId, setUserTeamId] = useState<string | null>(null);
-  const weekScrollRef = useRef<HTMLDivElement>(null);
   const cycleStatus = GameCycleManager.getStatus();
 
   // ─── Data Fetching ─────────────────────────────────────────────
@@ -273,14 +285,8 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
           away: { name: (m.awayTeam as string) || 'Bilinmiyor' },
         }));
         setFixtures(mapped.sort((a, b) => a.tur - b.tur));
-        const lastTur = mapped.length > 0 ? Math.max(...mapped.map(f => f.tur)) : 0;
-        setSelectedTur(Math.min(34, lastTur + 1));
       } else {
         setFixtures(allFixtures);
-        const playedTurs = allFixtures.filter((f: Fixture) => f.status === 'finished').map((f: Fixture) => f.tur);
-        const lastPlayedTur = playedTurs.length > 0 ? Math.max(...playedTurs) : 0;
-        const initialTur = Math.min(34, lastPlayedTur + 1);
-        setSelectedTur(initialTur);
       }
     } catch (err) {
       console.error('Fixture loading error:', err);
@@ -292,17 +298,6 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  // ─── Scroll to selected week ────────────────────────────────────
-  useEffect(() => {
-    if (weekScrollRef.current) {
-      const container = weekScrollRef.current;
-      const selectedEl = container.querySelector(`[data-week="${selectedTur}"]`);
-      if (selectedEl) {
-        selectedEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      }
-    }
-  }, [selectedTur]);
 
   // ─── Computed: Form Guide ────────────────────────────────────────
   const computeForm = useCallback(
@@ -346,53 +341,30 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
   );
 
   // ─── Computed: Filtered fixtures ────────────────────────────────
-  const filteredFixtures = fixtures.filter(f => {
-    const isPlayed = f.status === 'finished';
-    if (filter === 'upcoming') return !isPlayed;
-    if (filter === 'played') return isPlayed;
-    return f.tur === selectedTur;
-  });
+  const filteredFixtures = useMemo(() => {
+    return fixtures.filter(f => {
+      const isPlayed = f.status === 'finished';
+      if (filter === 'upcoming') return !isPlayed;
+      if (filter === 'played') return isPlayed;
+      return true;
+    });
+  }, [fixtures, filter]);
 
   const nextMatch = fixtures.find(f => f.status === 'scheduled' || f.status === 'user_pending' || f.status === 'live');
-  const turs = Array.from({ length: 34 }, (_, i) => i + 1);
 
-  // ─── Grouped by tur ──────────────────────────────────────────────
-  const fixturesByTur = useMemo(() => {
-    const map = new Map<number, Fixture[]>();
-    fixtures.forEach(f => {
-      const list = map.get(f.tur) || [];
+  // ─── Grouped by month ──────────────────────────────────────────
+  const groupedByMonth = useMemo(() => {
+    const map = new Map<string, Fixture[]>();
+    filteredFixtures.forEach(f => {
+      const key = f.match_date ? getMonthYear(f.match_date) : 'BİLİNMİYOR';
+      const list = map.get(key) || [];
       list.push(f);
-      map.set(f.tur, list);
+      map.set(key, list);
     });
     return map;
-  }, [fixtures]);
+  }, [filteredFixtures]);
 
-  // ─── Week date range ──────────────────────────────────────────
-  const weekDateRange = useMemo(() => {
-    const weekFixtures = fixtures.filter(f => f.tur === selectedTur);
-    const dates = weekFixtures
-      .map(f => f.match_date)
-      .filter((d): d is string => !!d)
-      .map(d => new Date(d))
-      .sort((a, b) => a.getTime() - b.getTime());
-    if (dates.length === 0) return null;
-    const minDate = dates[0];
-    const maxDate = dates[dates.length - 1];
-    return { minDate, maxDate };
-  }, [fixtures, selectedTur]);
-
-  const weekDateDisplay = useMemo(() => {
-    if (!weekDateRange) return 'Tarih Belirlenmedi';
-    const { minDate, maxDate } = weekDateRange;
-    if (minDate.getTime() === maxDate.getTime()) {
-      return format(minDate, 'd MMMM EEEE', { locale: tr });
-    }
-    return `${format(minDate, 'd MMMM', { locale: tr })} — ${format(maxDate, 'd MMMM', { locale: tr })}`;
-  }, [weekDateRange]);
-
-  const weekMatchCount = useMemo(() => {
-    return fixtures.filter(f => f.tur === selectedTur).length;
-  }, [fixtures, selectedTur]);
+  const monthKeys = useMemo(() => Array.from(groupedByMonth.keys()), [groupedByMonth]);
 
   // ─── Opponent form for next match spotlight ────────────────────
   const opponentForm = useMemo(() => {
@@ -424,14 +396,6 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
       return 'L';
     },
     [userTeamId],
-  );
-
-  // ─── Get user match for a specific tur ─────────────────────────
-  const getUserMatchForTur = useCallback(
-    (tur: number): Fixture | null => {
-      return fixtures.find(f => f.tur === tur && (f.home_team_id === userTeamId || f.away_team_id === userTeamId)) || null;
-    },
-    [fixtures, userTeamId],
   );
 
   // ─── Season progress ───────────────────────────────────────────
@@ -512,154 +476,12 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                     : 'text-white/40 hover:text-white hover:bg-white/5'
                 }`}
               >
-                {f === 'all' ? 'Haftalık' : f === 'upcoming' ? 'Gelenler' : 'Geçmiş'}
+                {f === 'all' ? 'Tümü' : f === 'upcoming' ? 'Gelenler' : 'Geçmiş'}
               </button>
             ))}
           </div>
         </div>
       </div>
-
-      {/* ── Horizontal Week Cards ─────────────────────────────────── */}
-      {filter === 'all' && (
-        <div className="px-4 md:px-6 py-4 bg-gradient-to-b from-zinc-900/60 to-black/40 border-b border-white/5">
-          <div className="flex items-center gap-2 mb-3">
-            <Calendar size={11} className="text-white/30" />
-            <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">
-              Hafta {selectedTur} — {weekDateDisplay}
-            </span>
-            <span className="text-white/10 mx-1">·</span>
-            <span className="text-[9px] font-bold text-white/30 uppercase tracking-wider">
-              {weekMatchCount} Maç
-            </span>
-          </div>
-          <div className="relative">
-            {/* Left Arrow */}
-            <button
-              onClick={() => setSelectedTur(prev => Math.max(1, prev - 1))}
-              disabled={selectedTur <= 1}
-              className={`absolute left-0 top-0 bottom-0 z-10 w-8 flex items-center justify-center bg-gradient-to-r from-black/80 to-transparent transition-all ${
-                selectedTur <= 1 ? 'opacity-0 pointer-events-none' : 'hover:from-black/90'
-              }`}
-            >
-              <ChevronLeft size={16} className="text-white/60" />
-            </button>
-
-            {/* Week Cards — flex-wrap, no horizontal scroll */}
-            <div
-              ref={weekScrollRef}
-              className="flex flex-wrap gap-2 justify-center px-4 py-1"
-            >
-              {turs.map(tur => {
-                const isSelected = selectedTur === tur;
-                const hasPlayed = fixtures.some(f => f.tur === tur && f.status === 'finished');
-                const hasUserMatch = fixtures.some(f => f.tur === tur && (f.home_team_id === userTeamId || f.away_team_id === userTeamId));
-                const hasLive = fixtures.some(f => f.tur === tur && f.status === 'live');
-                const userMatch = getUserMatchForTur(tur);
-                const userResult = userMatch ? getUserResult(userMatch) : null;
-
-                // Compact score display for the week card
-                const scoreDisplay = (() => {
-                  if (!userMatch) return null;
-                  if (userMatch.status === 'finished') {
-                    return `${userMatch.home_score} - ${userMatch.away_score}`;
-                  }
-                  if (userMatch.status === 'live') {
-                    return `${userMatch.home_score} - ${userMatch.away_score}`;
-                  }
-                  return 'VS';
-                })();
-
-                return (
-                  <button
-                    key={tur}
-                    data-week={tur}
-                    onClick={() => setSelectedTur(tur)}
-                    className={`relative rounded-xl border transition-all duration-300 overflow-hidden ${
-                      isSelected
-                        ? 'min-w-[5rem] bg-gradient-to-br from-amber-500/20 via-zinc-800/80 to-amber-700/10 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
-                        : hasLive
-                          ? 'min-w-[4rem] bg-gradient-to-b from-red-500/10 to-red-900/5 border-red-500/30 hover:border-red-500/50'
-                          : hasPlayed
-                            ? 'min-w-[4rem] bg-gradient-to-b from-zinc-800/60 to-zinc-900/40 border-white/8 hover:border-white/15'
-                            : hasUserMatch
-                              ? 'min-w-[4rem] bg-gradient-to-b from-zinc-800/40 to-zinc-900/20 border-amber-500/10 hover:border-amber-500/25'
-                              : 'min-w-[4rem] bg-zinc-900/30 border-white/5 hover:border-white/10'
-                    }`}
-                  >
-                    {/* Top accent line for selected */}
-                    {isSelected && (
-                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
-                    )}
-                    {/* Live pulse accent */}
-                    {hasLive && !isSelected && (
-                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-red-500 animate-pulse" />
-                    )}
-
-                    <div className="px-3 py-2.5 flex flex-col items-center gap-1">
-                      {/* Week Number */}
-                      <div className="flex items-center gap-1.5">
-                        {hasLive && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                        )}
-                        <span className={`text-[7px] font-black uppercase tracking-tighter ${
-                          isSelected ? 'text-amber-400/70' : 'text-white/30'
-                        }`}>
-                          HFT
-                        </span>
-                      </div>
-                      <span className={`text-base font-black ${
-                        isSelected ? 'text-white' : 'text-white/60'
-                      }`}>
-                        {tur}
-                      </span>
-
-                      {/* User match mini-score */}
-                      {hasUserMatch && userMatch && (
-                        <div className={`flex flex-col items-center gap-0.5 mt-0.5 ${
-                          isSelected ? 'opacity-100' : 'opacity-60'
-                        }`}>
-                          <span className={`text-[8px] font-mono font-bold ${
-                            userMatch.status === 'live'
-                              ? 'text-red-400'
-                              : userResult === 'W'
-                                ? 'text-emerald-400'
-                                : userResult === 'L'
-                                  ? 'text-red-400'
-                                  : userResult === 'D'
-                                    ? 'text-amber-400'
-                                    : 'text-white/30'
-                          }`}>
-                            {scoreDisplay}
-                          </span>
-                          <span className="text-[6px] font-black uppercase tracking-wider text-white/20">
-                            {userMatch.home_team_id === userTeamId ? 'EV' : 'DEP'}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Completed dot indicator for non-selected weeks */}
-                      {hasPlayed && !isSelected && !hasUserMatch && (
-                        <div className="w-1 h-1 bg-emerald-500/60 rounded-full mt-1" />
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Right Arrow */}
-            <button
-              onClick={() => setSelectedTur(prev => Math.min(34, prev + 1))}
-              disabled={selectedTur >= 34}
-              className={`absolute right-0 top-0 bottom-0 z-10 w-8 flex items-center justify-center bg-gradient-to-l from-black/80 to-transparent transition-all ${
-                selectedTur >= 34 ? 'opacity-0 pointer-events-none' : 'hover:from-black/90'
-              }`}
-            >
-              <ChevronRight size={16} className="text-white/60" />
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* ── Main Content ──────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-gradient-to-b from-black via-zinc-900/40 to-black">
@@ -868,76 +690,35 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
             )}
 
             {/* ══════════════════════════════════════════════════════
-                WEEK HEADER CARD
+                FIXTURE LIST — Month-Grouped Match Cards
                 ══════════════════════════════════════════════════════ */}
-            {filter === 'all' && (
-              <div className="bg-gradient-to-r from-zinc-900/80 via-zinc-800/60 to-zinc-900/80 rounded-2xl border border-white/5 p-5 flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-5">
-                  <div className="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-b from-amber-500/20 to-amber-700/10 border border-amber-500/30">
-                    <span className="text-[7px] font-black uppercase tracking-tighter text-amber-400/60">HFT</span>
-                    <span className="text-2xl font-black text-amber-400">{selectedTur}</span>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black uppercase tracking-wider text-white/80">
-                      Hafta {selectedTur}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Calendar size={11} className="text-white/25" />
-                      <span className="text-[10px] font-bold text-white/40">
-                        {weekDateDisplay}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Trophy size={10} className="text-white/20" />
-                      <span className="text-[9px] font-bold text-white/30 uppercase tracking-wider">
-                        {weekMatchCount} Maç
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setSelectedTur(prev => Math.max(1, prev - 1))}
-                    disabled={selectedTur <= 1}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all ${
-                      selectedTur <= 1
-                        ? 'bg-black/10 border-white/5 text-white/10 cursor-not-allowed'
-                        : 'bg-black/20 border-white/10 text-white/40 hover:bg-white/10 hover:text-white hover:border-amber-500/40 active:scale-95'
-                    }`}
-                  >
-                    <ChevronLeft size={12} />
-                    Önceki
-                  </button>
-                  <button
-                    onClick={() => setSelectedTur(prev => Math.min(34, prev + 1))}
-                    disabled={selectedTur >= 34}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all ${
-                      selectedTur >= 34
-                        ? 'bg-black/10 border-white/5 text-white/10 cursor-not-allowed'
-                        : 'bg-black/20 border-white/10 text-white/40 hover:bg-white/10 hover:text-white hover:border-amber-500/40 active:scale-95'
-                    }`}
-                  >
-                    Sonraki
-                    <ChevronRight size={12} />
-                  </button>
-                </div>
+            {filteredFixtures.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-16 bg-zinc-900/20 rounded-2xl border border-dashed border-white/10">
+                <Calendar className="w-12 h-12 text-white/5 mb-4" />
+                <p className="text-xs font-bold text-white/30 uppercase tracking-widest">
+                  Maç bulunamadı
+                </p>
               </div>
-            )}
+            ) : (
+              monthKeys.map(monthKey => {
+                const monthFixtures = groupedByMonth.get(monthKey) || [];
+                return (
+                  <div key={monthKey} className="space-y-3">
+                    {/* ── Month Header ── */}
+                    <div className="sticky top-0 z-10 backdrop-blur-md bg-black/90 border-b border-white/[0.06] px-4 py-2.5 flex items-center justify-between rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <Calendar size={12} className="text-amber-400/70" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400/80">
+                          {monthKey}
+                        </span>
+                      </div>
+                      <span className="text-[9px] text-white/20 font-semibold">{monthFixtures.length} maç</span>
+                    </div>
 
-            {/* ══════════════════════════════════════════════════════
-                FIXTURE LIST — Modern Gradient Match Cards
-                ══════════════════════════════════════════════════════ */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <AnimatePresence mode="popLayout">
-                {filteredFixtures.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center p-16 bg-zinc-900/20 rounded-2xl border border-dashed border-white/10">
-                    <Calendar className="w-12 h-12 text-white/5 mb-4" />
-                    <p className="text-xs font-bold text-white/30 uppercase tracking-widest">
-                      İlgili hafta için maç bulunamadı
-                    </p>
-                  </div>
-                ) : (
-                  filteredFixtures.map((fixture, idx) => {
+                    {/* ── Match Cards for this month ── */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <AnimatePresence mode="popLayout">
+                        {monthFixtures.map((fixture, idx) => {
                     const isUserMatch =
                       fixture.home_team_id === userTeamId || fixture.away_team_id === userTeamId;
                     const matchDate = fixture.match_date ? new Date(fixture.match_date) : null;
@@ -1132,9 +913,13 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                       </motion.div>
                     );
                   })
-                )}
-              </AnimatePresence>
+                  }
+                </AnimatePresence>
+              </div>
             </div>
+          );
+              })
+            )}
           </div>
         )}
       </div>

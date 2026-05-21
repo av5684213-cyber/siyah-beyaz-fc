@@ -11,6 +11,48 @@ function toTitleCase(str: string): string {
 import { POS_ORDER, POS_LABELS, POS_TO_GROUP } from '@/lib/fm/playerGenerator';
 import { getPosGroup, getPosRowStyle } from '@/lib/fm/ui-helpers';
 import { ChevronUp, ChevronDown } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+// Arketip açıklama haritası
+const ARCHETYPE_INFO: Record<string, { desc: string; boosts: string[] }> = {
+  'Refleks canavarı': { desc: 'Kaleci arketipi — Refleks ve kurtarış ustası', boosts: ['Kalecilik', 'Refleksler'] },
+  'Güvenli eller': { desc: 'Kaleci arketipi — Top tutma ve soğukkanlılık', boosts: ['Kalecilik', 'Soğukkanlılık'] },
+  '1v1 ustası': { desc: 'Kaleci arketipi — Bire bir durumlarda uzman', boosts: ['Kalecilik', 'Cesaret'] },
+  'Hava hakimiyeti': { desc: 'Hava toplarında dominant — Kafa ve zıplama', boosts: ['Kafa', 'Zıplama'] },
+  'Kale gibi': { desc: 'Defans arketipi — Markaj ve top kapma ustası', boosts: ['Markaj', 'Top Kapma'] },
+  'Lider stoper': { desc: 'Defans arketipi — Liderlik ve pozisyon alma', boosts: ['Liderlik', 'Pozisyon'] },
+  'Topla çıkan stoper': { desc: 'Defans arketipi — Pas ve dribling yeteneği yüksek', boosts: ['Pas', 'Dribling'] },
+  'Hızlı stoper': { desc: 'Defans arketipi — Hız ve iverlenme', boosts: ['Hız', 'İverlenme'] },
+  'Markajcı': { desc: 'Defans arketipi — Adam adama markaj ustası', boosts: ['Markaj'] },
+  'Gölge Markajcı': { desc: 'Defans arketipi — Gölge markaj tekniği', boosts: ['Markaj'] },
+  'Kanat bekçisi': { desc: 'Bek arketipi — Markaj ve top kapma', boosts: ['Markaj', 'Top Kapma'] },
+  'Uzun pas ustası': { desc: 'Orta ve uzun pas uzmanı', boosts: ['Orta', 'Pas'] },
+  'Süpürücü (libero)': { desc: 'Defans arketipi — Markaj ve pozisyon alma', boosts: ['Markaj', 'Pozisyon'] },
+  'Top saklayan': { desc: 'Top saklama ve denge ustası', boosts: ['Dribling', 'Denge'] },
+  'Pres ustası': { desc: 'Orta saha arketipi — Top kapma ve çalışkanlık', boosts: ['Top Kapma', 'Çalışkanlık'] },
+  'Tempo kontrolcüsü': { desc: 'Orta saha arketipi — Pas ve vizyon', boosts: ['Pas', 'Vizyon'] },
+  'Regista': { desc: 'Orta saha arketipi — Derin oyun kurucu', boosts: ['Pas', 'Vizyon'] },
+  'Oyun Bozan': { desc: 'Orta saha arketipi — Top kapma ve öngörü', boosts: ['Top Kapma', 'Öngörü'] },
+  'Oyun kurucu': { desc: 'Orta saha arketipi — Pas ve vizyon ile oyun kurar', boosts: ['Pas', 'Vizyon'] },
+  'Box-to-box': { desc: 'Orta saha arketipi — Dayanıklılık, top kapma ve şut', boosts: ['Dayanıklılık', 'Top Kapma', 'Şut'] },
+  'Top dağıtıcı': { desc: 'Orta saha arketibi — Pas ve ilk kontrol', boosts: ['Pas', 'İlk Kontrol'] },
+  'Uzaktan şutçu': { desc: 'Uzaktan şut uzmanı', boosts: ['Uzaktan Şut', 'Şut'] },
+  'Pas arası ustası': { desc: 'Öngörü ve top kapma ile pas arası', boosts: ['Öngörü', 'Top Kapma'] },
+  '10 numara': { desc: 'Ofansif orta saha — Pas, vizyon ve dribling', boosts: ['Pas', 'Vizyon', 'Dribling'] },
+  'Boşluk bulucu': { desc: 'Ofansif orta saha — Boş alan bulma ve dribling', boosts: ['Boş Alan', 'Dribling'] },
+  'Oyun görüşü yüksek': { desc: 'Vizyon ve pas ile oyun okuma', boosts: ['Vizyon', 'Pas'] },
+  'Koşu ustası': { desc: 'Hız ve dayanıklılık ile sürekli koşu', boosts: ['Hız', 'Dayanıklılık'] },
+  'Hızlı forvet': { desc: 'Forvet arketipi — Hız ve iverlenme', boosts: ['Hız', 'İverlenme'] },
+  'Boşluk avcısı': { desc: 'Forvet arketibi — Dribling ve boş alan bulma', boosts: ['Dribling', 'Boş Alan'] },
+  'Kontra canavarı': { desc: 'Kontra atak ustası — Hız ve dribling', boosts: ['Hız', 'Dribling'] },
+  'Bitirici': { desc: 'Forvet arketibi — Şut ve bitiricilik', boosts: ['Şut', 'Bitiricilik'] },
+  'Sahte 9': { desc: 'Forvet arketibi — Vizyon, pas ve dribling', boosts: ['Vizyon', 'Pas', 'Dribling'] },
+  'Pozisyoncu': { desc: 'Forvet arketibi — Boş alan ve bitiricilik', boosts: ['Boş Alan', 'Bitiricilik'] },
+  'Fırsatçı': { desc: 'Forvet arketibi — Fırsatları değerlendirir', boosts: ['Boş Alan', 'Bitiricilik'] },
+  'Gol makinesi': { desc: 'Forvet arketibi — Gol atma ustası', boosts: ['Şut', 'Bitiricilik', 'Boş Alan'] },
+  'Fiziksel santrafor': { desc: 'Forvet arketibi — Güç ve kafa', boosts: ['Güç', 'Kafa'] },
+  'Kafacı (forvet)': { desc: 'Forvet arketibi — Kafa vuruşu ve bitiricilik', boosts: ['Kafa', 'Bitiricilik'] },
+};
 
 interface TacticsCommandCenterProps {
   isAdmin?: boolean;
@@ -101,45 +143,62 @@ const PlayerIcon = ({ player, condition, pos, onDrop, onDragOver, onDragStart, o
         onClick={onClick}
         className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-grab active:cursor-grabbing ${isDragOver ? 'z-30 scale-110' : 'z-10'}`}
     >
-        <div className="relative w-12 h-12 flex items-center justify-center">
+        <div className="relative w-14 h-14 flex items-center justify-center">
             {/* Condition ring */}
             <svg className="absolute inset-0 w-full h-full -rotate-90">
-                <circle cx="24" cy="24" r="22" fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="4" />
+                <circle cx="28" cy="28" r="25" fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="4" />
                 <circle 
-                    cx="24" cy="24" r="22" 
+                    cx="28" cy="28" r="25" 
                     fill="none" 
                     stroke={ringColor} 
                     strokeWidth={condition >= 100 ? 4 : 3}
-                    strokeDasharray="138"
-                    strokeDashoffset={138 * (1 - (condition || 100) / 100)}
+                    strokeDasharray="157"
+                    strokeDashoffset={157 * (1 - (condition || 100) / 100)}
                     className="transition-all duration-500"
                 />
             </svg>
             
-            {/* Modern Kit Card */}
+            {/* Modern Kit Card - Enhanced */}
             <div 
-              className="w-10 h-11 relative rounded-lg flex flex-col items-center justify-center group-hover:scale-110 transition-transform"
+              className="w-12 h-14 relative rounded-lg flex flex-col items-center justify-center group-hover:scale-110 transition-transform overflow-hidden"
               style={{
-                background: `linear-gradient(135deg, ${primaryColor} 0%, ${darkenColor(primaryColor, 20)} 100%)`,
+                background: `linear-gradient(160deg, ${primaryColor} 0%, ${darkenColor(primaryColor, 15)} 50%, ${darkenColor(primaryColor, 25)} 100%)`,
                 border: `1.5px solid ${secondaryColor}60`,
-                boxShadow: `0 2px 8px ${primaryColor}50, inset 0 1px 0 ${secondaryColor}30`
+                boxShadow: `0 3px 12px ${primaryColor}40, inset 0 1px 0 ${secondaryColor}40, 0 1px 3px rgba(0,0,0,0.4)`
               }}
             >
-              {/* Subtle collar/accent line at top */}
+              {/* V-neck collar */}
               <div 
-                className="absolute top-0 inset-x-2 h-[2px] rounded-b"
-                style={{ background: `${secondaryColor}80` }}
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-[5px]"
+                style={{ 
+                  background: `linear-gradient(180deg, ${secondaryColor}90 0%, transparent 100%)`,
+                  clipPath: 'polygon(0 0, 100% 0, 70% 100%, 30% 100%)'
+                }}
               />
-              <span className="text-[9px] font-black text-white tracking-tight leading-none drop-shadow-sm">
+              {/* Horizontal kit stripe pattern */}
+              <div 
+                className="absolute inset-0 opacity-[0.07]"
+                style={{
+                  background: `repeating-linear-gradient(0deg, transparent, transparent 4px, ${secondaryColor} 4px, ${secondaryColor} 5px)`
+                }}
+              />
+              {/* Team badge dot on left chest */}
+              <div 
+                className="absolute left-[5px] top-[8px] w-[5px] h-[5px] rounded-full"
+                style={{ background: `${secondaryColor}cc`, boxShadow: `0 0 3px ${secondaryColor}80` }}
+              />
+              <span className="text-[10px] font-black text-white tracking-tight leading-none drop-shadow-sm relative z-10 mt-1">
                 {posCode}
               </span>
-              <span className="text-[7px] font-bold text-white/50 leading-none mt-0.5">
+              <span className="text-[8px] font-bold text-white/60 leading-none mt-0.5 relative z-10">
                 {player.rating}
               </span>
             </div>
         </div>
-        <div className="mt-1 bg-black/80 backdrop-blur-sm text-white px-2 py-0.5 shadow-xl border border-white/10 min-w-[50px] max-w-[90px] rounded-sm">
-            <span className="text-[7px] font-black tracking-tight block text-center leading-tight uppercase">{displayName}</span>
+        {/* Shadow underneath */}
+        <div className="w-10 h-1.5 bg-black/30 rounded-full blur-[2px] mx-auto -mt-0.5" />
+        <div className="mt-0.5 bg-black/80 backdrop-blur-sm text-white px-2 py-0.5 shadow-xl border border-white/10 min-w-[52px] max-w-[92px] rounded-sm">
+            <span className="text-[8px] font-black tracking-tight block text-center leading-tight uppercase">{displayName}</span>
         </div>
     </motion.div>
   );
@@ -655,21 +714,44 @@ export default function TacticsCommandCenter({
                         <div className="w-3 h-3 bg-zinc-900/95 border-r border-b border-white/10 rotate-45 -mt-[7px]" />
                       </div>
                       
-                      {/* Archetype */}
+                      {/* Archetype with Tooltip */}
                       {archetypeName && (
-                        <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/5">
-                          <div className="w-5 h-5 rounded-md flex items-center justify-center text-[8px] font-black" 
-                            style={{ 
-                              background: `linear-gradient(135deg, ${POS_GROUP_COLORS[getPosGroup(player.specificPosition || player.position)] || '#9B9B9B'}40 0%, ${POS_GROUP_COLORS[getPosGroup(player.specificPosition || player.position)] || '#9B9B9B'}20 100%)`,
-                              color: POS_GROUP_COLORS[getPosGroup(player.specificPosition || player.position)] || '#9B9B9B'
-                            }}>
-                            {player.specificPosition?.charAt(0) || player.position.charAt(0)}
-                          </div>
-                          <div>
-                            <div className="text-[9px] font-black text-white/90">{archetypeName}</div>
-                            <div className="text-[7px] text-white/30 font-medium">Arketip</div>
-                          </div>
-                        </div>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/5 cursor-help">
+                                <div className="w-5 h-5 rounded-md flex items-center justify-center text-[8px] font-black" 
+                                  style={{ 
+                                    background: `linear-gradient(135deg, ${POS_GROUP_COLORS[getPosGroup(player.specificPosition || player.position)] || '#9B9B9B'}40 0%, ${POS_GROUP_COLORS[getPosGroup(player.specificPosition || player.position)] || '#9B9B9B'}20 100%)`,
+                                    color: POS_GROUP_COLORS[getPosGroup(player.specificPosition || player.position)] || '#9B9B9B'
+                                  }}>
+                                  {player.specificPosition?.charAt(0) || player.position.charAt(0)}
+                                </div>
+                                <div>
+                                  <div className="text-[9px] font-black text-white/90">{archetypeName}</div>
+                                  <div className="text-[7px] text-white/30 font-medium">Arketip</div>
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="bg-zinc-900/95 backdrop-blur-xl border border-white/10 shadow-2xl max-w-[220px]">
+                              <div className="px-1 py-0.5">
+                                <div className="text-[10px] font-black text-white/90 mb-1">{archetypeName}</div>
+                                <div className="text-[9px] text-white/60 leading-relaxed mb-1.5">
+                                  {ARCHETYPE_INFO[archetypeName]?.desc || 'Bu arketip hakkında bilgi bulunmuyor.'}
+                                </div>
+                                {ARCHETYPE_INFO[archetypeName]?.boosts && ARCHETYPE_INFO[archetypeName].boosts.length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {ARCHETYPE_INFO[archetypeName].boosts.map((b: string) => (
+                                      <span key={b} className="px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded text-[7px] font-bold text-amber-400">
+                                        +{b}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
 
                       {/* Stats row */}

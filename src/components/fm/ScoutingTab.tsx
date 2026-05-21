@@ -29,7 +29,6 @@ interface AdvancedFilters {
   Alg: number;
   Top: number;
   Tplm: number;
-  potentialMin: number;
 }
 
 const getDefaultFilters = (): AdvancedFilters => ({
@@ -52,14 +51,13 @@ const getDefaultFilters = (): AdvancedFilters => ({
   Alg: 0,
   Top: 0,
   Tplm: 0,
-  potentialMin: 0,
 });
 
 // ─── Scout Level Descriptors ──────────────────────────────────────
 const SCOUT_LEVEL_INFO: Record<number, { label: string; desc: string; color: string }> = {
   1: { label: 'Temel Arama', desc: 'İsim, pozisyon, yaş', color: 'text-white/40' },
   2: { label: 'Genişletilmiş', desc: '+ OVR aralığı, nadirlik filtreleri', color: 'text-amber-400' },
-  3: { label: 'Detaylı Arama', desc: '+ Arketip, yetenekler, potansiyel', color: 'text-emerald-400' },
+  3: { label: 'Detaylı Arama', desc: '+ Arketip, yetenekler', color: 'text-emerald-400' },
 };
 
 // ─── Archetype Options (from playerGenerator.ts traitBoosts) ──────
@@ -437,16 +435,16 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
 
         if (advancedFilters.Tplm > 0 && total < advancedFilters.Tplm) return false;
 
-        // ── LEVEL 3: Potential filter ──
-        if (scoutLevel >= 3 && advancedFilters.potentialMin > 0) {
-          const potentialValue = (p.potential as number) ?? (p.klt as number) ?? 0;
-          if (potentialValue < advancedFilters.potentialMin) return false;
-        }
-
         // ── LEVEL 3: Archetype filter (multi-select OR logic) ──
         if (scoutLevel >= 3 && advancedFilters.archetypes && advancedFilters.archetypes.length > 0) {
+          const archetypeId = (p.archetype_id as string) ?? '';
           const playerArchetype = (p.archetype as string) ?? (p.play_style as string) ?? '';
-          const matchesAny = advancedFilters.archetypes.some(a => playerArchetype.toLowerCase().includes(a.toLowerCase()));
+          const matchesAny = advancedFilters.archetypes.some(a => {
+            // First try archetype_id if available
+            if (archetypeId && archetypeId.toLowerCase() === a.toLowerCase()) return true;
+            // Then exact case-insensitive match on archetype/play_style
+            return playerArchetype.toLowerCase() === a.toLowerCase();
+          });
           if (!matchesAny) return false;
         }
 
@@ -657,66 +655,46 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
           <ChevronRight size={14} className="text-white/20 group-open:rotate-90 transition-transform" />
         </summary>
         <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[0, 1, 2].map((slotIndex) => {
-            const scout = scouting.scouts[slotIndex];
-            return (
-              <div key={slotIndex} className="bg-white/5 border border-white/5 rounded-2xl p-5 relative overflow-hidden flex flex-col min-h-[160px]">
-                {scout ? (
-                  <>
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="text-base font-black italic uppercase tracking-tighter text-white">{scout.name}</h3>
-                        <div className="flex gap-1 mt-1">
-                          {[...Array(scout.stars)].map((_, i) => (
-                            <Star key={i} size={10} className="text-amber-400 fill-amber-400" />
-                          ))}
-                        </div>
-                      </div>
-                      <div className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest ${
-                        scout.status === 'IDLE' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-amber-500/20 text-amber-500 animate-pulse'
-                      }`}>
-                        {scout.status === 'IDLE' ? 'BOŞTA' : 'GÖREVDE'}
-                      </div>
-                    </div>
-                    <div className="flex-1 flex flex-col justify-center">
-                      {scout.status === 'IDLE' ? (
-                        <div className="text-center space-y-1 opacity-40">
-                          <Activity className="mx-auto" size={18} />
-                          <p className="text-[8px] font-black uppercase tracking-widest">Görev bekliyor</p>
-                        </div>
-                      ) : (
-                        <div className="text-center space-y-2">
-                          <Map className="mx-auto text-amber-500/40" size={24} />
-                          <div>
-                            <p className="text-[8px] font-black uppercase tracking-widest text-white/40">{scout.location}</p>
-                            <p className="text-base font-mono font-bold text-white tracking-widest">{scout.remainingDays} GÜN</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center space-y-3 border-2 border-dashed border-white/5 rounded-2xl p-4">
-                    <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-white/20">
-                      <Users size={18} />
-                    </div>
-                    <div className="text-center">
-                      <p className="text-[8px] font-black uppercase tracking-widest text-white/30">Boş Slot</p>
-                      <button 
-                        onClick={() => {
-                          setSelectedScoutSlot(slotIndex);
-                          setShowRecruitModal(true);
-                        }}
-                        className="mt-2 px-4 py-1.5 bg-white text-black text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all"
-                      >
-                        İŞE AL
-                      </button>
+          {scouting.scouts.length > 0 ? scouting.scouts.map((scout: Scout) => (
+              <div key={scout.id} className="bg-white/5 border border-white/5 rounded-2xl p-5 relative overflow-hidden flex flex-col min-h-[160px]">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="text-base font-black italic uppercase tracking-tighter text-white">{scout.name}</h3>
+                    <div className="flex gap-1 mt-1">
+                      {[...Array(scout.stars)].map((_, i) => (
+                        <Star key={i} size={10} className="text-amber-400 fill-amber-400" />
+                      ))}
                     </div>
                   </div>
-                )}
+                  <div className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest ${
+                    scout.status === 'IDLE' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-amber-500/20 text-amber-500 animate-pulse'
+                  }`}>
+                    {scout.status === 'IDLE' ? 'BOŞTA' : 'GÖREVDE'}
+                  </div>
+                </div>
+                <div className="flex-1 flex flex-col justify-center">
+                  {scout.status === 'IDLE' ? (
+                    <div className="text-center space-y-1 opacity-40">
+                      <Activity className="mx-auto" size={18} />
+                      <p className="text-[8px] font-black uppercase tracking-widest">Görev bekliyor</p>
+                    </div>
+                  ) : (
+                    <div className="text-center space-y-2">
+                      <Map className="mx-auto text-amber-500/40" size={24} />
+                      <div>
+                        <p className="text-[8px] font-black uppercase tracking-widest text-white/40">{scout.location}</p>
+                        <p className="text-base font-mono font-bold text-white tracking-widest">{scout.remainingDays} GÜN</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            );
-          })}
+          )) : (
+            <div className="col-span-full text-center py-8 text-white/30">
+              <Users size={24} className="mx-auto mb-2 opacity-40" />
+              <p className="text-[9px] font-black uppercase tracking-widest">Henüz gözlemci yok — Personel sekmesinden işe alabilirsiniz</p>
+            </div>
+          )}
         </div>
       </details>
 
@@ -894,7 +872,7 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${scoutLevel >= 3 ? 'bg-emerald-500/20' : 'bg-white/5'}`}>
                   <span className={`text-[9px] font-black ${scoutLevel >= 3 ? 'text-emerald-400' : 'text-white/30'}`}>3</span>
                </div>
-               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Detaylı — Arketip, Yetenekler, Potansiyel</span>
+               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Detaylı — Arketip, Yetenekler</span>
                {scoutLevel < 3 && <Lock size={10} className="text-white/20 ml-1" />}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -903,16 +881,6 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
                  onChange={(val) => setAdvancedFilters({ ...advancedFilters, archetypes: val })}
                  scoutLevel={scoutLevel}
                />
-               <div className="space-y-1.5">
-                   <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Min Potansiyel</label>
-                   <input 
-                     type="number"
-                     value={advancedFilters.potentialMin || ''}
-                     onChange={(e) => setAdvancedFilters({ ...advancedFilters, potentialMin: parseInt(e.target.value) || 0 })}
-                     placeholder="0"
-                     className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white focus:border-amber-500 outline-none transition-all"
-                   />
-               </div>
             </div>
          </div>
 

@@ -327,24 +327,162 @@ function randomFrom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// ═══════════════════════════════════════════════════════════════
+// ARKETİP TANIMLARI — Pozisyon bazlı nitelik üretimi
+// Her arketip: güçlü özellikler (+bonus), zayıf özellikler (-ceza)
+// 6 temel nitelik: shooting, passing, dribbling, defending, physical, speed (0-100)
+// ═══════════════════════════════════════════════════════════════
+
+interface ArchetypeDef {
+  name: string;
+  strong: string[];   // Stats that get +bonus
+  weak: string[];     // Stats that get -penalty
+}
+
+const POSITION_ARCHETYPES: Record<string, ArchetypeDef[]> = {
+  GK: [
+    { name: 'Refleks canavarı', strong: ['physical', 'speed'], weak: ['shooting', 'dribbling'] },
+    { name: 'Güvenli eller', strong: ['physical', 'passing'], weak: ['shooting', 'speed'] },
+    { name: '1v1 ustası', strong: ['speed', 'physical'], weak: ['passing', 'shooting'] },
+    { name: 'Hava hakimiyeti', strong: ['physical', 'defending'], weak: ['dribbling', 'speed'] },
+  ],
+  CB: [
+    { name: 'Kale gibi', strong: ['defending', 'physical'], weak: ['shooting', 'dribbling'] },
+    { name: 'Lider stoper', strong: ['defending', 'passing'], weak: ['speed', 'dribbling'] },
+    { name: 'Topla çıkan stoper', strong: ['passing', 'dribbling'], weak: ['physical', 'shooting'] },
+    { name: 'Hızlı stoper', strong: ['speed', 'defending'], weak: ['shooting', 'dribbling'] },
+    { name: 'Markajcı', strong: ['defending', 'speed'], weak: ['shooting', 'passing'] },
+  ],
+  LB: [
+    { name: 'Kanat bekçisi', strong: ['speed', 'defending'], weak: ['shooting', 'physical'] },
+    { name: 'Uzun pas ustası', strong: ['passing', 'speed'], weak: ['shooting', 'physical'] },
+    { name: 'Süpürücü (libero)', strong: ['defending', 'passing'], weak: ['shooting', 'dribbling'] },
+  ],
+  RB: [
+    { name: 'Kanat bekçisi', strong: ['speed', 'defending'], weak: ['shooting', 'physical'] },
+    { name: 'Uzun pas ustası', strong: ['passing', 'speed'], weak: ['shooting', 'physical'] },
+  ],
+  LWB: [
+    { name: 'Uzun pas ustası', strong: ['passing', 'speed'], weak: ['shooting', 'physical'] },
+    { name: 'Top saklayan', strong: ['dribbling', 'speed'], weak: ['shooting', 'defending'] },
+  ],
+  RWB: [
+    { name: 'Uzun pas ustası', strong: ['passing', 'speed'], weak: ['shooting', 'physical'] },
+    { name: 'Top saklayan', strong: ['dribbling', 'speed'], weak: ['shooting', 'defending'] },
+  ],
+  CDM: [
+    { name: 'Pres ustası', strong: ['defending', 'physical'], weak: ['shooting', 'dribbling'] },
+    { name: 'Tempo kontrolcüsü', strong: ['passing', 'defending'], weak: ['shooting', 'speed'] },
+    { name: 'Regista', strong: ['passing', 'dribbling'], weak: ['shooting', 'physical'] },
+    { name: 'Oyun Bozan', strong: ['defending', 'passing'], weak: ['shooting', 'dribbling'] },
+  ],
+  CM: [
+    { name: 'Oyun kurucu', strong: ['passing', 'dribbling'], weak: ['defending', 'physical'] },
+    { name: 'Box-to-box', strong: ['physical', 'passing'], weak: ['dribbling', 'shooting'] },
+    { name: 'Top dağıtıcı', strong: ['passing', 'physical'], weak: ['shooting', 'speed'] },
+    { name: 'Uzaktan şutçu', strong: ['shooting', 'passing'], weak: ['defending', 'speed'] },
+    { name: 'Pas arası ustası', strong: ['defending', 'passing'], weak: ['shooting', 'dribbling'] },
+  ],
+  CAM: [
+    { name: '10 numara', strong: ['passing', 'dribbling'], weak: ['defending', 'physical'] },
+    { name: 'Boşluk bulucu', strong: ['dribbling', 'shooting'], weak: ['defending', 'physical'] },
+    { name: 'Oyun görüşü yüksek', strong: ['passing', 'shooting'], weak: ['defending', 'speed'] },
+  ],
+  LM: [
+    { name: 'Uzun pas ustası', strong: ['passing', 'speed'], weak: ['shooting', 'defending'] },
+    { name: 'Koşu ustası', strong: ['speed', 'physical'], weak: ['shooting', 'defending'] },
+    { name: 'Top saklayan', strong: ['dribbling', 'speed'], weak: ['defending', 'physical'] },
+  ],
+  RM: [
+    { name: 'Uzun pas ustası', strong: ['passing', 'speed'], weak: ['shooting', 'defending'] },
+    { name: 'Koşu ustası', strong: ['speed', 'physical'], weak: ['shooting', 'defending'] },
+    { name: 'Top saklayan', strong: ['dribbling', 'speed'], weak: ['defending', 'physical'] },
+  ],
+  LW: [
+    { name: 'Hızlı forvet', strong: ['speed', 'dribbling'], weak: ['defending', 'physical'] },
+    { name: 'Boşluk avcısı', strong: ['dribbling', 'shooting'], weak: ['defending', 'physical'] },
+    { name: 'Kontra canavarı', strong: ['speed', 'shooting'], weak: ['defending', 'physical'] },
+  ],
+  RW: [
+    { name: 'Hızlı forvet', strong: ['speed', 'dribbling'], weak: ['defending', 'physical'] },
+    { name: 'Boşluk avcısı', strong: ['dribbling', 'shooting'], weak: ['defending', 'physical'] },
+    { name: 'Kontra canavarı', strong: ['speed', 'shooting'], weak: ['defending', 'physical'] },
+  ],
+  CF: [
+    { name: 'Bitirici', strong: ['shooting', 'dribbling'], weak: ['defending', 'physical'] },
+    { name: 'Sahte 9', strong: ['passing', 'dribbling'], weak: ['defending', 'physical'] },
+    { name: 'Pozisyoncu', strong: ['shooting', 'speed'], weak: ['defending', 'physical'] },
+    { name: 'Fırsatçı', strong: ['shooting', 'speed'], weak: ['defending', 'passing'] },
+  ],
+  ST: [
+    { name: 'Gol makinesi', strong: ['shooting', 'speed'], weak: ['defending', 'passing'] },
+    { name: 'Fiziksel santrafor', strong: ['physical', 'shooting'], weak: ['dribbling', 'speed'] },
+    { name: 'Hızlı forvet', strong: ['speed', 'shooting'], weak: ['defending', 'passing'] },
+    { name: 'Kafacı (forvet)', strong: ['physical', 'shooting'], weak: ['dribbling', 'speed'] },
+    { name: 'Bitirici', strong: ['shooting', 'dribbling'], weak: ['defending', 'passing'] },
+  ],
+};
+
+// Pozisyon bazlı temel nitelik ağırlıkları (0-100 ölçeğinde)
+const POSITION_BASE_WEIGHTS: Record<string, Record<string, number>> = {
+  GK:  { shooting: -25, passing: -5, dribbling: -20, defending: 5, physical: 10, speed: -10 },
+  CB:  { shooting: -15, passing: -5, dribbling: -10, defending: 15, physical: 10, speed: -5 },
+  LB:  { shooting: -10, passing: 0, dribbling: 0, defending: 5, physical: -5, speed: 10 },
+  RB:  { shooting: -10, passing: 0, dribbling: 0, defending: 5, physical: -5, speed: 10 },
+  LWB: { shooting: -10, passing: 5, dribbling: 0, defending: 0, physical: -5, speed: 10 },
+  RWB: { shooting: -10, passing: 5, dribbling: 0, defending: 0, physical: -5, speed: 10 },
+  CDM: { shooting: -10, passing: 5, dribbling: -5, defending: 10, physical: 5, speed: -5 },
+  CM:  { shooting: -5, passing: 10, dribbling: 0, defending: 0, physical: 0, speed: 0 },
+  CAM: { shooting: 5, passing: 10, dribbling: 5, defending: -10, physical: -10, speed: 0 },
+  LM:  { shooting: -5, passing: 0, dribbling: 5, defending: -10, physical: -5, speed: 10 },
+  RM:  { shooting: -5, passing: 0, dribbling: 5, defending: -10, physical: -5, speed: 10 },
+  LW:  { shooting: 0, passing: 0, dribbling: 10, defending: -15, physical: -10, speed: 10 },
+  RW:  { shooting: 0, passing: 0, dribbling: 10, defending: -15, physical: -10, speed: 10 },
+  CF:  { shooting: 10, passing: 0, dribbling: 5, defending: -15, physical: -5, speed: 5 },
+  ST:  { shooting: 15, passing: -10, dribbling: -5, defending: -20, physical: 5, speed: 5 },
+};
+
 function generatePlayerStats(position: string, baseRating: number) {
   const isGK = position === 'GK';
-  const isDef = ['CB', 'LB', 'RB', 'LWB', 'RWB'].includes(position);
-  const isMid = ['CDM', 'CM', 'CAM', 'LM', 'RM'].includes(position);
-  const isFwd = ['LW', 'RW', 'CF', 'ST'].includes(position);
 
-  const v = () => Math.max(1, Math.min(99, baseRating + Math.floor(Math.random() * 20) - 10));
+  // Pozisyon bazlı ağırlıkları al
+  const weights = POSITION_BASE_WEIGHTS[position] || POSITION_BASE_WEIGHTS['CM'];
+
+  // Arketip seç
+  const archetypes = POSITION_ARCHETYPES[position] || POSITION_ARCHETYPES['CM'];
+  const selectedArchetype = archetypes[Math.floor(Math.random() * archetypes.length)];
+
+  // Temel nitelik üretimi (0-100)
+  const genVal = (base: number, weight: number, isStrong: boolean, isWeak: boolean) => {
+    let val = base + weight;
+    if (isStrong) val += 5 + Math.floor(Math.random() * 6);  // +5 to +10 bonus
+    if (isWeak) val -= 5 + Math.floor(Math.random() * 6);     // -5 to -10 penalty
+    val += Math.floor(Math.random() * 12) - 6;  // ±6 variance
+    return Math.max(1, Math.min(99, val));
+  };
+
+  const strongSet = new Set(selectedArchetype.strong);
+  const weakSet = new Set(selectedArchetype.weak);
+
+  const shooting = genVal(baseRating, weights.shooting, strongSet.has('shooting'), weakSet.has('shooting'));
+  const passing = genVal(baseRating, weights.passing, strongSet.has('passing'), weakSet.has('passing'));
+  const dribbling = genVal(baseRating, weights.dribbling, strongSet.has('dribbling'), weakSet.has('dribbling'));
+  const defending = genVal(baseRating, weights.defending, strongSet.has('defending'), weakSet.has('defending'));
+  const physical = genVal(baseRating, weights.physical, strongSet.has('physical'), weakSet.has('physical'));
+  const speed = genVal(baseRating, weights.speed, strongSet.has('speed'), weakSet.has('speed'));
 
   return {
-    speed: isFwd ? v() + 5 : v(),
-    power: isDef ? v() + 5 : v(),
-    passing: isMid ? v() + 5 : v(),
-    shooting: isFwd ? v() + 8 : v(),
-    heading: isDef || isFwd ? v() + 3 : v(),
-    goalkeeping: isGK ? v() + 15 : Math.max(1, v() - 30),
-    control: v(),
-    vision: isMid ? v() + 3 : v(),
-    defending: isDef ? v() + 8 : v(),
+    shooting,
+    passing,
+    dribbling,
+    defending,
+    speed,
+    power: physical,  // backward compat
+    heading: isGK ? 5 : Math.max(1, Math.min(99, baseRating + (['CB', 'ST', 'CF'].includes(position) ? 5 : -5) + Math.floor(Math.random() * 10) - 5)),
+    goalkeeping: isGK ? Math.max(1, Math.min(99, baseRating + 10 + Math.floor(Math.random() * 8))) : Math.max(1, Math.min(20, baseRating - 30 + Math.floor(Math.random() * 10))),
+    control: dribbling,  // backward compat
+    vision: passing,     // backward compat
+    archetype: selectedArchetype.name,
   };
 }
 

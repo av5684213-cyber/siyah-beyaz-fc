@@ -523,3 +523,118 @@ Stage Summary:
 - User needs to run FIX_MISSING_TABLES_AND_COLUMNS.sql on Supabase to enable full functionality
 - StaffSection is already integrated into StadiumTab (Yerleşke)
 - Staff types: scout(3,max), coach(3), physio(3), youth_coordinator(2), sporting_director(1), analyst(2)
+
+---
+Task ID: stadium-scouting-fixes
+Agent: Z Code Agent
+Task: 3 Tasks — Stadium Rename Reposition, Scout Slot Cleanup, Archetype/Potential Filter Fix
+
+Work Log:
+
+Task 1: Move Stadium Rename to Bottom of Yerleşke Tab
+- StadiumTab.tsx: Moved the "Stadyum İsmi" (Stadium Name Change) card section from between the Header and Facility Cards Grid (was at lines 565-614) to AFTER the Facility Cards Grid section (now at lines 850-899)
+- The card now appears as a standalone section after all facility cards, before the Staff/Personnel section
+- Same styling and functionality preserved — no content changes
+
+Task 2: Remove Empty Scout Slots in ScoutingTab
+- ScoutingTab.tsx: Replaced the `[0, 1, 2].map()` grid that always showed 3 slots (including empty "Boş Slot" / "İŞE AL" placeholders) with `scouting.scouts.map()` that only renders actual scouts
+- Empty slot card with dashed border, "Boş Slot" text, and "İŞE AL" button removed entirely
+- When no scouts exist, a brief message is shown: "Henüz gözlemci yok — Personel sekmesinden işe alabilirsiniz"
+- Scout count display (activeScoutSlots) still correctly uses staff table data
+
+Task 3: Fix Archetype Filter & Remove Min Potential Filter in ScoutingTab
+- Archetype filter fix: Changed from `playerArchetype.toLowerCase().includes(a.toLowerCase())` (partial match) to:
+  * First tries matching against `p.archetype_id` field (if it exists in DB)
+  * Falls back to exact case-insensitive match against `p.archetype` or `p.play_style` field
+  * This prevents false matches like "Pres ustası" matching "Oyun ustası"
+- Removed `potentialMin` field from `AdvancedFilters` interface
+- Removed `potentialMin: 0` from `getDefaultFilters()` function
+- Removed the potential filter logic in `handleAdvancedSearch` (lines 441-444)
+- Removed the "Min Potansiyel" input from the Level 3 UI section
+- Updated Level 3 description: "Detaylı — Arketip, Yetenekler, Potansiyel" → "Detaylı — Arketip, Yetenekler"
+- Updated SCOUT_LEVEL_INFO level 3 desc: "+ Arketip, yetenekler, potansiyel" → "+ Arketip, yetenekler"
+- Verified Supabase query already searches ALL players (no team_name/profile_id restriction)
+
+Stage Summary:
+- 2 files modified: StadiumTab.tsx, ScoutingTab.tsx
+- Stadium Name Change card repositioned to bottom of Yerleşke tab
+- Empty scout slot placeholders removed; only actual scouts shown
+- Archetype filter now uses exact match (not partial includes)
+- Min Potential filter fully removed from interface, defaults, logic, and UI
+- All players are searched regardless of team assignment
+- Dev server compiles and runs successfully (HTTP 200)
+
+---
+Task ID: 4
+Agent: Super Z (main)
+Task: GÖREV 4 - rental_listings SQL Migration + Error Logging in Rental APIs
+
+Work Log:
+
+4a: SQL Migration File
+- Created `/home/z/my-project/supabase/migrations/create_rental_listings.sql`
+- rental_listings tablosu: id, player_id, owner_team_id, daily_cost, status (active/pending/completed/cancelled), duration_weeks, listed_at, created_at
+- rental_agreements tablosu: id, listing_id, player_id, owner_team_id, renter_team_id, duration_weeks, daily_cost, total_cost, commission, end_date, status (pending/accepted/rejected/active/completed/cancelled), created_at
+- İndeksler: player_id, status, renter_team_id, owner_team_id
+- RLS politikaları: public SELECT/INSERT/UPDATE her iki tablo için
+
+4b: Error Logging in Rental API Routes
+- `/home/z/my-project/src/app/api/rental/list/route.ts` güncellendi:
+  * Her catch/error noktasına detaylı console.error/console.warn eklendi (context bilgisiyle: playerId, error.message, body)
+  * Her hata yanıtına `userMessage` alanı eklendi (Türkçe kullanıcı dostu mesajlar)
+  * Her hata yanıtına `debug` alanı eklendi (teknik detaylar)
+  * Supabase yapılandırma hatası, istemci oluşturma hatası, eksik playerId, geçersiz süre, oyuncu bulunamadı, oyuncu zaten kirada, güncelleme hatası, genel exception — hepsi için özel mesajlar
+  * Genel catch bloğunda stack trace loglama eklendi
+
+- `/home/z/my-project/src/app/api/rental/offer/route.ts` güncellendi:
+  * Her catch/error noktasına detaylı console.error/console.warn eklendi (context bilgisiyle: playerId, renterTeamId, listingId, error.message)
+  * Her hata yanıtına `userMessage` alanı eklendi (Türkçe kullanıcı dostu mesajlar)
+  * Her hata yanıtına `debug` alanı eklendi (teknik detaylar)
+  * Supabase yapılandırma hatası, istemci oluşturma hatası, eksik alanlar, geçersiz süre, ilan bulunamadı, ilan aktif değil, oyuncu bulunamadı, kendi oyuncusu, zaten kirada, mevcut teklif kontrol hatası, tekrarlanan teklif, profil bulunamadı, yetersiz kredi, yetersiz Euro, komisyon düşme hatası, Euro düşme hatası (komisyon iade ile), anlaşma kayıt hatası (finansal rollback ile), oyuncu güncelleme hatası, ilan güncelleme hatası, genel exception — hepsi için özel mesajlar
+  * Komisyon düşme ve Euro düşme işlemlerinde hata durumunda geri ödeme/rollback mantığı korundu ve iyileştirildi
+  * Rollback başarısız olursa manuel müdahale uyarısı loglandı
+  * Genel catch bloğunda stack trace loglama eklendi
+
+Stage Summary:
+- Yeni dosya: supabase/migrations/create_rental_listings.sql (rental_listings + rental_agreements tabloları, indeksler, RLS)
+- Güncellenen: src/app/api/rental/list/route.ts (9 error noktası, her biri userMessage + debug ile)
+- Güncellenen: src/app/api/rental/offer/route.ts (16 error noktası, her biri userMessage + debug ile)
+- Tüm hata mesajları Türkçe ve kullanıcı dostu
+- Tüm debug mesajları İngilizce ve teknik detaylı
+- Finansal rollback mantığı korundu ve genişletildi
+
+---
+Task ID: 7
+Agent: Super Z (main)
+Task: GÖREV 7 - Remove HFT 1..34 Week Buttons from Fixture Page, Keep Only Month-Grouped List
+
+Work Log:
+- Read FixtureTab.tsx (1144 lines) and fixture/page.tsx to understand current implementation
+- Identified all sections to remove: Horizontal Week Cards (HFT 1-34 buttons), WEEK HEADER CARD, selectedTur state, weekScrollRef, and related computed values
+- Added TURKISH_MONTHS constant and getMonthYear() helper function (same as fixture/page.tsx)
+- Removed selectedTur state, weekScrollRef useRef
+- Removed scroll-to-week useEffect
+- Removed weekDateRange, weekDateDisplay, weekMatchCount computed values
+- Removed turs array (Array.from({ length: 34 }))
+- Removed fixturesByTur computed value
+- Removed getUserMatchForTur callback
+- Removed setSelectedTur calls in fetchData
+- Updated filteredFixtures logic: for 'all' filter, returns true (all fixtures) instead of f.tur === selectedTur
+- Changed filter tab label from 'Haftalık' to 'Tümü'
+- Removed entire Horizontal Week Cards section (lines 522-662 in original)
+- Removed entire WEEK HEADER CARD section (lines 870-925 in original)
+- Added groupedByMonth and monthKeys computed values for month-based grouping
+- Replaced flat fixture grid with month-grouped layout:
+  * Each month has a sticky header with month name (Turkish) and match count
+  * Under each month header, match cards are rendered in the same grid layout (1/2/3 columns)
+  * Same match card rendering logic preserved (scores, team names, venue badges, etc.)
+- Cleaned up unused imports: ChevronLeft, useRef, ArrowRight
+- Updated empty state text from "İlgili hafta için maç bulunamadı" to "Maç bulunamadı"
+
+Stage Summary:
+- File modified: src/components/fm/FixtureTab.tsx (1144 → 928 lines)
+- Removed: HFT 1-34 week buttons, selectedTur state, week-related computed values
+- Added: TURKISH_MONTHS constant, getMonthYear() helper, groupedByMonth/monthKeys computed values, month-grouped fixture list
+- Filter tabs: 'Haftalık' → 'Tümü', 'Gelenler' and 'Geçmiş' unchanged
+- All existing match rendering logic preserved (scores, team names, venue badges, result indicators, action buttons)
+- No TypeScript errors, dev server compiles successfully (HTTP 200)

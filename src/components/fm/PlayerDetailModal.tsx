@@ -10,7 +10,7 @@ import {
   Ruler, Scale, Eye, Gavel, Timer, XCircle, Globe
 } from 'lucide-react';
 import {
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer
 } from 'recharts';
 import { calculateMarketValue, getTransferCorridor, formatCurrency } from '@/lib/fm/valuation';
 import { calculateLoanFeeEuro } from '@/lib/fm/inflation';
@@ -826,6 +826,7 @@ export default function PlayerDetailModal({
                     <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
                       <PolarGrid stroke="#ffffff10" />
                       <PolarAngleAxis dataKey="subject" tick={{ fill: '#ffffff40', fontSize: 8, fontWeight: 700 }} />
+                      <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: '#ffffff20', fontSize: 6 }} axisLine={false} />
                       <Radar name={toTitleCase(player.name)} dataKey="A" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.10} strokeWidth={1.5} />
                     </RadarChart>
                   </ResponsiveContainer>

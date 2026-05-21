@@ -609,6 +609,7 @@ export const generatePlayer = (
     negTraits,
     personalityTraits,
     playStyle,
+    archetype: restrictedTraits.length > 0 ? restrictedTraits[0] : archetype.name,
     traitLevels: restrictedLevels,
     styleLevels: { [playStyle]: 1 },
     match_ratings: [],

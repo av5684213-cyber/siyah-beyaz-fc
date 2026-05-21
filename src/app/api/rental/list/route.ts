@@ -10,12 +10,22 @@ import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });
+    console.error('[POST /api/rental/list] Supabase is not configured. Check environment variables (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY).');
+    return NextResponse.json({
+      error: 'Supabase yapılandırılmamış',
+      userMessage: 'Sistem bağlantısı yapılandırılmamış. Lütfen sayfayı yenileyip tekrar deneyin veya yöneticiyle iletişime geçin.',
+      debug: 'Supabase environment variables missing',
+    }, { status: 500 });
   }
 
   const supabase = getSupabase();
   if (!supabase) {
-    return NextResponse.json({ error: 'Supabase istemcisi oluşturulamadı' }, { status: 500 });
+    console.error('[POST /api/rental/list] Supabase client could not be created. getSupabase() returned null.');
+    return NextResponse.json({
+      error: 'Supabase istemcisi oluşturulamadı',
+      userMessage: 'Veritabanı bağlantısı sağlanamadı. Lütfen sayfayı yenileyip tekrar deneyin.',
+      debug: 'getSupabase() returned null',
+    }, { status: 500 });
   }
 
   try {
@@ -23,11 +33,21 @@ export async function POST(request: NextRequest) {
     const { playerId, ownerTeamId, dailyCost = 0, durationWeeks = 17 } = body;
 
     if (!playerId) {
-      return NextResponse.json({ error: 'playerId zorunlu' }, { status: 400 });
+      console.warn('[POST /api/rental/list] Missing playerId in request body.', { body });
+      return NextResponse.json({
+        error: 'playerId zorunlu',
+        userMessage: 'Oyuncu bilgisi eksik. Lütfen sayfayı yenileyip tekrar deneyin.',
+        debug: 'playerId is required but was not provided',
+      }, { status: 400 });
     }
 
     if (typeof durationWeeks !== 'number' || durationWeeks < 1 || durationWeeks > 34) {
-      return NextResponse.json({ error: 'Kiralama süresi 1-34 hafta arasında olmalıdır' }, { status: 400 });
+      console.warn('[POST /api/rental/list] Invalid durationWeeks:', durationWeeks, 'Must be 1-34.');
+      return NextResponse.json({
+        error: 'Kiralama süresi 1-34 hafta arasında olmalıdır',
+        userMessage: 'Kiralama süresi 1 ile 34 hafta arasında olmalıdır. Lütfen geçerli bir süre girin.',
+        debug: `durationWeeks=${durationWeeks}, must be 1-34`,
+      }, { status: 400 });
     }
 
     // Oyuncuyu getir — önce tüm kolonlarla dene, hata olursa sadece temel kolonlarla tekrar dene
@@ -41,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     if (fullResult.error) {
       // Kolonlar henüz yoksa — sadece temel kolonlarla tekrar dene
-      console.warn('[POST /api/rental/list] Full select failed, trying basic select:', fullResult.error.message);
+      console.warn('[POST /api/rental/list] Full select failed, trying basic select:', fullResult.error.message, { playerId });
       const basicResult = await supabase
         .from('players')
         .select('id, name, profile_id, team_name, market_value')
@@ -49,10 +69,11 @@ export async function POST(request: NextRequest) {
         .maybeSingle();
 
       if (basicResult.error || !basicResult.data) {
-        console.error('[POST /api/rental/list] Player not found. playerId:', playerId, 'error:', basicResult.error?.message);
+        console.error('[POST /api/rental/list] Player not found after basic select. playerId:', playerId, 'error:', basicResult.error?.message, 'data:', basicResult.data);
         return NextResponse.json({
-          error: 'Oyuncu bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin.',
-          debug: { playerId, error: basicResult.error?.message }
+          error: 'Oyuncu bulunamadı',
+          userMessage: 'Oyuncu bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin.',
+          debug: { playerId, fullSelectError: fullResult.error.message, basicSelectError: basicResult.error?.message || null },
         }, { status: 404 });
       }
 
@@ -62,20 +83,31 @@ export async function POST(request: NextRequest) {
     }
 
     if (!player) {
-      console.error('[POST /api/rental/list] Player is null after query. playerId:', playerId);
+      console.error('[POST /api/rental/list] Player is null after query. playerId:', playerId, 'This should not happen — check Supabase data integrity.');
       return NextResponse.json({
-        error: 'Oyuncu bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin.',
-        debug: { playerId, ownerTeamId }
+        error: 'Oyuncu bulunamadı',
+        userMessage: 'Oyuncu bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin.',
+        debug: { playerId, ownerTeamId, reason: 'player_null_after_query' },
       }, { status: 404 });
     }
 
     // Zaten kiralık pazarında mı?
     if (player.is_on_loan_market) {
-      return NextResponse.json({ error: 'Bu oyuncu zaten kiralık pazarında' }, { status: 400 });
+      console.warn('[POST /api/rental/list] Player already on loan market. playerId:', playerId, 'playerName:', player.name);
+      return NextResponse.json({
+        error: 'Bu oyuncu zaten kiralık pazarında',
+        userMessage: 'Bu oyuncu zaten kiralık pazarında listelenmiş. Aynı oyuncuyu tekrar ekleyemezsiniz.',
+        debug: { playerId, playerName: player.name, is_on_loan_market: true },
+      }, { status: 400 });
     }
 
     if (player.loan_status === 'active') {
-      return NextResponse.json({ error: 'Bu oyuncu şu anda kirada' }, { status: 400 });
+      console.warn('[POST /api/rental/list] Player is currently on loan. playerId:', playerId, 'playerName:', player.name, 'loan_status:', player.loan_status);
+      return NextResponse.json({
+        error: 'Bu oyuncu şu anda kirada',
+        userMessage: 'Bu oyuncu şu anda başka bir takımda kirada. Kiralama süresi dolana kadar tekrar listelenemez.',
+        debug: { playerId, playerName: player.name, loan_status: player.loan_status },
+      }, { status: 400 });
     }
 
     // rental_listings tablosuna ekle — duration_weeks kolonu yoksa tekrar dene
@@ -97,7 +129,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.warn('[POST /api/rental/list] rental_listings insert with duration_weeks failed:', insertError.message);
+      console.warn('[POST /api/rental/list] rental_listings insert with duration_weeks failed:', insertError.message, { playerId, durationWeeks, dailyCost });
       // duration_weeks kolonu yoksa tekrar dene
       const { data: fallbackListing, error: fallbackError } = await supabase
         .from('rental_listings')
@@ -106,13 +138,15 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (fallbackError) {
-        console.warn('[POST /api/rental/list] rental_listings insert error (non-critical):', fallbackError.message);
+        console.error('[POST /api/rental/list] rental_listings insert error (both attempts failed). playerId:', playerId, 'firstError:', insertError.message, 'fallbackError:', fallbackError.message, 'The rental_listings table may not exist or migration has not been run.');
         // rental_listings tablosu yoksa da devam et — players tablosu güncellenecek
       } else {
         listingId = fallbackListing?.id;
+        console.info('[POST /api/rental/list] rental_listings insert succeeded (fallback without duration_weeks). listingId:', listingId);
       }
     } else {
       listingId = listing?.id;
+      console.info('[POST /api/rental/list] rental_listings insert succeeded. listingId:', listingId);
     }
 
     // Oyuncuyu kiralık pazarına çıkar — önce tüm kolonlarla güncelle, hata olursa sadece temel kolonlarla
@@ -129,7 +163,7 @@ export async function POST(request: NextRequest) {
       .eq('id', playerId);
 
     if (fullUpdateError) {
-      console.warn('[POST /api/rental/list] Full update failed, trying minimal update:', fullUpdateError.message);
+      console.warn('[POST /api/rental/list] Full player update failed, trying minimal update. playerId:', playerId, 'error:', fullUpdateError.message, 'Missing columns may include: is_on_loan_market, loan_fee, loan_owner_profile_id, loan_status');
       // Sadece mevcut kolonları güncelle
       const { error: basicUpdateError } = await supabase
         .from('players')
@@ -137,8 +171,12 @@ export async function POST(request: NextRequest) {
         .eq('id', playerId);
 
       if (basicUpdateError) {
-        console.error('[POST /api/rental/list] Player update error:', basicUpdateError.message);
-        return NextResponse.json({ error: 'Oyuncu güncellenemedi: ' + basicUpdateError.message }, { status: 500 });
+        console.error('[POST /api/rental/list] Player update error (both attempts failed). playerId:', playerId, 'fullUpdateError:', fullUpdateError.message, 'basicUpdateError:', basicUpdateError.message, 'Player may not exist or RLS policy blocking update.');
+        return NextResponse.json({
+          error: 'Oyuncu güncellenemedi',
+          userMessage: 'Oyuncu kiralık listesine eklenirken güncelleme başarısız oldu. Lütfen sayfayı yenileyip tekrar deneyin.',
+          debug: { playerId, fullUpdateError: fullUpdateError.message, basicUpdateError: basicUpdateError.message },
+        }, { status: 500 });
       }
     }
 
@@ -152,7 +190,7 @@ export async function POST(request: NextRequest) {
         status: 'listed',
       });
     } catch (loanErr) {
-      console.warn('[POST /api/rental/list] loans insert error (non-critical):', loanErr);
+      console.warn('[POST /api/rental/list] loans insert error (non-critical). playerId:', playerId, 'error:', loanErr instanceof Error ? loanErr.message : String(loanErr), 'The loans table may not exist or have different schema.');
     }
 
     return NextResponse.json({
@@ -163,7 +201,11 @@ export async function POST(request: NextRequest) {
       listingId,
     });
   } catch (err) {
-    console.error('[POST /api/rental/list] Exception:', err);
-    return NextResponse.json({ error: 'Bir hata oluştu' }, { status: 500 });
+    console.error('[POST /api/rental/list] Unhandled exception:', err instanceof Error ? err.message : String(err), err instanceof Error ? err.stack : '');
+    return NextResponse.json({
+      error: 'Bir hata oluştu',
+      userMessage: 'Oyuncu kiralık listesine eklenirken beklenmeyen bir hata oluştu. Lütfen sayfayı yenileyip tekrar deneyin.',
+      debug: err instanceof Error ? err.message : String(err),
+    }, { status: 500 });
   }
 }
