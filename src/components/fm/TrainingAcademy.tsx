@@ -136,7 +136,7 @@ export default function TrainingAcademy({
   const [selectedProgram, setSelectedProgram] = useState<TrainingProgramId | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showTacticLab, setShowTacticLab] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'rating' | 'cond' | 'age' | 'position' | 'Klt' | 'Klc' | 'Tk' | 'Pas' | 'Sut' | 'Kfa' | 'Hız' | 'Güç' | 'Alg' | 'Top' | 'total'>('rating');
+  const [sortBy, setSortBy] = useState<'name' | 'rating' | 'cond' | 'age' | 'position' | 'assignment' | 'Klt' | 'Klc' | 'Tk' | 'Pas' | 'Sut' | 'Kfa' | 'Hız' | 'Güç' | 'Alg' | 'Top' | 'total'>('rating');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filterPos, setFilterPos] = useState<string>('ALL');
 
@@ -152,23 +152,29 @@ export default function TrainingAcademy({
   const POS_GROUP_ORDER: Record<string, number> = { GK: 0, DEF: 1, MID: 2, FWD: 3, SUB: 4 };
 
   // ── Helper: get sort value for a player by key ──
-  const getSortValue = useCallback((p: Player, key: typeof sortBy): any => {
+  const getSortValue = useCallback((p: Player, key: typeof sortBy, assignmentMap: Map<string, TrainingAssignment>): any => {
     switch (key) {
       case 'name': return p.name;
       case 'position': return p.position;
+      case 'assignment': {
+        // Sort by assignment status: assigned players first, then by program name
+        const a = assignmentMap.get(p.id);
+        if (!a) return 'zzz_none'; // Unassigned sort last
+        return `aaa_${a.programId}`; // Assigned sort first, grouped by program
+      }
       case 'total': return p.rating * 11.2;
-      case 'Klt': return (p as any).potential || p.potential || p.rating;
-      case 'Klc': return (p as any).goalkeeping || p.goalkeeping || (p.position === 'GK' ? p.rating * 1.05 : p.rating * 0.12);
-      case 'Tk': return (p as any).defending || p.defending || p.rating;
-      case 'Pas': return (p as any).passing || p.passing || p.rating;
-      case 'Sut': return (p as any).shooting || p.shooting || p.rating;
-      case 'Kfa': return (p as any).heading || p.heading || p.rating * 0.95;
-      case 'Hız': return (p as any).speed || p.speed || p.rating;
-      case 'Güç': return (p as any).power || p.power || p.rating;
-      case 'Alg': return (p as any).vision || p.vision || p.rating;
-      case 'Top': return (p as any).control || p.control || p.rating;
+      case 'Klt': return (p as any).potential ?? p.potential ?? p.rating;
+      case 'Klc': return (p as any).goalkeeping ?? p.goalkeeping ?? (p.position === 'GK' ? p.rating * 1.05 : p.rating * 0.12);
+      case 'Tk': return (p as any).defending ?? p.defending ?? p.rating;
+      case 'Pas': return (p as any).passing ?? p.passing ?? p.rating;
+      case 'Sut': return (p as any).shooting ?? p.shooting ?? p.rating;
+      case 'Kfa': return (p as any).heading ?? p.heading ?? p.rating * 0.95;
+      case 'Hız': return (p as any).speed ?? p.speed ?? p.rating;
+      case 'Güç': return (p as any).power ?? p.power ?? p.rating;
+      case 'Alg': return (p as any).vision ?? p.vision ?? p.rating;
+      case 'Top': return (p as any).control ?? p.control ?? p.rating;
       case 'rating': return p.rating;
-      case 'cond': return p.fitness || p.cond || 100;
+      case 'cond': return p.fitness ?? p.cond ?? 100;
       default: return p.rating;
     }
   }, []);
@@ -192,8 +198,8 @@ export default function TrainingAcademy({
       }
 
       // Stat sort: primary = selected stat value, secondary = position group for ties
-      const valA = getSortValue(a, sortBy);
-      const valB = getSortValue(b, sortBy);
+      const valA = getSortValue(a, sortBy, assignmentMap);
+      const valB = getSortValue(b, sortBy, assignmentMap);
 
       let cmp: number;
       if (typeof valA === 'string') {
@@ -215,7 +221,7 @@ export default function TrainingAcademy({
       return cmp;
     });
     return list;
-  }, [squad, filterPos, sortBy, sortDirection, getSortValue]);
+  }, [squad, filterPos, sortBy, sortDirection, getSortValue, assignmentMap]);
 
   const toggleSort = (key: any) => {
     if (sortBy === key) {
@@ -467,7 +473,12 @@ export default function TrainingAcademy({
           >
             POZ {sortBy === 'position' && (sortDirection === 'desc' ? '▼' : '▲')}
           </div>
-          <div className="w-32 shrink-0 text-[9px] font-black uppercase text-white/40 tracking-widest">AKTİF / GELİŞİM</div>
+          <div 
+            onClick={() => toggleSort('assignment')}
+            className="w-32 shrink-0 text-left text-[9px] font-black uppercase text-white/40 tracking-widest cursor-pointer hover:text-emerald-400 transition-colors flex items-center gap-2"
+          >
+            AKTİF / GELİŞİM {sortBy === 'assignment' && (sortDirection === 'desc' ? '▼' : '▲')}
+          </div>
           <div className="flex-1 grid grid-cols-13 gap-px text-white/40">
             {[
               { label: 'Klt', key: 'Klt' },

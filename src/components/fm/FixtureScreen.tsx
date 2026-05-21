@@ -426,19 +426,8 @@ export default function FixtureScreen({
                           </span>
                         </div>
 
-                        {/* Action button or chevron */}
-                        {isUserMatch && isScheduled && onWatchMatch ? (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onWatchMatch(match);
-                            }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600/90 to-emerald-500/90 hover:from-emerald-500 hover:to-emerald-400 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-[0_0_10px_rgba(16,185,129,0.2)] transition-all hover:scale-105 active:scale-95 shrink-0"
-                          >
-                            <Play size={9} className="fill-current" />
-                            Maçı İzle
-                          </button>
-                        ) : isUserMatch && isLive && onWatchMatch ? (
+                        {/* Action button or chevron - No İzle for scheduled, only for live/finished */}
+                        {isUserMatch && isLive && onWatchMatch ? (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();

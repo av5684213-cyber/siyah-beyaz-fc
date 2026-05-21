@@ -14,6 +14,7 @@ import { generateLeagueReferees, pickRefereeForMatch, getRefereeDisplayInfo, typ
 import { GameCycleManager } from '@/lib/fm/GameCycleManager';
 import { toTitleCase } from '@/lib/fm/ui-helpers';
 import { getDefaultActiveTactic } from '@/lib/fm/types';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 // Module-level flag to prevent double-starting match simulation
 // (Cannot use useRef + mutation inside useEffect due to React Compiler immutability rule)
@@ -708,23 +709,46 @@ const MatchDay = ({
             const refName = effectiveRefereeName || matchResult?.refereeName;
             const refPersonality = effectiveRefereePersonality || matchResult?.refereePersonality;
             const refStrictness = effectiveRefereeStrictness || matchResult?.refereeStrictness;
-            const REFEREE_LABELS: Record<string, { emoji: string; label: string; color: string }> = {
-              katil: { emoji: '🟥', label: 'Katılcı', color: 'text-red-400' },
-              dengeci: { emoji: '⚖️', label: 'Dengeci', color: 'text-yellow-400' },
-              hoşgörülü: { emoji: '🤝', label: 'Hoşgörülü', color: 'text-green-400' },
-              ev_sahibi: { emoji: '🏠', label: 'Ev Sahibi', color: 'text-blue-400' },
-              değişken: { emoji: '🎲', label: 'Değişken', color: 'text-purple-400' },
-              var_sever: { emoji: '📺', label: 'VAR Meraklısı', color: 'text-cyan-400' },
+            const REFEREE_LABELS_MATCH: Record<string, { emoji: string; label: string; color: string; desc: string }> = {
+              katil: { emoji: '\u{1F534}', label: 'Kat\u0131lc\u0131', color: 'text-red-400', desc: 'Sert bir y\u00f6netim sergiler, kart g\u00f6stermekten \u00e7ekinmez.' },
+              dengeci: { emoji: '\u2696\uFE0F', label: 'Dengeci', color: 'text-yellow-400', desc: 'Dengeli bir tutum sergiler, adil kararlar verir.' },
+              'ho\u015fg\u00f6r\u00fcl\u00fc': { emoji: '\u{1F91D}', label: 'Ho\u015fg\u00f6r\u00fcl\u00fc', color: 'text-green-400', desc: 'Oyunun ak\u0131\u015f\u0131n\u0131 bozmamaya \u00e7al\u0131\u015f\u0131r, az faul \u00e7alar.' },
+              ev_sahibi: { emoji: '\u{1F3E0}', label: 'Ev Sahibi', color: 'text-blue-400', desc: 'Ev sahibine k\u00fc\u00e7\u00fck avantajlar sa\u011flar.' },
+              'de\u011fi\u015fken': { emoji: '\u{1F3B2}', label: 'De\u011fi\u015fken', color: 'text-purple-400', desc: 'Kararlar\u0131 tutars\u0131z, her ma\u00e7 farkl\u0131 bir hakem gibi.' },
+              var_sever: { emoji: '\u{1F4FA}', label: 'VAR Sever', color: 'text-cyan-400', desc: 'VAR incelemelerini s\u0131k\u00e7a kullan\u0131r, bol penalt\u0131 karar.' },
             };
-            const info = refPersonality ? REFEREE_LABELS[refPersonality] : null;
-            const strictLabel = !refStrictness ? '' : refStrictness >= 75 ? 'Çok Sert' : refStrictness >= 55 ? 'Sert' : refStrictness >= 40 ? 'Dengeli' : refStrictness >= 25 ? 'Yumuşak' : 'Çok Yumuşak';
+            const info = refPersonality ? REFEREE_LABELS_MATCH[refPersonality] : null;
+            const strictLabel = !refStrictness ? '' : refStrictness >= 75 ? '\u00c7ok Sert' : refStrictness >= 55 ? 'Sert' : refStrictness >= 40 ? 'Dengeli' : refStrictness >= 25 ? 'Yumu\u015fak' : '\u00c7ok Yumu\u015fak';
             return (
               <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg">
-                <span className="text-sm">{info?.emoji || '👨‍⚖️'}</span>
                 <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">HAKEM</span>
                 <span className="text-xs font-bold text-white/80">{refName}</span>
-                {info && <span className={`text-[10px] font-bold ${info.color}`}>{info.label}</span>}
-                {strictLabel && <span className="text-[9px] text-white/30">({strictLabel})</span>}
+                {info && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-white/10 text-white/30 text-[10px] cursor-help hover:text-white/60 hover:border-white/20 transition-colors">\u24D8</span>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="bg-zinc-900 border border-white/10 text-white/80 px-3 py-2 rounded-lg shadow-xl max-w-[220px]"
+                      sideOffset={6}
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm">{info.emoji}</span>
+                          <span className="text-[10px] font-black text-white/90 uppercase tracking-wider">{info.label}</span>
+                        </div>
+                        <p className="text-[9px] text-white/50 leading-relaxed">{info.desc}</p>
+                        {strictLabel && (
+                          <div className="pt-1 border-t border-white/10 mt-1">
+                            <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Sertlik: </span>
+                            <span className="text-[9px] font-bold text-amber-400/70">{strictLabel}</span>
+                          </div>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
               </div>
             );
           })()}

@@ -658,30 +658,26 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
 
                     {/* ── Action Button ───────────────────────────────── */}
                     <div className="mt-6 flex justify-center">
-                      {onNavigateToMatch &&
-                      (cycleStatus.phase === 'LIVE_MATCH' || cycleStatus.phase === 'PRE_MATCH') ? (
+                      {onNavigateToMatch && (cycleStatus.phase === 'LIVE_MATCH' || cycleStatus.phase === 'PRE_MATCH') ? (
                         <button
                           onClick={onNavigateToMatch}
                           className="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-2xl shadow-amber-500/20 flex items-center gap-3 group/btn hover:scale-105 active:scale-95"
                         >
                           <Zap size={14} className="group-hover:fill-current" /> MAÇ ODASINA GİT
                         </button>
+                      ) : nextMatch.status === 'live' && onNavigateToMatch ? (
+                        <button
+                          onClick={onNavigateToMatch}
+                          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600/90 to-red-500/90 hover:from-red-500 hover:to-red-400 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-red-500/20 transition-all hover:scale-105 active:scale-95 animate-pulse"
+                        >
+                          <Eye size={14} /> MAÇI İZLE
+                        </button>
                       ) : (
-                        nextMatch.status === 'scheduled' || nextMatch.status === 'user_pending' ? (
-                          <button
-                            onClick={onNavigateToMatch}
-                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600/90 to-emerald-500/90 hover:from-emerald-500 hover:to-emerald-400 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95"
-                          >
-                            <Play size={14} className="fill-current" />
-                            Maçı İzle
-                          </button>
-                        ) : (
-                          <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl">
-                            <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">
-                              Maç Günü Bekleniyor
-                            </span>
-                          </div>
-                        )
+                        <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl">
+                          <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">
+                            Maç Günü Bekleniyor
+                          </span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -846,11 +842,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                                       <span className="text-[7px] font-black text-red-400 uppercase tracking-widest">Canlı</span>
                                     </div>
                                   )}
-                                  {isFinished && fixture.homeScoreHT != null && fixture.awayScoreHT != null && (
-                                    <span className="text-[8px] text-white/25 font-mono">
-                                      İY: {fixture.homeScoreHT}-{fixture.awayScoreHT}
-                                    </span>
-                                  )}
+                                  {/* HFT (İY) display removed */}
                                 </>
                               )}
                             </div>
@@ -873,15 +865,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
 
                           {/* Right: Action area */}
                           <div className="flex items-center gap-2 shrink-0">
-                            {isUserMatch && isScheduled && onNavigateToMatch && (
-                              <button
-                                onClick={onNavigateToMatch}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600/90 to-emerald-500/90 hover:from-emerald-500 hover:to-emerald-400 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-[0_0_12px_rgba(16,185,129,0.25)] transition-all hover:scale-105 active:scale-95"
-                              >
-                                <Play size={10} className="fill-current" />
-                                Maçı İzle
-                              </button>
-                            )}
+                            {/* No "İzle" button for scheduled matches - only show for live and finished */}
                             {isUserMatch && isLive && onNavigateToMatch && (
                               <button
                                 onClick={onNavigateToMatch}
