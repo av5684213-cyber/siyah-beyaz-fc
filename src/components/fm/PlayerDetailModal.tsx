@@ -569,6 +569,18 @@ export default function PlayerDetailModal({
                 
                 {isScouted ? (
                   <div className="space-y-1.5">
+                    {/* Arketip */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] text-white/40">Arketip</span>
+                      {isScouted ? (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-purple-500/10 border-purple-500/20 text-purple-400">
+                          <span className="text-[10px] font-black uppercase tracking-wider">{player.archetype || POS_LABELS[sp] || sp}</span>
+                        </div>
+                      ) : (
+                        <span className="text-[9px] font-bold text-white/20">???</span>
+                      )}
+                    </div>
+
                     {/* Play Style */}
                     {playStyle ? (
                       <div className="flex items-center gap-2 px-2 py-1 bg-white/[0.03] border border-white/[0.06] rounded-sm">
@@ -679,39 +691,6 @@ export default function PlayerDetailModal({
                   </div>
                 )}
               </div>
-
-                  <div className="px-3 py-2 border-b border-white/[0.05]">
-                    <div className="text-[8px] font-black uppercase tracking-[0.2em] text-white/25 mb-2">Genel Karakter</div>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between group/tooltip relative">
-                        <span className="text-[9px] text-white/40">Zihniyet</span>
-                        <span className="text-[9px] font-bold text-white/60">
-                          {isScouted ? (player.personality || 'Dengeli') : 'Bilinmiyor'}
-                        </span>
-                        <div className="absolute top-full left-0 mt-3 w-48 p-2 bg-zinc-950 border border-white/20 rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all text-[9px] font-medium text-white/70 z-[500] pointer-events-none shadow-2xl backdrop-blur-xl">
-                           <p className="font-bold text-white mb-1 uppercase tracking-tighter">Zihniyet: {player.personality || 'Dengeli'}</p>
-                           <p className="text-white/50 text-[8px] leading-tight">Oyuncunun saha i\u00e7indeki genel karakteri ve bask\u0131 alt\u0131ndaki tavr\u0131n\u0131 belirler.</p>
-                        </div>
-                      </div>
-                      {/* Arketip Profili — Profesyonel G\u00f6r\u00fcn\u00fcm */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] text-white/40">Arketip</span>
-                        {isScouted ? (
-                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-purple-500/10 border-purple-500/20 text-purple-400">
-                            <span className="text-[10px] font-black uppercase tracking-wider">{player.archetype || POS_LABELS[sp] || sp}</span>
-                          </div>
-                        ) : (
-                          <span className="text-[9px] font-bold text-white/20">???</span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[9px] text-white/40">Potansiyel</span>
-                        <span className="text-[9px] font-bold text-white/60 italic">
-                          {isScouted ? `${player.potential} (G: ${player.hidden_potential})` : '??'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
 
               {/* ── SAKATLIK BİLGİSİ VE FİZYOTERAPEST ── */}
               {player.is_injured && (
@@ -839,105 +818,10 @@ export default function PlayerDetailModal({
                 </div>
               )}
 
-              {/* Traits */}
-              <div className="px-3 py-2">
-                <div className="text-[8px] font-black uppercase tracking-[0.2em] text-white/25 mb-2">
-                  Özel Yetenekler ({player.traits?.length || 0})
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {isScouted && player.traits && player.traits.length > 0 ? (
-                    player.traits.slice(0, 10).map((tk, idx) => {
-                      const t = (traitDescriptions && traitDescriptions[tk]) || { name: tk, short: 'Özel yetenek.', type: 'pozitif' as const };
-                      const isNeg = t.type === 'negatif';
-                      return (
-                        <div key={idx} className="relative group/trait">
-                          <button className={`px-2 py-1 rounded-full border text-[7px] font-black uppercase tracking-tighter transition-all hover:scale-105 ${
-                            isNeg ? 'border-red-400/20 bg-red-400/10 text-red-400'
-                            : 'border-emerald-400/20 bg-emerald-400/10 text-emerald-400'
-                          }`}>
-                            {isNeg ? '🚩' : '💠'} {t.name}
-                          </button>
-                          <div className="absolute top-full left-0 mt-3 w-48 p-3 bg-zinc-950 border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover/trait:opacity-100 group-hover/trait:visible transition-all z-[500] pointer-events-none backdrop-blur-xl">
-                            <div className={`font-black text-[10px] mb-1 uppercase tracking-widest ${isNeg ? 'text-red-400' : 'text-emerald-400'}`}>{t.name}</div>
-                            <p className="text-[9px] text-white/60 leading-relaxed font-medium">{t.short}</p>
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-4 w-full border border-dashed border-white/5 rounded-2xl bg-white/[0.02]">
-                       <Zap size={16} className="text-white/10 mb-2" />
-                       <span className="text-[8px] text-white/20 font-black uppercase tracking-widest">Rapor Bekleniyor</span>
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
 
             {/* ─── CENTER PANEL: Attributes (Technical + Mental) ─── */}
             <div className="flex-1 min-w-0">
-              {/* Traits integrated into attributes area as requested */}
-              <div className="p-3 border-b border-white/[0.04] bg-white/[0.01]">
-                <div className="flex items-center gap-2 mb-2.5">
-                  <motion.div 
-                    animate={{ scale: [1, 1.1, 1] }} 
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Zap size={11} className="text-amber-400" />
-                  </motion.div>
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40">Özel Profil Yetenekleri</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {isScouted ? (
-                    player.traits && player.traits.length > 0 ? (
-                      player.traits.map((tk: string, idx: number) => {
-                        const info = traitDescriptions[tk] || { name: tk, short: 'Özel yetenek.' };
-                        return (
-                          <div key={idx} className="relative group/trait-main">
-                            <motion.div 
-                              whileHover={{ scale: 1.05 }}
-                              className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-[10px] font-black uppercase text-amber-400 tracking-[0.1em] cursor-help shadow-lg"
-                            >
-                              ✨ {info.name}
-                            </motion.div>
-                            <div className="absolute top-full left-0 mt-3 w-64 p-4 bg-[#1a1e2a] border border-amber-500/20 rounded-lg shadow-[0_15px_40px_rgba(0,0,0,0.8)] opacity-0 invisible group-hover/trait-main:opacity-100 group-hover/trait-main:visible transition-all z-[300] pointer-events-none">
-                              <div className="flex items-center gap-2 mb-2">
-                                <div className="p-1 bg-amber-500/20 rounded-md">
-                                  <Zap size={14} className="text-amber-400" />
-                                </div>
-                                <div className="font-black text-[11px] text-white uppercase tracking-widest">{info.name}</div>
-                              </div>
-                              <p className="text-[10px] text-white/60 leading-relaxed italic border-t border-white/5 pt-2">{info.short || 'Özel yetenek.'}</p>
-                              {info.engineEffect && (
-                                <div className="mt-2 py-2 border-t border-white/5 space-y-1">
-                                  <div className="flex justify-between text-[10px] font-bold text-emerald-400">
-                                    <span>ETKİ ORANI:</span>
-                                    <span>%{Math.round(info.engineEffect.successRate * 100)}</span>
-                                  </div>
-                                  <div className="flex justify-between text-[10px] font-bold text-blue-400">
-                                    <span>MOTOR ETKİSİ:</span>
-                                    <span>%{Math.round(info.engineEffect.engineWeight * 100)}</span>
-                                  </div>
-                                </div>
-                              )}
-                              {info.counterFor && (
-                                <div className="mt-2 py-1.5 px-2 bg-amber-500/5 border border-amber-500/10 rounded-md text-[9px] font-black italic text-amber-400 uppercase tracking-widest">
-                                  🚀 Karşı Güç: {info.counterFor}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <span className="text-[9px] text-white/10 italic">Belirgin bir yetenek bulunamadı.</span>
-                    )
-                  ) : (
-                    <span className="text-[9px] text-white/10 italic">Bu yetenekleri görmek için oyuncuyu gözlemleyin.</span>
-                  )}
-                </div>
-              </div>
-
               <div className="flex">
                 <div className="flex-1 min-w-0 p-2 border-r border-white/[0.04]">
                   <AttrColumn
