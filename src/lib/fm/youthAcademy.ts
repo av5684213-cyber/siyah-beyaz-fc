@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import { PositionGroup, SpecificPosition } from './types';
+import { generateAttributeValue, positionPriorities, getPositionKey, ATTRIBUTE_KEY_MAP } from './attributeGenerator';
 
 // ═══════════════════════════════════════════════════
 //  ALTYAPI TESİSİ ÇARPANI
@@ -660,31 +661,77 @@ function generateYouthStats(
   baseRating: number,
   rngFn: () => number = Math.random,
 ): Record<string, number> {
-  const arch = POSITION_ARCHETYPES[specificPosition];
+  // Pozisyon öncelik tablolarını kullan (attributeGenerator.ts)
+  const posKey = getPositionKey(specificPosition);
+  const priorities = positionPriorities[posKey];
   const stats: Record<string, number> = {};
 
-  // Key stats — close to baseRating
-  for (const stat of arch.keyStats) {
-    stats[stat] = clamp(
-      Math.round(baseRating + (rngFn() * 12 - 4)),
-      10, 85
-    );
-  }
+  if (priorities) {
+    // Teknik nitelikler
+    for (const [trKey, priority] of Object.entries(priorities.teknik)) {
+      const engKey = ATTRIBUTE_KEY_MAP[trKey];
+      if (engKey) {
+        const val = generateAttributeValue(priority as any);
+        // Genç oyuncular için değerleri baseRating'e ölçekle
+        stats[engKey] = clamp(Math.round(val * (baseRating / 65)), 5, 85);
+      }
+    }
 
-  // Secondary stats — below baseRating
-  for (const stat of arch.secondaryStats) {
-    stats[stat] = clamp(
-      Math.round(baseRating - 8 + (rngFn() * 16 - 4)),
-      8, 75
-    );
-  }
+    // Mental nitelikler
+    for (const [trKey, priority] of Object.entries(priorities.mental)) {
+      const engKey = ATTRIBUTE_KEY_MAP[trKey];
+      if (engKey) {
+        const val = generateAttributeValue(priority as any);
+        stats[engKey] = clamp(Math.round(val * (baseRating / 65)), 5, 85);
+      }
+    }
 
-  // Weak stats — well below baseRating
-  for (const stat of arch.weakStats) {
-    stats[stat] = clamp(
-      Math.round(baseRating - 20 + (rngFn() * 14 - 4)),
-      5, 55
-    );
+    // Fiziksel nitelikler
+    for (const [trKey, priority] of Object.entries(priorities.fiziksel)) {
+      const engKey = ATTRIBUTE_KEY_MAP[trKey];
+      if (engKey) {
+        const val = generateAttributeValue(priority as any);
+        stats[engKey] = clamp(Math.round(val * (baseRating / 65)), 5, 85);
+      }
+    }
+
+    // Goalkeeping
+    if (posKey === 'GK') {
+      stats.goalkeeping = clamp(Math.round(generateAttributeValue('cok_yuksek') * (baseRating / 65)), 10, 85);
+    } else {
+      stats.goalkeeping = clamp(Math.round(generateAttributeValue('cok_dusuk') * (baseRating / 65)), 5, 35);
+    }
+
+    // offTheBall
+    if (!stats.offTheBall) {
+      stats.offTheBall = posKey === 'FWD'
+        ? clamp(Math.round(generateAttributeValue('yuksek') * (baseRating / 65)), 5, 85)
+        : clamp(Math.round(generateAttributeValue('orta') * (baseRating / 65)), 5, 85);
+    }
+  } else {
+    // Fallback: eski arketip sistemi
+    const arch = POSITION_ARCHETYPES[specificPosition];
+
+    for (const stat of arch.keyStats) {
+      stats[stat] = clamp(
+        Math.round(baseRating + (rngFn() * 12 - 4)),
+        10, 85
+      );
+    }
+
+    for (const stat of arch.secondaryStats) {
+      stats[stat] = clamp(
+        Math.round(baseRating - 8 + (rngFn() * 16 - 4)),
+        8, 75
+      );
+    }
+
+    for (const stat of arch.weakStats) {
+      stats[stat] = clamp(
+        Math.round(baseRating - 20 + (rngFn() * 14 - 4)),
+        5, 55
+      );
+    }
   }
 
   // Ensure all standard stats have values
@@ -704,9 +751,15 @@ function generateYouthStats(
   }
 
   // Special: goalkeeping for non-GK should be very low
-  if (specificPosition !== 'GK') {
+  if (specificPosition !== 'GK' && (stats.goalkeeping ?? 0) > 35) {
     stats.goalkeeping = clamp(Math.round(10 + rngFn() * 20), 5, 35);
   }
+
+  // Türetilmiş istatistikler (backward compat)
+  stats.shooting = clamp(Math.round(((stats.finishing || 50) + (stats.longShots || 50)) / 2), 5, 85);
+  stats.defending = clamp(Math.round(((stats.tackling || 50) + (stats.marking || 50) + (stats.positioning || 50)) / 3), 5, 85);
+  stats.power = stats.strength || 50;
+  stats.control = stats.dribbling || 50;
 
   return stats;
 }

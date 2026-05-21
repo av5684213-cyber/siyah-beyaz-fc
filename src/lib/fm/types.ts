@@ -106,6 +106,7 @@ export interface Player {
   suspended_until?: string;     // ISO date - oyuncu cezalı olduğu son tarih
   is_injured?: boolean;         // Aktif sakatlık durumu
   injury_end_date?: string;     // ISO date - sakatlık bitiş tarihi
+  injury_severity?: 'light' | 'medium' | 'heavy' | null; // Sakatlık şiddeti
   transferOffer?: {
     bidder: string;
     amount: number;

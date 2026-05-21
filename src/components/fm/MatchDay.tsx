@@ -13,12 +13,51 @@ import { unifiedMatchEngine } from '@/lib/fm/unifiedMatchEngine';
 import { generateLeagueReferees, pickRefereeForMatch, getRefereeDisplayInfo, type RefereePersonality } from '@/lib/fm/referee';
 import { GameCycleManager } from '@/lib/fm/GameCycleManager';
 import { toTitleCase } from '@/lib/fm/ui-helpers';
+import { addHours } from 'date-fns';
 import { getDefaultActiveTactic } from '@/lib/fm/types';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 // Module-level flag to prevent double-starting match simulation
 // (Cannot use useRef + mutation inside useEffect due to React Compiler immutability rule)
 let _simulationStarted = false;
+
+/** Check if current time (Europe/Istanbul = UTC+3) is a match hour (weekday 12:00 or 18:00) */
+function isMatchHourNow(): boolean {
+  const now = new Date();
+  const trDate = addHours(now, 3); // UTC+3 for Europe/Istanbul
+  const dayOfWeek = trDate.getDay(); // 0=Sun, 6=Sat
+  const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+  const hour = trDate.getHours();
+  return isWeekday && (hour === 12 || hour === 18);
+}
+
+/** Match Day Time Lock Warning Banner */
+function MatchTimeWarningBanner() {
+  return (
+    <div className="relative overflow-hidden border border-amber-500/30 bg-gradient-to-r from-amber-950/80 via-amber-900/60 to-amber-950/80 rounded-lg px-4 py-3 mb-4">
+      {/* Animated accent line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent animate-pulse" />
+      <div className="flex items-center gap-3">
+        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-amber-400">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-amber-200 text-sm font-bold tracking-wide">Maç saatleri hafta içi 12:00 ve 18:00&apos;dir</p>
+          <p className="text-amber-400/60 text-[10px] font-medium tracking-wider uppercase mt-0.5">
+            Şu an maç saati değil — sayfa görüntülenebilir ancak canlı maç özelliği devre dışı
+          </p>
+        </div>
+        <div className="flex-shrink-0 hidden sm:flex items-center gap-1 px-2 py-1 rounded bg-amber-500/10 border border-amber-500/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500/50" />
+          <span className="text-[9px] font-bold text-amber-400/70 uppercase tracking-widest">Beklemede</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface MatchDayProps {
   profile: any;
@@ -63,6 +102,19 @@ const MatchDay = ({
   const [activeTab, setActiveTab] = useState<string>('commentary');
   const [cycleStatus, setCycleStatus] = useState(GameCycleManager.getStatus());
   const { minute: gameMinute, score, result: matchResult, visibleEvents, isFinished: isMatchFinished, isActive, playerConditions } = matchState;
+
+  // Time Lock: check if current hour is a match time (weekday 12:00 or 18:00 Istanbul)
+  // Re-check every minute
+  const [isCurrentlyMatchTime, setIsCurrentlyMatchTime] = useState(isMatchHourNow);
+  useEffect(() => {
+    setIsCurrentlyMatchTime(isMatchHourNow());
+    const timer = setInterval(() => {
+      setIsCurrentlyMatchTime(isMatchHourNow());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+  // Show warning when NOT match time AND there's no active live match
+  const showTimeWarning = !isCurrentlyMatchTime && !isActive;
   
   // Auto-generate referee for current match week if not provided via props
   const autoReferee = useMemo(() => {
@@ -548,7 +600,13 @@ const MatchDay = ({
   // If match isn't live, show different UI
   if (!isActive && (cycleStatus.phase === 'IDLE' || cycleStatus.phase === 'POST_MATCH' || cycleStatus.phase === 'TRAINING_WINDOW')) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[600px] p-20 bg-black/80 backdrop-blur-md border border-white/5 space-y-8 text-center">
+      <div className="flex flex-col h-full min-h-[600px] bg-black/80 backdrop-blur-md border border-white/5">
+        {showTimeWarning && (
+          <div className="px-4 pt-4">
+            <MatchTimeWarningBanner />
+          </div>
+        )}
+        <div className="flex flex-col items-center justify-center flex-1 p-20 space-y-8 text-center">
         <div className="w-24 h-24 rounded-full border-4 border-besiktas-red border-t-white animate-spin flex items-center justify-center">
           <div className="w-16 h-16 rounded-full bg-besiktas-red/20" />
         </div>
@@ -587,13 +645,20 @@ const MatchDay = ({
         >
           Manuel Simülasyonu Başlat (Test)
         </button>
+        </div>
       </div>
     );
   }
 
   if (!isActive && cycleStatus.phase === 'PRE_MATCH') {
      return (
-        <div className="flex flex-col items-center justify-center h-full min-h-[600px] p-20 bg-black/80 backdrop-blur-md border border-white/5 space-y-8 text-center">
+        <div className="flex flex-col h-full min-h-[600px] bg-black/80 backdrop-blur-md border border-white/5">
+          {showTimeWarning && (
+            <div className="px-4 pt-4">
+              <MatchTimeWarningBanner />
+            </div>
+          )}
+          <div className="flex flex-col items-center justify-center flex-1 p-20 space-y-8 text-center">
             <div className="text-amber-500 font-black text-6xl italic animate-pulse">!</div>
             <div>
                 <h2 className="text-4xl font-black italic tracking-tighter text-white uppercase">Isınma Hareketleri Başladı</h2>
@@ -630,12 +695,18 @@ const MatchDay = ({
             >
               Erken Başla (Test)
             </button>
+          </div>
         </div>
      );
   }
 
   return (
     <div className="flex flex-col h-full min-h-[600px] bg-black/80 backdrop-blur-sm text-white font-sans overflow-hidden relative border border-white/5">
+      {showTimeWarning && (
+        <div className="px-4 pt-4">
+          <MatchTimeWarningBanner />
+        </div>
+      )}
       <AnimatePresence>
         {isMatchFinished && gameMinute >= 90 && matchResult && (
           <PostMatchSummary 

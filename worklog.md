@@ -638,3 +638,258 @@ Stage Summary:
 - Filter tabs: 'Haftalık' → 'Tümü', 'Gelenler' and 'Geçmiş' unchanged
 - All existing match rendering logic preserved (scores, team names, venue badges, result indicators, action buttons)
 - No TypeScript errors, dev server compiles successfully (HTTP 200)
+
+---
+Task ID: 1
+Agent: Z Code Agent
+Task: Improve PlayerIcon Jersey/Kit Appearance in TacticsCommandCenter.tsx
+
+Work Log:
+- Read TacticsCommandCenter.tsx and analyzed PlayerIcon component (lines 102-205)
+- Identified existing jersey design: rounded-lg div with gradient, V-neck collar via clipPath, horizontal stripe pattern, badge dot, position code + rating
+- Enhanced jersey to realistic football kit silhouette with the following changes:
+
+1. Jersey Silhouette via clipPath:
+   - Replaced rounded-lg shape with polygon clipPath that creates a football jersey silhouette
+   - clipPath: polygon with wider shoulders (0% at top), sleeves extending to sides (0%-26% height), tapered waist (18%/82% at bottom vs 0%/100% at shoulders), and V-neck notch (50% 13% center dip)
+   - Full shape: polygon(0% 8%, 0% 26%, 22% 26%, 18% 100%, 82% 100%, 78% 26%, 100% 26%, 100% 8%, 73% 0%, 58% 0%, 50% 13%, 42% 0%, 27% 0%)
+
+2. Pronounced V-neck Collar:
+   - Deeper collar with w-[14px] h-[8px] (was w-4 h-[5px])
+   - Stronger secondary color gradient (dd→55→transparent vs 90→transparent)
+   - Added collar outline rim div for extra collar definition
+
+3. Sleeve Accents:
+   - Left/Right sleeve accent stripes at top-[10%] with secondaryColor 45% opacity
+   - Left/Right sleeve cuffs at top-[22%] with secondaryColor 70% opacity (darker, like real sleeve cuffs)
+
+4. Large Squad Number:
+   - Rating displayed as watermark-style large number (text-[17px], text-white/20)
+   - Positioned at top-[30%] on the body area
+   - select-none to prevent accidental text selection
+
+5. Enhanced 3D Depth:
+   - Replaced border/boxShadow with filter: drop-shadow on parent div
+   - drop-shadow(0 0 1px secondaryColor) creates colored outline around clipPath shape
+   - drop-shadow(0 4px 8px primaryColor) adds colored glow
+   - drop-shadow(0 2px 5px rgba(0,0,0)) adds depth shadow
+   - Enhanced ground shadow: w-11 h-[6px] with rounded-[50%] and blur-[3px]
+
+6. Preserved:
+   - Team badge dot on left chest (repositioned to left-[22%] top-[33%])
+   - Horizontal kit stripe pattern (opacity 0.06, 3px spacing)
+   - Position code at bottom (bottom-[8%]) with stronger text-shadow
+   - GK still uses green colors (#2E8B57 / #1A5C3A)
+   - All drag/drop, click, condition ring functionality intact
+   - Size approximately w-12 h-[54px] (was w-12 h-14)
+
+- TypeScript compilation verified: no new errors introduced
+- Only TacticsCommandCenter.tsx modified (PlayerIcon component only)
+
+Stage Summary:
+- PlayerIcon jersey redesigned from rounded rectangle to realistic football kit silhouette
+- 5 visual enhancements: clipPath jersey shape, pronounced collar, sleeve accents, large squad number, 3D depth shadow
+- All existing functionality preserved (drag/drop, click, condition ring, GK colors)
+- No TypeScript errors introduced
+- File modified: src/components/fm/TacticsCommandCenter.tsx
+
+---
+Task ID: 2-3
+Agent: Z Code Agent
+Task: GÖREV 2 — Loan Confirmation Modal + GÖREV 3 — Rental API Fix
+
+Work Log:
+
+GÖREV 2: Loan Confirmation Modal in PlayerDetailModal.tsx
+- Mevcut loan form overlay (lines 1458-1586) analiz edildi
+- Loan form, inline `absolute inset-0` overlay'den `fixed inset-0 z-[500]` confirmation modal'e dönüştürüldü
+- Motion animation (scale + y) ile modal giriş efekti eklendi
+- Başlık: "Kiralık Olarak Gönder" → "Kiralık Pazarına Gönder"
+- Açıklama metni güncellendi (10 Kredi komisyon, kiralık ücret kiralanan takıma ödenecek)
+- Süre input (hafta, 1-34) eklendi: range slider + number input, 17 varsayılan
+- API endpoint: `/api/rental/create-listing` → `/api/rental/list`
+- `alert()` → `useToast()` toast notifications (ToastContext)
+- Buton metni: "Kiralık Pazara Çıkar" → "Onayla"
+- Validasyon eklendi: kiralık ücret > 0
+- Backdrop tıklama ile modal kapatma
+
+GÖREV 3: Rental API Fix — "Oyuncu bulunamadı"
+- SQL migration oluşturuldu: `supabase/migrations/20260521000002_rental_system.sql`
+  * rental_listings tablosu: id, player_id, owner_team_id, daily_cost, status, duration_weeks, listed_at, created_at
+  * loans tablosu: id, player_id, owner_team_id, loaned_to_team_id, loan_fee_paid, duration_weeks, start_date, end_date, status, created_at, updated_at
+  * İndeksler ve idempotent RLS politikaları (DO $$ blocks)
+  * players tablosuna kolon eklemeleri (is_on_loan_market, loan_status, loan_fee, loan_owner_profile_id)
+- `/api/rental/list/route.ts` güncellendi:
+  * `isTableNotFoundError()` yardımcı fonksiyonu eklendi
+  * rental_listings tablosu yoksa 500 + kullanıcı dostu Türkçe mesaj + migration ipucu
+  * loans tablosu insert: try/catch → Supabase error handling ile değiştirildi
+  * Hata yanıtlarında `debug` alanında migration dosya adı
+
+Stage Summary:
+- Güncellenen: src/components/fm/PlayerDetailModal.tsx (loan confirmation modal, toast, duration input, API endpoint)
+- Güncellenen: src/app/api/rental/list/route.ts (table-not-found detection, migration hint)
+- Yeni dosya: supabase/migrations/20260521000002_rental_system.sql
+- TypeScript: Yeni hata eklenmedi, dev server HTTP 200
+
+---
+Task ID: 4
+Agent: Z Code Agent
+Task: GÖREV 4 - Injury System (Sakatlık Sistemi)
+
+Work Log:
+- Mevcut proje yapısı ve dosyalar okundu: types.ts, PlayerDetailModal.tsx, staff API, supabase.ts
+- worklog.md incelendi ve mevcut sakatlık alanları kontrol edildi (is_injured, injury_end_date zaten Player tipinde mevcut)
+- injury_severity alanı Player tipine eklendi ('light' | 'medium' | 'heavy' | null)
+- mevcut matchEngine.ts'teki getInjuryRecoveryMultiplier() ve applyInjuryRecovery() fonksiyonları kontrol edildi
+- Staff API'de fizyoterapist sorgulama yapısı incelendi (type='physio', stars alanı)
+
+1. injuryManager.ts oluşturuldu:
+   - calculateInjuryRisk(stamina): stamina>=60 → 0, 50-59 → 0.10, 40-49 → 0.30, <40 → 0.60
+   - generateInjury(): %50 hafif(1-3 gün), %35 orta(4-10 gün), %15 ağır(11-30 gün)
+   - calculatePhysioHealing(physioStars[]): 1★=2 gün, 2★=4 gün, 3★=8 gün, 4★=12 gün, 5★=16 gün
+   - applyHealingToDate(injuryEndDate, healingDays): Yeni bitiş tarihi hesaplama
+
+2. SQL migration oluşturuldu (20260521000003_injury_system.sql):
+   - players tablosuna is_injured (boolean default false) kolonu (IF NOT EXISTS)
+   - players tablosuna injury_end_date (timestamptz nullable) kolonu (IF NOT EXISTS)
+   - players tablosuna injury_severity (text nullable) kolonu (IF NOT EXISTS)
+   - İndeks: idx_players_is_injury (WHERE is_injured = true)
+
+3. /api/physio-treat/route.ts oluşturuldu (POST):
+   - playerId ve profileId parametreleri zorunlu
+   - Oyuncunun is_injured durumu kontrol edilir
+   - Kullanıcının fizyoterapist personeli (type='physio') getirilir
+   - calculatePhysioHealing ile iyileştirme gücü hesaplanır
+   - applyHealingToDate ile yeni bitiş tarihi hesaplanır
+   - Sakatlık bittiyse is_injured=false, injury_end_date=null, injury_severity=null
+   - Başarı yanıtı: { success, daysReduced, newEndDate, injuryCleared, physiosUsed }
+
+4. PlayerDetailModal.tsx güncellendi:
+   - Heart ve HeartPulse ikonları import edildi
+   - calculatePhysioHealing import edildi
+   - isPhysioTreating ve physioInfo state'leri eklendi
+   - useEffect ile sakat oyuncunun fizyoterapist bilgileri otomatik çekilir (/api/staff?userId=PROFILE_ID)
+   - "Genel Bakış" tab'ın sol paneline "Sakatlık Durumu" bölümü eklendi:
+     * HeartPulse animasyonlu sakatlık göstergesi
+     * Şiddet rozeti (Hafif/Orta/Ağır - renkli)
+     * Tahmini iyileşme tarihi (Türkçe format)
+     * Kalan gün sayısı
+     * Fizyoterapist gücü gösterimi (yıldızlar ve gün kısaltma)
+     * "Fizyoterapist Kullan" butonu (emerald, loading spinner)
+     * Buton onClick: /api/physio-treat API'sine POST isteği
+     * Başarı: toast ile "Fizyoterapist tedavisi uygulandı! Sakatlık X gün kısaldı."
+     * Tam iyileşme: toast ile "tamamen iyileşti! Sakatlık sona erdi."
+     * Fizyoterapist yoksa uyarı mesajı gösterilir
+
+Stage Summary:
+- Yeni dosyalar:
+  * src/lib/fm/injuryManager.ts (4 export: calculateInjuryRisk, generateInjury, calculatePhysioHealing, applyHealingToDate)
+  * supabase/migrations/20260521000003_injury_system.sql (3 kolon + 1 indeks)
+  * src/app/api/physio-treat/route.ts (POST endpoint)
+- Güncellenen dosyalar:
+  * src/lib/fm/types.ts (injury_severity alanı eklendi)
+  * src/components/fm/PlayerDetailModal.tsx (imports, state, useEffect, sakatlık UI bölümü)
+- Tüm API'ler çalışıyor (HTTP 200, doğru hata yanıtları)
+- TypeScript: Yeni hata eklenmedi (mevcut hatalar önceden mevcut)
+- Dev server: HTTP 200
+
+---
+Task ID: 8
+Agent: Z Code Agent
+Task: GÖREV 8 - Match Day Time Lock (Maç Saati Dışında Uyarı)
+
+Work Log:
+- MatchDay.tsx okundu ve analiz edildi (~950 satır)
+- GameCycleManager.ts incelendi: getStatus() ile phase/nextEventTime/countDownMinutes bilgisi alınıyor
+- Mevcut yapı: 3 return path var (IDLE/POST_MATCH/TRAINING_WINDOW, PRE_MATCH, aktif maç)
+- isMatchHourNow() yardımcı fonksiyonu oluşturuldu (Europe/Istanbul = UTC+3, weekday 12:00 veya 18:00 kontrolü)
+- MatchTimeWarningBanner bileşeni oluşturuldu (amber/yellow tema, saat ikonu, animasyonlu accent line)
+- isCurrentlyMatchTime state eklendi (60 saniyede bir re-check)
+- showTimeWarning computed value: !isCurrentlyMatchTime && !isActive (aktif maçta uyarı gösterilmez)
+- Tüm 3 return path'e uyarı banner'ı eklendi:
+  * IDLE/POST_MATCH/TRAINING_WINDOW ekranı: wrapper div flex-col yapıldı, banner üstte, içerik ortada
+  * PRE_MATCH ekranı: aynı flex-col yapısı, banner üstte
+  * Aktif maç ekranı: banner en üstte (showTimeWarning ile)
+- addHours import'u eklendi (date-fns'den, GameCycleManager ile aynı yöntem)
+- Tüm kullanıcı metinleri Türkçe
+- Dev server HTTP 200 yanıt veriyor
+
+Stage Summary:
+- Dosya: src/components/fm/MatchDay.tsx güncellendi
+- Yeni fonksiyon: isMatchHourNow() — İstanbul saati ile maç saati kontrolü
+- Yeni bileşen: MatchTimeWarningBanner — amber tema, saat ikonu, "Maç saatleri hafta içi 12:00 ve 18:00'dir" mesajı
+- Yeni state: isCurrentlyMatchTime — her dakika güncellenir
+- showTimeWarning = !isCurrentlyMatchTime && !isActive — aktif maçta uyarı gizlenir
+- Sayfa tamamen engellenmiyor, sadece uyarı banner'ı gösteriliyor
+- Yeni TS hatası eklenmedi
+
+---
+Task ID: attr
+Agent: Z Code Agent
+Task: Implement Position-Based Weighted Random Attribute Distribution System
+
+Work Log:
+- Read worklog.md and analyzed project context (824 lines of history)
+- Read playerGenerator.ts (750 lines) — identified generatePlayer/generateStarterPlayer and generateArchetypeStats as the core system to replace
+- Read types.ts — verified Player interface (all 30 attribute fields)
+- Read youthAcademy.ts — identified generateYouthPlayer and generateYouthStats as secondary target
+- Read reset-database.ts — verified it does NOT import from playerGenerator (uses own generatePlayerStats)
+
+ADIM 1: Created attributeGenerator.ts
+- Created /home/z/my-project/src/lib/fm/attributeGenerator.ts
+- Priority type: 'cok_dusuk' | 'dusuk' | 'orta' | 'yuksek' | 'cok_yuksek'
+- Priority ranges: cok_dusuk=[20,50], dusuk=[30,65], orta=[40,80], yuksek=[55,90], cok_yuksek=[70,95]
+- positionPriorities: GK, DEF, MID, FWD — each with teknik/mental/fiziksel sub-tables (exact values from spec)
+- getPositionKey(): maps specific position (CB, CDM, ST) to group key (DEF, MID, FWD)
+- ATTRIBUTE_KEY_MAP: Turkish→English attribute name mapping (30 entries: 10 teknik, 13 mental, 7 fiziksel)
+- generateAttributeValue(priority): generates random value within priority range
+
+ADIM 2: Updated playerGenerator.ts
+- Added import of generateAttributeValue, positionPriorities, getPositionKey, ATTRIBUTE_KEY_MAP from attributeGenerator
+- Replaced generateArchetypeStats() with generatePositionBasedStats(positionGroup) — generates ALL attributes from position priority tables
+- Added computeRatingFromStats(stats, positionGroup) — weighted average rating calculation with position-specific weights
+  * GK: goalkeeping 20%, positioning 12%, composure 10%, concentration 10%...
+  * DEF: tackling 12%, marking 10%, heading 8%, positioning 8%...
+  * MID: passing 12%, vision 10%, technique 8%, firstTouch 7%...
+  * FWD: finishing 15%, longShots 8%, composure 8%, speed 8%...
+- Added scaleStatsToRating(stats, targetRating, positionGroup) — scales attributes to match forcedRating when provided
+- Rating is now DERIVED from attributes (computeRatingFromStats), not randomly assigned
+- Trait boost system preserved — applied AFTER base position-based attributes are generated
+- Secondary position bonus preserved — +3 to top 2 stats from secondary position's archetype
+- Derived stats computed: shooting=(finishing+longShots)/2, defending=(tackling+marking+positioning)/3, goalkeeping computed from key GK stats
+- potential still generated: +5-20 bonus for age<22, +0-10 for age>=22
+- hidden_potential still generated
+- All existing exports preserved: POS_ORDER, POS_LABELS, POS_TO_GROUP, GROUP_POSITIONS, aiTeamNames, etc.
+- Archetype system preserved (for trait selection and boosts only)
+- Fixed duplicate 'passing' and 'speed' keys in return object
+- Removed 'Klt' and 'Güç' keys (not in Player type), used 'Guc' instead
+- Added `as Player` cast for backward compat properties (Klc, Tk, Pas, Sut, etc.)
+
+ADIM 3: Updated youthAcademy.ts
+- Added import of generateAttributeValue, positionPriorities, getPositionKey, ATTRIBUTE_KEY_MAP from attributeGenerator
+- Replaced generateYouthStats() to use position priority tables with youth scaling
+  * Generates attributes using generateAttributeValue() per priority
+  * Scales values by baseRating/65 ratio (youth players have lower baseRating)
+  * Added fallback to old archetype system if priorities not found
+  * Added derived stats: shooting, defending, power, control
+- Preserved all existing youth academy logic (traits, personality, development curve, etc.)
+
+ADIM 3 (scripts verification):
+- scripts/reset-database.ts: Does NOT import from playerGenerator — uses own generatePlayerStats(). No changes needed.
+- scripts/seedBots.ts: DOES import generatePlayer from playerGenerator — will automatically use new system. No changes needed.
+- scripts/fix-positions.ts: Checked, no playerGenerator import.
+- scripts/simulateSeason.ts: Checked, no playerGenerator import.
+
+Verification:
+- TypeScript compilation (tsc --noEmit): 0 errors in modified files (playerGenerator.ts, attributeGenerator.ts, youthAcademy.ts)
+- Dev server: HTTP 200 on port 3000
+- Existing TS errors in other files: 435 (pre-existing, none from our changes)
+
+Stage Summary:
+- New file: src/lib/fm/attributeGenerator.ts — Position-based weighted random attribute distribution system
+- Modified: src/lib/fm/playerGenerator.ts — Rating derived from attributes, not random; attributes from position priority tables
+- Modified: src/lib/fm/youthAcademy.ts — Youth stats generated from position priority tables with youth scaling
+- Key change: Rating = weighted average of position-relevant attributes (not random 60-85)
+- Key change: Attributes follow realistic position distributions (e.g., GK: high positioning/concentration, low dribbling/finishing)
+- Key change: forcedRating still supported via scaleStatsToRating() for squad generation
+- 0 new TypeScript errors introduced

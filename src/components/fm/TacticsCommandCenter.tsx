@@ -158,45 +158,76 @@ const PlayerIcon = ({ player, condition, pos, onDrop, onDragOver, onDragStart, o
                 />
             </svg>
             
-            {/* Modern Kit Card - Enhanced */}
+            {/* Football Jersey - Realistic Silhouette */}
             <div 
-              className="w-12 h-14 relative rounded-lg flex flex-col items-center justify-center group-hover:scale-110 transition-transform overflow-hidden"
+              className="w-12 h-[54px] relative group-hover:scale-110 transition-transform"
               style={{
-                background: `linear-gradient(160deg, ${primaryColor} 0%, ${darkenColor(primaryColor, 15)} 50%, ${darkenColor(primaryColor, 25)} 100%)`,
-                border: `1.5px solid ${secondaryColor}60`,
-                boxShadow: `0 3px 12px ${primaryColor}40, inset 0 1px 0 ${secondaryColor}40, 0 1px 3px rgba(0,0,0,0.4)`
+                filter: `drop-shadow(0 0 1px ${secondaryColor}99) drop-shadow(0 4px 8px ${primaryColor}35) drop-shadow(0 2px 5px rgba(0,0,0,0.55))`
               }}
             >
-              {/* V-neck collar */}
+              {/* Jersey body with silhouette clipPath — wider shoulders/sleeves, tapered waist, V-neck */}
               <div 
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-[5px]"
-                style={{ 
-                  background: `linear-gradient(180deg, ${secondaryColor}90 0%, transparent 100%)`,
-                  clipPath: 'polygon(0 0, 100% 0, 70% 100%, 30% 100%)'
-                }}
-              />
-              {/* Horizontal kit stripe pattern */}
-              <div 
-                className="absolute inset-0 opacity-[0.07]"
+                className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden"
                 style={{
-                  background: `repeating-linear-gradient(0deg, transparent, transparent 4px, ${secondaryColor} 4px, ${secondaryColor} 5px)`
+                  background: `linear-gradient(175deg, ${primaryColor} 0%, ${darkenColor(primaryColor, 10)} 35%, ${darkenColor(primaryColor, 22)} 100%)`,
+                  clipPath: 'polygon(0% 8%, 0% 26%, 22% 26%, 18% 100%, 82% 100%, 78% 26%, 100% 26%, 100% 8%, 73% 0%, 58% 0%, 50% 13%, 42% 0%, 27% 0%)',
                 }}
-              />
-              {/* Team badge dot on left chest */}
-              <div 
-                className="absolute left-[5px] top-[8px] w-[5px] h-[5px] rounded-full"
-                style={{ background: `${secondaryColor}cc`, boxShadow: `0 0 3px ${secondaryColor}80` }}
-              />
-              <span className="text-[10px] font-black text-white tracking-tight leading-none drop-shadow-sm relative z-10 mt-1">
-                {posCode}
-              </span>
-              <span className="text-[8px] font-bold text-white/60 leading-none mt-0.5 relative z-10">
-                {player.rating}
-              </span>
+              >
+                {/* Pronounced V-neck collar — secondary color */}
+                <div 
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-[14px] h-[8px]"
+                  style={{ 
+                    background: `linear-gradient(180deg, ${secondaryColor}dd 0%, ${secondaryColor}55 65%, transparent 100%)`,
+                    clipPath: 'polygon(0 0, 100% 0, 66% 100%, 34% 100%)',
+                  }}
+                />
+                {/* Collar outline rim */}
+                <div 
+                  className="absolute top-[1px] left-1/2 -translate-x-1/2 w-[16px] h-[3px]"
+                  style={{ 
+                    background: `${secondaryColor}40`,
+                    clipPath: 'polygon(5% 0, 95% 0, 70% 100%, 30% 100%)',
+                  }}
+                />
+                {/* Left sleeve accent stripe */}
+                <div className="absolute left-0 top-[10%] w-[20%] h-[5%]" style={{ background: `${secondaryColor}45` }} />
+                {/* Left sleeve cuff */}
+                <div className="absolute left-0 top-[22%] w-[20%] h-[3%]" style={{ background: `${secondaryColor}70` }} />
+                {/* Right sleeve accent stripe */}
+                <div className="absolute right-0 top-[10%] w-[20%] h-[5%]" style={{ background: `${secondaryColor}45` }} />
+                {/* Right sleeve cuff */}
+                <div className="absolute right-0 top-[22%] w-[20%] h-[3%]" style={{ background: `${secondaryColor}70` }} />
+                {/* Horizontal kit stripe pattern */}
+                <div 
+                  className="absolute inset-0 opacity-[0.06]"
+                  style={{
+                    background: `repeating-linear-gradient(0deg, transparent, transparent 3px, ${secondaryColor} 3px, ${secondaryColor} 4px)`
+                  }}
+                />
+                {/* Team badge on left chest */}
+                <div 
+                  className="absolute left-[22%] top-[33%] w-[5px] h-[5px] rounded-full"
+                  style={{ background: `${secondaryColor}cc`, boxShadow: `0 0 2px ${secondaryColor}80` }}
+                />
+                {/* Large squad number — watermark style behind position */}
+                <span 
+                  className="absolute top-[30%] text-[17px] font-black text-white/20 leading-none tracking-tighter select-none"
+                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+                >
+                  {player.rating}
+                </span>
+                {/* Position code at bottom */}
+                <span 
+                  className="absolute bottom-[8%] text-[8px] font-black text-white tracking-tight leading-none z-10"
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
+                >
+                  {posCode}
+                </span>
+              </div>
             </div>
         </div>
-        {/* Shadow underneath */}
-        <div className="w-10 h-1.5 bg-black/30 rounded-full blur-[2px] mx-auto -mt-0.5" />
+        {/* Enhanced 3D depth shadow underneath */}
+        <div className="w-11 h-[6px] bg-black/20 rounded-[50%] blur-[3px] mx-auto -mt-1" />
         <div className="mt-0.5 bg-black/80 backdrop-blur-sm text-white px-2 py-0.5 shadow-xl border border-white/10 min-w-[52px] max-w-[92px] rounded-sm">
             <span className="text-[8px] font-black tracking-tight block text-center leading-tight uppercase">{displayName}</span>
         </div>

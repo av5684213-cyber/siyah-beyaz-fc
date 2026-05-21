@@ -128,8 +128,23 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
+    // Tablo yokluğunu tespit etmek için yardımcı fonksiyon
+    const isTableNotFoundError = (msg: string): boolean =>
+      /relation .* does not exist|could not find|not found|does not exist/i.test(msg);
+
     if (insertError) {
       console.warn('[POST /api/rental/list] rental_listings insert with duration_weeks failed:', insertError.message, { playerId, durationWeeks, dailyCost });
+
+      // Tablo mevcut değilse — kullanıcıya migration mesajı göster
+      if (isTableNotFoundError(insertError.message)) {
+        console.error('[POST /api/rental/list] rental_listings table does not exist. Migration required: supabase/migrations/20260521000002_rental_system.sql');
+        return NextResponse.json({
+          error: 'rental_listings tablosu bulunamadı',
+          userMessage: 'Kiralık pazarı sistemi henüz veritabanına yüklenmemiş. Lütfen yöneticinizle iletişime geçin ve 20260521000002_rental_system.sql migration dosyasını çalıştırmasını isteyin.',
+          debug: { playerId, error: insertError.message, hint: 'Run supabase/migrations/20260521000002_rental_system.sql' },
+        }, { status: 500 });
+      }
+
       // duration_weeks kolonu yoksa tekrar dene
       const { data: fallbackListing, error: fallbackError } = await supabase
         .from('rental_listings')
@@ -138,8 +153,17 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (fallbackError) {
-        console.error('[POST /api/rental/list] rental_listings insert error (both attempts failed). playerId:', playerId, 'firstError:', insertError.message, 'fallbackError:', fallbackError.message, 'The rental_listings table may not exist or migration has not been run.');
-        // rental_listings tablosu yoksa da devam et — players tablosu güncellenecek
+        console.error('[POST /api/rental/list] rental_listings insert error (both attempts failed). playerId:', playerId, 'firstError:', insertError.message, 'fallbackError:', fallbackError.message);
+
+        if (isTableNotFoundError(fallbackError.message)) {
+          return NextResponse.json({
+            error: 'rental_listings tablosu bulunamadı',
+            userMessage: 'Kiralık pazarı sistemi henüz veritabanına yüklenmemiş. Lütfen yöneticinizle iletişime geçin ve 20260521000002_rental_system.sql migration dosyasını çalıştırmasını isteyin.',
+            debug: { playerId, firstError: insertError.message, fallbackError: fallbackError.message, hint: 'Run supabase/migrations/20260521000002_rental_system.sql' },
+          }, { status: 500 });
+        }
+
+        // Diğer hatalar — rental_listings tablosu olmadan da devam et
       } else {
         listingId = fallbackListing?.id;
         console.info('[POST /api/rental/list] rental_listings insert succeeded (fallback without duration_weeks). listingId:', listingId);
@@ -181,16 +205,21 @@ export async function POST(request: NextRequest) {
     }
 
     // loans tablosuna da kayıt oluştur
-    try {
-      await supabase.from('loans').insert({
-        player_id: playerId,
-        owner_team_id: ownerTeamId || player.team_name || player.profile_id,
-        loan_fee_paid: dailyCost,
-        duration_weeks: durationWeeks,
-        status: 'listed',
-      });
-    } catch (loanErr) {
-      console.warn('[POST /api/rental/list] loans insert error (non-critical). playerId:', playerId, 'error:', loanErr instanceof Error ? loanErr.message : String(loanErr), 'The loans table may not exist or have different schema.');
+    const { error: loanInsertError } = await supabase.from('loans').insert({
+      player_id: playerId,
+      owner_team_id: ownerTeamId || player.team_name || player.profile_id,
+      loan_fee_paid: dailyCost,
+      duration_weeks: durationWeeks,
+      status: 'listed',
+    });
+
+    if (loanInsertError) {
+      // loans tablosu yoksa non-critical uyarı ver ama başarısız olma
+      if (isTableNotFoundError(loanInsertError.message)) {
+        console.warn('[POST /api/rental/list] loans table does not exist (non-critical). playerId:', playerId, 'hint: Run migration 20260521000002_rental_system.sql');
+      } else {
+        console.warn('[POST /api/rental/list] loans insert error (non-critical). playerId:', playerId, 'error:', loanInsertError.message);
+      }
     }
 
     return NextResponse.json({

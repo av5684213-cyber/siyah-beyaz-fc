@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Map, Users, Star, Target, Zap, Shield, Activity, TrendingUp, Filter, AlertCircle, Eye, History, LayoutList, ChevronRight, X, Database, Lock, Ban, Check, ChevronDown } from 'lucide-react';
+import { Search, Map as MapIcon, Users, Star, Target, Zap, Shield, Activity, TrendingUp, Filter, AlertCircle, Eye, History, LayoutList, ChevronRight, X, Database, Lock, Ban, Check, ChevronDown } from 'lucide-react';
 import { useFM } from '@/lib/fm/GameContext';
 import { Player, Scout } from '@/lib/fm/types';
 import { toTitleCase, localizePos, getPlayerPos } from '@/lib/fm/ui-helpers';
@@ -680,7 +680,7 @@ export default function ScoutingTab({ onPlayerClick, isAdmin }: { onPlayerClick?
                     </div>
                   ) : (
                     <div className="text-center space-y-2">
-                      <Map className="mx-auto text-amber-500/40" size={24} />
+                      <MapIcon className="mx-auto text-amber-500/40" size={24} />
                       <div>
                         <p className="text-[8px] font-black uppercase tracking-widest text-white/40">{scout.location}</p>
                         <p className="text-base font-mono font-bold text-white tracking-widest">{scout.remainingDays} GÜN</p>

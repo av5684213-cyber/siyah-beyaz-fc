@@ -319,17 +319,17 @@ export default function TrainingAcademy({
         </div>
 
         <button 
-          onClick={() => { if (assistantCoachCount >= 3) setShowTacticLab(true); }}
-          disabled={assistantCoachCount < 3}
+          onClick={() => { if (assistantCoachCount >= 1) setShowTacticLab(true); }}
+          disabled={assistantCoachCount < 1}
           className={`group relative flex items-center gap-3 px-6 py-2 rounded-lg transition-all transform ${
-            assistantCoachCount >= 3 
+            assistantCoachCount >= 1 
               ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] active:scale-95' 
               : 'bg-gradient-to-r from-gray-700 to-gray-800 cursor-not-allowed opacity-50'
           }`}
         >
            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
            <div className="relative flex items-center gap-2">
-              {assistantCoachCount < 3 ? (
+              {assistantCoachCount < 1 ? (
                 <Lock size={16} className="text-white/40" />
               ) : (
                 <FlaskConical size={16} className="text-white animate-pulse" />
@@ -339,9 +339,9 @@ export default function TrainingAcademy({
                  <span className="text-[6px] text-blue-200 uppercase font-bold tracking-widest">TAKTIK TEST MERKEZİ</span>
               </div>
            </div>
-           {assistantCoachCount < 3 && (
+           {assistantCoachCount < 1 && (
              <span className="ml-2 text-[6px] text-amber-400/80 font-bold uppercase tracking-wider whitespace-nowrap">
-               3. Yardımcı Antrenör gerekir
+               En az 1 Yardımcı Antrenör gerekir
              </span>
            )}
         </button>

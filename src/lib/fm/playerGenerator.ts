@@ -2,6 +2,7 @@ import { Player, SpecificPosition, PositionGroup } from './types';
 import { TRAITS_DATA, PLAY_STYLES, PERSONALITY_TRAITS } from './traitsData';
 import { calculateMarketValue } from './valuation';
 import { hasConflict } from './traitConflicts';
+import { generateAttributeValue, positionPriorities, getPositionKey, ATTRIBUTE_KEY_MAP } from './attributeGenerator';
 
 // ═══════════════════════════════════════════════════════════════
 // POZISYON SİSTEMİ - Arketip Tabanlı Oyuncu Üretme Motoru
@@ -305,49 +306,160 @@ function assignSecondaryPositions(
   return shuffled.slice(0, count);
 }
 
-// ═══ STAT ÜRETME MOTORU ═══
-function generateArchetypeStats(
-  archetype: Archetype,
-  baseRating: number,
-  rng: () => number
+// ═══ POZİSYON BAZLI NİTELİK ÜRETME MOTORU ═══
+// Pozisyon öncelik tablolarına dayalı ağırlıklı rastgele nitelik dağıtımı
+
+// Pozisyon bazlı rating ağırlıkları (hangi nitelikler overall rating'i daha çok etkiler)
+const RATING_WEIGHTS: Record<string, Record<string, number>> = {
+  GK: {
+    goalkeeping: 0.20, positioning: 0.12, composure: 0.10, concentration: 0.10,
+    jumping: 0.08, agility: 0.06, bravery: 0.06, strength: 0.05, anticipation: 0.05,
+    reactions: 0.05, balance: 0.04, determination: 0.03, decisions: 0.03, leadership: 0.03,
+  },
+  DEF: {
+    tackling: 0.12, marking: 0.10, heading: 0.08, positioning: 0.08, anticipation: 0.07,
+    strength: 0.06, concentration: 0.06, composure: 0.05, decisions: 0.05, aggression: 0.05,
+    jumping: 0.04, passing: 0.04, bravery: 0.04, workRate: 0.04, teamwork: 0.04,
+    leadership: 0.04,
+  },
+  MID: {
+    passing: 0.12, vision: 0.10, technique: 0.08, firstTouch: 0.07, tackling: 0.06,
+    workRate: 0.06, decisions: 0.06, stamina: 0.05, dribbling: 0.05, crossing: 0.05,
+    longShots: 0.05, composure: 0.05, anticipation: 0.04, teamwork: 0.04, flair: 0.04,
+    agility: 0.04,
+  },
+  FWD: {
+    finishing: 0.15, longShots: 0.08, composure: 0.08, speed: 0.08, acceleration: 0.07,
+    dribbling: 0.07, technique: 0.06, firstTouch: 0.06, heading: 0.05, bravery: 0.05,
+    offTheBall: 0.05, agility: 0.05, strength: 0.04, determination: 0.04, crossing: 0.03,
+    positioning: 0.04,
+  },
+};
+
+/** Pozisyon öncelik tablolarından tüm nitelikleri üret */
+function generatePositionBasedStats(
+  positionGroup: PositionGroup | string,
 ): Record<string, number> {
+  const posKey = getPositionKey(positionGroup as string) as string;
+  const priorities = positionPriorities[posKey];
+  if (!priorities) {
+    // Fallback: MID önceliklerini kullan
+    return generatePositionBasedStats('MID');
+  }
+
   const stats: Record<string, number> = {};
-  const allStats = new Set([...archetype.strong, ...archetype.medium, ...archetype.weak]);
-  
-  const genVal = (base: number, variance: number) => {
-    return Math.min(99, Math.max(5, base + Math.floor(rng() * variance) - Math.floor(variance * 0.3)));
-  };
-  
-  for (const stat of allStats) {
-    if (archetype.strong.includes(stat)) {
-      stats[stat] = genVal(baseRating, 8);
-    } else if (archetype.medium.includes(stat)) {
-      stats[stat] = genVal(baseRating - 10, 12);
-    } else {
-      stats[stat] = genVal(baseRating - 25, 10);
+
+  // Teknik nitelikler
+  for (const [trKey, priority] of Object.entries(priorities.teknik)) {
+    const engKey = ATTRIBUTE_KEY_MAP[trKey];
+    if (engKey) {
+      stats[engKey] = generateAttributeValue(priority as any);
     }
   }
-  
-  // Mental statları her pozisyon için makul seviyede tut
-  const mentalDefaults: Record<string, number> = {
-    determination: baseRating - 5 + Math.floor(rng() * 20),
-    concentration: baseRating - 10 + Math.floor(rng() * 20),
-    leadership: 10 + Math.floor(rng() * 70),
-    teamwork: 35 + Math.floor(rng() * 50),
-    decisions: baseRating - 10 + Math.floor(rng() * 20),
-    composure: baseRating - 10 + Math.floor(rng() * 20),
-  };
-  
-  for (const [key, val] of Object.entries(mentalDefaults)) {
-    if (!stats[key]) stats[key] = Math.min(99, Math.max(5, val));
+
+  // Mental nitelikler
+  for (const [trKey, priority] of Object.entries(priorities.mental)) {
+    const engKey = ATTRIBUTE_KEY_MAP[trKey];
+    if (engKey) {
+      stats[engKey] = generateAttributeValue(priority as any);
+    }
   }
-  
-  // Physical defaults
-  if (!stats.stamina) stats.stamina = 55 + Math.floor(rng() * 35);
-  if (!stats.balance) stats.balance = baseRating - 10 + Math.floor(rng() * 20);
-  if (!stats.agility) stats.agility = baseRating - 15 + Math.floor(rng() * 20);
-  
+
+  // Fiziksel nitelikler
+  for (const [trKey, priority] of Object.entries(priorities.fiziksel)) {
+    const engKey = ATTRIBUTE_KEY_MAP[trKey];
+    if (engKey) {
+      stats[engKey] = generateAttributeValue(priority as any);
+    }
+  }
+
+  // Ek nitelikler: goalkeeping (sadece GK'de yüksek, diğerlerinde çok düşük)
+  if (posKey === 'GK') {
+    stats.goalkeeping = generateAttributeValue('cok_yuksek'); // 70-95
+  } else {
+    stats.goalkeeping = generateAttributeValue('cok_dusuk'); // 20-50
+  }
+
+  // Ek nitelikler: offTheBall (positionPriorities'de yok, pozisyona göre ekle)
+  if (posKey === 'FWD') {
+    stats.offTheBall = stats.offTheBall || generateAttributeValue('yuksek');
+  } else if (posKey === 'MID') {
+    stats.offTheBall = stats.offTheBall || generateAttributeValue('orta');
+  } else if (posKey === 'DEF') {
+    stats.offTheBall = stats.offTheBall || generateAttributeValue('orta');
+  } else {
+    stats.offTheBall = stats.offTheBall || generateAttributeValue('dusuk');
+  }
+
   return stats;
+}
+
+/** Niteliklerden ağırlıklı ortalama rating hesapla */
+function computeRatingFromStats(
+  stats: Record<string, number>,
+  positionGroup: PositionGroup | string,
+): number {
+  const posKey = getPositionKey(positionGroup as string) as string;
+  const weights = RATING_WEIGHTS[posKey];
+
+  if (!weights) {
+    // Basit ortalama
+    const vals = Object.values(stats).filter(v => typeof v === 'number');
+    return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  }
+
+  let weightedSum = 0;
+  let totalWeight = 0;
+
+  for (const [stat, weight] of Object.entries(weights)) {
+    if (stats[stat] !== undefined && stats[stat] !== null) {
+      weightedSum += stats[stat] * weight;
+      totalWeight += weight;
+    }
+  }
+
+  // Ağırlığı olmayan nitelikler de küçük etki yapsın
+  const unweightedStats = Object.entries(stats).filter(
+    ([key]) => !weights[key] && typeof stats[key] === 'number'
+  );
+  if (unweightedStats.length > 0 && totalWeight < 1) {
+    const remainingWeight = 1 - totalWeight;
+    const perStat = remainingWeight / unweightedStats.length;
+    for (const [key] of unweightedStats) {
+      weightedSum += (stats[key] as number) * perStat;
+      totalWeight += perStat;
+    }
+  }
+
+  if (totalWeight === 0) {
+    const vals = Object.values(stats).filter(v => typeof v === 'number') as number[];
+    return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  }
+
+  return Math.round(weightedSum / totalWeight);
+}
+
+/** Nitelikleri hedef rating'e göre ölçekle */
+function scaleStatsToRating(
+  stats: Record<string, number>,
+  targetRating: number,
+  positionGroup: PositionGroup | string,
+): Record<string, number> {
+  const currentRating = computeRatingFromStats(stats, positionGroup);
+  if (currentRating === 0) return stats;
+
+  const diff = targetRating - currentRating;
+  if (Math.abs(diff) <= 2) return stats; // Zaten yakın, ölçeklemeye gerek yok
+
+  const scaled: Record<string, number> = {};
+  for (const [key, val] of Object.entries(stats)) {
+    if (typeof val !== 'number') { scaled[key] = val; continue; }
+    // 1:1 ölçekleme yerine %50 oranında yakınlaştır (doğallık için)
+    const adjustment = diff * 0.6;
+    const newVal = val + adjustment + (Math.random() * 6 - 3); // küçük rastgelelik
+    scaled[key] = Math.min(99, Math.max(5, Math.round(newVal)));
+  }
+  return scaled;
 }
 
 // ═══ ANA ÜRETME FONKSİYONU ═══
@@ -362,7 +474,6 @@ export const generatePlayer = (
   
   const name = names[Math.floor(randomFn() * names.length)] + ' ' + surnames[Math.floor(randomFn() * surnames.length)];
   const age = 17 + Math.floor(randomFn() * 18);
-  const baseRating = forcedRating || (60 + Math.floor(randomFn() * 25));
   
   // Determine specific position
   let specificPosition: SpecificPosition;
@@ -476,6 +587,49 @@ export const generatePlayer = (
     if (extraNeg) personalityTraits.push(extraNeg);
   }
 
+  // ═══ POZİSYON BAZLI NİTELİK ÜRETME ═══
+  // Pozisyon öncelik tablolarından temel nitelikleri üret
+  let aStats = generatePositionBasedStats(positionGroup);
+
+  // Eğer forcedRating verildiyse, nitelikleri hedef rating'e ölçekle
+  if (forcedRating) {
+    aStats = scaleStatsToRating(aStats, forcedRating, positionGroup);
+  }
+
+  // Trait boost uygula (arketip bazlı, nitelikler üretildikten sonra)
+  selectedTraits.forEach((tName) => {
+    const boosts = archetypeTraits[tName];
+    if (boosts) {
+      boosts.forEach((stat: string) => {
+        if (aStats[stat] !== undefined) aStats[stat] = Math.min(99, aStats[stat] + 4 + Math.floor(randomFn() * 4));
+      });
+    }
+    // Genel boostlar
+    if (tName.includes('Bitirici') || tName.includes('Gol')) { if (aStats.finishing) aStats.finishing = Math.min(99, aStats.finishing + 5); }
+    if (tName.includes('Refleks') || tName.includes('Güvenli')) { if (aStats.goalkeeping) aStats.goalkeeping = Math.min(99, aStats.goalkeeping + 5); }
+    if (tName.includes('Kale gibi') || tName.includes('Top kapma')) { if (aStats.tackling) aStats.tackling = Math.min(99, aStats.tackling + 5); }
+    if (tName.includes('Oyun kurucu') || tName.includes('Pas')) { if (aStats.passing) aStats.passing = Math.min(99, aStats.passing + 5); }
+  });
+
+  // Yan mevki bonusu: Ek mevkisi olan oyuncular yan mevkinin en önemli statına küçük bonus alır
+  if (secondaryPositions && secondaryPositions.length > 0) {
+    secondaryPositions.forEach((sp) => {
+      const secArchetype = ARCHETYPES[sp];
+      if (secArchetype) {
+        // Yan mevkinin en güçlü 2 statına +3 bonus
+        const topStats = secArchetype.strong.slice(0, 2);
+        topStats.forEach((stat: string) => {
+          if (aStats[stat] !== undefined) aStats[stat] = Math.min(99, aStats[stat] + 3);
+        });
+      }
+    });
+  }
+
+  // Rating'i niteliklerden hesapla (ağırlıklı ortalama)
+  const computedRating = computeRatingFromStats(aStats, positionGroup);
+  // forcedRating yoksa 60-85 arası sınır uygula, varsa forcedRating'e yakın olmalı
+  const baseRating = forcedRating || Math.max(60, Math.min(85, computedRating));
+
   // Ofsayt temizliği
   if (negTraits.includes("Ofsayta düşer")) {
     if (baseRating > 75 || selectedTraits.includes("Ofsayt ustası")) {
@@ -527,48 +681,22 @@ export const generatePlayer = (
   }
   const hidden_potential = Math.min(99, potential + Math.floor(randomFn() * 10));
 
-  // ═══ ARKETİP BAZLI STAT ÜRETME ═══
-  const aStats = generateArchetypeStats(archetype, baseRating, randomFn);
-  
-  // Trait boost uygula
-  selectedTraits.forEach((tName) => {
-    const boosts = archetypeTraits[tName];
-    if (boosts) {
-      boosts.forEach((stat: string) => {
-        if (aStats[stat] !== undefined) aStats[stat] = Math.min(99, aStats[stat] + 4 + Math.floor(randomFn() * 4));
-      });
-    }
-    // Genel boostlar
-    if (tName.includes('Bitirici') || tName.includes('Gol')) { if (aStats.finishing) aStats.finishing = Math.min(99, aStats.finishing + 5); }
-    if (tName.includes('Refleks') || tName.includes('Güvenli')) { if (aStats.goalkeeping) aStats.goalkeeping = Math.min(99, aStats.goalkeeping + 5); }
-    if (tName.includes('Kale gibi') || tName.includes('Top kapma')) { if (aStats.tackling) aStats.tackling = Math.min(99, aStats.tackling + 5); }
-    if (tName.includes('Oyun kurucu') || tName.includes('Pas')) { if (aStats.passing) aStats.passing = Math.min(99, aStats.passing + 5); }
-  });
-
-  // Yan mevki bonusu: Ek mevkisi olan oyuncular yan mevkinin en önemli statına küçük bonus alır
-  if (secondaryPositions && secondaryPositions.length > 0) {
-    secondaryPositions.forEach((sp) => {
-      const secArchetype = ARCHETYPES[sp];
-      if (secArchetype) {
-        // Yan mevkinin en güçlü 2 statına +3 bonus
-        const topStats = secArchetype.strong.slice(0, 2);
-        topStats.forEach((stat: string) => {
-          if (aStats[stat] !== undefined) aStats[stat] = Math.min(99, aStats[stat] + 3);
-        });
-      }
-    });
-  }
-
   const preferredFoot = randomFn() > 0.8 ? 'Left' : 'Right';
   const rightFoot = preferredFoot === 'Right' ? 100 : 20 + Math.floor(randomFn() * 60);
   const leftFoot = preferredFoot === 'Left' ? 100 : 20 + Math.floor(randomFn() * 60);
 
-  // Kısa stat'lar (backward compat)
+  // Kısa stat'lar (backward compat) - türetilmiş istatistikler
+  const derivedShooting = Math.round(((aStats.finishing || 50) + (aStats.longShots || 50)) / 2);
+  const derivedDefending = Math.round(((aStats.tackling || 50) + (aStats.marking || 50) + (aStats.positioning || 50)) / 3);
+  const derivedGoalkeeping = positionGroup === 'GK'
+    ? Math.round(((aStats.goalkeeping || 70) + (aStats.positioning || 70) + (aStats.composure || 70)) / 3)
+    : Math.round(aStats.goalkeeping || 10);
+
   const stats = {
-    Klc: Math.min(99, Math.max(5, aStats.goalkeeping || (positionGroup === 'GK' ? baseRating : 10))),
-    Tk: aStats.tackling || 50,
+    Klc: derivedGoalkeeping,
+    Tk: derivedDefending,
     Pas: aStats.passing || 50,
-    Sut: aStats.finishing || aStats.shooting || 50,
+    Sut: derivedShooting,
     Kfa: aStats.heading || 50,
     Hiz: aStats.speed || 50,
     Guc: aStats.strength || 50,
@@ -619,7 +747,7 @@ export const generatePlayer = (
     form_rating: 50, // Başlangıç form puanı (cron job ile güncellenecek)
     injury_history: [], // Boş sakatlık geçmişi
     
-    // Detailed Technical
+    // Detailed Technical (pozisyon öncelik tablolarından üretilen değerler)
     finishing: aStats.finishing || 50,
     dribbling: aStats.dribbling || 50,
     firstTouch: aStats.firstTouch || 50,
@@ -630,9 +758,8 @@ export const generatePlayer = (
     longShots: aStats.longShots || 50,
     offTheBall: aStats.offTheBall || 50,
     heading: aStats.heading || 50,
-    passing: stats.Pas,
 
-    // Detailed Mental
+    // Detailed Mental (pozisyon öncelik tablolarından üretilen değerler)
     determination: aStats.determination || 50,
     aggression: aStats.aggression || 40,
     bravery: aStats.bravery || 40,
@@ -649,7 +776,6 @@ export const generatePlayer = (
 
     // Detailed Physical
     acceleration: aStats.acceleration || stats.Hiz,
-    speed: stats.Hiz,
     agility: aStats.agility || 50,
     balance: aStats.balance || 50,
     strength: stats.Guc,
@@ -658,19 +784,18 @@ export const generatePlayer = (
     leftFoot,
     rightFoot,
     
-    // Compatibility stats
-    Klt: baseRating,
+    // Compatibility stats (backward compat — used in MultiplayerTab etc.)
     Klc: stats.Klc,
     Tk: stats.Tk,
     Pas: stats.Pas,
     Sut: stats.Sut,
     Kfa: stats.Kfa,
     Hiz: stats.Hiz,
-    Güç: stats.Guc,
+    Guc: stats.Guc,
     Alg: stats.Alg,
     Top: stats.Top,
     Kon: 100,
-  };
+  } as Player;
 };
 
 export const generateStarterPlayer = generatePlayer;

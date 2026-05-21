@@ -1,19 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDraggableModal } from '@/hooks/useDraggableModal';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import {
   X as XIcon, Star, ChevronDown, ChevronRight, User, Activity,
   Target, Shield, Footprints, ShoppingCart, BarChart2, Dumbbell, TrendingUp, AlertTriangle, AlertCircle, Zap,
-  Ruler, Scale, Eye, Gavel, Timer, XCircle, Globe
+  Ruler, Scale, Eye, Gavel, Timer, XCircle, Globe, Heart, HeartPulse
 } from 'lucide-react';
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer
 } from 'recharts';
 import { calculateMarketValue, getTransferCorridor, formatCurrency } from '@/lib/fm/valuation';
 import { calculateLoanFeeEuro } from '@/lib/fm/inflation';
+import { useToast } from '@/lib/fm/ToastContext';
 import { traitDescriptions } from '@/lib/fm/traits';
 import { TRAIT_LEVELS } from '@/lib/fm/traitsData';
 import { useFM } from '@/lib/fm/GameContext';
@@ -21,6 +22,7 @@ import { getPlayStyleEffect } from '@/lib/fm/playStyles';
 import { localizePosFull, getPosBadgeStyle, getPlayerPos } from '@/lib/fm/ui-helpers';
 import { POS_LABELS } from '@/lib/fm/playerGenerator';
 import { fmStatColor, fmStatBg, cap99, toTitleCase } from '@/lib/fm/ui-helpers';
+import { calculatePhysioHealing } from '@/lib/fm/injuryManager';
 import type { Player, TrainingState } from '@/lib/fm/types';
 import type { MarketListing } from '@/lib/fm/multiplayer';
 import PlayerStatsTab from './PlayerStatsTab';
@@ -83,6 +85,7 @@ export default function PlayerDetailModal({
   player: initialPlayer, onClose, teamStats, onSell, marketListing, onBuy, onBid, onSign, trainingState, onTrainingStateChange, profileMoney, profileTeamName, profileId, isAdmin 
 }: PlayerDetailModalProps) {
   const { scoutPlayer, watchlist, toggleWatchlist } = useFM();
+  const { success: toastSuccess, error: toastError } = useToast();
   const [player, setPlayer] = useState<Player>(initialPlayer);
   const [activeTab, setActiveTab] = useState<'genel' | 'bilgi' | 'performans' | 'istatistikler' | 'market' | 'antrenman'>(marketListing ? 'market' : 'genel');
 
@@ -97,6 +100,33 @@ export default function PlayerDetailModal({
   const [sellPrice, setSellPrice] = useState<number>(0);
   const [isSelling, setIsSelling] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
+
+  // ── Fizyoterapist tedavi state ──
+  const [isPhysioTreating, setIsPhysioTreating] = useState(false);
+  const [physioInfo, setPhysioInfo] = useState<{ stars: number[]; totalHealing: number } | null>(null);
+
+  // ── Sakat oyuncunun fizyoterapist bilgilerini çek ──
+  useEffect(() => {
+    if (player.is_injured && isOwned && profileId) {
+      const fetchPhysios = async () => {
+        try {
+          const res = await fetch(`/api/staff?userId=${profileId}`);
+          const data = await res.json();
+          if (data.staff && Array.isArray(data.staff)) {
+            const physios = data.staff.filter((s: { type: string }) => s.type === 'physio');
+            if (physios.length > 0) {
+              const stars = physios.map((p: { stars: number }) => p.stars);
+              const totalHealing = calculatePhysioHealing(stars);
+              setPhysioInfo({ stars, totalHealing });
+            }
+          }
+        } catch (err) {
+          console.error('[PlayerDetailModal] Physio fetch error:', err);
+        }
+      };
+      fetchPhysios();
+    }
+  }, [player.is_injured, isOwned, profileId]);
 
   // ── Kiralama form state ──
   const [showLoanForm, setShowLoanForm] = useState(false);
@@ -682,6 +712,132 @@ export default function PlayerDetailModal({
                       </div>
                     </div>
                   </div>
+
+              {/* ── SAKATLIK BİLGİSİ VE FİZYOTERAPEST ── */}
+              {player.is_injured && (
+                <div className="px-3 py-2 border-b border-white/[0.05]">
+                  <div className="text-[8px] font-black uppercase tracking-[0.2em] text-white/25 mb-2">Sakatlık Durumu</div>
+                  <div className="bg-red-500/[0.08] border border-red-500/20 rounded-sm p-2 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <HeartPulse size={12} className="text-red-400 animate-pulse" />
+                      <span className="text-[9px] font-bold text-red-300 uppercase tracking-wider">Sakat</span>
+                      {player.injury?.severity !== undefined && (
+                        <span className={`px-1.5 py-px rounded-sm text-[7px] font-black uppercase tracking-wider ${
+                          player.injury.severity <= 1 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                          : player.injury.severity <= 2 ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        }`}>
+                          {player.injury_severity === 'light' ? 'Hafif' : player.injury_severity === 'medium' ? 'Orta' : player.injury_severity === 'heavy' ? 'Ağır' : 'Belirsiz'}
+                        </span>
+                      )}
+                      {player.injury_severity && !player.injury?.severity && (
+                        <span className={`px-1.5 py-px rounded-sm text-[7px] font-black uppercase tracking-wider ${
+                          player.injury_severity === 'light' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                          : player.injury_severity === 'medium' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        }`}>
+                          {player.injury_severity === 'light' ? 'Hafif' : player.injury_severity === 'medium' ? 'Orta' : 'Ağır'}
+                        </span>
+                      )}
+                    </div>
+                    {player.injury_end_date && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[8px] text-white/40">Tahmini İyileşme</span>
+                        <span className="text-[9px] font-bold text-red-300/80">
+                          {new Date(player.injury_end_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}
+                        </span>
+                      </div>
+                    )}
+                    {player.injury?.remaining_days !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[8px] text-white/40">Kalan Gün</span>
+                        <span className="text-[9px] font-bold text-red-300/80">{player.injury.remaining_days} gün</span>
+                      </div>
+                    )}
+                    {/* Fizyoterapist Tedavi Butonu */}
+                    {isOwned && physioInfo && physioInfo.totalHealing > 0 && (
+                      <div className="pt-1.5 border-t border-red-500/10">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[8px] text-white/30">Fizyoterapist Gücü</span>
+                          <div className="flex items-center gap-1">
+                            {physioInfo.stars.map((s, i) => (
+                              <div key={i} className="flex items-center gap-px">
+                                {Array.from({ length: s }).map((_, si) => (
+                                  <Star key={si} size={6} className="text-amber-400 fill-amber-400" />
+                                ))}
+                              </div>
+                            ))}
+                            <span className="text-[8px] font-bold text-emerald-400 ml-1">-{physioInfo.totalHealing} gün</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            if (!profileId) return;
+                            setIsPhysioTreating(true);
+                            try {
+                              const res = await fetch('/api/physio-treat', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ playerId: player.id, profileId }),
+                              });
+                              const data = await res.json();
+                              if (data.success) {
+                                if (data.injuryCleared) {
+                                  toastSuccess(`${toTitleCase(player.name)} tamamen iyileşti! Sakatlık sona erdi.`);
+                                  setPlayer(prev => ({
+                                    ...prev,
+                                    is_injured: false,
+                                    injury_end_date: undefined,
+                                    injury_severity: undefined,
+                                    injury: undefined,
+                                  }));
+                                } else {
+                                  toastSuccess(`Fizyoterapist tedavisi uygulandı! Sakatlık ${data.daysReduced} gün kısaldı.`);
+                                  setPlayer(prev => ({
+                                    ...prev,
+                                    injury_end_date: data.newEndDate || prev.injury_end_date,
+                                  }));
+                                }
+                                // Refresh physio info
+                                setPhysioInfo(null);
+                              } else {
+                                toastError(data.userMessage || data.message || 'Tedavi uygulanamadı.');
+                              }
+                            } catch (err) {
+                              console.error('[PhysioTreat] Exception:', err);
+                              toastError('Bir hata oluştu. Lütfen tekrar deneyin.');
+                            } finally {
+                              setIsPhysioTreating(false);
+                            }
+                          }}
+                          disabled={isPhysioTreating}
+                          className="w-full py-1.5 bg-emerald-500/15 border border-emerald-500/30 rounded-sm text-[8px] font-black uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/25 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                        >
+                          {isPhysioTreating ? (
+                            <>
+                              <div className="w-2.5 h-2.5 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
+                              Tedavi Uygulanıyor...
+                            </>
+                          ) : (
+                            <>
+                              <Heart size={10} />
+                              Fizyoterapist Kullan
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                    {isOwned && (!physioInfo || physioInfo.totalHealing === 0) && (
+                      <div className="pt-1.5 border-t border-red-500/10">
+                        <div className="flex items-center gap-1.5 text-[7px] text-white/20 italic">
+                          <AlertTriangle size={8} className="text-amber-500/50" />
+                          <span>Fizyoterapist yok — Personel sekmesinden işe alabilirsiniz</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Traits */}
               <div className="px-3 py-2">
@@ -1453,73 +1609,113 @@ export default function PlayerDetailModal({
         </div>
 
         {/* ══════════════════════════════════════════════
-            LOAN FORM OVERLAY — Kiralık Olarak Gönder
+            LOAN CONFIRMATION MODAL — Kiralık Pazarına Gönder
         ══════════════════════════════════════════════ */}
         {showLoanForm && isOwned && (
-          <div className="absolute inset-0 z-[300] bg-black/90 backdrop-blur-md flex items-center justify-center p-6">
-            <div className="bg-[#111820] border border-cyan-500/20 rounded-2xl p-6 w-full max-w-md space-y-5 shadow-2xl">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[500] flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+            onClick={() => setShowLoanForm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-[#111820] border border-cyan-500/20 rounded-2xl p-6 w-full max-w-md space-y-5 shadow-[0_0_80px_rgba(0,200,255,0.08)]"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center border border-cyan-500/20">
                     <Globe size={20} className="text-cyan-400" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black uppercase tracking-widest text-cyan-400">Kiralık Olarak Gönder</h3>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-cyan-400">Kiralık Pazarına Gönder</h3>
                     <p className="text-[9px] text-white/30 font-bold uppercase tracking-wider">{toTitleCase(player.name)} • {sp} • {rating} OVR</p>
                   </div>
                 </div>
-                <button onClick={() => setShowLoanForm(false)} className="p-2 text-white/30 hover:text-white transition-colors">
+                <button onClick={() => setShowLoanForm(false)} className="p-2 text-white/30 hover:text-white transition-colors rounded-lg hover:bg-white/5">
                   <XIcon size={18} />
                 </button>
               </div>
 
-              {/* Loan Fee (Euro) */}
+              {/* Description */}
+              <div className="bg-cyan-500/5 border border-cyan-500/10 rounded-xl p-3.5">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle size={14} className="text-cyan-400 mt-0.5 shrink-0" />
+                  <p className="text-[10px] text-white/60 leading-relaxed">
+                    Oyuncunuz kiralık pazarına çıkacak. Diğer takımlar bu oyuncuyu kiralayabilir.
+                    Kiralama gerçekleştiğinde{' '}<span className="text-cyan-400 font-bold">10 Kredi</span>{' '}sistem komisyonu olarak kiracıdan düşülecek.
+                    <span className="text-cyan-400 font-bold"> Kiralık ücret (Euro)</span>{' '}kiralanan takıma ödenecek.
+                  </p>
+                </div>
+              </div>
+
+              {/* Daily Rental Fee Input (Euro) */}
               <div className="space-y-2">
                 <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block">
-                  Kiralık Ücret (Euro) — Alıcıdan satıcıya ödenecek
+                  Günlük Kiralık Ücret (Euro)
                 </label>
                 <input
                   type="number"
                   value={loanFeeEuro}
                   onChange={(e) => setLoanFeeEuro(Number(e.target.value))}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-base font-black text-cyan-400 focus:outline-none focus:border-cyan-500 transition-all"
+                  min={0}
+                  className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-base font-black text-cyan-400 focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-white/10"
+                  placeholder="Günlük ücret girin..."
                 />
-                <div className="flex gap-2">
+                <div className="flex gap-1.5">
                   {[0.10, 0.15, 0.20, 0.30].map(pct => {
                     const suggested = calculateLoanFeeEuro(marketValue, 1, pct);
                     return (
                       <button
                         key={pct}
                         onClick={() => setLoanFeeEuro(suggested)}
-                        className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-[8px] font-black uppercase tracking-wider rounded-lg border border-white/5 transition-all"
+                        className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-[8px] font-black uppercase tracking-wider rounded-lg border border-white/5 transition-all text-white/50 hover:text-white/80"
                       >
-                        %{Math.round(pct * 100)} = {formatCurrency(suggested)}
+                        %{Math.round(pct * 100)}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Info Box */}
-              <div className="bg-cyan-500/5 border border-cyan-500/10 rounded-xl p-3 space-y-1.5">
-                <div className="flex items-start gap-2">
-                  <AlertCircle size={12} className="text-cyan-400 mt-0.5 shrink-0" />
-                  <p className="text-[9px] text-white/50 leading-relaxed">
-                    Oyuncunuz kiralık pazarına çıkacak. Diğer takımlar bu oyuncuyu kiralayabilir.
-                    Kiralama gerçekleştiğinde <span className="text-cyan-400 font-bold">10 Kredi</span> sistem komisyonu olarak kiracıdan düşülecek.
-                    <span className="text-cyan-400 font-bold"> Kiralık ücret (Euro)</span> alıcıdan size ödenecek.
-                  </p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Timer size={12} className="text-amber-400 mt-0.5 shrink-0" />
-                  <p className="text-[9px] text-white/50 leading-relaxed">
-                    Sezon sonunda oyuncu otomatik olarak takımınıza geri dönecek.
-                  </p>
+              {/* Duration Input (Weeks) */}
+              <div className="space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block">
+                  Süre (Hafta)
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={1}
+                    max={34}
+                    value={loanWeeks}
+                    onChange={(e) => setLoanWeeks(Number(e.target.value))}
+                    className="flex-1 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-cyan-500"
+                  />
+                  <div className="flex items-center gap-1.5 min-w-[70px] justify-end">
+                    <input
+                      type="number"
+                      min={1}
+                      max={34}
+                      value={loanWeeks}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        if (v >= 1 && v <= 34) setLoanWeeks(v);
+                      }}
+                      className="w-12 bg-black/50 border border-white/10 rounded-lg p-1.5 text-center text-sm font-black text-cyan-400 focus:outline-none focus:border-cyan-500/50 transition-all"
+                    />
+                    <span className="text-[9px] text-white/30 font-bold">hafta</span>
+                  </div>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-1">
                 <button
                   onClick={() => setShowLoanForm(false)}
                   className="flex-1 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/10 transition-all"
@@ -1529,38 +1725,39 @@ export default function PlayerDetailModal({
                 <button
                   onClick={async () => {
                     if (!profileId) {
-                      alert('Profil ID bulunamadı. Lütfen sayfayı yenileyin.');
+                      toastError('Profil ID bulunamadı. Lütfen sayfayı yenileyin.');
                       return;
                     }
                     if (!player.id) {
-                      alert('Oyuncu ID bulunamadı.');
+                      toastError('Oyuncu ID bulunamadı.');
+                      return;
+                    }
+                    if (loanFeeEuro <= 0) {
+                      toastError('Kiralık ücret sıfırdan büyük olmalıdır.');
                       return;
                     }
                     setIsSendingLoan(true);
                     try {
-                      console.log('[Loan] Sending to /api/rental/create-listing:', { playerId: player.id, dailyCost: loanFeeEuro, ownerTeamId: profileId, durationWeeks: loanWeeks });
-                      const res = await fetch('/api/rental/create-listing', {
+                      const res = await fetch('/api/rental/list', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                           playerId: player.id,
-                          dailyCost: loanFeeEuro,
                           ownerTeamId: profileId,
+                          dailyCost: loanFeeEuro,
                           durationWeeks: loanWeeks,
                         }),
                       });
                       const data = await res.json();
-                      console.log('[Loan] API response:', data);
                       if (data.success) {
-                        alert(`${toTitleCase(player.name)} kiralık pazarına çıkarıldı!`);
+                        toastSuccess(`${toTitleCase(player.name)} kiralık pazarına çıkarıldı!`);
                         setShowLoanForm(false);
                       } else {
-                        const debugInfo = data.debug ? `\n\nHata Ayıklama: ${JSON.stringify(data.debug)}` : '';
-                        alert(data.error || 'Kiralık pazara çıkarılamadı.' + debugInfo);
+                        toastError(data.userMessage || data.error || 'Kiralık pazara çıkarılamadı.');
                       }
                     } catch (err) {
                       console.error('[Loan] Exception:', err);
-                      alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                      toastError('Bir hata oluştu. Lütfen tekrar deneyin.');
                     } finally {
                       setIsSendingLoan(false);
                     }
@@ -1576,13 +1773,13 @@ export default function PlayerDetailModal({
                   ) : (
                     <>
                       <Globe size={14} />
-                      Kiralık Pazara Çıkar
+                      Onayla
                     </>
                   )}
                 </button>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
       </motion.div>
     </motion.div>
