@@ -3,6 +3,10 @@
  * Oyuncuyu kiralık listesine ekle (rental_listings tablosu)
  *
  * Body: { playerId, ownerTeamId, dailyCost, durationWeeks }
+ *
+ * DÜZELTME: players tablosundan sadece temel kolonları çek,
+ * is_on_loan_market gibi olmayan kolonları sorgulama.
+ * Sadece rental_listings ve loans tablolarına yaz.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -10,21 +14,21 @@ import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   if (!isSupabaseConfigured()) {
-    console.error('[POST /api/rental/list] Supabase is not configured. Check environment variables (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY).');
+    console.error('[POST /api/rental/list] Supabase is not configured.');
     return NextResponse.json({
+      success: false,
       error: 'Supabase yapılandırılmamış',
-      userMessage: 'Sistem bağlantısı yapılandırılmamış. Lütfen sayfayı yenileyip tekrar deneyin veya yöneticiyle iletişime geçin.',
-      debug: 'Supabase environment variables missing',
+      userMessage: 'Sistem bağlantısı yapılandırılmamış. Lütfen sayfayı yenileyip tekrar deneyin.',
     }, { status: 500 });
   }
 
   const supabase = getSupabase();
   if (!supabase) {
-    console.error('[POST /api/rental/list] Supabase client could not be created. getSupabase() returned null.');
+    console.error('[POST /api/rental/list] Supabase client null.');
     return NextResponse.json({
+      success: false,
       error: 'Supabase istemcisi oluşturulamadı',
       userMessage: 'Veritabanı bağlantısı sağlanamadı. Lütfen sayfayı yenileyip tekrar deneyin.',
-      debug: 'getSupabase() returned null',
     }, { status: 500 });
   }
 
@@ -32,179 +36,150 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { playerId, ownerTeamId, dailyCost = 0, durationWeeks = 17 } = body;
 
+    console.log('[POST /api/rental/list] Request:', { playerId, ownerTeamId, dailyCost, durationWeeks });
+
     if (!playerId) {
-      console.warn('[POST /api/rental/list] Missing playerId in request body.', { body });
       return NextResponse.json({
+        success: false,
         error: 'playerId zorunlu',
         userMessage: 'Oyuncu bilgisi eksik. Lütfen sayfayı yenileyip tekrar deneyin.',
-        debug: 'playerId is required but was not provided',
       }, { status: 400 });
     }
 
     if (typeof durationWeeks !== 'number' || durationWeeks < 1 || durationWeeks > 34) {
-      console.warn('[POST /api/rental/list] Invalid durationWeeks:', durationWeeks, 'Must be 1-34.');
       return NextResponse.json({
+        success: false,
         error: 'Kiralama süresi 1-34 hafta arasında olmalıdır',
-        userMessage: 'Kiralama süresi 1 ile 34 hafta arasında olmalıdır. Lütfen geçerli bir süre girin.',
-        debug: `durationWeeks=${durationWeeks}, must be 1-34`,
+        userMessage: 'Kiralama süresi 1 ile 34 hafta arasında olmalıdır.',
       }, { status: 400 });
     }
 
-    // Oyuncuyu getir — önce tüm kolonlarla dene, hata olursa sadece temel kolonlarla tekrar dene
-    let player: any = null;
-
-    const fullResult = await supabase
+    // ── Oyuncuyu getir — SADECE temel kolonlar ──
+    // is_on_loan_market, loan_status gibi kolonlar players tablosunda OLMAYABİLİR
+    const { data: player, error: playerError } = await supabase
       .from('players')
-      .select('id, name, profile_id, team_name, is_on_loan_market, loan_status, market_value')
+      .select('id, name, profile_id, team_name, market_value')
       .eq('id', playerId)
       .maybeSingle();
 
-    if (fullResult.error) {
-      // Kolonlar henüz yoksa — sadece temel kolonlarla tekrar dene
-      console.warn('[POST /api/rental/list] Full select failed, trying basic select:', fullResult.error.message, { playerId });
-      const basicResult = await supabase
-        .from('players')
-        .select('id, name, profile_id, team_name, market_value')
-        .eq('id', playerId)
-        .maybeSingle();
-
-      if (basicResult.error || !basicResult.data) {
-        console.error('[POST /api/rental/list] Player not found after basic select. playerId:', playerId, 'error:', basicResult.error?.message, 'data:', basicResult.data);
-        return NextResponse.json({
-          error: 'Oyuncu bulunamadı',
-          userMessage: 'Oyuncu bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin.',
-          debug: { playerId, fullSelectError: fullResult.error.message, basicSelectError: basicResult.error?.message || null },
-        }, { status: 404 });
-      }
-
-      player = { ...basicResult.data, is_on_loan_market: false, loan_status: null };
-    } else {
-      player = fullResult.data;
+    if (playerError) {
+      console.error('[POST /api/rental/list] Player query error:', playerError.message);
+      return NextResponse.json({
+        success: false,
+        error: 'Oyuncu sorgulanamadı',
+        userMessage: 'Teknik bir hata oluştu, daha sonra tekrar deneyin.',
+        debug: playerError.message,
+      }, { status: 500 });
     }
 
     if (!player) {
-      console.error('[POST /api/rental/list] Player is null after query. playerId:', playerId, 'This should not happen — check Supabase data integrity.');
+      console.error('[POST /api/rental/list] Player not found. playerId:', playerId);
       return NextResponse.json({
+        success: false,
         error: 'Oyuncu bulunamadı',
         userMessage: 'Oyuncu bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin.',
-        debug: { playerId, ownerTeamId, reason: 'player_null_after_query' },
       }, { status: 404 });
     }
 
-    // Zaten kiralık pazarında mı?
-    if (player.is_on_loan_market) {
-      console.warn('[POST /api/rental/list] Player already on loan market. playerId:', playerId, 'playerName:', player.name);
+    // ── Aynı oyuncu zaten kiralık listesinde mi? ──
+    // rental_listings tablosundan kontrol et (players tablosundaki kolonlara güvenme)
+    const { data: existingListing, error: existingError } = await supabase
+      .from('rental_listings')
+      .select('id, status')
+      .eq('player_id', playerId)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (existingError && !isTableNotFoundError(existingError.message)) {
+      console.warn('[POST /api/rental/list] Could not check existing listings:', existingError.message);
+      // Non-critical — devam et
+    }
+
+    if (existingListing) {
+      console.warn('[POST /api/rental/list] Player already has active listing. playerId:', playerId);
       return NextResponse.json({
+        success: false,
         error: 'Bu oyuncu zaten kiralık pazarında',
-        userMessage: 'Bu oyuncu zaten kiralık pazarında listelenmiş. Aynı oyuncuyu tekrar ekleyemezsiniz.',
-        debug: { playerId, playerName: player.name, is_on_loan_market: true },
+        userMessage: 'Bu oyuncu zaten kiralık pazarında listelenmiş.',
       }, { status: 400 });
     }
 
-    if (player.loan_status === 'active') {
-      console.warn('[POST /api/rental/list] Player is currently on loan. playerId:', playerId, 'playerName:', player.name, 'loan_status:', player.loan_status);
-      return NextResponse.json({
-        error: 'Bu oyuncu şu anda kirada',
-        userMessage: 'Bu oyuncu şu anda başka bir takımda kirada. Kiralama süresi dolana kadar tekrar listelenemez.',
-        debug: { playerId, playerName: player.name, loan_status: player.loan_status },
-      }, { status: 400 });
-    }
-
-    // rental_listings tablosuna ekle — duration_weeks kolonu yoksa tekrar dene
-    let listingId: string | null = null;
-    const baseListingPayload = {
+    // ── rental_listings tablosuna ekle ──
+    const listingPayload = {
       player_id: playerId,
       owner_team_id: ownerTeamId || player.team_name || player.profile_id,
       daily_cost: dailyCost,
+      duration_weeks: durationWeeks,
       status: 'active',
     };
 
+    console.log('[POST /api/rental/list] Inserting rental listing:', listingPayload);
+
     const { data: listing, error: insertError } = await supabase
       .from('rental_listings')
-      .insert({
-        ...baseListingPayload,
-        duration_weeks: durationWeeks,
-      })
+      .insert(listingPayload)
       .select()
       .single();
 
-    // Tablo yokluğunu tespit etmek için yardımcı fonksiyon
-    const isTableNotFoundError = (msg: string): boolean =>
-      /relation .* does not exist|could not find|not found|does not exist/i.test(msg);
-
     if (insertError) {
-      console.warn('[POST /api/rental/list] rental_listings insert with duration_weeks failed:', insertError.message, { playerId, durationWeeks, dailyCost });
+      console.error('[POST /api/rental/list] rental_listings insert failed:', insertError.message, insertError);
 
-      // Tablo mevcut değilse — kullanıcıya migration mesajı göster
       if (isTableNotFoundError(insertError.message)) {
-        console.error('[POST /api/rental/list] rental_listings table does not exist. Migration required: supabase/migrations/20260521000002_rental_system.sql');
         return NextResponse.json({
+          success: false,
           error: 'rental_listings tablosu bulunamadı',
-          userMessage: 'Kiralık pazarı sistemi henüz veritabanına yüklenmemiş. Lütfen yöneticinizle iletişime geçin ve 20260521000002_rental_system.sql migration dosyasını çalıştırmasını isteyin.',
-          debug: { playerId, error: insertError.message, hint: 'Run supabase/migrations/20260521000002_rental_system.sql' },
+          userMessage: 'Kiralık pazarı sistemi henüz veritabanına yüklenmemiş. Lütfen Supabase SQL Editor\'de supabase/migrations/20260521000002_rental_system.sql dosyasını çalıştırın.',
+          debug: insertError.message,
         }, { status: 500 });
       }
 
-      // duration_weeks kolonu yoksa tekrar dene
-      const { data: fallbackListing, error: fallbackError } = await supabase
-        .from('rental_listings')
-        .insert(baseListingPayload)
-        .select()
-        .single();
+      // Kolon hatası olabilir — duration_weeks olmadan dene
+      if (/column.*does not exist/i.test(insertError.message)) {
+        console.warn('[POST /api/rental/list] Column missing, trying without duration_weeks:', insertError.message);
+        const fallbackPayload = {
+          player_id: playerId,
+          owner_team_id: ownerTeamId || player.team_name || player.profile_id,
+          daily_cost: dailyCost,
+          status: 'active',
+        };
 
-      if (fallbackError) {
-        console.error('[POST /api/rental/list] rental_listings insert error (both attempts failed). playerId:', playerId, 'firstError:', insertError.message, 'fallbackError:', fallbackError.message);
+        const { data: fallbackListing, error: fallbackError } = await supabase
+          .from('rental_listings')
+          .insert(fallbackPayload)
+          .select()
+          .single();
 
-        if (isTableNotFoundError(fallbackError.message)) {
+        if (fallbackError) {
+          console.error('[POST /api/rental/list] Fallback insert also failed:', fallbackError.message);
           return NextResponse.json({
-            error: 'rental_listings tablosu bulunamadı',
-            userMessage: 'Kiralık pazarı sistemi henüz veritabanına yüklenmemiş. Lütfen yöneticinizle iletişime geçin ve 20260521000002_rental_system.sql migration dosyasını çalıştırmasını isteyin.',
-            debug: { playerId, firstError: insertError.message, fallbackError: fallbackError.message, hint: 'Run supabase/migrations/20260521000002_rental_system.sql' },
+            success: false,
+            error: 'İlan oluşturulamadı',
+            userMessage: 'Teknik bir hata oluştu, daha sonra tekrar deneyin.',
+            debug: fallbackError.message,
           }, { status: 500 });
         }
 
-        // Diğer hatalar — rental_listings tablosu olmadan da devam et
-      } else {
-        listingId = fallbackListing?.id;
-        console.info('[POST /api/rental/list] rental_listings insert succeeded (fallback without duration_weeks). listingId:', listingId);
-      }
-    } else {
-      listingId = listing?.id;
-      console.info('[POST /api/rental/list] rental_listings insert succeeded. listingId:', listingId);
-    }
-
-    // Oyuncuyu kiralık pazarına çıkar — önce tüm kolonlarla güncelle, hata olursa sadece temel kolonlarla
-    const fullUpdatePayload = {
-      is_on_loan_market: true,
-      loan_fee: dailyCost,
-      loan_owner_profile_id: ownerTeamId || player.profile_id,
-      loan_status: 'listed',
-    };
-
-    const { error: fullUpdateError } = await supabase
-      .from('players')
-      .update(fullUpdatePayload)
-      .eq('id', playerId);
-
-    if (fullUpdateError) {
-      console.warn('[POST /api/rental/list] Full player update failed, trying minimal update. playerId:', playerId, 'error:', fullUpdateError.message, 'Missing columns may include: is_on_loan_market, loan_fee, loan_owner_profile_id, loan_status');
-      // Sadece mevcut kolonları güncelle
-      const { error: basicUpdateError } = await supabase
-        .from('players')
-        .update({ market_value: player.market_value }) // En az bir kolon güncellenmeli
-        .eq('id', playerId);
-
-      if (basicUpdateError) {
-        console.error('[POST /api/rental/list] Player update error (both attempts failed). playerId:', playerId, 'fullUpdateError:', fullUpdateError.message, 'basicUpdateError:', basicUpdateError.message, 'Player may not exist or RLS policy blocking update.');
+        console.log('[POST /api/rental/list] Fallback insert succeeded:', fallbackListing?.id);
         return NextResponse.json({
-          error: 'Oyuncu güncellenemedi',
-          userMessage: 'Oyuncu kiralık listesine eklenirken güncelleme başarısız oldu. Lütfen sayfayı yenileyip tekrar deneyin.',
-          debug: { playerId, fullUpdateError: fullUpdateError.message, basicUpdateError: basicUpdateError.message },
-        }, { status: 500 });
+          success: true,
+          message: `${player.name || 'Oyuncu'} kiralık listesine eklendi`,
+          dailyCost,
+          durationWeeks,
+          listingId: fallbackListing?.id,
+        });
       }
+
+      return NextResponse.json({
+        success: false,
+        error: 'İlan oluşturulamadı',
+        userMessage: 'Teknik bir hata oluştu, daha sonra tekrar deneyin.',
+        debug: insertError.message,
+      }, { status: 500 });
     }
 
-    // loans tablosuna da kayıt oluştur
+    console.log('[POST /api/rental/list] Listing created:', listing?.id);
+
+    // ── loans tablosuna da kayıt oluştur (non-critical) ──
     const { error: loanInsertError } = await supabase.from('loans').insert({
       player_id: playerId,
       owner_team_id: ownerTeamId || player.team_name || player.profile_id,
@@ -214,12 +189,27 @@ export async function POST(request: NextRequest) {
     });
 
     if (loanInsertError) {
-      // loans tablosu yoksa non-critical uyarı ver ama başarısız olma
       if (isTableNotFoundError(loanInsertError.message)) {
-        console.warn('[POST /api/rental/list] loans table does not exist (non-critical). playerId:', playerId, 'hint: Run migration 20260521000002_rental_system.sql');
+        console.warn('[POST /api/rental/list] loans table does not exist (non-critical). Run migration 20260521000002_rental_system.sql');
       } else {
-        console.warn('[POST /api/rental/list] loans insert error (non-critical). playerId:', playerId, 'error:', loanInsertError.message);
+        console.warn('[POST /api/rental/list] loans insert error (non-critical):', loanInsertError.message);
       }
+    }
+
+    // ── players tablosunu güncelle — sadece mevcut kolonlar ──
+    // is_on_loan_market vb. kolonlar migration çalıştırılmışsa güncellenir
+    const { error: playerUpdateError } = await supabase
+      .from('players')
+      .update({
+        is_on_loan_market: true,
+        loan_status: 'listed',
+        loan_fee: dailyCost,
+      })
+      .eq('id', playerId);
+
+    if (playerUpdateError) {
+      // Kolonlar yoksa non-critical — rental_listings ana kaynaktır
+      console.warn('[POST /api/rental/list] Player update skipped (columns may not exist):', playerUpdateError.message);
     }
 
     return NextResponse.json({
@@ -227,14 +217,21 @@ export async function POST(request: NextRequest) {
       message: `${player.name || 'Oyuncu'} kiralık listesine eklendi`,
       dailyCost,
       durationWeeks,
-      listingId,
+      listingId: listing?.id,
     });
+
   } catch (err) {
     console.error('[POST /api/rental/list] Unhandled exception:', err instanceof Error ? err.message : String(err), err instanceof Error ? err.stack : '');
     return NextResponse.json({
+      success: false,
       error: 'Bir hata oluştu',
-      userMessage: 'Oyuncu kiralık listesine eklenirken beklenmeyen bir hata oluştu. Lütfen sayfayı yenileyip tekrar deneyin.',
+      userMessage: 'Oyuncu kiralık listesine eklenirken beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.',
       debug: err instanceof Error ? err.message : String(err),
     }, { status: 500 });
   }
+}
+
+// Tablo yokluğunu tespit etmek için yardımcı fonksiyon
+function isTableNotFoundError(msg: string): boolean {
+  return /relation .* does not exist|could not find|not found|does not exist/i.test(msg);
 }
