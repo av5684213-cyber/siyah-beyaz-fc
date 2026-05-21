@@ -66,12 +66,15 @@ export default function TrainingAcademy({
   const [hasAnalyst, setHasAnalyst] = useState(false);
   const [analystStars, setAnalystStars] = useState(0);
   const [analystLoading, setAnalystLoading] = useState(true);
+  const [assistantCoachCount, setAssistantCoachCount] = useState(0);
+  const [staffLoading, setStaffLoading] = useState(true);
 
-  // ── Check if user has an analyst staff member ──
+  // ── Check if user has analyst and assistant_coach staff members ──
   useEffect(() => {
-    const checkAnalyst = async () => {
+    const checkStaff = async () => {
       if (!profile?.id) {
         setAnalystLoading(false);
+        setStaffLoading(false);
         return;
       }
       try {
@@ -82,13 +85,16 @@ export default function TrainingAcademy({
         const analyst = staffList.find((s: any) => s.type === 'analyst');
         setHasAnalyst(!!analyst);
         setAnalystStars(analyst?.stars || 0);
+        const assistantCoaches = staffList.filter((s: any) => s.type === 'assistant_coach');
+        setAssistantCoachCount(assistantCoaches.length);
       } catch (err) {
-        console.error('[TrainingAcademy] Analyst check error:', err);
+        console.error('[TrainingAcademy] Staff check error:', err);
       } finally {
         setAnalystLoading(false);
+        setStaffLoading(false);
       }
     };
-    checkAnalyst();
+    checkStaff();
   }, [profile?.id]);
 
   // ── Generate analyst recommendation based on squad data ──
@@ -145,78 +151,71 @@ export default function TrainingAcademy({
   // ── Position group sort order ──
   const POS_GROUP_ORDER: Record<string, number> = { GK: 0, DEF: 1, MID: 2, FWD: 3, SUB: 4 };
 
+  // ── Helper: get sort value for a player by key ──
+  const getSortValue = useCallback((p: Player, key: typeof sortBy): any => {
+    switch (key) {
+      case 'name': return p.name;
+      case 'position': return p.position;
+      case 'total': return p.rating * 11.2;
+      case 'Klt': return (p as any).potential || p.potential || p.rating;
+      case 'Klc': return (p as any).goalkeeping || p.goalkeeping || (p.position === 'GK' ? p.rating * 1.05 : p.rating * 0.12);
+      case 'Tk': return (p as any).defending || p.defending || p.rating;
+      case 'Pas': return (p as any).passing || p.passing || p.rating;
+      case 'Sut': return (p as any).shooting || p.shooting || p.rating;
+      case 'Kfa': return (p as any).heading || p.heading || p.rating * 0.95;
+      case 'Hız': return (p as any).speed || p.speed || p.rating;
+      case 'Güç': return (p as any).power || p.power || p.rating;
+      case 'Alg': return (p as any).vision || p.vision || p.rating;
+      case 'Top': return (p as any).control || p.control || p.rating;
+      case 'rating': return p.rating;
+      case 'cond': return p.fitness || p.cond || 100;
+      default: return p.rating;
+    }
+  }, []);
+
   // ── Filtered & sorted players ──
   const filteredSquad = useMemo(() => {
     let list = [...(squad || [])];
     if (filterPos !== 'ALL') list = list.filter(p => p.position === filterPos);
     
-    // Primary sort: position group (GK → DEF → MID → FWD), secondary: user-selected sort
+    // When sorting by position: primary = position group, secondary = rating
+    // When sorting by any stat: primary = that stat, secondary = position group (for ties)
     list.sort((a, b) => {
-      // First: sort by position group
-      const posA = getPlayerPos(a as Record<string, unknown>);
-      const posB = getPlayerPos(b as Record<string, unknown>);
-      const groupA = POS_GROUP_ORDER[getPosGroup(posA)] ?? 4;
-      const groupB = POS_GROUP_ORDER[getPosGroup(posB)] ?? 4;
-      if (groupA !== groupB) return groupA - groupB;
-
-      // Then: within same group, sort by user-selected criteria
-      let valA: any = a[sortBy as keyof Player] || 0;
-      let valB: any = b[sortBy as keyof Player] || 0;
-
-      if (sortBy === 'name') {
-        valA = a.name;
-        valB = b.name;
-      } else if (sortBy === 'position') {
-        valA = a.position;
-        valB = b.position;
-      } else if (sortBy === 'total') {
-        valA = a.rating * 11.2;
-        valB = b.rating * 11.2;
-      } else if (sortBy === 'Klt') {
-        valA = (a as any).Klt || a.rating;
-        valB = (b as any).Klt || b.rating;
-      } else if (sortBy === 'Klc') {
-        valA = (a as any).Klc || (a.position === 'GK' ? a.rating * 1.05 : a.rating * 0.12);
-        valB = (b as any).Klc || (b.position === 'GK' ? b.rating * 1.05 : b.rating * 0.12);
-      } else if (sortBy === 'Tk') {
-        valA = (a as any).Tk || a.defending || a.rating;
-        valB = (b as any).Tk || b.defending || b.rating;
-      } else if (sortBy === 'Pas') {
-        valA = (a as any).Pas || a.passing || a.rating;
-        valB = (b as any).Pas || b.passing || b.rating;
-      } else if (sortBy === 'Sut') {
-        valA = (a as any).Sut || a.shooting || a.rating;
-        valB = (b as any).Sut || b.shooting || b.rating;
-      } else if (sortBy === 'Kfa') {
-        valA = (a as any).Kfa || a.rating * 0.95;
-        valB = (b as any).Kfa || b.rating * 0.95;
-      } else if (sortBy === 'Hız') {
-        valA = (a as any).Hız || a.speed || a.rating;
-        valB = (b as any).Hız || b.speed || b.rating;
-      } else if (sortBy === 'Güç') {
-        valA = (a as any).Güç || a.power || a.rating;
-        valB = (b as any).Güç || b.power || b.rating;
-      } else if (sortBy === 'Alg') {
-        valA = (a as any).Alg || a.vision || a.rating;
-        valB = (b as any).Alg || b.vision || b.rating;
-      } else if (sortBy === 'Top') {
-        valA = (a as any).Top || a.control || a.rating;
-        valB = (b as any).Top || b.control || b.rating;
-      } else if (sortBy === 'rating') {
-        valA = a.rating;
-        valB = b.rating;
-      } else if (sortBy === 'cond') {
-        valA = a.fitness || 100;
-        valB = b.fitness || 100;
+      if (sortBy === 'position') {
+        // Position sort: group first, then name
+        const posA = getPlayerPos(a as Record<string, unknown>);
+        const posB = getPlayerPos(b as Record<string, unknown>);
+        const groupA = POS_GROUP_ORDER[getPosGroup(posA)] ?? 4;
+        const groupB = POS_GROUP_ORDER[getPosGroup(posB)] ?? 4;
+        if (groupA !== groupB) return groupA - groupB;
+        return a.name.localeCompare(b.name);
       }
 
+      // Stat sort: primary = selected stat value, secondary = position group for ties
+      const valA = getSortValue(a, sortBy);
+      const valB = getSortValue(b, sortBy);
+
+      let cmp: number;
       if (typeof valA === 'string') {
-        return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        cmp = sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      } else {
+        cmp = sortDirection === 'asc' ? valA - valB : valB - valA;
       }
-      return sortDirection === 'asc' ? valA - valB : valB - valA;
+
+      // If values are equal, break tie by position group then name
+      if (cmp === 0) {
+        const posA = getPlayerPos(a as Record<string, unknown>);
+        const posB = getPlayerPos(b as Record<string, unknown>);
+        const groupA = POS_GROUP_ORDER[getPosGroup(posA)] ?? 4;
+        const groupB = POS_GROUP_ORDER[getPosGroup(posB)] ?? 4;
+        if (groupA !== groupB) return groupA - groupB;
+        return a.name.localeCompare(b.name);
+      }
+
+      return cmp;
     });
     return list;
-  }, [squad, filterPos, sortBy, sortDirection]);
+  }, [squad, filterPos, sortBy, sortDirection, getSortValue]);
 
   const toggleSort = (key: any) => {
     if (sortBy === key) {
@@ -314,17 +313,31 @@ export default function TrainingAcademy({
         </div>
 
         <button 
-          onClick={() => setShowTacticLab(true)}
-          className="group relative flex items-center gap-3 px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] transition-all transform active:scale-95"
+          onClick={() => { if (assistantCoachCount >= 3) setShowTacticLab(true); }}
+          disabled={assistantCoachCount < 3}
+          className={`group relative flex items-center gap-3 px-6 py-2 rounded-lg transition-all transform ${
+            assistantCoachCount >= 3 
+              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] active:scale-95' 
+              : 'bg-gradient-to-r from-gray-700 to-gray-800 cursor-not-allowed opacity-50'
+          }`}
         >
            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
            <div className="relative flex items-center gap-2">
-              <FlaskConical size={16} className="text-white animate-pulse" />
+              {assistantCoachCount < 3 ? (
+                <Lock size={16} className="text-white/40" />
+              ) : (
+                <FlaskConical size={16} className="text-white animate-pulse" />
+              )}
               <div className="flex flex-col items-start leading-none">
                  <span className="text-[10px] font-black text-white uppercase tracking-wider">9v9 LABORATUVARI</span>
                  <span className="text-[6px] text-blue-200 uppercase font-bold tracking-widest">TAKTIK TEST MERKEZİ</span>
               </div>
            </div>
+           {assistantCoachCount < 3 && (
+             <span className="ml-2 text-[6px] text-amber-400/80 font-bold uppercase tracking-wider whitespace-nowrap">
+               3. Yardımcı Antrenör gerekir
+             </span>
+           )}
         </button>
 
         <div className="flex items-center gap-2">
@@ -416,7 +429,25 @@ export default function TrainingAcademy({
               className="flex-1 py-2.5 bg-teal-500/5 border border-teal-500/10 text-teal-400/50 text-[8px] font-black uppercase tracking-widest hover:bg-teal-500/10 active:scale-95 transition-all flex items-center justify-center gap-2">
               <Heart size={10}/> DİNLENME (+20)
             </button>
+            <button 
+              onClick={handleRunSession}
+              disabled={assistantCoachCount < 2}
+              className={`flex-1 py-2.5 border text-[8px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                assistantCoachCount >= 2 
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 active:scale-95' 
+                  : 'bg-white/[0.02] border-white/5 text-white/20 cursor-not-allowed opacity-50'
+              }`}
+            >
+              {assistantCoachCount < 2 ? <Lock size={10} /> : <Dumbbell size={10} />}
+              ANTRENMANI ÇALIŞTIR
+            </button>
           </div>
+          {assistantCoachCount < 2 && (
+            <div className="flex items-center gap-2 px-1">
+              <Lock size={10} className="text-amber-400/60" />
+              <span className="text-[7px] text-amber-400/80 font-bold uppercase tracking-wider">Bu özellik için 2. Yardımcı Antrenör gerekir</span>
+            </div>
+          )}
 
           <div className="flex gap-2 text-[6px] font-black uppercase tracking-wider text-white/15">
             <span>U21 Bonus: <span className="text-emerald-400/50">+25%</span></span>
@@ -675,10 +706,22 @@ export default function TrainingAcademy({
 
         {/* Content */}
         <div className="p-4 bg-zinc-900/50">
-          {analystLoading ? (
+          {staffLoading || analystLoading ? (
             <div className="flex items-center gap-2 text-white/30">
               <div className="w-4 h-4 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
               <span className="text-[10px] font-bold uppercase">Analiz yapiliyor...</span>
+            </div>
+          ) : assistantCoachCount < 1 ? (
+            <div className="flex items-start gap-3 px-4 py-3 bg-amber-500/5 border border-amber-500/15 rounded-lg">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                <Lock size={14} className="text-amber-400" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-amber-300/80 uppercase tracking-wider mb-1">Yardımcı Antrenör gerekli</p>
+                <p className="text-[9px] text-white/30 leading-relaxed">
+                  Bu özellik için Yardımcı Antrenör işe almalısınız. Yerleşke → Personel
+                </p>
+              </div>
             </div>
           ) : !hasAnalyst ? (
             <div className="flex items-start gap-3 px-4 py-3 bg-amber-500/5 border border-amber-500/15 rounded-lg">

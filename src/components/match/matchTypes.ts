@@ -19,6 +19,9 @@ export interface FixtureData {
   season_id?: string;
   is_friendly?: boolean;
   is_quick_match?: boolean;
+  referee_name?: string | null;
+  referee_personality?: string | null;
+  referee_strictness?: number | null;
 }
 
 export interface MatchEventRow {

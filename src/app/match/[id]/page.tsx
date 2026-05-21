@@ -35,6 +35,8 @@ import EventList from '@/components/match/EventList';
 import PlayerStatsTable from '@/components/match/PlayerStatsTable';
 import LiveStrategyPanel from '@/components/match/LiveStrategyPanel';
 import type { FixtureData, MatchEventRow, PlayerStatRow } from '@/components/match/matchTypes';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { REFEREE_PERSONALITIES, type RefereePersonality } from '@/lib/fm/referee';
 
 // ═══════════════════════════════════════════════════════════════
 // Types (sadece MatchPage'e özel olanlar burada kalır)
@@ -247,6 +249,9 @@ export default function MatchPage() {
           home_team_id,
           away_team_id,
           season_id,
+          referee_name,
+          referee_personality,
+          referee_strictness,
           home:league_teams!home_team_id (name, id, is_bot, profile_id),
           away:league_teams!away_team_id (name, id, is_bot, profile_id)
         `)
@@ -615,6 +620,56 @@ export default function MatchPage() {
           awayScore={fixture.away_score}
           status={matchStatus}
         />
+
+        {/* ═══ Hakem Bilgisi ═══ */}
+        {fixture.referee_name && (() => {
+          const refPersonality = fixture.referee_personality as RefereePersonality | undefined;
+          const refConfig = refPersonality ? REFEREE_PERSONALITIES[refPersonality] : null;
+          const strictness = fixture.referee_strictness;
+          const strictLabel = !strictness ? '' : strictness >= 75 ? 'Çok Sert' : strictness >= 55 ? 'Sert' : strictness >= 40 ? 'Dengeli' : strictness >= 25 ? 'Yumuşak' : 'Çok Yumuşak';
+          // Parse the referee_name to extract just the name part (strip inline character type if present)
+          const rawName = fixture.referee_name;
+          // Format like "Arda Batur Ev Sahibi (Sert)" — extract just "Arda Batur"
+          const knownTypes = ['Ev Sahibi', 'Sert', 'Katılcı', 'Adil', 'Dengeli', 'Hoşgörülü', 'Değişken', 'VAR Meraklısı', 'Yumuşak', 'Çok Sert', 'Çok Yumuşak'];
+          let cleanName = rawName;
+          for (const t of knownTypes) {
+            cleanName = cleanName.replace(t, '');
+          }
+          cleanName = cleanName.replace(/\s*\([^)]*\)\s*/g, '').replace(/\s+/g, ' ').trim();
+
+          return (
+            <div className="flex items-center justify-center gap-2 py-1">
+              <span className="text-white/20 text-[9px] font-bold uppercase tracking-widest">Hakem</span>
+              <span className="text-white/60 text-xs font-bold">{cleanName}</span>
+              {refConfig && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-white/10 text-white/30 text-[10px] cursor-help hover:text-white/60 hover:border-white/20 transition-colors">ⓘ</span>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="bg-zinc-900 border border-white/10 text-white/80 px-3 py-2 rounded-lg shadow-xl max-w-[220px]"
+                    sideOffset={6}
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">{refConfig.emoji}</span>
+                        <span className="text-[10px] font-black text-white/90 uppercase tracking-wider">{refConfig.label_tr}</span>
+                      </div>
+                      <p className="text-[9px] text-white/50 leading-relaxed">{refConfig.description_tr}</p>
+                      {strictLabel && (
+                        <div className="pt-1 border-t border-white/10 mt-1">
+                          <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Sertlik: </span>
+                          <span className="text-[9px] font-bold text-amber-400/70">{strictLabel}</span>
+                        </div>
+                      )}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ═══ Planlanmış Maç: Geri Sayım ═══ */}
         {isScheduled && (

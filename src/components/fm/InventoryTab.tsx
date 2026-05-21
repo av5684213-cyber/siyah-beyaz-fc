@@ -190,6 +190,7 @@ function getDefaultInventory(profile: any): InventoryItem[] {
 
 export default function InventoryTab({ userId, onMarketRedirect }: { userId?: string; onMarketRedirect: () => void }) {
   const { profile, squad, setSquad, setProfile } = useFM();
+  const [showComingSoon, setShowComingSoon] = useState(true);
   const [activeCategory, setActiveCategory] = useState<ItemCategory | 'all'>('all');
   const [usedItem, setUsedItem] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -315,6 +316,45 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
       exit={{ opacity: 0, y: -10 }}
       className="space-y-6 relative"
     >
+      {/* Yakında Coming Soon Overlay */}
+      <AnimatePresence>
+        {showComingSoon && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center rounded-2xl"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="max-w-sm w-full mx-4 p-8 rounded-3xl border border-amber-500/25 bg-gradient-to-b from-zinc-900 to-zinc-950 text-center shadow-[0_0_60px_rgba(245,158,11,0.1)]"
+            >
+              <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
+                <Construction size={32} className="text-amber-400" />
+              </div>
+              <h3 className="text-xl font-black italic uppercase tracking-tight text-amber-300 mb-3">
+                🚧 Yakında!
+              </h3>
+              <p className="text-sm text-white/50 leading-relaxed mb-6">
+                Bu bölüm şu anda geliştirme aşamasındadır. Yakında aktif olacaktır.
+              </p>
+              <button
+                onClick={() => setShowComingSoon(false)}
+                className="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all active:scale-95"
+              >
+                Kapat
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Underlying content - disabled when overlay is active */}
+      <div className={showComingSoon ? 'pointer-events-none select-none' : ''}>
       {/* Toast Notification */}
       <AnimatePresence>
         {toast && (
@@ -479,6 +519,7 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
           <p className="text-xs text-white/20 font-bold uppercase">Bu kategoride eşya yok</p>
         </div>
       )}
+      </div>{/* end pointer-events wrapper */}
     </motion.div>
   );
 }

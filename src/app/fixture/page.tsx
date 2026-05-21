@@ -729,6 +729,7 @@ function MatchDetailsPanel({
   fixture: FixtureListItem;
   teamName: string;
 }) {
+  const router = useRouter();
   const [events, setEvents] = useState<MatchEventRow[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [friendlyLoading, setFriendlyLoading] = useState(false);
@@ -976,26 +977,30 @@ function MatchDetailsPanel({
         </div>
       )}
 
-      {/* ── Go to Match Page Button ── */}
+      {/* ── İzle / CANLI İZLE Button ── */}
       {finished && (
         <div className="pt-1">
-          <GoToMatchButton fixtureId={fixture.id} />
+          <button
+            onClick={() => router.push(`/match/${fixture.id}`)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white/40 text-xs font-black uppercase tracking-widest hover:bg-white/10 hover:text-white/60 transition-all active:scale-[0.98]"
+          >
+            <Trophy size={14} />
+            İZLE
+          </button>
+        </div>
+      )}
+      {live && (
+        <div className="pt-1">
+          <button
+            onClick={() => router.push(`/match/${fixture.id}`)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-black uppercase tracking-widest hover:bg-red-500/30 hover:border-red-500/50 transition-all active:scale-[0.98]"
+          >
+            <Circle size={10} className="fill-red-400 animate-pulse" />
+            CANLI İZLE
+          </button>
         </div>
       )}
     </motion.div>
-  );
-}
-
-function GoToMatchButton({ fixtureId }: { fixtureId: string }) {
-  const router = useRouter();
-  return (
-    <button
-      onClick={() => router.push(`/match/${fixtureId}`)}
-      className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/25 text-amber-400 text-xs font-black uppercase tracking-widest hover:from-amber-500/20 hover:to-amber-600/20 transition-all active:scale-[0.98]"
-    >
-      <Trophy size={14} />
-      Maç Detayına Git
-    </button>
   );
 }
 
