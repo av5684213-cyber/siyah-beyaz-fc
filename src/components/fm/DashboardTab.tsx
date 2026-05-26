@@ -29,6 +29,7 @@ import type { Player } from '@/lib/fm/types';
 
 import { toTitleCase } from '@/lib/fm/ui-helpers';
 import { useFM } from '@/lib/fm/GameContext';
+import { isSupabaseConfigured, getSupabase } from '@/lib/supabase';
 import LiveMatchAlert from '@/components/fm/LiveMatchAlert';
 import LeagueInfoCard from '@/components/fm/LeagueInfoCard';
 import { calculateAttendance, calculateStadiumCapacity, calculateMatchRevenueLegacy } from '@/lib/fm/financialModel';
@@ -407,6 +408,9 @@ export function DashboardTab({
   // ═══ Son Antrenman Raporu State ═══
   const [recentTrainings, setRecentTrainings] = useState<TrainingRecord[]>([]);
 
+  // ═══ Oynanan Maç Sayısı State ═══
+  const [matchesPlayed, setMatchesPlayed] = useState(0);
+
   // Antrenman verilerini yükle
   const loadTrainings = useCallback(async () => {
     if (!profile?.id) return;
@@ -426,6 +430,39 @@ export function DashboardTab({
   useEffect(() => {
     loadTrainings();
   }, [loadTrainings]);
+
+  // Kullanıcının oynadığı maç sayısını çek (sezon bitiş kriteri için)
+  useEffect(() => {
+    if (!profile?.id || !isSupabaseConfigured()) return;
+    const supabase = getSupabase();
+    if (!supabase) return;
+
+    const fetchMatchesPlayed = async () => {
+      try {
+        // Kullanıcının ligdeki takım ID'sini bul
+        const { data: team } = await supabase
+          .from('league_teams')
+          .select('id')
+          .eq('profile_id', profile.id)
+          .maybeSingle();
+
+        if (!team?.id) return;
+
+        // Bu sezon oynadığı maç sayısını al
+        const { data: standing } = await supabase
+          .from('league_standings')
+          .select('played')
+          .eq('team_id', team.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        setMatchesPlayed(standing?.played || 0);
+      } catch { /* sessizce geç */ }
+    };
+
+    fetchMatchesPlayed();
+  }, [profile?.id]);
 
   return (
     <motion.div key="dash" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
@@ -790,12 +827,18 @@ export function DashboardTab({
              { id: 'fixtures', label: 'Maç Takvimi', icon: CalendarDays, color: 'hover:bg-zinc-800', action: () => onNavigate('fixtures') },
              { id: 'training', label: 'Antrenman', icon: Dumbbell, color: 'hover:bg-zinc-800', action: () => onRunTraining('morning') },
              { id: 'tactics', label: 'Taktik Masası', icon: Settings, color: 'hover:bg-zinc-800', action: () => onNavigate('tactics') },
-            ...( (profile?.current_day || 0) >= 34 ? [{
+            ...( matchesPlayed >= 34 ? [{
               id: 'evolve',
               label: 'Yeni Sezon',
               icon: CalendarDays,
               color: 'hover:bg-amber-600',
               action: onNextSeason || (() => {}),
+            }] : matchesPlayed > 0 ? [{
+              id: 'evolve',
+              label: `Yeni Sezon (${34 - matchesPlayed} maç kaldı)`,
+              icon: CalendarDays,
+              color: 'hover:bg-zinc-800 opacity-40',
+              action: () => {}, // disabled — henüz 34 maç oynanmadı
             }] : []),
            ].map((btn) => (
              <button 
