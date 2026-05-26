@@ -66,3 +66,31 @@ Stage Summary:
 - TypeScript compilation passes for all modified files (MarketTab.tsx errors are pre-existing)
 - Dev server running at localhost:3000
 - UNIQUE constraint SQL migration needs manual application via Supabase SQL Editor
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: SIYAH BEYAZ FC — Sezon Yapısı, Ödüller, Kupa ve Antrenman (Prompts 1-4)
+
+Work Log:
+- PROMPT 1: Changed season-end cron from Sunday ("0 0 * * 0") to Tuesday 19:00 UTC ("0 19 * * 2") in vercel.json
+- PROMPT 1: Added fixture-based completion check in season-end/route.ts — if no scheduled fixtures remain, season is complete
+- PROMPT 1: Updated reset-database.ts — last round (both first leg and return leg) falls on Tuesday for season-end alignment
+- PROMPT 2: Added 4 new AwardTypes to types.ts: best_11, fan_favorite, most_improved, unsung_hero
+- PROMPT 2: Updated MVP title from "En Değerli Oyuncu" to "Yılın Futbolcusu (MVP)" in AWARD_LABELS
+- PROMPT 2: Added new AWARD_LABELS entries with icons/colors for best_11, fan_favorite, most_improved, unsung_hero
+- PROMPT 2: Added most_improved, unsung_hero, fan_favorite award logic in season-end/route.ts
+- PROMPT 2: Extended mvpPlayer select query to include morale, profile_id, goals, specific_position, rating_start_of_season
+- PROMPT 3: Added best_11 award with POSITION_SLOTS-based selection (GK/RB/CB1/CB2/LB/CDM/CM/CAM/RW/ST/LW) in season-end route
+- PROMPT 4: Added new award type counts to TrophyCabinetTab (best11Count, fanFavoriteCount, mostImprovedCount, unsungHeroCount)
+- PROMPT 4: Added new awards to award distribution grid
+- PROMPT 4: Added special best_11 render with player list by position slot
+- PROMPT 4: Added new award icons to season row display
+- PROMPT 5: Added rating_start_of_season column migration to schema-migration/route.ts
+- PROMPT 5: Added rating_start_of_season snapshot logic at season reset in season-end/route.ts
+
+Stage Summary:
+- All 4 prompts applied successfully
+- TypeScript compilation passes for all modified files (MarketTab.tsx errors are pre-existing)
+- Dev server running at localhost:3000
+- rating_start_of_season column needs manual migration via Supabase SQL Editor

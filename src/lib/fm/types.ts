@@ -238,12 +238,16 @@ export type AwardType =
   | 'best_defender'    // En iyi savunmacı
   | 'most_motm'        // En çok maçın adamı
   | 'clean_sheet_win'  // Gol yemeden kazanma
-  | 'longest_streak';  // En uzun galibiyet serisi
+  | 'longest_streak'   // En uzun galibiyet serisi
+  | 'best_11'          // Yılın En İyi 11'i (liste)
+  | 'fan_favorite'     // Taraftarın Sevgilisi
+  | 'most_improved'    // En Çok Gelişen
+  | 'unsung_hero';     // Görünmez Kahraman
 
 /** Ödül görüntü etiketleri (Türkçe) */
 export const AWARD_LABELS: Record<AwardType, { title: string; icon: string; color: string }> = {
   golden_boot:     { title: 'Altın Krampon',          icon: '👢', color: 'text-yellow-400' },
-  mvp:             { title: 'En Değerli Oyuncu',       icon: '⭐', color: 'text-amber-300' },
+  mvp:             { title: 'Yılın Futbolcusu (MVP)',  icon: '⭐', color: 'text-amber-300' },
   best_gk:         { title: 'En İyi Kaleci',           icon: '🧤', color: 'text-emerald-400' },
   top_assists:     { title: 'Asist Kralı',             icon: '🎯', color: 'text-blue-400' },
   best_young:      { title: 'En İyi Genç',             icon: '🌟', color: 'text-purple-400' },
@@ -255,6 +259,10 @@ export const AWARD_LABELS: Record<AwardType, { title: string; icon: string; colo
   most_motm:       { title: 'En Çok Maçın Adamı',       icon: '🎖️', color: 'text-rose-400' },
   clean_sheet_win: { title: 'Gol Yemeden Kazanma',      icon: '🔒', color: 'text-indigo-400' },
   longest_streak:  { title: 'En Uzun Galibiyet Serisi', icon: '🔥', color: 'text-orange-400' },
+  best_11:         { title: 'Yılın En İyi 11\'i',        icon: '🌐', color: 'text-sky-300' },
+  fan_favorite:    { title: 'Taraftarın Sevgilisi',      icon: '❤️', color: 'text-pink-400' },
+  most_improved:   { title: 'En Çok Gelişen Oyuncu',     icon: '📈', color: 'text-emerald-300' },
+  unsung_hero:     { title: 'Görünmez Kahraman',         icon: '🦸', color: 'text-slate-300' },
 };
 
 /** Sezon ödülü (DB: season_awards tablosu) */

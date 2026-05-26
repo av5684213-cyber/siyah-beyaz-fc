@@ -85,7 +85,25 @@ if (!isSupabaseConfigured()) {
       if (data.allPlayed && data.total >= 2) {
         completedLeagues.push(leagueId);
       } else {
-        incompleteLeagues.push(leagueId);
+        // Ek kontrol: Bu ligdeki tüm scheduled fikstürler tamamlandı mı?
+        // Hiç scheduled fikstür kalmamışsa sezon tamamlanmış sayılır
+        try {
+          const { count: pendingCount } = await supabase
+            .from('fixtures')
+            .select('id', { count: 'exact', head: true })
+            .eq('season_id', leagueId)
+            .eq('competition_type', 'league')
+            .eq('status', 'scheduled');
+
+          const allFixturesPlayed = (pendingCount ?? 0) === 0;
+          if (allFixturesPlayed && data.total >= 2) {
+            completedLeagues.push(leagueId);
+          } else {
+            incompleteLeagues.push(leagueId);
+          }
+        } catch {
+          incompleteLeagues.push(leagueId);
+        }
       }
     }
 
@@ -194,7 +212,7 @@ async function processLeagueSeasonEnd(
 
   const { data: mvpPlayer } = await supabase
     .from('players')
-    .select('id, name, rating, team_name, form_rating, age, position, assists, yellow_cards, red_cards, matches_played, clean_sheets')
+    .select('id, name, rating, team_name, form_rating, age, position, specific_position, assists, goals, yellow_cards, red_cards, matches_played, clean_sheets, morale, profile_id, rating_start_of_season')
     .in('profile_id', profileIds.length > 0 ? profileIds : ['__none__']);
 
   const seasonId = `S${new Date().getFullYear()}_auto`;
@@ -326,6 +344,137 @@ async function processLeagueSeasonEnd(
         player_name: fairPlay.name,
         team_name: fairPlay.team_name,
         stat_value: ((fairPlay.yellow_cards as number) || 0) + ((fairPlay.red_cards as number) || 0) * 3,
+      });
+    }
+  }
+
+  // ─── YENİ ÖDÜLLER: most_improved, unsung_hero, fan_favorite, best_11 ───
+  if (mvpPlayer && mvpPlayer.length > 0) {
+    // ─── En Çok Gelişen Oyuncu ───
+    // Sezon başındaki rating ile şu anki rating farkı en büyük olan (U25)
+    const improvedPlayers = mvpPlayer.filter((p: Record<string, unknown>) =>
+      ((p.age as number) || 30) <= 25 && ((p.rating_start_of_season as number) || 0) > 0
+    );
+    if (improvedPlayers.length > 0) {
+      const mostImproved = [...improvedPlayers].sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
+        (((b.rating as number) || 0) - ((b.rating_start_of_season as number) || (b.rating as number) || 0)) -
+        (((a.rating as number) || 0) - ((a.rating_start_of_season as number) || (a.rating as number) || 0))
+      )[0];
+      const improvement = ((mostImproved.rating as number) || 0) - ((mostImproved.rating_start_of_season as number) || (mostImproved.rating as number) || 0);
+      if (improvement > 0) {
+        awards.push({
+          id: `award_${seasonId}_${leagueId}_most_improved`,
+          season_id: seasonId,
+          profile_id: mostImproved.profile_id,
+          league_name: leagueName,
+          award_type: 'most_improved',
+          player_id: mostImproved.id,
+          player_name: mostImproved.name,
+          team_name: mostImproved.team_name,
+          stat_value: improvement,
+          stat_detail: { start: mostImproved.rating_start_of_season, end: mostImproved.rating, diff: improvement },
+        });
+      }
+    }
+
+    // ─── Görünmez Kahraman (Unsung Hero) ───
+    // DEF veya DM pozisyonu, gol+asist < 3, ama avg_rating >= 65
+    const defensivePlayers = mvpPlayer.filter((p: Record<string, unknown>) =>
+      ['CB', 'LB', 'RB', 'CDM', 'DEF'].includes((p.position as string) || '') &&
+      (((p.goals as number) || 0) + ((p.assists as number) || 0)) < 3 &&
+      ((p.form_rating as number) || 0) >= 65
+    );
+    if (defensivePlayers.length > 0) {
+      const unsungHero = [...defensivePlayers].sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
+        ((b.form_rating as number) || 0) - ((a.form_rating as number) || 0)
+      )[0];
+      awards.push({
+        id: `award_${seasonId}_${leagueId}_unsung_hero`,
+        season_id: seasonId,
+        profile_id: unsungHero.profile_id,
+        league_name: leagueName,
+        award_type: 'unsung_hero',
+        player_id: unsungHero.id,
+        player_name: unsungHero.name,
+        team_name: unsungHero.team_name,
+        stat_value: (unsungHero.form_rating as number) || 0,
+      });
+    }
+
+    // ─── Taraftarın Sevgilisi ───
+    // En yüksek morale'e sahip, gol+asist >= 2 olan oyuncu
+    const fanFavs = mvpPlayer.filter((p: Record<string, unknown>) =>
+      ((p.morale as number) || 0) >= 75 &&
+      (((p.goals as number) || 0) + ((p.assists as number) || 0)) >= 2
+    );
+    if (fanFavs.length > 0) {
+      const fanFav = [...fanFavs].sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
+        (((b.morale as number) || 0) * 0.3 + ((b.goals as number) || 0) * 2 + ((b.assists as number) || 0)) -
+        (((a.morale as number) || 0) * 0.3 + ((a.goals as number) || 0) * 2 + ((a.assists as number) || 0))
+      )[0];
+      awards.push({
+        id: `award_${seasonId}_${leagueId}_fan_favorite`,
+        season_id: seasonId,
+        profile_id: fanFav.profile_id,
+        league_name: leagueName,
+        award_type: 'fan_favorite',
+        player_id: fanFav.id,
+        player_name: fanFav.name,
+        team_name: fanFav.team_name,
+        stat_value: (fanFav.morale as number) || 0,
+      });
+    }
+
+    // ─── Yılın En İyi 11'i (PROMPT 3) ───
+    const POSITION_SLOTS: Record<string, string[]> = {
+      GK:  ['GK'],
+      RB:  ['RB', 'LB'],
+      CB1: ['CB'],
+      CB2: ['CB'],
+      LB:  ['LB', 'RB'],
+      CDM: ['CDM', 'CM'],
+      CM:  ['CM', 'CDM', 'CAM'],
+      CAM: ['CAM', 'CM'],
+      RW:  ['RW', 'LW', 'ST'],
+      ST:  ['ST', 'CF'],
+      LW:  ['LW', 'RW', 'ST'],
+    };
+
+    const usedPlayerIds = new Set<string>();
+    const best11: { slot: string; player: Record<string, unknown> }[] = [];
+
+    for (const [slot, positions] of Object.entries(POSITION_SLOTS)) {
+      const candidates = mvpPlayer.filter((p: Record<string, unknown>) =>
+        positions.includes((p.position as string) || (p.specific_position as string) || '') && !usedPlayerIds.has(p.id as string)
+      );
+      if (candidates.length > 0) {
+        const best = [...candidates].sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
+          ((b.form_rating as number) || 0) - ((a.form_rating as number) || 0)
+        )[0];
+        usedPlayerIds.add(best.id as string);
+        best11.push({ slot, player: best });
+      }
+    }
+
+    if (best11.length >= 8) {
+      const best11Detail = best11.reduce((obj: Record<string, unknown>, { slot, player }) => {
+        obj[slot] = {
+          id: player.id,
+          name: player.name,
+          position: player.position || player.specific_position,
+          rating: player.form_rating,
+        };
+        return obj;
+      }, {} as Record<string, unknown>);
+      awards.push({
+        id: `award_${seasonId}_${leagueId}_best_11`,
+        season_id: seasonId,
+        profile_id: championProfileId || null,
+        league_name: leagueName,
+        award_type: 'best_11',
+        team_name: leagueName,
+        stat_value: best11.length,
+        stat_detail: best11Detail,
       });
     }
   }
@@ -530,6 +679,12 @@ async function processLeagueSeasonEnd(
       }
     }
 
+    // Save rating_start_of_season snapshot for "most_improved" award tracking
+    const { data: currentRatings } = await supabase
+      .from('players')
+      .select('id, rating')
+      .eq('profile_id', pid as string);
+
     await supabase
       .from('players')
       .update({
@@ -545,6 +700,18 @@ async function processLeagueSeasonEnd(
         injury_end_date: null,
       })
       .eq('profile_id', pid as string);
+
+    // Set rating_start_of_season for each player (for next season's "most_improved" award)
+    if (currentRatings && currentRatings.length > 0) {
+      for (const p of currentRatings) {
+        try {
+          await supabase
+            .from('players')
+            .update({ rating_start_of_season: p.rating || 0 })
+            .eq('id', p.id);
+        } catch {}
+      }
+    }
   }
 
   // ─── 14. TÜM OYUNCULARIN YAŞINI 1 ARTIR ───

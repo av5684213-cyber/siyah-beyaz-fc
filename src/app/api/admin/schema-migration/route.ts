@@ -236,7 +236,11 @@ export async function POST(request: NextRequest) {
       `);
       results.push('match_sessions UNIQUE constraint on fixture_id added');
 
-      // 19. Reload PostgREST schema cache
+      // 19. players: Add rating_start_of_season column
+      await client.query(`ALTER TABLE players ADD COLUMN IF NOT EXISTS rating_start_of_season INTEGER DEFAULT 0`);
+      results.push('players.rating_start_of_season column added');
+
+      // 20. Reload PostgREST schema cache
       await client.query(`NOTIFY pgrst, 'reload schema'`);
       results.push('PostgREST schema cache reload notified');
 

@@ -234,6 +234,10 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
   const mostMotmCount = allAwards.filter(a => a.award_type === 'most_motm').length;
   const cleanSheetWinCount = allAwards.filter(a => a.award_type === 'clean_sheet_win').length;
   const longestStreakCount = allAwards.filter(a => a.award_type === 'longest_streak').length;
+  const best11Count = allAwards.filter(a => a.award_type === 'best_11').length;
+  const fanFavoriteCount = allAwards.filter(a => a.award_type === 'fan_favorite').length;
+  const mostImprovedCount = allAwards.filter(a => a.award_type === 'most_improved').length;
+  const unsungHeroCount = allAwards.filter(a => a.award_type === 'unsung_hero').length;
   const totalAwards = allAwards.length;
   const seasonsPlayed = summaries.length;
 
@@ -286,6 +290,10 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
             { type: 'most_motm' as AwardType, count: mostMotmCount },
             { type: 'clean_sheet_win' as AwardType, count: cleanSheetWinCount },
             { type: 'longest_streak' as AwardType, count: longestStreakCount },
+            { type: 'best_11' as AwardType, count: best11Count },
+            { type: 'fan_favorite' as AwardType, count: fanFavoriteCount },
+            { type: 'most_improved' as AwardType, count: mostImprovedCount },
+            { type: 'unsung_hero' as AwardType, count: unsungHeroCount },
           ].map(item => {
             const label = AWARD_LABELS[item.type];
             return (
@@ -388,6 +396,10 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
                         {seasonAwardList.some(a => a.award_type === 'mvp') && <span className="text-sm">⭐</span>}
                         {seasonAwardList.some(a => a.award_type === 'best_gk') && <span className="text-sm">🧤</span>}
                         {seasonAwardList.some(a => a.award_type === 'top_assists') && <span className="text-sm">🎯</span>}
+                        {seasonAwardList.some(a => a.award_type === 'best_11') && <span className="text-sm">🌐</span>}
+                        {seasonAwardList.some(a => a.award_type === 'fan_favorite') && <span className="text-sm">❤️</span>}
+                        {seasonAwardList.some(a => a.award_type === 'most_improved') && <span className="text-sm">📈</span>}
+                        {seasonAwardList.some(a => a.award_type === 'unsung_hero') && <span className="text-sm">🦸</span>}
                         {s.is_relegated && <span className="text-sm">⬇️</span>}
                       </div>
                     </div>
@@ -401,15 +413,33 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
                       className="overflow-hidden ml-4 mt-1 space-y-1"
                     >
                       {seasonAwardList.map(award => {
-                        const label = AWARD_LABELS[award.award_type];
+                        const label = AWARD_LABELS[award.award_type as AwardType];
+                        if (!label) return null;
                         return (
-                          <div key={award.id} className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-2 flex items-center gap-2">
-                            <span className="text-lg">{label.icon}</span>
-                            <div className="flex-1">
-                              <span className={`text-xs font-medium ${label.color}`}>{label.title}</span>
-                              <span className="text-white/50 text-xs ml-2">{award.player_name || ''}</span>
+                          <div key={award.id}>
+                            <div className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-2 flex items-center gap-2">
+                              <span className="text-lg">{label.icon}</span>
+                              <div className="flex-1">
+                                <span className={`text-xs font-medium ${label.color}`}>{label.title}</span>
+                                <span className="text-white/50 text-xs ml-2">{award.player_name || ''}</span>
+                              </div>
+                              <span className="text-white/40 text-xs font-mono">{award.stat_value}</span>
                             </div>
-                            <span className="text-white/40 text-xs font-mono">{award.stat_value}</span>
+                            {/* Best 11 special render */}
+                            {award.award_type === 'best_11' && award.stat_detail && (
+                              <div className="mt-2 space-y-1 ml-8">
+                                <p className="text-[8px] font-black uppercase tracking-widest text-white/20 mb-2">
+                                  Sezonun En İyi 11'i
+                                </p>
+                                {Object.entries(award.stat_detail as Record<string, any>).map(([slot, player]) => (
+                                  <div key={slot} className="flex items-center justify-between text-[9px] bg-white/[0.02] rounded-lg px-2 py-1">
+                                    <span className="text-white/30 font-bold w-10">{slot}</span>
+                                    <span className="text-white/60 font-bold flex-1">{(player as any).name}</span>
+                                    <span className="text-amber-400 font-black">{((player as any).rating || 0).toFixed(0)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         );
                       })}

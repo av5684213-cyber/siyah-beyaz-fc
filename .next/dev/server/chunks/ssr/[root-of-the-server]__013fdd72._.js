@@ -814,7 +814,7 @@ const AWARD_LABELS = {
         color: 'text-yellow-400'
     },
     mvp: {
-        title: 'En Değerli Oyuncu',
+        title: 'Yılın Futbolcusu (MVP)',
         icon: '⭐',
         color: 'text-amber-300'
     },
@@ -872,6 +872,26 @@ const AWARD_LABELS = {
         title: 'En Uzun Galibiyet Serisi',
         icon: '🔥',
         color: 'text-orange-400'
+    },
+    best_11: {
+        title: 'Yılın En İyi 11\'i',
+        icon: '🌐',
+        color: 'text-sky-300'
+    },
+    fan_favorite: {
+        title: 'Taraftarın Sevgilisi',
+        icon: '❤️',
+        color: 'text-pink-400'
+    },
+    most_improved: {
+        title: 'En Çok Gelişen Oyuncu',
+        icon: '📈',
+        color: 'text-emerald-300'
+    },
+    unsung_hero: {
+        title: 'Görünmez Kahraman',
+        icon: '🦸',
+        color: 'text-slate-300'
     }
 };
 const FITNESS_THRESHOLDS = {

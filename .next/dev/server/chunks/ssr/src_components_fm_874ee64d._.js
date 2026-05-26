@@ -10448,6 +10448,10 @@ function TrophyCabinetTab({ profileId, teamName }) {
     const mostMotmCount = allAwards.filter((a)=>a.award_type === 'most_motm').length;
     const cleanSheetWinCount = allAwards.filter((a)=>a.award_type === 'clean_sheet_win').length;
     const longestStreakCount = allAwards.filter((a)=>a.award_type === 'longest_streak').length;
+    const best11Count = allAwards.filter((a)=>a.award_type === 'best_11').length;
+    const fanFavoriteCount = allAwards.filter((a)=>a.award_type === 'fan_favorite').length;
+    const mostImprovedCount = allAwards.filter((a)=>a.award_type === 'most_improved').length;
+    const unsungHeroCount = allAwards.filter((a)=>a.award_type === 'unsung_hero').length;
     const totalAwards = allAwards.length;
     const seasonsPlayed = summaries.length;
     const milestones = computeMilestones(championships, totalAwards, goldenBootCount, mvpCount, seasonsPlayed);
@@ -10459,12 +10463,12 @@ function TrophyCabinetTab({ profileId, teamName }) {
                 className: "animate-spin w-10 h-10 border-2 border-amber-400/30 border-t-amber-400 rounded-full"
             }, void 0, false, {
                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                lineNumber: 246,
+                lineNumber: 250,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-            lineNumber: 245,
+            lineNumber: 249,
             columnNumber: 7
         }, this);
     }
@@ -10481,12 +10485,12 @@ function TrophyCabinetTab({ profileId, teamName }) {
                             className: "text-amber-400"
                         }, void 0, false, {
                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                            lineNumber: 256,
+                            lineNumber: 260,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 255,
+                        lineNumber: 259,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10496,7 +10500,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                 children: "Ödül Dolabı"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                lineNumber: 259,
+                                lineNumber: 263,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -10507,19 +10511,19 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                lineNumber: 260,
+                                lineNumber: 264,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 258,
+                        lineNumber: 262,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                lineNumber: 254,
+                lineNumber: 258,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10533,12 +10537,12 @@ function TrophyCabinetTab({ profileId, teamName }) {
                             children: "🏆"
                         }, void 0, false, {
                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                            lineNumber: 266,
+                            lineNumber: 270,
                             columnNumber: 66
                         }, void 0)
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 266,
+                        lineNumber: 270,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(StatBox, {
@@ -10549,12 +10553,12 @@ function TrophyCabinetTab({ profileId, teamName }) {
                             children: "🏅"
                         }, void 0, false, {
                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                            lineNumber: 267,
+                            lineNumber: 271,
                             columnNumber: 64
                         }, void 0)
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 267,
+                        lineNumber: 271,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(StatBox, {
@@ -10565,12 +10569,12 @@ function TrophyCabinetTab({ profileId, teamName }) {
                             children: "👢"
                         }, void 0, false, {
                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                            lineNumber: 268,
+                            lineNumber: 272,
                             columnNumber: 70
                         }, void 0)
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 268,
+                        lineNumber: 272,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(StatBox, {
@@ -10581,18 +10585,18 @@ function TrophyCabinetTab({ profileId, teamName }) {
                             children: "⭐"
                         }, void 0, false, {
                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                            lineNumber: 269,
+                            lineNumber: 273,
                             columnNumber: 53
                         }, void 0)
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 269,
+                        lineNumber: 273,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                lineNumber: 265,
+                lineNumber: 269,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10603,7 +10607,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                         children: "Ödül Dağılımı"
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 274,
+                        lineNumber: 278,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10656,6 +10660,22 @@ function TrophyCabinetTab({ profileId, teamName }) {
                             {
                                 type: 'longest_streak',
                                 count: longestStreakCount
+                            },
+                            {
+                                type: 'best_11',
+                                count: best11Count
+                            },
+                            {
+                                type: 'fan_favorite',
+                                count: fanFavoriteCount
+                            },
+                            {
+                                type: 'most_improved',
+                                count: mostImprovedCount
+                            },
+                            {
+                                type: 'unsung_hero',
+                                count: unsungHeroCount
                             }
                         ].map((item)=>{
                             const label = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$fm$2f$types$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AWARD_LABELS"][item.type];
@@ -10667,7 +10687,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                         children: label.icon
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                        lineNumber: 293,
+                                        lineNumber: 301,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10675,7 +10695,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                         children: item.count
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                        lineNumber: 294,
+                                        lineNumber: 302,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10683,25 +10703,25 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                         children: label.title
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                        lineNumber: 295,
+                                        lineNumber: 303,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, item.type, true, {
                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                lineNumber: 292,
+                                lineNumber: 300,
                                 columnNumber: 15
                             }, this);
                         })
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 275,
+                        lineNumber: 279,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                lineNumber: 273,
+                lineNumber: 277,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10715,7 +10735,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                 children: "Başım Rozetleri"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                lineNumber: 305,
+                                lineNumber: 313,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -10728,13 +10748,13 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                lineNumber: 306,
+                                lineNumber: 314,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 304,
+                        lineNumber: 312,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10761,7 +10781,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                 children: m.icon
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                lineNumber: 322,
+                                                lineNumber: 330,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10772,7 +10792,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                         children: m.label
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                        lineNumber: 324,
+                                                        lineNumber: 332,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -10780,13 +10800,13 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                         children: m.description
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                        lineNumber: 327,
+                                                        lineNumber: 335,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                lineNumber: 323,
+                                                lineNumber: 331,
                                                 columnNumber: 17
                                             }, this),
                                             m.unlocked && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10794,13 +10814,13 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                 children: "✓"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                lineNumber: 330,
+                                                lineNumber: 338,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                        lineNumber: 321,
+                                        lineNumber: 329,
                                         columnNumber: 15
                                     }, this),
                                     !m.unlocked && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10808,24 +10828,24 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                         children: m.requirement
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                        lineNumber: 334,
+                                        lineNumber: 342,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, m.id, true, {
                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                lineNumber: 310,
+                                lineNumber: 318,
                                 columnNumber: 13
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 308,
+                        lineNumber: 316,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                lineNumber: 303,
+                lineNumber: 311,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10836,7 +10856,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                         children: "Sezon Geçmişi"
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 343,
+                        lineNumber: 351,
                         columnNumber: 9
                     }, this),
                     summaries.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10844,7 +10864,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                         children: "Henüz sezon geçmişi yok."
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 345,
+                        lineNumber: 353,
                         columnNumber: 11
                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "space-y-2",
@@ -10879,7 +10899,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                    lineNumber: 369,
+                                                    lineNumber: 377,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10890,7 +10910,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                             children: s.season_id.replace('season-', 'Sezon ')
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                            lineNumber: 376,
+                                                            lineNumber: 384,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10909,13 +10929,13 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                            lineNumber: 379,
+                                                            lineNumber: 387,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                    lineNumber: 375,
+                                                    lineNumber: 383,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10926,7 +10946,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                             children: "🏆"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                            lineNumber: 386,
+                                                            lineNumber: 394,
                                                             columnNumber: 43
                                                         }, this),
                                                         seasonAwardList.some((a)=>a.award_type === 'golden_boot') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -10934,7 +10954,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                             children: "👢"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                            lineNumber: 387,
+                                                            lineNumber: 395,
                                                             columnNumber: 87
                                                         }, this),
                                                         seasonAwardList.some((a)=>a.award_type === 'mvp') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -10942,7 +10962,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                             children: "⭐"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                            lineNumber: 388,
+                                                            lineNumber: 396,
                                                             columnNumber: 79
                                                         }, this),
                                                         seasonAwardList.some((a)=>a.award_type === 'best_gk') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -10950,7 +10970,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                             children: "🧤"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                            lineNumber: 389,
+                                                            lineNumber: 397,
                                                             columnNumber: 83
                                                         }, this),
                                                         seasonAwardList.some((a)=>a.award_type === 'top_assists') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -10958,7 +10978,39 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                             children: "🎯"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                            lineNumber: 390,
+                                                            lineNumber: 398,
+                                                            columnNumber: 87
+                                                        }, this),
+                                                        seasonAwardList.some((a)=>a.award_type === 'best_11') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-sm",
+                                                            children: "🌐"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
+                                                            lineNumber: 399,
+                                                            columnNumber: 83
+                                                        }, this),
+                                                        seasonAwardList.some((a)=>a.award_type === 'fan_favorite') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-sm",
+                                                            children: "❤️"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
+                                                            lineNumber: 400,
+                                                            columnNumber: 88
+                                                        }, this),
+                                                        seasonAwardList.some((a)=>a.award_type === 'most_improved') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-sm",
+                                                            children: "📈"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
+                                                            lineNumber: 401,
+                                                            columnNumber: 89
+                                                        }, this),
+                                                        seasonAwardList.some((a)=>a.award_type === 'unsung_hero') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-sm",
+                                                            children: "🦸"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
+                                                            lineNumber: 402,
                                                             columnNumber: 87
                                                         }, this),
                                                         s.is_relegated && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -10966,24 +11018,24 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                             children: "⬇️"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                            lineNumber: 391,
+                                                            lineNumber: 403,
                                                             columnNumber: 44
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                    lineNumber: 385,
+                                                    lineNumber: 393,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                            lineNumber: 366,
+                                            lineNumber: 374,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                        lineNumber: 360,
+                                        lineNumber: 368,
                                         columnNumber: 19
                                     }, this),
                                     isSelected && seasonAwardList.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
@@ -10998,78 +11050,137 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                         className: "overflow-hidden ml-4 mt-1 space-y-1",
                                         children: seasonAwardList.map((award)=>{
                                             const label = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$fm$2f$types$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AWARD_LABELS"][award.award_type];
+                                            if (!label) return null;
                                             return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                className: "bg-white/[0.02] border border-white/[0.04] rounded-lg p-2 flex items-center gap-2",
                                                 children: [
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        className: "text-lg",
-                                                        children: label.icon
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                        lineNumber: 407,
-                                                        columnNumber: 29
-                                                    }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "flex-1",
+                                                        className: "bg-white/[0.02] border border-white/[0.04] rounded-lg p-2 flex items-center gap-2",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                className: `text-xs font-medium ${label.color}`,
-                                                                children: label.title
+                                                                className: "text-lg",
+                                                                children: label.icon
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                                lineNumber: 409,
+                                                                lineNumber: 421,
+                                                                columnNumber: 31
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                className: "flex-1",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                        className: `text-xs font-medium ${label.color}`,
+                                                                        children: label.title
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
+                                                                        lineNumber: 423,
+                                                                        columnNumber: 33
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                        className: "text-white/50 text-xs ml-2",
+                                                                        children: award.player_name || ''
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
+                                                                        lineNumber: 424,
+                                                                        columnNumber: 33
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
+                                                                lineNumber: 422,
                                                                 columnNumber: 31
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                className: "text-white/50 text-xs ml-2",
-                                                                children: award.player_name || ''
+                                                                className: "text-white/40 text-xs font-mono",
+                                                                children: award.stat_value
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                                lineNumber: 410,
+                                                                lineNumber: 426,
                                                                 columnNumber: 31
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                        lineNumber: 408,
+                                                        lineNumber: 420,
                                                         columnNumber: 29
                                                     }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        className: "text-white/40 text-xs font-mono",
-                                                        children: award.stat_value
-                                                    }, void 0, false, {
+                                                    award.award_type === 'best_11' && award.stat_detail && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "mt-2 space-y-1 ml-8",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                className: "text-[8px] font-black uppercase tracking-widest text-white/20 mb-2",
+                                                                children: "Sezonun En İyi 11'i"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
+                                                                lineNumber: 431,
+                                                                columnNumber: 33
+                                                            }, this),
+                                                            Object.entries(award.stat_detail).map(([slot, player])=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                    className: "flex items-center justify-between text-[9px] bg-white/[0.02] rounded-lg px-2 py-1",
+                                                                    children: [
+                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                            className: "text-white/30 font-bold w-10",
+                                                                            children: slot
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
+                                                                            lineNumber: 436,
+                                                                            columnNumber: 37
+                                                                        }, this),
+                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                            className: "text-white/60 font-bold flex-1",
+                                                                            children: player.name
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
+                                                                            lineNumber: 437,
+                                                                            columnNumber: 37
+                                                                        }, this),
+                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                            className: "text-amber-400 font-black",
+                                                                            children: (player.rating || 0).toFixed(0)
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
+                                                                            lineNumber: 438,
+                                                                            columnNumber: 37
+                                                                        }, this)
+                                                                    ]
+                                                                }, slot, true, {
+                                                                    fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
+                                                                    lineNumber: 435,
+                                                                    columnNumber: 35
+                                                                }, this))
+                                                        ]
+                                                    }, void 0, true, {
                                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                        lineNumber: 412,
-                                                        columnNumber: 29
+                                                        lineNumber: 430,
+                                                        columnNumber: 31
                                                     }, this)
                                                 ]
                                             }, award.id, true, {
                                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                lineNumber: 406,
+                                                lineNumber: 419,
                                                 columnNumber: 27
                                             }, this);
                                         })
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                        lineNumber: 398,
+                                        lineNumber: 410,
                                         columnNumber: 21
                                     }, this)
                                 ]
                             }, s.id, true, {
                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                lineNumber: 354,
+                                lineNumber: 362,
                                 columnNumber: 17
                             }, this);
                         })
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 347,
+                        lineNumber: 355,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                lineNumber: 342,
+                lineNumber: 350,
                 columnNumber: 7
             }, this),
             hofEntries.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11080,7 +11191,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                         children: "Efsaneler Salonu"
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 428,
+                        lineNumber: 458,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11118,7 +11229,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                         children: tierLabels[entry.legend_tier] || 'Bronz'
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                        lineNumber: 449,
+                                        lineNumber: 479,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11129,7 +11240,7 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                 children: entry.player_name
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                lineNumber: 453,
+                                                lineNumber: 483,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11146,13 +11257,13 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                                lineNumber: 454,
+                                                lineNumber: 484,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                        lineNumber: 452,
+                                        lineNumber: 482,
                                         columnNumber: 19
                                     }, this),
                                     entry.is_club_legend && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -11160,31 +11271,31 @@ function TrophyCabinetTab({ profileId, teamName }) {
                                         children: "⭐"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                        lineNumber: 458,
+                                        lineNumber: 488,
                                         columnNumber: 44
                                     }, this)
                                 ]
                             }, entry.id, true, {
                                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                                lineNumber: 442,
+                                lineNumber: 472,
                                 columnNumber: 17
                             }, this);
                         })
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                        lineNumber: 429,
+                        lineNumber: 459,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-                lineNumber: 427,
+                lineNumber: 457,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/fm/TrophyCabinetTab.tsx",
-        lineNumber: 252,
+        lineNumber: 256,
         columnNumber: 5
     }, this);
 }

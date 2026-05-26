@@ -803,6 +803,14 @@ async function resetDatabase() {
           if (dayOfWeek === 0) matchDate.setDate(matchDate.getDate() + 1);
           else if (dayOfWeek === 6) matchDate.setDate(matchDate.getDate() + 2);
 
+          // Son tur (round === n - 2) Salı gününe denk gelsin — sezon sonu ödüller Salı akşamı verilir
+          if (round === n - 2) {
+            const currentDay = matchDate.getDay();
+            // Salı = 2
+            const daysToTuesday = ((2 - currentDay + 7) % 7) || 7;
+            matchDate.setDate(matchDate.getDate() + daysToTuesday);
+          }
+
           const matchTime = WEEKDAY_TIMES[match % WEEKDAY_TIMES.length];
 
           // İlk yarış (ev-deplasman)
@@ -823,6 +831,13 @@ async function resetDatabase() {
           const returnDayOfWeek = returnDate.getDay();
           if (returnDayOfWeek === 0) returnDate.setDate(returnDate.getDate() + 1);
           else if (returnDayOfWeek === 6) returnDate.setDate(returnDate.getDate() + 2);
+
+          // Sezonun son turu (tur = 2*(n-1) = 34) Salı gününe denk gelsin
+          if (round === n - 2) {
+            const rDay = returnDate.getDay();
+            const daysToTue = ((2 - rDay + 7) % 7) || 7;
+            returnDate.setDate(returnDate.getDate() + daysToTue);
+          }
 
           fixtures.push({
             home_team_id: away,
