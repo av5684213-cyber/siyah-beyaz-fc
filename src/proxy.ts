@@ -46,7 +46,7 @@ const RATE_LIMITS: Record<string, { prefix: string; limit: number; windowMs: num
 
 // ─── Middleware Logic ──────────────────────────────────────────────
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const response = NextResponse.next();
 
   // 1. Add security headers to all responses
