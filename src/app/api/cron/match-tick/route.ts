@@ -620,14 +620,20 @@ if (!isSupabaseConfigured()) {
           console.log(`[cron/match-tick] Finalizing match ${fixtureId}: ${newHomeScore}-${newAwayScore}`);
 
           // ── Fikstürü 'completed' olarak güncelle ──
-          await supabase
-            .from('fixtures')
-            .update({
-              status: 'completed',
-              home_score: newHomeScore,
-              away_score: newAwayScore,
-            })
-            .eq('id', fixtureId);
+          try {
+            await supabase
+              .from('fixtures')
+              .update({
+                status: 'completed',
+                home_score: newHomeScore,
+                away_score: newAwayScore,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', fixtureId);
+            console.log(`[match-tick] Match ${fixtureId} completed: ${newHomeScore}-${newAwayScore}`);
+          } catch (fixtureUpdateErr) {
+            console.error('[match-tick] Fixture completion update error:', fixtureUpdateErr);
+          }
 
           // ── Tüm olayları açığa çıkar (güvenlik) ──
           try {

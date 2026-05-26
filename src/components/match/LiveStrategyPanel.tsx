@@ -73,6 +73,7 @@ export default function LiveStrategyPanel({
   isApplying,
   lastApplied,
   changeCount,
+  currentMinute,
 }: LiveStrategyPanelProps) {
   const [draftFormation, setDraftFormation] = useState(currentFormation);
   const [draftTactic, setDraftTactic] = useState(currentTactic);
@@ -263,6 +264,19 @@ export default function LiveStrategyPanel({
 
           {lastApplied && (
             <p className="text-[8px] text-center text-white/15">Son talimat saati: {lastApplied}</p>
+          )}
+
+          {/* ═══ Son 15 dakika uyarisi ═══ */}
+          {currentMinute != null && currentMinute >= 75 && remaining > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2"
+            >
+              <p className="text-[9px] font-bold text-red-400 text-center">
+                ⚠️ Son {90 - currentMinute} dakika kaldı!
+              </p>
+            </motion.div>
           )}
         </>
       )}

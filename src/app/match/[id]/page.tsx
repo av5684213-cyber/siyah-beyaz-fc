@@ -1144,6 +1144,7 @@ export default function MatchPage() {
                     isApplying={isApplyingTactic}
                     lastApplied={lastTacticApplied}
                     changeCount={tacticChangeCount}
+                    currentMinute={liveMatchMinute}
                   />
                   {/* ═══ Taktik Etki Bilgi Kutusu ═══ */}
                   <div className="mt-4 bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
@@ -1167,7 +1168,7 @@ export default function MatchPage() {
                         </div>
                       ))}
                     </div>
-                    <p className="text-[8px] text-white/15 mt-2">Formasyon değişiklikleri de ofans/defans dengesini etkiler. Maç başına 3 müdahale hakkınız vardır.</p>
+                    <p className="text-[8px] text-white/15 mt-2">Formasyon değişiklikleri de ofans/defans dengesini etkiler. Maç başına 5 müdahale hakkınız vardır.</p>
                   </div>
                 </motion.div>
               )}

@@ -149,12 +149,14 @@ export async function GET(request: NextRequest) {
   try {
     console.log('[cron/match-scheduler] Starting match session initialization...');
 
-    // 1. Bugün oynanacak scheduled maçları bul
-    const today = new Date().toISOString().split('T')[0];
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
+    // 1. Bugün oynanacak scheduled maçları bul (Istanbul saat diliminde)
+    const istanbulTz = 'Europe/Istanbul';
+    const nowInIstanbul = new Date(new Date().toLocaleString('en-US', { timeZone: istanbulTz }));
+    const today = nowInIstanbul.toISOString().split('T')[0];
+    const currentHour = nowInIstanbul.getHours();
+    const currentMinute = nowInIstanbul.getMinutes();
     const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+    console.log(`[cron/match-scheduler] Istanbul time: ${today} ${currentTimeStr}`);
 
     const { data: pendingFixtures, error: fixturesError } = await supabase
       .from('fixtures')
@@ -199,14 +201,17 @@ export async function GET(request: NextRequest) {
     for (const fixture of readyFixtures) {
       try {
         // Zaten bu fixture için bir session var mı kontrol et
+        // Sadece live/halftime/completed durumundaki session'ları kontrol et
+        // (aborted/failed gibi durumlar yeni session oluşturulmasına izin verir)
         const { data: existingSession } = await supabase
           .from('match_sessions')
-          .select('id')
+          .select('id, status')
           .eq('fixture_id', fixture.id)
+          .in('status', ['live', 'halftime', 'completed'])
           .maybeSingle();
 
         if (existingSession) {
-          console.log(`[cron/match-scheduler] Session already exists for fixture ${fixture.id}, skipping`);
+          console.log(`[cron/match-scheduler] Fixture ${fixture.id} already has session (${existingSession.status}), skip`);
           continue;
         }
 

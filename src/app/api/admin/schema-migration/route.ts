@@ -235,7 +235,20 @@ export async function POST(request: NextRequest) {
       await client.query(`ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ`);
       results.push('match_sessions missing columns added');
 
-      // 18. Reload PostgREST schema cache
+      // 18. match_sessions: UNIQUE constraint on fixture_id (prevent duplicate sessions)
+      await client.query(`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM pg_constraint WHERE conname = 'uniq_match_session_fixture'
+          ) THEN
+            ALTER TABLE match_sessions ADD CONSTRAINT uniq_match_session_fixture UNIQUE (fixture_id);
+          END IF;
+        END $$;
+      `);
+      results.push('match_sessions UNIQUE constraint on fixture_id added');
+
+      // 19. Reload PostgREST schema cache
       await client.query(`NOTIFY pgrst, 'reload schema'`);
       results.push('PostgREST schema cache reload notified');
 

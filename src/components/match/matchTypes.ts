@@ -63,4 +63,5 @@ export interface LiveStrategyPanelProps {
   isApplying: boolean;
   lastApplied: string | null;
   changeCount: number;
+  currentMinute?: number;
 }

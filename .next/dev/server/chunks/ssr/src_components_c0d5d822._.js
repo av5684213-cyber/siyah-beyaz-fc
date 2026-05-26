@@ -266,7 +266,7 @@ function TacticEffectInfo({ tacticId }) {
         columnNumber: 5
     }, this);
 }
-function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplying, lastApplied, changeCount }) {
+function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplying, lastApplied, changeCount, currentMinute }) {
     const [draftFormation, setDraftFormation] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(currentFormation);
     const [draftTactic, setDraftTactic] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(currentTactic);
     const [showEffects, setShowEffects] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(true);
@@ -345,12 +345,12 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                 className: "text-amber-400"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                lineNumber: 137,
+                                lineNumber: 138,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                            lineNumber: 136,
+                            lineNumber: 137,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -358,18 +358,18 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                             children: lastChangeMsg
                         }, void 0, false, {
                             fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                            lineNumber: 139,
+                            lineNumber: 140,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                    lineNumber: 129,
+                    lineNumber: 130,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                lineNumber: 127,
+                lineNumber: 128,
                 columnNumber: 7
             }, this),
             remaining === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
@@ -388,7 +388,7 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                         className: "text-red-400 shrink-0"
                     }, void 0, false, {
                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                        lineNumber: 151,
+                        lineNumber: 152,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -398,7 +398,7 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                 children: "Müdahale Hakkı Doldu"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                lineNumber: 153,
+                                lineNumber: 154,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -406,19 +406,19 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                 children: "Bu maç için kenardan müdahale hakkınız kalmamıştır. Taktik değişikliği yapamazsınız."
                             }, void 0, false, {
                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                lineNumber: 154,
+                                lineNumber: 155,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                        lineNumber: 152,
+                        lineNumber: 153,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                lineNumber: 146,
+                lineNumber: 147,
                 columnNumber: 9
             }, this),
             remaining === 1 && changeCount > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
@@ -435,7 +435,7 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                         className: "text-amber-400 shrink-0"
                     }, void 0, false, {
                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                        lineNumber: 166,
+                        lineNumber: 167,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -443,13 +443,13 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                         children: "Dikkat! Son müdahale hakkınız. Bu değişiklikten sonra taktik değiştiremezsiniz."
                     }, void 0, false, {
                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                        lineNumber: 167,
+                        lineNumber: 168,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                lineNumber: 161,
+                lineNumber: 162,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -459,7 +459,7 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                         className: "w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0"
                     }, void 0, false, {
                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                        lineNumber: 173,
+                        lineNumber: 174,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -470,7 +470,7 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                 children: "Aktif Taktik Planı"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                lineNumber: 175,
+                                lineNumber: 176,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -482,13 +482,13 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                lineNumber: 176,
+                                lineNumber: 177,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                        lineNumber: 174,
+                        lineNumber: 175,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -499,7 +499,7 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                 children: "Değişiklik Hakkı"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                lineNumber: 181,
+                                lineNumber: 182,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -511,19 +511,19 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                lineNumber: 182,
+                                lineNumber: 183,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                        lineNumber: 180,
+                        lineNumber: 181,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                lineNumber: 172,
+                lineNumber: 173,
                 columnNumber: 7
             }, this),
             remaining > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -535,7 +535,7 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                 children: "Formasyonu Değiştir"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                lineNumber: 192,
+                                lineNumber: 193,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -547,18 +547,18 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                         children: f
                                     }, f, false, {
                                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                        lineNumber: 195,
+                                        lineNumber: 196,
                                         columnNumber: 17
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                lineNumber: 193,
+                                lineNumber: 194,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                        lineNumber: 191,
+                        lineNumber: 192,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -568,7 +568,7 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                 children: "Oyun Stilini Değiştir"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                lineNumber: 213,
+                                lineNumber: 214,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -583,7 +583,7 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                                 children: t.icon
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                                lineNumber: 226,
+                                                lineNumber: 227,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -591,7 +591,7 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                                 children: t.label
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                                lineNumber: 227,
+                                                lineNumber: 228,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -599,24 +599,24 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                                 children: t.desc
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                                lineNumber: 228,
+                                                lineNumber: 229,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, t.id, true, {
                                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                        lineNumber: 216,
+                                        lineNumber: 217,
                                         columnNumber: 17
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                lineNumber: 214,
+                                lineNumber: 215,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                        lineNumber: 212,
+                        lineNumber: 213,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -624,12 +624,12 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                             tacticId: draftTactic
                         }, void 0, false, {
                             fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                            lineNumber: 237,
+                            lineNumber: 238,
                             columnNumber: 15
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                        lineNumber: 235,
+                        lineNumber: 236,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -641,20 +641,20 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                                 size: 10
                             }, void 0, false, {
                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                lineNumber: 246,
+                                lineNumber: 247,
                                 columnNumber: 28
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                 size: 10
                             }, void 0, false, {
                                 fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                                lineNumber: 246,
+                                lineNumber: 247,
                                 columnNumber: 54
                             }, this),
                             showEffects ? 'Etki bilgisini gizle' : 'Etki bilgisini göster'
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                        lineNumber: 241,
+                        lineNumber: 242,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -665,7 +665,7 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                         children: isApplying ? '⏳ Taktiğe müdahale ediliyor...' : hasChanges ? '✅ Kulübeden Talimatı Ver' : '— Değişiklik Yok —'
                     }, void 0, false, {
                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                        lineNumber: 251,
+                        lineNumber: 252,
                         columnNumber: 11
                     }, this),
                     lastApplied && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -676,7 +676,34 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-                        lineNumber: 265,
+                        lineNumber: 266,
+                        columnNumber: 13
+                    }, this),
+                    currentMinute != null && currentMinute >= 75 && remaining > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
+                        initial: {
+                            opacity: 0,
+                            y: 5
+                        },
+                        animate: {
+                            opacity: 1,
+                            y: 0
+                        },
+                        className: "bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2",
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                            className: "text-[9px] font-bold text-red-400 text-center",
+                            children: [
+                                "⚠️ Son ",
+                                90 - currentMinute,
+                                " dakika kaldı!"
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
+                            lineNumber: 276,
+                            columnNumber: 15
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
+                        lineNumber: 271,
                         columnNumber: 13
                     }, this)
                 ]
@@ -684,7 +711,7 @@ function LiveStrategyPanel({ currentFormation, currentTactic, onApply, isApplyin
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/match/LiveStrategyPanel.tsx",
-        lineNumber: 125,
+        lineNumber: 126,
         columnNumber: 5
     }, this);
 }

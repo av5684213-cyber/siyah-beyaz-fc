@@ -43,3 +43,26 @@ Stage Summary:
 - TypeScript compilation passes for all modified files
 - Migration file: supabase/migrations/20260527000001_match_sessions_live_columns.sql
 - Core architectural fix: match-tick no longer re-simulates entire 90 minutes each tick
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: PROMPT 8-10 — Match-Scheduler Duplicate Prevention, Match-Tick Completion Fix, LiveStrategyPanel Müdahale Fix
+
+Work Log:
+- PROMPT 8: Updated match-scheduler/route.ts duplicate session check to filter by status ['live', 'halftime', 'completed'] instead of any session
+- PROMPT 8: Added Istanbul timezone (Europe/Istanbul) handling for match date/time queries
+- PROMPT 8: Added match_sessions.fixture_id UNIQUE constraint to schema-migration/route.ts (migration #18)
+- PROMPT 8: Created SQL file for manual application: /home/z/my-project/download/add_match_sessions_unique_constraint.sql
+- PROMPT 9: Added updated_at and try/catch to fixtures update in match-tick/route.ts completion block
+- PROMPT 9: Added console.log for match completion confirmation
+- PROMPT 10: Fixed "3 müdahale hakkı" to "5 müdahale hakkı" in match/[id]/page.tsx
+- PROMPT 10: Added currentMinute optional prop to LiveStrategyPanelProps in matchTypes.ts
+- PROMPT 10: Added last 15 minutes warning (>=75 min) in LiveStrategyPanel.tsx with ⚠️ icon
+- PROMPT 10: Passed liveMatchMinute as currentMinute prop from match/[id]/page.tsx to LiveStrategyPanel
+
+Stage Summary:
+- All 3 prompts applied successfully
+- TypeScript compilation passes for all modified files (MarketTab.tsx errors are pre-existing)
+- Dev server running at localhost:3000
+- UNIQUE constraint SQL migration needs manual application via Supabase SQL Editor
