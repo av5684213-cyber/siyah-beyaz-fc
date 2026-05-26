@@ -1,11 +1,7 @@
 /**
- * @deprecated Bu route kullanılmıyor ve vercel.json'da kayıtlı değil.
- * Bırakılan mimari: match_sessions tabanlı tick simülasyonu.
- * Aktif simülasyon: /api/cron/process-match-queue kullanılıyor.
- *
  * Cron Job: Maç Tick (Artırımlı Canlı Maç Simülasyonu)
  *
- * Her 1-2 dakikada bir çağrılır. Canlı maçları ilerletir:
+ * Her 2 dakikada bir çağrılır. Canlı maçları ilerletir:
  * - match_sessions'den mevcut oturumu okur
  * - Son simüle edilen dakikadan itibaren birkaç dakikalık simülasyon yapar
  * - Olayları match_events tablosuna yazar (is_revealed=true)
@@ -30,12 +26,12 @@ export const maxDuration = 60; // 5 dakika
 
 // ═══════════════════════════════════════════════════════════════
 // Simülasyon hızı: 1 gerçek dakika = kaç maç dakikası?
-// Varsayılan: 2 (90 dk maç ~ 45 gerçek dakikada biter)
+// Varsayılan: 3 (90 dk maç ~ 30 gerçek dakikada biter)
 // ═══════════════════════════════════════════════════════════════
-const DEFAULT_SIMULATION_SPEED = 2;
+const DEFAULT_SIMULATION_SPEED = 3;
 
 // Devre arası gerçek hayatta kaç dakika sürer
-const HALFTIME_REAL_DURATION_MINUTES = 2;
+const HALFTIME_REAL_DURATION_MINUTES = 1;
 
 // Her tick'te simüle edilecek maksimum dakika sayısı
 const MAX_MINUTES_PER_TICK = 6;
@@ -124,6 +120,8 @@ async function updateLeagueStandings(
 
 // ═══════════════════════════════════════════════════════════════
 // Artırımlı simülasyon: Sadece fromMinute → toMinute arası
+// Artık TÜM maçı simüle edip filtrelemiyor — sadece istenen aralığı
+// simüle ediyor (deterministik sonuçlar, taktik değişiklikleri etkili)
 // ═══════════════════════════════════════════════════════════════
 function simulateIncremental(
   homePlayers: Player[],
@@ -143,10 +141,12 @@ function simulateIncremental(
     awayGoalMod?: number;
     homeConceedMod?: number;
     awayConceedMod?: number;
+    initialHomeScore?: number;
+    initialAwayScore?: number;
   }
 ): EnhancedMatchResult {
-  // Tüm maçı simüle et, ama sadece fromMinute-toMinute arasındaki olayları al
-  const fullResult = simulateEnhancedMatch(
+  // Sadece fromMinute → toMinute arasını simüle et (tüm maç DEĞİL)
+  const result = simulateEnhancedMatch(
     homePlayers,
     awayPlayers,
     homeTactic,
@@ -158,6 +158,10 @@ function simulateIncremental(
       refereePersonality: options.refereePersonality,
       refereeName: options.refereeName,
       weather: options.weather,
+      startMinute: fromMinute,    // YENI: sadece bu aralığı simüle et
+      endMinute: toMinute,        // YENI: sadece bu aralığı simüle et
+      initialHomeScore: options.initialHomeScore ?? 0,  // YENI: önceki goller
+      initialAwayScore: options.initialAwayScore ?? 0,  // YENI: önceki goller
       homeTacticModifiers: {
         goalMod: options.homeGoalMod || 0,
         conceedMod: options.homeConceedMod || 0,
@@ -169,29 +173,10 @@ function simulateIncremental(
     }
   );
 
-  // Sadece istenen dakika aralığındaki olayları filtrele
-  const filteredEvents = fullResult.events.filter(e => e.minute >= fromMinute && e.minute <= toMinute);
-
-  // Skoru bu aralıktaki gollere göre hesapla
-  let homeScore = 0;
-  let awayScore = 0;
-  for (const evt of filteredEvents) {
-    if (evt.type === 'goal') {
-      if (evt.team === 'home') homeScore++;
-      else if (evt.team === 'away') awayScore++;
-    }
-  }
-
-  return {
-    ...fullResult,
-    events: filteredEvents,
-    homeScore,
-    awayScore,
-  };
+  return result;
 }
 
 export async function GET(request: NextRequest) {
-  return NextResponse.json({ error: 'deprecated', message: 'Bu endpoint devre dışı. Aktif simülasyon: /api/cron/process-match-queue' }, { status: 410 });
   // CRON_SECRET protection
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret || request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
@@ -367,6 +352,34 @@ if (!isSupabaseConfigured()) {
             ? JSON.parse(session.referee_data) : session.referee_data;
         } catch {}
 
+        // ── Taktik değişikliği algılama ──
+        // Session'daki taktik önceki tick'ten farklı mı kontrol et
+        // Farklı ise TACTICAL_CHANGE event'i match_events'e yaz
+        const prevTactic = session.prev_tactic || null;
+        const currentTactic = session.home_tactic || null;
+        if (prevTactic !== null && currentTactic !== null && prevTactic !== currentTactic && session.current_minute > 0) {
+          try {
+            await supabase.from('match_events').insert({
+              fixture_id: fixtureId,
+              event_type: 'TACTICAL_CHANGE',
+              minute: session.current_minute,
+              team: 'home',
+              detail: `Taktik degistirildi: ${currentTactic}`,
+              is_revealed: true,
+            });
+          } catch (tacErr) {
+            console.warn(`[match-tick] TACTICAL_CHANGE event insert failed:`, tacErr);
+          }
+        }
+        // prev_tactic'i guncelle
+        if (currentTactic && currentTactic !== prevTactic) {
+          try {
+            await supabase.from('match_sessions')
+              .update({ prev_tactic: currentTactic })
+              .eq('id', session.id);
+          } catch {}
+        }
+
         // ── Artırımlı simülasyonu çalıştır ──
         const incrementalResult = simulateIncremental(
           homePlayers,
@@ -386,6 +399,8 @@ if (!isSupabaseConfigured()) {
             awayGoalMod: session.away_goal_mod || 0,
             homeConceedMod: session.home_conceed_mod || 0,
             awayConceedMod: session.away_conceed_mod || 0,
+            initialHomeScore: session.home_score || 0,   // Önceki golleri taşı
+            initialAwayScore: session.away_score || 0,   // Önceki golleri taşı
           }
         );
 
@@ -423,11 +438,13 @@ if (!isSupabaseConfigured()) {
           }
         }
 
-        // ── Skoru güncelle (mevcut skor + yeni goller) ──
-        let newHomeScore = session.home_score || 0;
-        let newAwayScore = session.away_score || 0;
+        // ── Skoru güncelle ──
+        // Artırımlı simülasyon initialHomeScore/initialAwayScore ile başladığı için
+        // incrementalResult.homeScore zaten TOPLAM skoru içerir (önceki + yeni goller)
+        let newHomeScore = incrementalResult.homeScore;
+        let newAwayScore = incrementalResult.awayScore;
 
-        // Tüm revealed goal olaylarını say
+        // Fallback: DB'deki tüm revealed golleri say (tutarsızlık olursa)
         try {
           const { data: allRevealedGoals } = await supabase
             .from('match_events')
@@ -437,17 +454,20 @@ if (!isSupabaseConfigured()) {
             .eq('is_revealed', true);
 
           if (allRevealedGoals && allRevealedGoals.length > 0) {
-            newHomeScore = 0;
-            newAwayScore = 0;
+            let dbHomeScore = 0;
+            let dbAwayScore = 0;
             for (const g of allRevealedGoals) {
-              if (g.team === 'home') newHomeScore++;
-              else if (g.team === 'away') newAwayScore++;
+              if (g.team === 'home') dbHomeScore++;
+              else if (g.team === 'away') dbAwayScore++;
+            }
+            // DB skoru daha yüksekse (güvenlik), onu kullan
+            if (dbHomeScore + dbAwayScore > newHomeScore + newAwayScore) {
+              newHomeScore = dbHomeScore;
+              newAwayScore = dbAwayScore;
             }
           }
         } catch (scoreErr) {
-          // Fallback: sadece bu aralıktaki golleri ekle
-          newHomeScore += incrementalResult.homeScore;
-          newAwayScore += incrementalResult.awayScore;
+          // DB sorgusu başarısız olursa simülasyon skorunu kullan (zaten yukarıda atandı)
         }
 
         // ── Durumu hesapla ──
@@ -494,7 +514,7 @@ if (!isSupabaseConfigured()) {
               home_score: newHomeScore,
               away_score: newAwayScore,
               status: newStatus,
-              last_updated: new Date().toISOString(),
+              last_tick_at: new Date().toISOString(),  // DOGRU kolon adı (last_updated degil)
             })
             .eq('id', session.id);
         } catch (sessionUpdateErr) {

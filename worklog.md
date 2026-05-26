@@ -23,3 +23,23 @@ Stage Summary:
 - Migration API route created but requires DATABASE_URL to function
 - SQL script prepared at /home/z/my-project/download/apply-migrations.sql
 - User needs to run the SQL script manually in Supabase SQL Editor for permanent fix
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: SIYAH BEYAZ FC — Canli Mac Mudahale Sistemi (7 Prompt)
+
+Work Log:
+- PROMPT 1: Removed deprecated @deprecated comments and early return from match-tick/route.ts and match-scheduler/route.ts, unblocking dead code
+- PROMPT 2: Added match-scheduler and match-tick to vercel.json crons and functions; changed match-simulator schedule to avoid conflicts
+- PROMPT 3: Changed DEFAULT_SIMULATION_SPEED from 2 to 3, HALFTIME_REAL_DURATION_MINUTES from 2 to 1; simulation_speed 2.0 to 3.0 in scheduler
+- PROMPT 4: Added startMinute/endMinute/initialHomeScore/initialAwayScore to SimulationOptions; modified engine loop to use effectiveStart/effectiveEnd; rewrote simulateIncremental to only simulate the needed range instead of full 90 minutes
+- PROMPT 5: Fixed last_updated to last_tick_at in match-tick session update; created migration 20260527000001_match_sessions_live_columns.sql
+- PROMPT 6: Added tactical change detection before each tick simulation; inserts TACTICAL_CHANGE event when tactic changes
+- PROMPT 7: Added auto-open strategy tab, red dot badge, live progress bar, last-15-minutes warning banner
+
+Stage Summary:
+- All 7 prompts applied successfully
+- TypeScript compilation passes for all modified files
+- Migration file: supabase/migrations/20260527000001_match_sessions_live_columns.sql
+- Core architectural fix: match-tick no longer re-simulates entire 90 minutes each tick

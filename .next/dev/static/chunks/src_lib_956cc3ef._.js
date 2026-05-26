@@ -8078,9 +8078,11 @@ function simulateEnhancedMatch(homePlayers, awayPlayers, homeTactic, awayTactic,
         usedSubs: 0,
         substitutes: awaySubstitutes
     };
-    // Score
-    let homeScore = 0;
-    let awayScore = 0;
+    // Score — for incremental simulation, carry over initial scores
+    const effectiveStart = options?.startMinute ?? 1;
+    const effectiveEnd = options?.endMinute ?? __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$fm$2f$constants$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MATCH_STRUCTURE"].duration;
+    let homeScore = options?.initialHomeScore ?? 0;
+    let awayScore = options?.initialAwayScore ?? 0;
     // All events
     const allEvents = [];
     // Live statistics
@@ -8210,12 +8212,12 @@ function simulateEnhancedMatch(homePlayers, awayPlayers, homeTactic, awayTactic,
         events.push(event);
     };
     // ── Main match loop ─────────────────────────────────────────────────────
-    let currentMinute = 1;
+    let currentMinute = effectiveStart;
     let momentumShiftCounter = 0;
-    while(currentMinute <= __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$fm$2f$constants$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MATCH_STRUCTURE"].duration){
+    while(currentMinute <= effectiveEnd){
         const minute = currentMinute;
-        // Weather & referee commentary at start
-        if (minute === 1) {
+        // Weather & referee commentary at start (only for full simulation from minute 1)
+        if (minute === 1 && effectiveStart === 1) {
             const refConfig = refCtx.personalityConfig;
             const refInfo = refCtx.referee.name ? ` Hakem: ${refCtx.referee.name} (${refConfig.emoji} ${refConfig.label_tr}, Sertlik: ${refCtx.referee.strictness}).` : '';
             allEvents.push({

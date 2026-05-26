@@ -608,6 +608,17 @@ export default function MatchPage() {
   const isLive = matchStatus === 'live';
   const isFinished = matchStatus === 'completed' || matchStatus === 'finished';
 
+  // ── Canlı maç: Strateji sekmesini otomatik aç (bir kez) ──
+  useEffect(() => {
+    if (isLive && fixtureId) {
+      const seen = sessionStorage.getItem(`strategy_seen_${fixtureId}`);
+      if (!seen) {
+        setActiveTab('strategy');
+        sessionStorage.setItem(`strategy_seen_${fixtureId}`, '1');
+      }
+    }
+  }, [isLive, fixtureId]);
+
   // ── Spoiler Kalkanı: Bitmiş bir maç sayfasını görüntüleyen kullanıcı izlemiş sayılır ──
   useEffect(() => {
     if (isFinished && fixtureId && typeof window !== 'undefined') {
@@ -722,6 +733,37 @@ export default function MatchPage() {
           status={matchStatus}
           minute={liveMatchMinute}
         />
+
+        {/* ═══ Canlı Maç İlerleme Çubuğu ═══ */}
+        {isLive && liveMatchMinute != null && (
+          <div className="space-y-2">
+            <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-amber-500 to-red-500 transition-all duration-[2000ms]"
+                style={{ width: `${(liveMatchMinute / 90) * 100}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[8px] text-white/20 font-mono">
+              <span>0&apos;</span>
+              <span>45&apos;</span>
+              <span>90&apos;</span>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ Son 15 Dakika Uyarısı ═══ */}
+        {isLive && liveMatchMinute != null && liveMatchMinute >= 75 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2 flex items-center gap-2"
+          >
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <p className="text-[10px] font-bold text-red-400">
+              Son {90 - liveMatchMinute} dakika — Taktik degistirme hakkiniz var mi?
+            </p>
+          </motion.div>
+        )}
 
         {/* ═══ Hakem Bilgisi Kartı ═══ */}
         {fixture.referee_name && (() => {
@@ -939,10 +981,10 @@ export default function MatchPage() {
             {/* Sekme Geçişi */}
             <div className="flex gap-1 p-1 bg-white/[0.02] rounded-xl border border-white/[0.06]">
               {[
-                { id: 'events' as const, label: 'Olaylar', icon: <CircleDot size={14} /> },
-                { id: 'stats' as const, label: 'İstatistikler', icon: <Users size={14} /> },
-                { id: 'chat' as const, label: 'Sohbet', icon: <MessageSquare size={14} /> },
-                ...(isLive ? [{ id: 'strategy' as const, label: 'Strateji', icon: <Shield size={14} /> }] : []),
+                { id: 'events' as const, label: 'Olaylar', icon: <CircleDot size={14} />, badge: undefined },
+                { id: 'stats' as const, label: 'İstatistikler', icon: <Users size={14} />, badge: undefined },
+                { id: 'chat' as const, label: 'Sohbet', icon: <MessageSquare size={14} />, badge: undefined },
+                ...(isLive ? [{ id: 'strategy' as const, label: 'Strateji', icon: <Shield size={14} />, badge: (tacticChangeCount < 5 ? 'live' : undefined) as string | undefined }] : []),
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -955,6 +997,9 @@ export default function MatchPage() {
                 >
                   {tab.icon}
                   {tab.label}
+                  {tab.badge === 'live' && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse ml-1" />
+                  )}
                 </button>
               ))}
             </div>

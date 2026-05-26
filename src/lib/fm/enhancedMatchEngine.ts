@@ -186,6 +186,12 @@ export interface SimulationOptions {
   // Play style modifiers (from playStyles.ts)
   homePlayStyleModifiers?: import('./playStyles').PlayStyleModifiers;
   awayPlayStyleModifiers?: import('./playStyles').PlayStyleModifiers;
+  // Incremental simulation: simulate only a specific minute range
+  startMinute?: number;  // Simülasyonun başladığı dakika (0 = varsayılan, baştan başla)
+  endMinute?: number;    // Simülasyonun bittiği dakika (90 = varsayılan, sonuna kadar)
+  // Initial scores for incremental simulation (carry over from previous ticks)
+  initialHomeScore?: number;
+  initialAwayScore?: number;
 }
 
 // ─── Internal Mutable Player State ──────────────────────────────────────────
@@ -1337,9 +1343,11 @@ export function simulateEnhancedMatch(
     substitutes: awaySubstitutes,
   };
 
-  // Score
-  let homeScore = 0;
-  let awayScore = 0;
+  // Score — for incremental simulation, carry over initial scores
+  const effectiveStart = options?.startMinute ?? 1;
+  const effectiveEnd = options?.endMinute ?? MATCH_STRUCTURE.duration;
+  let homeScore = options?.initialHomeScore ?? 0;
+  let awayScore = options?.initialAwayScore ?? 0;
 
   // All events
   const allEvents: MatchEvent[] = [];
@@ -1510,14 +1518,14 @@ export function simulateEnhancedMatch(
   };
 
   // ── Main match loop ─────────────────────────────────────────────────────
-  let currentMinute = 1;
+  let currentMinute = effectiveStart;
   let momentumShiftCounter = 0;
 
-  while (currentMinute <= MATCH_STRUCTURE.duration) {
+  while (currentMinute <= effectiveEnd) {
     const minute = currentMinute;
 
-    // Weather & referee commentary at start
-    if (minute === 1) {
+    // Weather & referee commentary at start (only for full simulation from minute 1)
+    if (minute === 1 && effectiveStart === 1) {
       const refConfig = refCtx.personalityConfig;
       const refInfo = refCtx.referee.name ? ` Hakem: ${refCtx.referee.name} (${refConfig.emoji} ${refConfig.label_tr}, Sertlik: ${refCtx.referee.strictness}).` : '';
       allEvents.push({

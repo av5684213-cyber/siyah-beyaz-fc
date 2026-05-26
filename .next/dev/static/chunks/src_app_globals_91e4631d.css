@@ -11765,6 +11765,11 @@
     transition-duration: 1s;
   }
 
+  .duration-\[2000ms\] {
+    --tw-duration: 2s;
+    transition-duration: 2s;
+  }
+
   .ease-in {
     --tw-ease: var(--ease-in);
     transition-timing-function: var(--ease-in);

@@ -4,7 +4,9 @@
   "outputDirectory": ".next",
   "installCommand": "npm install --legacy-peer-deps",
   "crons": [
-    { "path": "/api/cron/match-simulator",              "schedule": "0 9,15 * * 1-5" },
+    { "path": "/api/cron/match-scheduler",            "schedule": "0 9,15 * * 1-5" },
+    { "path": "/api/cron/match-tick",                  "schedule": "*/2 9-16 * * 1-5" },
+    { "path": "/api/cron/match-simulator",              "schedule": "0 8,14 * * 1-5" },
     { "path": "/api/cron/process-match-queue",           "schedule": "*/5 9-17 * * 1-5" },
     { "path": "/api/cron/weekly-income",                 "schedule": "0 6 * * 1" },
     { "path": "/api/cron/bot-actions",                   "schedule": "0 10 * * 1" },
@@ -20,6 +22,8 @@
     { "path": "/api/cron/weekly-fans",                "schedule": "0 7 * * 1" }
   ],
   "functions": {
+    "src/app/api/cron/match-scheduler/route.ts":        { "maxDuration": 60 },
+    "src/app/api/cron/match-tick/route.ts":              { "maxDuration": 30 },
     "src/app/api/cron/match-simulator/route.ts":         { "maxDuration": 60 },
     "src/app/api/cron/process-match-queue/route.ts":     { "maxDuration": 60 },
     "src/app/api/cron/weekly-income/route.ts":           { "maxDuration": 60 },

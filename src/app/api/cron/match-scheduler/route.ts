@@ -1,8 +1,4 @@
 /**
- * @deprecated Bu route kullanılmıyor ve vercel.json'da kayıtlı değil.
- * Bırakılan mimari: match_sessions tabanlı canlı maç oturumu başlatma.
- * Aktif simülasyon: /api/cron/process-match-queue kullanılıyor.
- *
  * Cron Job: Maç Başlatıcı (Live Match Session Starter)
  *
  * Scheduled maçları canlıya alır. Artık tüm 90 dakikayı önceden
@@ -128,7 +124,6 @@ function tacticToModifiers(tacticStr: string): { goalMod: number; conceedMod: nu
 }
 
 export async function GET(request: NextRequest) {
-  return NextResponse.json({ error: 'deprecated', message: 'Bu endpoint devre dışı. Aktif simülasyon: /api/cron/process-match-queue' }, { status: 410 });
   // CRON_SECRET protection
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret || request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
@@ -384,7 +379,7 @@ export async function GET(request: NextRequest) {
             home_team_id: fixture.home_team_id,
             away_team_id: fixture.away_team_id,
             season_id: fixture.season_id,
-            simulation_speed: 2.0,
+            simulation_speed: 3.0,
             last_updated: new Date().toISOString(),
           })
           .select('id')
