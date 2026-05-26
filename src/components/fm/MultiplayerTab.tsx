@@ -944,7 +944,16 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                       </div>
                       <div className="text-right">
                          <div className="text-sm font-black font-mono text-emerald-400">{formatCurrency(user.money)}</div>
-                         <div className="text-[9px] font-bold text-white/20 uppercase tracking-widest">BÜTÇE</div>
+                         <div className="flex items-center justify-end gap-2 mt-0.5">
+                           {(user.championship_count || 0) > 0 && (
+                             <span className="text-[8px] text-yellow-400 font-black">
+                               🏆 {user.championship_count}x
+                             </span>
+                           )}
+                           <span className="text-[8px] text-white/25">
+                             Rep: {user.reputation || 0}
+                           </span>
+                         </div>
                       </div>
                    </div>
                 ))}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { calculateWeeklyRevenue, calculateWeeklyExpenses, checkFinancialHealth } from '@/lib/fm/financialModel';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { acquireCronLock, releaseCronLock } from '@/lib/fm/cronLockService';
 export const maxDuration = 60;
 
 /**
@@ -27,6 +28,12 @@ if (!isSupabaseConfigured()) {
   const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'No Supabase client' }, { status: 500 });
+  }
+
+  // Cron lock: aynı anda iki instance çift işlem yapmasın
+  const lock = await acquireCronLock(supabase, 'weekly-income', 600);
+  if (!lock) {
+    return NextResponse.json({ message: 'Already running, skipped' });
   }
 
   try {
@@ -349,5 +356,7 @@ if (!isSupabaseConfigured()) {
     });
   } catch (err) {
     return createErrorResponse(err, { route: '/api/cron/weekly-income', method: 'GET' });
+  } finally {
+    await releaseCronLock(supabase, 'weekly-income', lock);
   }
 }

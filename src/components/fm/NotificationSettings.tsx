@@ -132,6 +132,7 @@ export default function NotificationSettings({ profileId }: NotificationSettings
   }
 
   const isBrowserSupported = typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator;
+  const isVapidConfigured = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const isActive = permission === 'granted' && hasSubscription;
 
   return (
@@ -180,7 +181,13 @@ export default function NotificationSettings({ profileId }: NotificationSettings
       </div>
 
       {/* ── Tarayıcı Bildirimlerini Aktif Et / Kapat Butonu ── */}
-      {!isBrowserSupported ? (
+      {!isVapidConfigured ? (
+        <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 text-center">
+          <p className="text-[10px] text-white/30">
+            Bu ortamda push bildirimleri yapılandırılmamış.
+          </p>
+        </div>
+      ) : !isBrowserSupported ? (
         <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-5">
           <div className="flex items-center gap-3">
             <MonitorSmartphone size={18} className="text-red-400" />

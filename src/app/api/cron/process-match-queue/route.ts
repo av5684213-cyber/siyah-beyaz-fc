@@ -18,6 +18,7 @@ import { safeJsonParse } from '@/lib/fm/sharedUtils';
 import { computeStadiumEffects, applyStadiumEffects, detectMatchConditions, fetchStadiumLevels } from '@/lib/fm/stadiumMatrix';
 import { calculateTeamPlayStyleModifiers } from '@/lib/fm/playStyles';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { acquireCronLock, releaseCronLock } from '@/lib/fm/cronLockService';
 
 export const maxDuration = 60; // Pro plan sınırı
 
@@ -62,6 +63,12 @@ if (!isSupabaseConfigured()) {
   const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase client is null' }, { status: 500 });
+  }
+
+  // Cron lock: aynı anda iki instance çift işlem yapmasın
+  const lock = await acquireCronLock(supabase, 'process-match-queue', 120);
+  if (!lock) {
+    return NextResponse.json({ message: 'Already running, skipped' });
   }
 
   try {
@@ -175,6 +182,8 @@ if (!isSupabaseConfigured()) {
     }
   } catch (err) {
     return createErrorResponse(err, { route: '/api/cron/process-match-queue', method: 'GET' });
+  } finally {
+    await releaseCronLock(supabase, 'process-match-queue', lock);
   }
 }
 

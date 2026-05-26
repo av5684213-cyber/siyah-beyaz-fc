@@ -24,6 +24,7 @@ import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { processPromotionRelegation } from '@/lib/fm/leagueHelpers';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { AWARD_LABELS, type AwardType } from '@/lib/fm/types';
+import { acquireCronLock, releaseCronLock } from '@/lib/fm/cronLockService';
 
 export const maxDuration = 60;
 
@@ -42,6 +43,12 @@ if (!isSupabaseConfigured()) {
   const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase istemcisi oluşturulamadı' }, { status: 500 });
+  }
+
+  // Cron lock: aynı anda iki instance çift işlem yapmasın
+  const lock = await acquireCronLock(supabase, 'season-end', 900);
+  if (!lock) {
+    return NextResponse.json({ message: 'Already running, skipped' });
   }
 
   try {
@@ -149,6 +156,8 @@ if (!isSupabaseConfigured()) {
     });
   } catch (err) {
     return createErrorResponse(err, { route: '/api/cron/season-end', method: 'GET' });
+  } finally {
+    await releaseCronLock(supabase, 'season-end', lock);
   }
 }
 

@@ -129,7 +129,8 @@ export async function hasPushSubscription(profileId: string): Promise<boolean> {
 export async function subscribeToPush(profileId: string): Promise<{ success: boolean; error?: string }> {
   try {
     if (!VAPID_PUBLIC_KEY) {
-      return { success: false, error: 'VAPID public key yapılandırılmamış.' };
+      console.warn('[push] VAPID key not configured');
+      return { success: false, error: 'Push bildirimleri bu sunucu yapılandırmasında desteklenmiyor. Lütfen yöneticiyle iletişime geçin.' };
     }
 
     // İzin al

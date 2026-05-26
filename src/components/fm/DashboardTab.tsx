@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   Flame,
   HeartPulse,
+  Info,
 } from 'lucide-react';
 import type { Player } from '@/lib/fm/types';
 
@@ -618,6 +619,39 @@ export function DashboardTab({
            </div>
          ))}
        </div>
+
+       {/* Oyun Rehberi — Yeni başlayanlar için */}
+       {(profile?.current_day || 0) < 14 && (
+         <div className="bg-amber-500/[0.06] border border-amber-500/15 rounded-2xl p-5 space-y-3">
+           <div className="flex items-center gap-2">
+             <Info size={14} className="text-amber-400" />
+             <p className="text-[10px] font-black uppercase tracking-widest text-amber-400/60">
+               Oyun Rehberi — Yeni Başlıyorsunuz
+             </p>
+           </div>
+           <div className="space-y-2 text-[9px] text-white/40">
+             <p>⚽ <span className="text-white/60 font-bold">Lig Maçları</span> — Pazartesi-Cuma 12:00 ve 18:00 saatlerinde oynanır</p>
+             <p>🏆 <span className="text-white/60 font-bold">Kupa Maçları</span> — Cumartesi ve Pazar, Kupa sekmesinden 5 krediyle oluşturun</p>
+             <p>💪 <span className="text-white/60 font-bold">Antrenman</span> — Hafta içi 15:00 ve 21:00 saatlerinde yapılabilir</p>
+             <p>📅 <span className="text-white/60 font-bold">Sezon</span> — 34 hafta (238 gün). 4. haftanın Salısında sona erer</p>
+           </div>
+           <button
+             onClick={() => {
+               if (profile?.id) {
+                 import('@/lib/supabase').then(({ getSupabase }) => {
+                   const supabase = getSupabase();
+                   if (supabase) {
+                     supabase.from('profiles').update({ current_day: Math.max(14, profile.current_day || 1) }).eq('id', profile.id).then();
+                   }
+                 });
+               }
+             }}
+             className="text-[8px] text-white/20 hover:text-white/40 transition-colors"
+           >
+             Rehberi Kapat
+           </button>
+         </div>
+       )}
 
        {/* Transfer Offers Panel */}
        {/* Lig Durumu Kartı */}

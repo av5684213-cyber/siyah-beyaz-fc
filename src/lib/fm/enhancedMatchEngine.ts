@@ -1343,6 +1343,20 @@ export function simulateEnhancedMatch(
     substitutes: awaySubstitutes,
   };
 
+  // ── Per-player position effectiveness maps ─────────────────────────
+  // Her oyuncunun pozisyon etkinliğini önceden hesapla, goalChance'te kullanılacak
+  const homeEffectiveness = new Map<string, number>();
+  const awayEffectiveness = new Map<string, number>();
+
+  for (const player of homePlayers) {
+    const targetPos = player.specificPosition || player.position || 'CM';
+    homeEffectiveness.set(player.id, getPositionEffectiveness(player, targetPos));
+  }
+  for (const player of awayPlayers) {
+    const targetPos = player.specificPosition || player.position || 'CM';
+    awayEffectiveness.set(player.id, getPositionEffectiveness(player, targetPos));
+  }
+
   // Score — for incremental simulation, carry over initial scores
   const effectiveStart = options?.startMinute ?? 1;
   const effectiveEnd = options?.endMinute ?? MATCH_STRUCTURE.duration;
@@ -1631,6 +1645,15 @@ export function simulateEnhancedMatch(
       const gkRating = opponentGK ? getAttr(opponentGK.player, 'goalkeeping', 50) / 100 : 0.5;
 
       let goalChance = baseGoalChance * strengthRatio * (finishing / (finishing + gkRating * GOAL_CHANCE.gkWeight));
+
+      // ── Pozisyon etkinlik carpani ──────────────────────────────────────
+      // Oyuncunun pozisyonuna uygunlugu goalChance'i etkiler
+      // effectiveRating = rating * (0.7 + 0.3 * effectiveness)
+      // Min %70 rating, max %100 rating — yanlis pozisyonda -%30, dogru pozisyonda +%30
+      const playerEff = (hasMomentum === 'home' ? homeEffectiveness : awayEffectiveness)
+        .get(selectedPlayer.player.id) ?? 0.7;
+      const posEffectivenessMod = 0.7 + 0.3 * playerEff; // 0.7 — 1.0 arası
+      goalChance *= posEffectivenessMod;
 
       // Quality gap modifier — much stronger team creates more
       const qualityGap = Math.abs(attackingTeam.overallStrength - defendingTeam.overallStrength) / 100;

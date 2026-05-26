@@ -190,8 +190,6 @@ function getDefaultInventory(profile: any): InventoryItem[] {
 
 export default function InventoryTab({ userId, onMarketRedirect }: { userId?: string; onMarketRedirect: () => void }) {
   const { profile, squad, setSquad, setProfile } = useFM();
-  // Coming Soon overlay is always shown — cannot be dismissed
-  const showComingSoon = true;
   const [activeCategory, setActiveCategory] = useState<ItemCategory | 'all'>('all');
   const [usedItem, setUsedItem] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -315,29 +313,8 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="space-y-6 relative"
+      className="space-y-6"
     >
-      {/* Yakında Coming Soon Overlay — always visible, not dismissible */}
-      <div
-        className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center rounded-2xl"
-      >
-        <div
-          className="max-w-sm w-full mx-4 p-8 rounded-3xl border border-amber-500/25 bg-gradient-to-b from-zinc-900 to-zinc-950 text-center shadow-[0_0_60px_rgba(245,158,11,0.1)]"
-        >
-          <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
-            <Construction size={32} className="text-amber-400" />
-          </div>
-          <h3 className="text-xl font-black italic uppercase tracking-tight text-amber-300 mb-3">
-            🚧 Yakında!
-          </h3>
-          <p className="text-sm text-white/50 leading-relaxed">
-            Bu bölüm şu anda geliştirme aşamasındadır. Yakında aktif olacaktır.
-          </p>
-        </div>
-      </div>
-
-      {/* Underlying content - disabled when overlay is active */}
-      <div className={showComingSoon ? 'pointer-events-none select-none' : ''}>
       {/* Toast Notification */}
       <AnimatePresence>
         {toast && (
@@ -357,7 +334,7 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
         )}
       </AnimatePresence>
 
-      {/* Yakinda Warning Banner */}
+      {/* Gelistirme Bilgilendirme Banner */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -368,16 +345,16 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
             <Construction size={20} className="text-amber-400" />
           </div>
           <div>
-            <p className="text-sm font-black text-amber-300 uppercase tracking-wider">Bu ozellik yakinda kullanima sunulacak.</p>
-            <p className="text-[10px] text-white/30 mt-0.5">Envanter sistemi henuz gelistirme asamasindadir. Gosterilen esyalar ornek veridir.</p>
+            <p className="text-sm text-white/50 leading-relaxed">
+              Envanter sistemi alt yapısı hazır. Oyun dengelemesi tamamlanınca aktif edilecek. Bu sekmeyi keşfedebilirsiniz.
+            </p>
           </div>
         </div>
-        {/* Decorative animated stripe */}
         <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
       </motion.div>
 
-      {/* Header - slightly dimmed */}
-      <div className="opacity-60 pointer-events-none select-none">
+      {/* Header */}
+      <div>
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -429,8 +406,8 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
         </div>
       </div>
 
-      {/* Items Grid - slightly dimmed */}
-      <div className="opacity-50 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {/* Items Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filteredItems.map((item, i) => {
           const rarity = RARITY_STYLES[item.rarity];
           const isUsed = usedItem === item.id;
@@ -502,7 +479,6 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
           <p className="text-xs text-white/20 font-bold uppercase">Bu kategoride eşya yok</p>
         </div>
       )}
-      </div>{/* end pointer-events wrapper */}
     </motion.div>
   );
 }

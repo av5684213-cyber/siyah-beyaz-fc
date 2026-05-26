@@ -1343,7 +1343,7 @@ export default function Home() {
                         return newFacilities;
                       });
                     }}
-                    onPromotePlayer={(youthPlayer: YouthPlayer) => {
+                    onPromotePlayer={async (youthPlayer: YouthPlayer) => {
                       // Genç oyuncuyu A takım oyuncusuna dönüştür
                       const promotedPlayer: Player = {
                         id: youthPlayer.id.replace('youth_', 'p_'),
@@ -1409,6 +1409,62 @@ export default function Home() {
                       setSquad(prev => [...prev, promotedPlayer]);
                       // Genç listeden çıkar
                       setYouthPlayers(prev => prev.filter(p => p.id !== youthPlayer.id));
+
+                      // ── Supabase'e kaydet ──
+                      if (isSupabaseConfigured() && profile?.id) {
+                        try {
+                          const supabase = getSupabase();
+                          const playerRow = {
+                            id: promotedPlayer.id,
+                            profile_id: profile.id,
+                            name: promotedPlayer.name,
+                            position: promotedPlayer.position,
+                            specific_position: promotedPlayer.specificPosition || null,
+                            rating: promotedPlayer.rating,
+                            age: promotedPlayer.age,
+                            potential: promotedPlayer.potential,
+                            market_value: promotedPlayer.market_value || 0,
+                            salary: promotedPlayer.salary || 0,
+                            nation: promotedPlayer.nation || 'TR',
+                            team_name: profile.team_name,
+                            defending: promotedPlayer.defending || 50,
+                            passing: promotedPlayer.passing || 50,
+                            shooting: promotedPlayer.shooting || 50,
+                            speed: promotedPlayer.speed || 50,
+                            power: promotedPlayer.power || 50,
+                            goalkeeping: promotedPlayer.goalkeeping || 10,
+                            vision: promotedPlayer.vision || 50,
+                            control: promotedPlayer.control || 50,
+                            heading: promotedPlayer.heading || 50,
+                            traits: JSON.stringify(promotedPlayer.traits || []),
+                            form_rating: 50,
+                            is_injured: false,
+                            is_free_agent: false,
+                            contract_end_week: Math.ceil((profile.current_day || 1) / 7) + 34,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                          };
+
+                          const { error: insertErr } = await supabase
+                            .from('players')
+                            .upsert(playerRow);
+
+                          if (insertErr) {
+                            console.error('[onPromotePlayer] Supabase insert failed:', insertErr.message);
+                          } else {
+                            console.log(`[onPromotePlayer] ${promotedPlayer.name} A takima eklendi (DB)`);
+                          }
+
+                          // Genç oyuncuyu youth_players tablosundan sil
+                          await supabase
+                            .from('youth_players')
+                            .delete()
+                            .eq('id', youthPlayer.id);
+
+                        } catch (err) {
+                          console.error('[onPromotePlayer] Supabase error:', err);
+                        }
+                      }
                     }}
                     budget={profile.money || 0}
                     credits={profile.credits || 0}

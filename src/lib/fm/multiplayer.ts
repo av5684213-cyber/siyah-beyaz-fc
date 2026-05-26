@@ -758,12 +758,48 @@ export const getGlobalLeaderboard = async () => {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, manager_name, team_name, reputation, level, fans')
+      .select(`
+        id,
+        manager_name,
+        team_name,
+        reputation,
+        level,
+        fans,
+        money,
+        league_name,
+        league_tier,
+        current_day
+      `)
       .order('reputation', { ascending: false })
-      .limit(20);
+      .limit(50);
 
     if (error || !data) return [];
-    return data;
+
+    // Her profil icin season_awards sayisini cek (champion sayisi)
+    const enhancedData = await Promise.all(data.map(async (profile) => {
+      try {
+        const { count: champCount } = await supabase
+          .from('season_awards')
+          .select('*', { count: 'exact', head: true })
+          .eq('profile_id', profile.id)
+          .eq('award_type', 'champion');
+
+        const { count: totalAwards } = await supabase
+          .from('season_awards')
+          .select('*', { count: 'exact', head: true })
+          .eq('profile_id', profile.id);
+
+        return {
+          ...profile,
+          championship_count: champCount || 0,
+          total_awards: totalAwards || 0,
+        };
+      } catch {
+        return { ...profile, championship_count: 0, total_awards: 0 };
+      }
+    }));
+
+    return enhancedData;
   } catch {
     return [];
   }

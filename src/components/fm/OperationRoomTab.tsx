@@ -38,7 +38,7 @@ export default function OperationRoomTab({ userId }: { userId?: string }) {
       exit={{ opacity: 0, y: -10 }}
       className="space-y-4"
     >
-      {/* Yakinda Warning Banner */}
+      {/* Bilgilendirme Banner */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -49,15 +49,16 @@ export default function OperationRoomTab({ userId }: { userId?: string }) {
             <Construction size={20} className="text-amber-400" />
           </div>
           <div>
-            <p className="text-sm font-black text-amber-300 uppercase tracking-wider">Bu ozellik yakinda kullanima sunulacak.</p>
-            <p className="text-[10px] text-white/30 mt-0.5">Operasyon odasi henuz gelistirme asamasindadir. Gosterilen icerik ornek veridir.</p>
+            <p className="text-sm text-white/50 leading-relaxed">
+              Operasyon Odası ve envanter sistemi alt yapısı hazır. Oyun dengelemesi tamamlanınca aktif edilecek. Bu sekmeyi keşfedebilirsiniz.
+            </p>
           </div>
         </div>
         <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
       </motion.div>
 
-      {/* Content - dimmed & disabled */}
-      <div className="opacity-60 pointer-events-none select-none">
+      {/* Content */}
+      <div>
         <OperationRoom
           trainingState={trainingState}
           budget={budget}
