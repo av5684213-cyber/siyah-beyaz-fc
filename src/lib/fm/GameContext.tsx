@@ -104,8 +104,9 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
   // Columns that may not exist in the database yet (pending migrations)
   // consecutive_losses already exists; these are the ones still missing:
   const PENDING_MIGRATION_COLUMNS = [
-    'last_newspaper_applied', 'financial_health',
-    'last_friendly_date', 'daily_friendly_count'
+    // All columns have been migrated - keeping list for reference
+    // 'last_newspaper_applied', 'financial_health',
+    // 'last_friendly_date', 'daily_friendly_count'
   ];
 
   useEffect(() => {

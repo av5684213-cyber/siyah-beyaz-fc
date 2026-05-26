@@ -169,3 +169,21 @@
 [00:41:27.118] Browser ERROR   unhandledRejection: undefined
 [00:41:27.349] Browser ERROR   unhandledRejection: undefined
 [00:42:33.576] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:45:33.757] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[01:00:34.053] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[01:01:33.587] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[01:02:01.042] Server  LOG     ✓ Compiled in 229ms
+[01:02:01.327] Server  WARN    ⚠ Fast Refresh had to perform a full reload when ./src/lib/fm/persistence.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[01:02:02.543] Server  WARN    ⚠ Fast Refresh had to perform a full reload when ./src/lib/fm/persistence.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[01:02:05.781] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:02:06.645] Server  LOG     ✓ Compiled in 208ms
+[01:02:07.572] Server  WARN    ⚠ Fast Refresh had to perform a full reload when ./src/lib/fm/GameContext.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[01:02:12.377] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[01:02:13.622] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[01:02:13.658] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[01:02:14.230] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[01:02:14.874] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[01:02:14.928] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[01:02:14.961] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[01:03:15.903] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[01:05:15.458] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"

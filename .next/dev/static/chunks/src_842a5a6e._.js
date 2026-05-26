@@ -1882,6 +1882,8 @@ const saveYouthFacilities = async (facilityLevels, userId)=>{
                 profile_id: userId,
                 facility_levels: JSON.stringify(facilityLevels),
                 updated_at: new Date().toISOString()
+            }, {
+                onConflict: 'profile_id'
             });
             if (error) {
                 console.error('[saveYouthFacilities] Upsert error:', error.message);
@@ -7006,12 +7008,7 @@ const FMProvider = ({ children })=>{
     // Sync to database (with localStorage backup and await)
     // Columns that may not exist in the database yet (pending migrations)
     // consecutive_losses already exists; these are the ones still missing:
-    const PENDING_MIGRATION_COLUMNS = [
-        'last_newspaper_applied',
-        'financial_health',
-        'last_friendly_date',
-        'daily_friendly_count'
-    ];
+    const PENDING_MIGRATION_COLUMNS = [];
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "FMProvider.useEffect": ()=>{
             if (profile?.id) {
@@ -8147,7 +8144,7 @@ const FMProvider = ({ children })=>{
         children: children
     }, void 0, false, {
         fileName: "[project]/src/lib/fm/GameContext.tsx",
-        lineNumber: 1057,
+        lineNumber: 1058,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };

@@ -639,7 +639,7 @@ export const saveYouthFacilities = async (facilityLevels: Record<string, number>
         profile_id: userId,
         facility_levels: JSON.stringify(facilityLevels),
         updated_at: new Date().toISOString(),
-      });
+      }, { onConflict: 'profile_id' });
 
       if (error) {
         console.error('[saveYouthFacilities] Upsert error:', error.message);
