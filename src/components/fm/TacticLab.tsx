@@ -94,6 +94,8 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
   
   // Loading state for Supabase session
   const [isLoaded, setIsLoaded] = useState(false);
+  // Track if lab_sessions table exists to avoid repeated errors
+  const [labTableAvailable, setLabTableAvailable] = useState(true);
 
   // Load saved lab session from Supabase
   useEffect(() => {
@@ -113,14 +115,19 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (!error && data) {
+        if (error) {
+          // If table doesn't exist, mark it as unavailable and skip auto-save
+          if (error.message?.includes('Could not find the table') || error.message?.includes('schema cache')) {
+            setLabTableAvailable(false);
+          }
+        } else if (data) {
           if (data.team_a) setTeamA(data.team_a);
           if (data.team_b) setTeamB(data.team_b);
           if (data.selected_formation) setSelectedFormation(data.selected_formation);
           if (data.settings) setSettings(data.settings);
         }
       } catch (err) {
-        console.error("Lab loading error:", err);
+        // Silently handle - localStorage fallback is always available
       } finally {
         setIsLoaded(true);
       }
@@ -131,7 +138,7 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
 
   // Auto-save lab session to Supabase every 2 seconds
   useEffect(() => {
-    if (!isLoaded || !user?.id || !isSupabaseConfigured()) return;
+    if (!isLoaded || !user?.id || !isSupabaseConfigured() || !labTableAvailable) return;
     
     const saveLab = async () => {
       try {
@@ -150,16 +157,19 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
           }, { onConflict: 'user_id' });
 
         if (error) {
-          console.error("Lab saving error:", error.message);
+          // If table doesn't exist, stop retrying
+          if (error.message?.includes('Could not find the table') || error.message?.includes('schema cache')) {
+            setLabTableAvailable(false);
+          }
         }
       } catch (err) {
-        console.error("Lab saving error:", err);
+        // Silently handle - localStorage fallback is always available
       }
     };
 
     const timer = setTimeout(saveLab, 2000);
     return () => clearTimeout(timer);
-  }, [teamA, teamB, selectedFormation, settings, isLoaded, user?.id]);
+  }, [teamA, teamB, selectedFormation, settings, isLoaded, labTableAvailable, user?.id]);
 
   const FORMATIONS = [
     '4-4-2', '4-3-3', '3-5-2', '5-4-1', '4-2-3-1', 

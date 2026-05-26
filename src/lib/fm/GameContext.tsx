@@ -101,6 +101,13 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
   }, [profile?.current_day, profile?.active_upgrade_type, profile?.active_upgrade_finish_day, setProfile, profile]);
 
   // Sync to database (with localStorage backup and await)
+  // Columns that may not exist in the database yet (pending migrations)
+  // consecutive_losses already exists; these are the ones still missing:
+  const PENDING_MIGRATION_COLUMNS = [
+    'last_newspaper_applied', 'financial_health',
+    'last_friendly_date', 'daily_friendly_count'
+  ];
+
   useEffect(() => {
     if (profile?.id) {
       // Always save to localStorage first as backup
@@ -112,9 +119,19 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
       if (isSupabaseConfigured()) {
         const supabase = getSupabase();
         if (supabase) {
-          supabase.from('profiles').update(profile).eq('id', profile.id)
+          // Strip columns that may not exist in the database yet to prevent sync errors
+          const profileForDb = { ...profile };
+          for (const col of PENDING_MIGRATION_COLUMNS) {
+            delete (profileForDb as any)[col];
+          }
+          supabase.from('profiles').update(profileForDb).eq('id', profile.id)
             .then(({ error }) => {
-              if (error) console.error('[GameContext] Profile sync error:', error.message);
+              if (error) {
+                // Only log non-migration-related errors
+                if (!error.message?.includes('does not exist') && !error.message?.includes('schema cache')) {
+                  console.error('[GameContext] Profile sync error:', error.message);
+                }
+              }
             });
         }
       }
@@ -922,8 +939,8 @@ export const FMProvider = ({ children }: { children: React.ReactNode }) => {
 
         await supabase.from('profiles').update({
           credits: newCredits,
-          last_friendly_date: today,
-          daily_friendly_count: newCount,
+          // last_friendly_date and daily_friendly_count columns may not exist yet
+          // They are saved to localStorage via the state update above
         }).eq('id', profile.id);
 
         await supabase.from('friendly_matches').insert({

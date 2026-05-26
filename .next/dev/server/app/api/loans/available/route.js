@@ -1,0 +1,10 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/loans/available/route.js")
+R.c("server/chunks/_22d59117._.js")
+R.c("server/chunks/node_modules_next_d05c680f._.js")
+R.c("server/chunks/node_modules_@supabase_postgrest-js_dist_index_mjs_b0bca5e1._.js")
+R.c("server/chunks/node_modules_@supabase_auth-js_dist_module_02e1b12e._.js")
+R.c("server/chunks/node_modules_4276a17d._.js")
+R.c("server/chunks/[root-of-the-server]__78c78886._.js")
+R.c("server/chunks/_next-internal_server_app_api_loans_available_route_actions_0d4ad91c.js")
+R.m("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/src/app/api/loans/available/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/src/app/api/loans/available/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports

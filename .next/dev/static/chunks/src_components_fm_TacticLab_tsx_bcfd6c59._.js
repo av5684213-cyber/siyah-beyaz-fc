@@ -184,6 +184,8 @@ function TacticLab({ onClose, squad }) {
     const [activeTab, setActiveTab] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('control');
     // Loading state for Supabase session
     const [isLoaded, setIsLoaded] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    // Track if lab_sessions table exists to avoid repeated errors
+    const [labTableAvailable, setLabTableAvailable] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(true);
     // Load saved lab session from Supabase
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "TacticLab.useEffect": ()=>{
@@ -200,14 +202,19 @@ function TacticLab({ onClose, squad }) {
                             return;
                         }
                         const { data, error } = await supabase.from('lab_sessions').select('team_a, team_b, selected_formation, settings').eq('user_id', user.id).maybeSingle();
-                        if (!error && data) {
+                        if (error) {
+                            // If table doesn't exist, mark it as unavailable and skip auto-save
+                            if (error.message?.includes('Could not find the table') || error.message?.includes('schema cache')) {
+                                setLabTableAvailable(false);
+                            }
+                        } else if (data) {
                             if (data.team_a) setTeamA(data.team_a);
                             if (data.team_b) setTeamB(data.team_b);
                             if (data.selected_formation) setSelectedFormation(data.selected_formation);
                             if (data.settings) setSettings(data.settings);
                         }
                     } catch (err) {
-                        console.error("Lab loading error:", err);
+                    // Silently handle - localStorage fallback is always available
                     } finally{
                         setIsLoaded(true);
                     }
@@ -221,7 +228,7 @@ function TacticLab({ onClose, squad }) {
     // Auto-save lab session to Supabase every 2 seconds
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "TacticLab.useEffect": ()=>{
-            if (!isLoaded || !user?.id || !(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["isSupabaseConfigured"])()) return;
+            if (!isLoaded || !user?.id || !(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["isSupabaseConfigured"])() || !labTableAvailable) return;
             const saveLab = {
                 "TacticLab.useEffect.saveLab": async ()=>{
                     try {
@@ -238,10 +245,13 @@ function TacticLab({ onClose, squad }) {
                             onConflict: 'user_id'
                         });
                         if (error) {
-                            console.error("Lab saving error:", error.message);
+                            // If table doesn't exist, stop retrying
+                            if (error.message?.includes('Could not find the table') || error.message?.includes('schema cache')) {
+                                setLabTableAvailable(false);
+                            }
                         }
                     } catch (err) {
-                        console.error("Lab saving error:", err);
+                    // Silently handle - localStorage fallback is always available
                     }
                 }
             }["TacticLab.useEffect.saveLab"];
@@ -256,6 +266,7 @@ function TacticLab({ onClose, squad }) {
         selectedFormation,
         settings,
         isLoaded,
+        labTableAvailable,
         user?.id
     ]);
     const FORMATIONS = [
@@ -1247,7 +1258,7 @@ function TacticLab({ onClose, squad }) {
                                     className: "jsx-b3cd0a4f7c7a1709" + " " + "w-10 h-1 rounded-full bg-white/15"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                    lineNumber: 541,
+                                    lineNumber: 551,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1255,25 +1266,25 @@ function TacticLab({ onClose, squad }) {
                                     children: "sürükle"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                    lineNumber: 542,
+                                    lineNumber: 552,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "jsx-b3cd0a4f7c7a1709" + " " + "w-10 h-1 rounded-full bg-white/15"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                    lineNumber: 543,
+                                    lineNumber: 553,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                            lineNumber: 540,
+                            lineNumber: 550,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                        lineNumber: 535,
+                        lineNumber: 545,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1289,12 +1300,12 @@ function TacticLab({ onClose, squad }) {
                                             size: 24
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 550,
+                                            lineNumber: 560,
                                             columnNumber: 15
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                        lineNumber: 549,
+                                        lineNumber: 559,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1305,7 +1316,7 @@ function TacticLab({ onClose, squad }) {
                                                 children: "TACTIC LABORATORY"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                lineNumber: 553,
+                                                lineNumber: 563,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1315,7 +1326,7 @@ function TacticLab({ onClose, squad }) {
                                                         className: "jsx-b3cd0a4f7c7a1709" + " " + "w-2 h-2 rounded-full bg-emerald-500 animate-pulse"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                        lineNumber: 555,
+                                                        lineNumber: 565,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1323,25 +1334,25 @@ function TacticLab({ onClose, squad }) {
                                                         children: "9v9 SIMULATION ENVIRONMENT // v2.4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                        lineNumber: 556,
+                                                        lineNumber: 566,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                lineNumber: 554,
+                                                lineNumber: 564,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                        lineNumber: 552,
+                                        lineNumber: 562,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                lineNumber: 548,
+                                lineNumber: 558,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1351,18 +1362,18 @@ function TacticLab({ onClose, squad }) {
                                     size: 20
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                    lineNumber: 564,
+                                    lineNumber: 574,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                lineNumber: 560,
+                                lineNumber: 570,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                        lineNumber: 547,
+                        lineNumber: 557,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1383,14 +1394,14 @@ function TacticLab({ onClose, squad }) {
                                                             size: 12
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 574,
+                                                            lineNumber: 584,
                                                             columnNumber: 23
                                                         }, this),
                                                         " TAKTİKSEL DİZİLİŞ"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 573,
+                                                    lineNumber: 583,
                                                     columnNumber: 20
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1406,12 +1417,12 @@ function TacticLab({ onClose, squad }) {
                                                                     children: f
                                                                 }, f, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 583,
+                                                                    lineNumber: 593,
                                                                     columnNumber: 29
                                                                 }, this))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 577,
+                                                            lineNumber: 587,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1421,24 +1432,24 @@ function TacticLab({ onClose, squad }) {
                                                                 className: "rotate-90"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                lineNumber: 587,
+                                                                lineNumber: 597,
                                                                 columnNumber: 26
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 586,
+                                                            lineNumber: 596,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 576,
+                                                    lineNumber: 586,
                                                     columnNumber: 20
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 572,
+                                            lineNumber: 582,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -1451,14 +1462,14 @@ function TacticLab({ onClose, squad }) {
                                                             size: 12
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 594,
+                                                            lineNumber: 604,
                                                             columnNumber: 23
                                                         }, this),
                                                         " HAVA VE ZEMİN"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 593,
+                                                    lineNumber: 603,
                                                     columnNumber: 20
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1480,24 +1491,24 @@ function TacticLab({ onClose, squad }) {
                                                                     children: w === 'Sunny' ? 'Güneş' : w === 'Rainy' ? 'Yağmur' : 'Kar'
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 606,
+                                                                    lineNumber: 616,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, w, true, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 598,
+                                                            lineNumber: 608,
                                                             columnNumber: 26
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 596,
+                                                    lineNumber: 606,
                                                     columnNumber: 20
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 592,
+                                            lineNumber: 602,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -1510,14 +1521,14 @@ function TacticLab({ onClose, squad }) {
                                                             size: 12
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 614,
+                                                            lineNumber: 624,
                                                             columnNumber: 23
                                                         }, this),
                                                         " MORAL VE BASKI"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 613,
+                                                    lineNumber: 623,
                                                     columnNumber: 20
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1538,7 +1549,7 @@ function TacticLab({ onClose, squad }) {
                                                                     children: m === 'Standard' ? 'STANDART' : m === 'Collapsed' ? 'ÇÖKMÜŞ (KRİZ)' : 'HİPER (GAZA GELMİŞ)'
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 625,
+                                                                    lineNumber: 635,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 m === 'Hyper' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trending$2d$up$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__TrendingUp$3e$__["TrendingUp"], {
@@ -1546,37 +1557,37 @@ function TacticLab({ onClose, squad }) {
                                                                     className: "text-emerald-400"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 626,
+                                                                    lineNumber: 636,
                                                                     columnNumber: 46
                                                                 }, this) : m === 'Collapsed' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertCircle$3e$__["AlertCircle"], {
                                                                     size: 12,
                                                                     className: "text-red-400"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 626,
+                                                                    lineNumber: 636,
                                                                     columnNumber: 122
                                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     className: "jsx-b3cd0a4f7c7a1709"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 626,
+                                                                    lineNumber: 636,
                                                                     columnNumber: 175
                                                                 }, this)
                                                             ]
                                                         }, m, true, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 618,
+                                                            lineNumber: 628,
                                                             columnNumber: 26
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 616,
+                                                    lineNumber: 626,
                                                     columnNumber: 20
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 612,
+                                            lineNumber: 622,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -1589,14 +1600,14 @@ function TacticLab({ onClose, squad }) {
                                                             size: 12
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 634,
+                                                            lineNumber: 644,
                                                             columnNumber: 23
                                                         }, this),
                                                         " HAKEM SERTLİĞİ"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 633,
+                                                    lineNumber: 643,
                                                     columnNumber: 20
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1615,18 +1626,18 @@ function TacticLab({ onClose, squad }) {
                                                             children: ref === 'Extreme' ? 'KASAP DOSTU' : ref === 'High' ? 'SERT' : ref === 'Medium' ? 'ORTA' : 'YUMUŞAK'
                                                         }, ref, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 638,
+                                                            lineNumber: 648,
                                                             columnNumber: 26
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 636,
+                                                    lineNumber: 646,
                                                     columnNumber: 20
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 632,
+                                            lineNumber: 642,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -1639,14 +1650,14 @@ function TacticLab({ onClose, squad }) {
                                                             size: 12
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 653,
+                                                            lineNumber: 663,
                                                             columnNumber: 23
                                                         }, this),
                                                         " SENARYO DÜZENLEYİCİ"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 652,
+                                                    lineNumber: 662,
                                                     columnNumber: 20
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1661,7 +1672,7 @@ function TacticLab({ onClose, squad }) {
                                                             children: "10 Kişi Kalma"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 656,
+                                                            lineNumber: 666,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1673,30 +1684,30 @@ function TacticLab({ onClose, squad }) {
                                                             children: "Son 5 Dakika"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 662,
+                                                            lineNumber: 672,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 655,
+                                                    lineNumber: 665,
                                                     columnNumber: 20
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 651,
+                                            lineNumber: 661,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                    lineNumber: 571,
+                                    lineNumber: 581,
                                     columnNumber: 14
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                lineNumber: 570,
+                                lineNumber: 580,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1714,7 +1725,7 @@ function TacticLab({ onClose, squad }) {
                                                             size: 18
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 677,
+                                                            lineNumber: 687,
                                                             columnNumber: 24
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1725,7 +1736,7 @@ function TacticLab({ onClose, squad }) {
                                                                     children: "TACTIC LABORATORY // INFO"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 679,
+                                                                    lineNumber: 689,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 "Burada takımınızın taktiklerini çeşitli simülasyon ortamlarında test edebilirsiniz.",
@@ -1733,14 +1744,14 @@ function TacticLab({ onClose, squad }) {
                                                                     className: "jsx-b3cd0a4f7c7a1709"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 681,
+                                                                    lineNumber: 691,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("br", {
                                                                     className: "jsx-b3cd0a4f7c7a1709"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 681,
+                                                                    lineNumber: 691,
                                                                     columnNumber: 32
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1748,7 +1759,7 @@ function TacticLab({ onClose, squad }) {
                                                                     children: "Kadro Mühendisi:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 682,
+                                                                    lineNumber: 692,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 " Takımınızı ikiye bölüp 9v9 maçlar planlayın.",
@@ -1756,7 +1767,7 @@ function TacticLab({ onClose, squad }) {
                                                                     className: "jsx-b3cd0a4f7c7a1709"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 683,
+                                                                    lineNumber: 693,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1764,25 +1775,25 @@ function TacticLab({ onClose, squad }) {
                                                                     children: "Saha & Analiz:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 684,
+                                                                    lineNumber: 694,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 " Farklı dizilişlerin sahada nasıl göründüğünü ve taktiksel parametrelerin maç motoruna etkisini analiz edin."
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 678,
+                                                            lineNumber: 688,
                                                             columnNumber: 24
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 676,
+                                                    lineNumber: 686,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                lineNumber: 675,
+                                                lineNumber: 685,
                                                 columnNumber: 18
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1794,7 +1805,7 @@ function TacticLab({ onClose, squad }) {
                                                         children: "SAHA"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                        lineNumber: 690,
+                                                        lineNumber: 700,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1803,19 +1814,19 @@ function TacticLab({ onClose, squad }) {
                                                         children: "ANALİZ"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                        lineNumber: 691,
+                                                        lineNumber: 701,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                lineNumber: 689,
+                                                lineNumber: 699,
                                                 columnNumber: 18
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                        lineNumber: 674,
+                                        lineNumber: 684,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1830,27 +1841,27 @@ function TacticLab({ onClose, squad }) {
                                                             className: "jsx-b3cd0a4f7c7a1709" + " " + "absolute inset-0 border-[3px] border-white/10 m-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 698,
+                                                            lineNumber: 708,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "jsx-b3cd0a4f7c7a1709" + " " + "absolute top-1/2 left-0 right-0 h-px bg-white/10"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 699,
+                                                            lineNumber: 709,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                             className: "jsx-b3cd0a4f7c7a1709" + " " + "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-[3px] border-white/10 rounded-full"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 700,
+                                                            lineNumber: 710,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 697,
+                                                    lineNumber: 707,
                                                     columnNumber: 24
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
@@ -1866,12 +1877,12 @@ function TacticLab({ onClose, squad }) {
                                                         className: "jsx-b3cd0a4f7c7a1709" + " " + "animate-[dash_2s_linear_infinite]"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                        lineNumber: 704,
+                                                        lineNumber: 714,
                                                         columnNumber: 27
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 703,
+                                                    lineNumber: 713,
                                                     columnNumber: 24
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1899,7 +1910,7 @@ function TacticLab({ onClose, squad }) {
                                                                 isSelected: swapTarget?.id === p.id
                                                             }, p.id, false, {
                                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                lineNumber: 715,
+                                                                lineNumber: 725,
                                                                 columnNumber: 32
                                                             }, this);
                                                         }),
@@ -1911,7 +1922,7 @@ function TacticLab({ onClose, squad }) {
                                                                     children: "AS TAKIM (A)"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 726,
+                                                                    lineNumber: 736,
                                                                     columnNumber: 30
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1922,19 +1933,19 @@ function TacticLab({ onClose, squad }) {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 727,
+                                                                    lineNumber: 737,
                                                                     columnNumber: 30
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 725,
+                                                            lineNumber: 735,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 707,
+                                                    lineNumber: 717,
                                                     columnNumber: 24
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1963,7 +1974,7 @@ function TacticLab({ onClose, squad }) {
                                                                 isSelected: swapTarget?.id === p.id
                                                             }, p.id, false, {
                                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                lineNumber: 740,
+                                                                lineNumber: 750,
                                                                 columnNumber: 32
                                                             }, this);
                                                         }),
@@ -1975,7 +1986,7 @@ function TacticLab({ onClose, squad }) {
                                                                     children: "YEDEK TAKIM (B)"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 751,
+                                                                    lineNumber: 761,
                                                                     columnNumber: 30
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1986,30 +1997,30 @@ function TacticLab({ onClose, squad }) {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 752,
+                                                                    lineNumber: 762,
                                                                     columnNumber: 30
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 750,
+                                                            lineNumber: 760,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 732,
+                                                    lineNumber: 742,
                                                     columnNumber: 24
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 696,
+                                            lineNumber: 706,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                        lineNumber: 695,
+                                        lineNumber: 705,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2024,12 +2035,12 @@ function TacticLab({ onClose, squad }) {
                                                         size: 18
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                        lineNumber: 763,
+                                                        lineNumber: 773,
                                                         columnNumber: 24
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 762,
+                                                    lineNumber: 772,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2040,7 +2051,7 @@ function TacticLab({ onClose, squad }) {
                                                             children: "YAPAY ZEKA KOÇ ÖNERİSİ:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 766,
+                                                            lineNumber: 776,
                                                             columnNumber: 24
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2048,30 +2059,30 @@ function TacticLab({ onClose, squad }) {
                                                             children: report || "Analiz bekleniyor... Simülasyonu başlatarak taktiksel zayıf noktaları ve oyuncu kimyalarını görebilirsin."
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 767,
+                                                            lineNumber: 777,
                                                             columnNumber: 24
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 765,
+                                                    lineNumber: 775,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 761,
+                                            lineNumber: 771,
                                             columnNumber: 18
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                        lineNumber: 760,
+                                        lineNumber: 770,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                lineNumber: 673,
+                                lineNumber: 683,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2089,14 +2100,14 @@ function TacticLab({ onClose, squad }) {
                                                             size: 12
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 780,
+                                                            lineNumber: 790,
                                                             columnNumber: 26
                                                         }, this),
                                                         " YENİ EDİNİLEN BİLGİLER"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 779,
+                                                    lineNumber: 789,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2120,7 +2131,7 @@ function TacticLab({ onClose, squad }) {
                                                                     className: "text-blue-400 flex-shrink-0 mt-0.5"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 791,
+                                                                    lineNumber: 801,
                                                                     columnNumber: 32
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2128,24 +2139,24 @@ function TacticLab({ onClose, squad }) {
                                                                     children: insight
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 792,
+                                                                    lineNumber: 802,
                                                                     columnNumber: 32
                                                                 }, this)
                                                             ]
                                                         }, i, true, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 784,
+                                                            lineNumber: 794,
                                                             columnNumber: 29
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 782,
+                                                    lineNumber: 792,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 778,
+                                            lineNumber: 788,
                                             columnNumber: 20
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -2159,7 +2170,7 @@ function TacticLab({ onClose, squad }) {
                                                             children: "TAKTIKSEL UYUM"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 801,
+                                                            lineNumber: 811,
                                                             columnNumber: 24
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2170,13 +2181,13 @@ function TacticLab({ onClose, squad }) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 802,
+                                                            lineNumber: 812,
                                                             columnNumber: 24
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 800,
+                                                    lineNumber: 810,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2191,12 +2202,12 @@ function TacticLab({ onClose, squad }) {
                                                         className: "h-full bg-gradient-to-r from-blue-600 to-indigo-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                        lineNumber: 805,
+                                                        lineNumber: 815,
                                                         columnNumber: 24
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 804,
+                                                    lineNumber: 814,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2208,13 +2219,13 @@ function TacticLab({ onClose, squad }) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 807,
+                                                    lineNumber: 817,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 799,
+                                            lineNumber: 809,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -2228,7 +2239,7 @@ function TacticLab({ onClose, squad }) {
                                                             children: "XG POTANSİYELİ"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 814,
+                                                            lineNumber: 824,
                                                             columnNumber: 24
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2236,13 +2247,13 @@ function TacticLab({ onClose, squad }) {
                                                             children: simResults.length > 0 ? (simResults.reduce((s, r)=>s + r.score.home, 0) / simResults.length).toFixed(1) : '—'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 815,
+                                                            lineNumber: 825,
                                                             columnNumber: 24
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 813,
+                                                    lineNumber: 823,
                                                     columnNumber: 20
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2253,7 +2264,7 @@ function TacticLab({ onClose, squad }) {
                                                             children: "GALİBİYET ORANI"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 822,
+                                                            lineNumber: 832,
                                                             columnNumber: 24
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2261,19 +2272,19 @@ function TacticLab({ onClose, squad }) {
                                                             children: simResults.length > 0 ? `%${Math.round(simResults.filter((r)=>r.score.home > r.score.away).length / simResults.length * 100)}` : '—'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 823,
+                                                            lineNumber: 833,
                                                             columnNumber: 24
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 821,
+                                                    lineNumber: 831,
                                                     columnNumber: 20
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 812,
+                                            lineNumber: 822,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -2290,7 +2301,7 @@ function TacticLab({ onClose, squad }) {
                                                                 className: "jsx-b3cd0a4f7c7a1709" + " " + "w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                lineNumber: 839,
+                                                                lineNumber: 849,
                                                                 columnNumber: 29
                                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                                                 children: [
@@ -2299,7 +2310,7 @@ function TacticLab({ onClose, squad }) {
                                                                         fill: "black"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                        lineNumber: 842,
+                                                                        lineNumber: 852,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2307,14 +2318,14 @@ function TacticLab({ onClose, squad }) {
                                                                         children: "LABORATUVARI ÇALIŞTIR (x5)"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                        lineNumber: 843,
+                                                                        lineNumber: 853,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 833,
+                                                            lineNumber: 843,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2326,20 +2337,20 @@ function TacticLab({ onClose, squad }) {
                                                                     size: 14
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 853,
+                                                                    lineNumber: 863,
                                                                     columnNumber: 26
                                                                 }, this),
                                                                 " DERİN ANALİZ (x25 SIM)"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 848,
+                                                            lineNumber: 858,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 832,
+                                                    lineNumber: 842,
                                                     columnNumber: 20
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2350,7 +2361,7 @@ function TacticLab({ onClose, squad }) {
                                                             children: "ANTRENMAN MAÇLARI SONUÇLARI"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 858,
+                                                            lineNumber: 868,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2364,24 +2375,24 @@ function TacticLab({ onClose, squad }) {
                                                                     ]
                                                                 }, i, true, {
                                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                    lineNumber: 861,
+                                                                    lineNumber: 871,
                                                                     columnNumber: 29
                                                                 }, this))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                            lineNumber: 859,
+                                                            lineNumber: 869,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 857,
+                                                    lineNumber: 867,
                                                     columnNumber: 20
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 831,
+                                            lineNumber: 841,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2398,7 +2409,7 @@ function TacticLab({ onClose, squad }) {
                                                                 className: "text-blue-400"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                lineNumber: 879,
+                                                                lineNumber: 889,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2409,7 +2420,7 @@ function TacticLab({ onClose, squad }) {
                                                                         children: "ANALİZ TAMAMLANDI"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                        lineNumber: 881,
+                                                                        lineNumber: 891,
                                                                         columnNumber: 30
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2417,19 +2428,19 @@ function TacticLab({ onClose, squad }) {
                                                                         children: "BU TAKTİĞİ ANA TAKTİĞİN YAP"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                        lineNumber: 882,
+                                                                        lineNumber: 892,
                                                                         columnNumber: 30
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                lineNumber: 880,
+                                                                lineNumber: 890,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                        lineNumber: 878,
+                                                        lineNumber: 888,
                                                         columnNumber: 24
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$right$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronRight$3e$__["ChevronRight"], {
@@ -2437,41 +2448,41 @@ function TacticLab({ onClose, squad }) {
                                                         className: "text-white/20 group-hover:text-blue-400 transition-all"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                        lineNumber: 885,
+                                                        lineNumber: 895,
                                                         columnNumber: 24
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                lineNumber: 874,
+                                                lineNumber: 884,
                                                 columnNumber: 20
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 873,
+                                            lineNumber: 883,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                    lineNumber: 776,
+                                    lineNumber: 786,
                                     columnNumber: 14
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                lineNumber: 775,
+                                lineNumber: 785,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                        lineNumber: 568,
+                        lineNumber: 578,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                lineNumber: 529,
+                lineNumber: 539,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -2508,7 +2519,7 @@ function TacticLab({ onClose, squad }) {
                                                 children: "OYUNCU SEÇİMİ"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                lineNumber: 908,
+                                                lineNumber: 918,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2519,13 +2530,13 @@ function TacticLab({ onClose, squad }) {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                lineNumber: 909,
+                                                lineNumber: 919,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                        lineNumber: 907,
+                                        lineNumber: 917,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2535,18 +2546,18 @@ function TacticLab({ onClose, squad }) {
                                             size: 16
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                            lineNumber: 912,
+                                            lineNumber: 922,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                        lineNumber: 911,
+                                        lineNumber: 921,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                lineNumber: 906,
+                                lineNumber: 916,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2582,7 +2593,7 @@ function TacticLab({ onClose, squad }) {
                                                                 children: p.specificPosition || p.position
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                lineNumber: 929,
+                                                                lineNumber: 939,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2593,7 +2604,7 @@ function TacticLab({ onClose, squad }) {
                                                                         children: p.name
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                        lineNumber: 935,
+                                                                        lineNumber: 945,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2608,19 +2619,19 @@ function TacticLab({ onClose, squad }) {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                        lineNumber: 936,
+                                                                        lineNumber: 946,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                                lineNumber: 934,
+                                                                lineNumber: 944,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                        lineNumber: 928,
+                                                        lineNumber: 938,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$right$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronRight$3e$__["ChevronRight"], {
@@ -2628,13 +2639,13 @@ function TacticLab({ onClose, squad }) {
                                                         className: "text-white/20 group-hover:text-white transition-all"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                        lineNumber: 939,
+                                                        lineNumber: 949,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                lineNumber: 919,
+                                                lineNumber: 929,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2644,39 +2655,39 @@ function TacticLab({ onClose, squad }) {
                                                     size: 20
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                    lineNumber: 945,
+                                                    lineNumber: 955,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                                lineNumber: 941,
+                                                lineNumber: 951,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, p.id, true, {
                                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                        lineNumber: 918,
+                                        lineNumber: 928,
                                         columnNumber: 19
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                                lineNumber: 916,
+                                lineNumber: 926,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                        lineNumber: 901,
+                        lineNumber: 911,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                    lineNumber: 895,
+                    lineNumber: 905,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                lineNumber: 893,
+                lineNumber: 903,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -2688,17 +2699,17 @@ function TacticLab({ onClose, squad }) {
                         teamStats: {}
                     }, void 0, false, {
                         fileName: "[project]/src/components/fm/TacticLab.tsx",
-                        lineNumber: 958,
+                        lineNumber: 968,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/fm/TacticLab.tsx",
-                    lineNumber: 957,
+                    lineNumber: 967,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/fm/TacticLab.tsx",
-                lineNumber: 955,
+                lineNumber: 965,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$styled$2d$jsx$2f$style$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -2708,11 +2719,11 @@ function TacticLab({ onClose, squad }) {
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/fm/TacticLab.tsx",
-        lineNumber: 523,
+        lineNumber: 533,
         columnNumber: 5
     }, this);
 }
-_s(TacticLab, "qPSHRI5T+XqsdZ445QsgZezSlMc=", false, function() {
+_s(TacticLab, "4rG+/hHg1EW0Pvu0U6NSkWFr+0A=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$fm$2f$GameContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useFM"],
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$contexts$2f$AuthContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"],
