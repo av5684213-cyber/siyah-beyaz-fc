@@ -53,9 +53,8 @@ async function insertInAppNotification(
       title,
       body,
       type,
-      fixture_id: fixtureId || null,
-      read: false,
-      created_at: new Date().toISOString(),
+      url: fixtureId ? `/match/${fixtureId}` : null,
+      is_read: false,
     });
   } catch (err) {
     console.warn('[match-tick] In-app notification insert skipped:', err);

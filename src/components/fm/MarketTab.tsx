@@ -138,7 +138,7 @@ const PlayerRowComponent = React.memo(function PlayerRowComponent({ index, style
       ))}
     </div>
   );
-}
+});
 
 // ─── Suggested salary based on rating ───
 function getSuggestedSalary(rating: number): number {

@@ -15,27 +15,26 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- 3. Create notifications table (for season award notifications etc.)
-CREATE TABLE IF NOT EXISTS public.notifications (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  profile_id UUID NOT NULL,
-  title TEXT NOT NULL,
-  body TEXT,
-  type TEXT DEFAULT 'general',
-  read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- 3. Ensure notifications table has all required columns
+-- (Table already exists from unified_core_schema; just ensure columns are present)
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS profile_id TEXT;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS body TEXT;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS url TEXT;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS tag TEXT;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'match_event';
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
 
--- Index for fast lookup by profile
-CREATE INDEX IF NOT EXISTS idx_notifications_profile_id ON public.notifications(profile_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_read ON public.notifications(profile_id, read) WHERE read = FALSE;
+-- Index for fast lookup of unread notifications by profile
+CREATE INDEX IF NOT EXISTS idx_notifications_profile_unread ON notifications(profile_id, is_read);
 
 -- RLS for notifications — permissive
-ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "notifications_select_all" ON public.notifications;
-DROP POLICY IF EXISTS "notifications_insert_all" ON public.notifications;
-DROP POLICY IF EXISTS "notifications_update_all" ON public.notifications;
-CREATE POLICY "notifications_select_all" ON public.notifications FOR SELECT USING (true);
-CREATE POLICY "notifications_insert_all" ON public.notifications FOR INSERT WITH CHECK (true);
-CREATE POLICY "notifications_update_all" ON public.notifications FOR UPDATE USING (true);
-CREATE POLICY "notifications_delete_all" ON public.notifications FOR DELETE USING (true);
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  CREATE POLICY "notifications_select_all" ON notifications FOR SELECT USING (true);
+  CREATE POLICY "notifications_insert_all" ON notifications FOR INSERT WITH CHECK (true);
+  CREATE POLICY "notifications_update_all" ON notifications FOR UPDATE USING (true);
+  CREATE POLICY "notifications_delete_all" ON notifications FOR DELETE USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;

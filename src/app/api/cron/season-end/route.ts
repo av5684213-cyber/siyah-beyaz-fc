@@ -504,8 +504,7 @@ async function processLeagueSeasonEnd(
         title: '🏆 Sezon Ödülü Kazandınız!',
         body: `Bu sezon şu ödülleri aldınız: ${awardNames}. Ödül kabinizi ziyaret edin!`,
         type: 'season_award',
-        read: false,
-        created_at: new Date().toISOString(),
+        is_read: false,
       });
     } catch (notifErr) {
       console.warn('[season-end] Award notification error:', notifErr);
