@@ -175,20 +175,8 @@ export async function POST(request: NextRequest) {
       results.push('youth_facilities RLS policies set (permissive)');
 
       // 12. user_facilities: Drop old profile_id UNIQUE if it conflicts
-      await client.query(`
-        DO $$
-        BEGIN
-          IF EXISTS (
-            SELECT 1 FROM pg_constraint
-            WHERE conrelid = 'user_facilities'::regclass
-            AND contype = 'u'
-            AND conname = 'user_facilities_profile_id_key'
-          ) THEN
-            ALTER TABLE user_facilities DROP CONSTRAINT user_facilities_profile_id_key;
-          END IF;
-        END $$;
-      `);
-      results.push('user_facilities old profile_id UNIQUE constraint dropped');
+      await client.query(`ALTER TABLE user_facilities DROP CONSTRAINT IF EXISTS user_facilities_profile_id_key`);
+      results.push('user_facilities old profile_id UNIQUE constraint dropped (if existed)');
 
       // 13. user_facilities: UNIQUE index on (profile_id, facility_type)
       await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_user_facilities_profile_type ON user_facilities(profile_id, facility_type)`);
