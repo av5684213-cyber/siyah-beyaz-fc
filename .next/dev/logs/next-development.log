@@ -1,2 +1,35 @@
-[00:00:01.223] Server  LOG     ✓ Ready in 925ms
-[00:00:17.678] Server  LOG     ○ Compiling / ...
+[00:00:01.162] Server  LOG     ✓ Ready in 874ms
+[00:00:21.715] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:25.863] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:30.936] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:31.215] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:31.759] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:31.764] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:32.593] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:32.821] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:33.110] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:33.701] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:35.797] Browser LOG     [Onboarding] Supabase'e kaydedildi, userId: db957cf2-d5e1-42ef-b9b8-2ea7bc1029b5
+[00:00:41.249] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:41.514] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:41.677] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:42.464] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:42.498] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:43.137] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:43.172] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:00:46.552] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:01:31.390] Browser LOG     Simulating match: a97367a8-3a74-493b-a31a-20166bd2e2f4 (12:00)
+[00:01:53.894] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:01:55.313] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:01:57.865] Browser ERROR   Lab saving error: Could not find the table 'public.lab_sessions' in the schema cache
+[00:02:02.383] Browser ERROR   Lab saving error: Could not find the table 'public.lab_sessions' in the schema cache
+[00:02:35.787] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:02:36.028] Server  LOG     [standings] Getting standings for leagueId=291fefeb-2c6c-48cb-894c-416256342bb4 (type: string)
+[00:02:36.240] Server  LOG     [standings] Resolved leagueId: 291fefeb-2c6c-48cb-894c-416256342bb4
+[00:02:38.316] Server  WARN    [RateLimit] Supabase error, falling back to memory: "column rate_limits.reset_time does not exist"
+[00:02:38.324] Server  LOG     [standings] Getting standings for leagueId=291fefeb-2c6c-48cb-894c-416256342bb4 (type: string)
+[00:02:38.526] Server  LOG     [standings] Resolved leagueId: 291fefeb-2c6c-48cb-894c-416256342bb4
+[00:02:39.722] Browser LOG     [NewspaperTab] Gazete etkisi uygulandı: morale=3, rep=1
+[00:02:39.876] Browser ERROR   [GameContext] Profile sync error: Could not find the 'last_newspaper_applied' column of 'profiles' in the schema cache
+[00:02:41.232] Browser LOG     [NewspaperTab] Gazete etkisi uygulandı: morale=3, rep=1
+[00:02:41.408] Browser ERROR   [GameContext] Profile sync error: Could not find the 'last_newspaper_applied' column of 'profiles' in the schema cache

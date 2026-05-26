@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
 
   // Mobil/PWA için zoom disable
   // allowedDevOrigins sadece local dev için
-  allowedDevOrigins: ["localhost", "127.0.0.1", ".space.chatglm.site", ".space-z.ai"],
+  allowedDevOrigins: ["localhost", "127.0.0.1", ".space.chatglm.site", ".space-z.ai", ".chatglm.site", "preview-chat-bdb86760-5776-4f94-b49f-36fec4f99ade.space-z.ai"],
 
   images: {
     remotePatterns: [
@@ -34,7 +34,6 @@ const nextConfig: NextConfig = {
         source: "/(.*)",
         headers: [
           { key: "X-Content-Type-Options",  value: "nosniff" },
-          { key: "X-Frame-Options",         value: "SAMEORIGIN" },
           { key: "Referrer-Policy",          value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy",       value: "camera=(), microphone=(), geolocation=()" },
         ],

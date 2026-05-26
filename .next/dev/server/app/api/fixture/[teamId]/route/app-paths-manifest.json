@@ -1,0 +1,3 @@
+{
+  "/api/fixture/[teamId]/route": "app/api/fixture/[teamId]/route.js"
+}
