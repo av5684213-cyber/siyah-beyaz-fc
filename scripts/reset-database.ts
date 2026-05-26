@@ -790,66 +790,84 @@ async function resetDatabase() {
     const fixtures: any[] = [];
     const teamIds = [...leagueTeamIds];
 
-    // Round-robin algoritması — lig maçları hafta içi
+    // Round-robin algoritması — lig maçları hafta içine dağıtılır
+    // Her turda N/2 maç var (18 takım = 9 maç/tur).
+    // Bu 9 maçı hafta içi 5 güne dağıtırız: günde 2 slot (12:00 ve 18:00)
+    // = Pzt 2, Sal 2, Car 2, Per 2, Cum 1 = haftada ~9-10 maç
+    const MATCHES_PER_DAY = 2; // 12:00 ve 18:00 slotları
+    const MATCHES_PER_WEEK = 5 * MATCHES_PER_DAY; // = 10 slot/hafta
+
     for (let round = 0; round < n - 1; round++) {
+      const roundMatches: { home: string; away: string }[] = [];
       for (let match = 0; match < n / 2; match++) {
         const home = teamIds[match];
         const away = teamIds[n - 1 - match];
         if (home && away) {
-          const matchDate = new Date(tomorrow);
-          matchDate.setDate(matchDate.getDate() + round * 7);
-          // Hafta içine ayarla (Pazartesi-Cuma)
-          const dayOfWeek = matchDate.getDay();
-          if (dayOfWeek === 0) matchDate.setDate(matchDate.getDate() + 1);
-          else if (dayOfWeek === 6) matchDate.setDate(matchDate.getDate() + 2);
-
-          // Son tur (round === n - 2) Salı gününe denk gelsin — sezon sonu ödüller Salı akşamı verilir
-          if (round === n - 2) {
-            const currentDay = matchDate.getDay();
-            // Salı = 2
-            const daysToTuesday = ((2 - currentDay + 7) % 7) || 7;
-            matchDate.setDate(matchDate.getDate() + daysToTuesday);
-          }
-
-          const matchTime = WEEKDAY_TIMES[match % WEEKDAY_TIMES.length];
-
-          // İlk yarış (ev-deplasman)
-          fixtures.push({
-            home_team_id: home,
-            away_team_id: away,
-            season_id: season.id,
-            tur: round + 1,
-            match_date: matchDate.toISOString().split('T')[0],
-            match_time: matchTime,
-            status: 'scheduled',
-            competition_type: 'league',
-          });
-
-          // İkinci yarış (ters)
-          const returnDate = new Date(matchDate);
-          returnDate.setDate(returnDate.getDate() + (n - 1) * 7);
-          const returnDayOfWeek = returnDate.getDay();
-          if (returnDayOfWeek === 0) returnDate.setDate(returnDate.getDate() + 1);
-          else if (returnDayOfWeek === 6) returnDate.setDate(returnDate.getDate() + 2);
-
-          // Sezonun son turu (tur = 2*(n-1) = 34) Salı gününe denk gelsin
-          if (round === n - 2) {
-            const rDay = returnDate.getDay();
-            const daysToTue = ((2 - rDay + 7) % 7) || 7;
-            returnDate.setDate(returnDate.getDate() + daysToTue);
-          }
-
-          fixtures.push({
-            home_team_id: away,
-            away_team_id: home,
-            season_id: season.id,
-            tur: round + 1 + (n - 1),
-            match_date: returnDate.toISOString().split('T')[0],
-            match_time: matchTime,
-            status: 'scheduled',
-            competition_type: 'league',
-          });
+          roundMatches.push({ home, away });
         }
+      }
+
+      // Bu turun başlangıç haftası
+      const roundWeekStart = new Date(tomorrow);
+      roundWeekStart.setDate(roundWeekStart.getDate() + round * 7);
+      // Pazartesiye ayarla
+      const startDay = roundWeekStart.getDay();
+      if (startDay === 0) roundWeekStart.setDate(roundWeekStart.getDate() + 1);
+      else if (startDay === 6) roundWeekStart.setDate(roundWeekStart.getDate() + 2);
+      else if (startDay > 1) roundWeekStart.setDate(roundWeekStart.getDate() - (startDay - 1));
+
+      // Round maçlarını hafta içi günlere dağıt
+      for (let matchIdx = 0; matchIdx < roundMatches.length; matchIdx++) {
+        const dayOffset = Math.floor(matchIdx / MATCHES_PER_DAY); // 0=Pzt, 1=Sal, ...
+        const slotIdx = matchIdx % MATCHES_PER_DAY; // 0=12:00, 1=18:00
+        const matchDate = new Date(roundWeekStart);
+        matchDate.setDate(matchDate.getDate() + dayOffset);
+
+        // Son tur (round === n - 2) Salı gününe denk gelsin — sezon sonu ödüller Salı akşamı verilir
+        if (round === n - 2) {
+          const currentDay = matchDate.getDay();
+          const daysToTuesday = ((2 - currentDay + 7) % 7) || 7;
+          matchDate.setDate(matchDate.getDate() + daysToTuesday);
+        }
+
+        const matchTime = WEEKDAY_TIMES[slotIdx];
+
+        // İlk yarış (ev-deplasman)
+        fixtures.push({
+          home_team_id: roundMatches[matchIdx].home,
+          away_team_id: roundMatches[matchIdx].away,
+          season_id: season.id,
+          tur: round + 1,
+          match_date: matchDate.toISOString().split('T')[0],
+          match_time: matchTime,
+          status: 'scheduled',
+          competition_type: 'league',
+        });
+
+        // İkinci yarış (ters ev-deplasman, yarım sezon sonra)
+        const returnDate = new Date(roundWeekStart);
+        returnDate.setDate(returnDate.getDate() + (round + n - 1) * 7 + dayOffset);
+        const returnDayOfWeek = returnDate.getDay();
+        if (returnDayOfWeek === 0) returnDate.setDate(returnDate.getDate() + 1);
+        else if (returnDayOfWeek === 6) returnDate.setDate(returnDate.getDate() + 2);
+
+        // Sezonun son turu (tur = 2*(n-1) = 34) Salı gününe denk gelsin
+        if (round === n - 2) {
+          const rDay = returnDate.getDay();
+          const daysToTue = ((2 - rDay + 7) % 7) || 7;
+          returnDate.setDate(returnDate.getDate() + daysToTue);
+        }
+
+        fixtures.push({
+          home_team_id: roundMatches[matchIdx].away,
+          away_team_id: roundMatches[matchIdx].home,
+          season_id: season.id,
+          tur: round + 1 + (n - 1),
+          match_date: returnDate.toISOString().split('T')[0],
+          match_time: matchTime,
+          status: 'scheduled',
+          competition_type: 'league',
+        });
       }
 
       // Takımları döndür (ilk sabit, geri kalan döner)

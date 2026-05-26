@@ -23,6 +23,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { processPromotionRelegation } from '@/lib/fm/leagueHelpers';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { AWARD_LABELS, type AwardType } from '@/lib/fm/types';
 
 export const maxDuration = 60;
 
@@ -485,6 +486,29 @@ async function processLeagueSeasonEnd(
       await supabase.from('season_awards').upsert(award);
     } catch (err) {
       console.warn('[season-end] Award insert error:', err);
+    }
+  }
+
+  // ─── 4b. Ödül kazanan profillere bildirim gönder ───
+  const profilesWithAwards = new Set(awards.map(a => a.profile_id).filter(Boolean) as string[]);
+  for (const awardProfileId of profilesWithAwards) {
+    const profileAwards = awards.filter(a => a.profile_id === awardProfileId);
+    const awardNames = profileAwards.map(a => {
+      const label = AWARD_LABELS[a.award_type as AwardType];
+      return label ? label.title : a.award_type;
+    }).join(', ');
+
+    try {
+      await supabase.from('notifications').insert({
+        profile_id: awardProfileId,
+        title: '🏆 Sezon Ödülü Kazandınız!',
+        body: `Bu sezon şu ödülleri aldınız: ${awardNames}. Ödül kabinizi ziyaret edin!`,
+        type: 'season_award',
+        read: false,
+        created_at: new Date().toISOString(),
+      });
+    } catch (notifErr) {
+      console.warn('[season-end] Award notification error:', notifErr);
     }
   }
 

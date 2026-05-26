@@ -1,16 +1,15 @@
 /**
- * @deprecated Bu route kullanılmıyor ve vercel.json'da kayıtlı değil.
- * İşlevi /api/cron/update-form-ratings cron'una taşındı (zaten günlük çalışıyor).
- * Form rating güncelleme mantığı orada zaten var; gereksiz tekrar.
- *
  * GET /api/cron/apply-training
- * Haftalık cron job — geçen hafta yapılan antrenmanların etkilerini
- * otomatik olarak uygular (eğer client uygulamamışsa).
+ * Pzt-Cum 15:00 ve 21:00 (İstanbul) antrenman cron'u.
+ * Geçen hafta yapılan antrenmanların etkilerini otomatik olarak uygular.
  * Ayrıca player.form_rating ve player.morale'i antrenman katılımına göre günceller.
  *
  * v2: training_attendances tablosunu kullanır (bireysel katılım),
  *     fallback olarak trainings.player_ids kullanır.
  *     Math.random() kaldırıldı, sabit katkı oranları kullanılıyor.
+ *
+ * Cron: UTC 12:00 ve 18:00 = İstanbul 15:00 ve 21:00
+ * Sadece hafta içi (Pzt-Cum) çalışır.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -19,11 +18,16 @@ import { safeJsonParse } from '@/lib/fm/sharedUtils';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function GET(request: NextRequest) {
-  return NextResponse.json({ error: 'deprecated', message: 'Bu endpoint devre dışı. İşlevi /api/cron/update-form-ratings cron\'una taşındı.' }, { status: 410 });
   // CRON_SECRET protection
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret || request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Hafta sonu kontrolü — sadece Pzt-Cum çalışır
+  const day = new Date().getUTCDay();
+  if (day === 0 || day === 6) {
+    return NextResponse.json({ message: 'Hafta sonu — antrenman yok', ran: 0 });
   }
 if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });

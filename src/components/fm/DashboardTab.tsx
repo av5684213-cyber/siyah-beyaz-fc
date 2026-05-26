@@ -136,7 +136,7 @@ function TrainingReportCard({ trainings }: { trainings: TrainingRecord[] }) {
         </div>
         <div className="flex items-center gap-2 py-4 text-white/20 text-xs">
           <Clock size={14} className="opacity-50" />
-          <span>Bugünkü antrenman henüz yapılmadı. Saat 15:00 ve 21:00&apos;de otomatik gerçekleşir.</span>
+          <span>Bugünkü antrenman henüz yapılmadı. 15:00 ve 21:00&apos;de sistem tarafından uygulanır.</span>
         </div>
       </div>
     );
