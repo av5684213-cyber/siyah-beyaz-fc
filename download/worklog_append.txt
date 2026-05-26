@@ -1,0 +1,15 @@
+
+---
+Task ID: 5
+Agent: Main Agent
+Task: Apply SQL migrations - rating_start_of_season + match_sessions UNIQUE constraint
+
+Work Log:
+- Confirmed all PROMPT 1-4 code changes already in place from previous session
+- Created SQL file at /home/z/my-project/download/apply_migrations_rating_and_unique.sql
+- DATABASE_URL is SQLite not PostgreSQL, so schema-migration endpoint cannot apply to Supabase
+
+Stage Summary:
+- SQL migrations saved to download folder for manual execution in Supabase SQL Editor
+- 1. ALTER TABLE players ADD COLUMN IF NOT EXISTS rating_start_of_season INTEGER DEFAULT 0
+- 2. ALTER TABLE match_sessions ADD CONSTRAINT uniq_match_session_fixture UNIQUE (fixture_id)
