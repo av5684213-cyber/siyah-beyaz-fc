@@ -94,3 +94,26 @@ Stage Summary:
 - TypeScript compilation passes for all modified files (MarketTab.tsx errors are pre-existing)
 - Dev server running at localhost:3000
 - rating_start_of_season column needs manual migration via Supabase SQL Editor
+---
+Task ID: 1
+Agent: main
+Task: Fix SQL migration and implement PROMPTS 7, 8, 9
+
+Work Log:
+- Fixed SQL migration file (apply_all_migrations.sql): notifications table uses `is_read` (not `read`) and `profile_id TEXT` (not `UUID`)
+- Fixed `season-end/route.ts`: notification insert used wrong column `read` → `is_read`, also removed `created_at` (has default) and fixed `fixture_id` → `url`
+- Fixed `match-scheduler/route.ts`: same `read` → `is_read` fix, also `fixture_id` → `url`
+- Fixed `match-tick/route.ts`: same `read` → `is_read` fix, also `fixture_id` → `url`
+- PROMPT 7: DashboardTab training text updated to be clearer (was misleading about auto-training)
+- PROMPT 7: Training cron already re-enabled, vercel.json already has `0 12,18 * * 1-5` cron and maxDuration 60
+- PROMPT 8: Analyzed fixture structure — 18 teams × 5 leagues, 9 matches/round, 10 weekly slots (1 empty). Current setup is reasonable.
+- PROMPT 9: Award notification already implemented, fixed column name bug
+- Fixed MarketTab.tsx: React.memo closing syntax error (`}` → `}`)
+- Added .gitignore (node_modules/ and .next/)
+- Pushed all changes to GitHub
+
+Stage Summary:
+- Critical bug fixed: notifications table column name mismatch (read vs is_read) in 3 files
+- SQL migration file corrected to match existing Supabase schema
+- All src/ code compiles cleanly (no TS errors)
+- Code pushed to GitHub (forced update due to git history cleanup)
