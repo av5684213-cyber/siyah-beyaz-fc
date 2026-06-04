@@ -22,8 +22,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(false);
 
+  // Geliştirme modu — auth bypass, direkt oyuna erişim
+  const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+
   useEffect(() => {
-    if (!isSupabaseConfigured()) {
+    // DEV_MODE aktifse veya Supabase yapılandırılmamışsa demo kullanıcı oluştur
+    if (isDevMode || !isSupabaseConfigured()) {
       // Sabit demo ID — Supabase'de bu ID ile profil VARSA direkt oyuna girer
       // Profil YOKSA ManagerRegistration gösterilir, kullanıcı kendi kulübünü kurar
       const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
