@@ -1,0 +1,116 @@
+═══════════════════════════════════════════════════════════════
+  SİYAH BEYAZ FC — VERCEL SERVERLESS TEMİZLİK RAPORU
+  Tarih: 2026-05-28
+═══════════════════════════════════════════════════════════════
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. SİLİNEN DOSYALAR (18 adet — yerel + git)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GIT'TEN SİLİNEN (push edildi):
+  ✗ gateway.mjs        — Dev ortamı reverse proxy (Vercel'de gereksiz)
+  ✗ server.js          — Custom server wrapper (Vercel kendi yönetiyor)
+
+YEREL ORTAMDAN SİLİNEN (git'te takip edilmiyordu):
+  ✗ custom-server.js           — Next.js custom server (next() API)
+  ✗ gateway-prod.mjs           — Prodüksiyon reverse proxy
+  ✗ gateway-standalone.mjs     — Standalone reverse proxy
+  ✗ server-proxy.js            — Proxy varyantı
+  ✗ all-in-one-server.js       — Tek süreç proxy + backend
+  ✗ serve-prod.js              — Production server starter
+  ✗ serve-standalone-persistent.js — Persistent restart döngüsü
+  ✗ run-server.mjs             — Standalone server wrapper
+  ✗ start.sh                   — Dev server while-döngüsü
+  ✗ start-server.sh            — next start while-döngüsü
+  ✗ start-standalone.sh        — Standalone server while-döngüsü
+  ✗ start-foreground.sh        — Basit npx next start
+  ✗ start-next.sh              — next start --port --hostname
+  ✗ run-server.sh              — next start while-döngüsü
+  ✗ keep-alive.sh              — Dev server keep-alive
+  ✗ dev-server.sh              — Dev server restart döngüsü
+  ✗ serve.sh                   — Standalone server while-döngüsü
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. KORUNAN DOSYALAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✓ apply-migrations.js    — Veritabanı migration aracı (geliştirme/sysadmin)
+  ✓ load-test.js           — Yük testi aracı (geliştirme)
+  ✓ Caddyfile              — Reverse proxy config (standalone Docker için)
+  ✓ eslint.config.mjs      — ESLint konfigürasyonu
+  ✓ postcss.config.mjs     — PostCSS konfigürasyonu
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. DEĞİŞTİRİLEN DOSYALAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+next.config.ts:
+  - "output: standalone" KALDIRILDI
+    Sebep: Vercel serverless ile çakışıyor. Serverless fonksiyonlar
+    standalone output olmadan düzgün çalışır.
+  - allowedDevOrigins temizlendi (spesifik preview URL kaldırıldı)
+  - Dockerfile'da build sırasında sed ile geçici olarak ekleniyor
+
+vercel.json:
+  - "installCommand" KALDIRILDI
+    Sebep: Vercel package.json'dan otomatik algılar, gereksiz override
+  - Cron schedule'lar ve functions maxDuration korundu (değişiklik yok)
+
+package.json:
+  - Değişiklik YOK (zaten temiz: dev, build, start, lint, test)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. EKLENEN DOSYALAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Dockerfile:
+  - Multi-stage build (deps → builder → runner)
+  - Builder aşamasında sed ile "output: standalone" geçici eklenir
+  - node:20-alpine tabanlı, 1001:1001 uid:gid ile güvenli
+  - Kullanım: docker build -t siyah-beyaz-fc .
+              docker run -p 3000:3000 --env-file .env siyah-beyaz-fc
+
+.dockerignore:
+  - node_modules, .next, .git, .env* vb. hariç tutuldu
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. DAĞITIM MİMARİSİ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+VERCEL (Ana dağıtım):
+  next.config.ts → output yok (serverless)
+  Vercel Cron → vercel.json crons[] (19 cron job)
+  API Routes → Serverless fonksiyonlar (maxDuration: 60s)
+  Başlatma: git push → Vercel otomatik build + deploy
+
+DOCKER (Self-hosted alternatif):
+  Dockerfile → output: standalone (builder'da sed ile eklenir)
+  Caddyfile → Port 81'den 3000'e reverse proxy
+  Başlatma: docker build → docker run
+
+LOCAL DEV:
+  npm run dev  → next dev (Turbopack)
+  npm run build → next build
+  npm run start → next start
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. DOĞRULAMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✓ npm run build — BAŞARILI
+  ✓ localhost:3000 — 200 OK
+  ✓ Git commit + push — BAŞARILI (1e600e3)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. ÖZET
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Toplam silinen dosya:    18
+  Değiştirilen dosya:       2 (next.config.ts, vercel.json)
+  Eklenen dosya:            2 (Dockerfile, .dockerignore)
+  Korunan dosya:            5
+
+  Proje artık Vercel serverless + Vercel Cron uyumlu en temiz
+  yapıda. Docker dağıtımı istendiğinde Dockerfile kullanılabilir.
+
+═══════════════════════════════════════════════════════════════

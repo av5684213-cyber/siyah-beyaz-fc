@@ -1,0 +1,169 @@
+═══════════════════════════════════════════════════════════════════
+  SİYAH BEYAZ FC — SPRINT 1 BUG FIX DOĞRULAMA RAPORU
+  Tarih: 2026-05-28
+═══════════════════════════════════════════════════════════════════
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BÖLÜM 1 — KRİTİK HATALAR DOĞRULAMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+───────────────────────────────────────────────────────────────────
+HATA-1: seasons.current_tur ASLA GÜNCELLENMİYOR
+───────────────────────────────────────────────────────────────────
+Durum: ✅ DÜZELTİLDİ (commit 695f3c1)
+
+Dosya: src/app/api/cron/match-tick/route.ts
+Konum: Satır 905-935 (updateLeagueStandings çağrısından hemen sonra)
+
+Uygulanan Kod:
+  - fixture'dan tur, season_id ve competition_type çekilir
+  - competition_type 'cup' veya 'playoff' değilse kontrol yapılır
+  - Aynı turdaki tamamlanmamış maç sayısı sayılır
+  - remaining = 0 ise seasons.current_tur artırılır
+  - try-catch ile korumalı, hata durumunda match-tick çökmez
+
+Etki:
+  ✅ current_day hesabı artık doğru: syncedDay = (current_tur - 1) * 7 + 1
+  ✅ Enflasyon çarpanı çalışıyor: getInflationFactor(current_tur) > 1.0
+  ✅ Haftalık gelirdeki inflasyon çarpanı aktif
+
+───────────────────────────────────────────────────────────────────
+HATA-2: PLAYOFF YARI FİNAL 2 SAAT '20:00' — MAÇ BAŞLAMIYOR
+───────────────────────────────────────────────────────────────────
+Durum: ✅ DÜZELTİLDİ (commit 695f3c1)
+
+Dosya: src/app/api/cron/match-tick/route.ts
+Konum: Satır 1480
+
+  match_time: '18:00'  ← Önceki: '20:00'
+
+Not: leagueHelpers.ts satır 353'teki '20:00' referansı bu dosyada
+yoktu. Playoff fixture'ları match-tick içinde oluşturuluyor
+(yarı final → final mantığı, satır 1434-1550).
+
+Mevcut yapı:
+  - Tur 35 = Yarı finaller (mevcut sezonun son turundaki fixture'lar)
+  - Tur 36 = Final (match-tick tarafından otomatik oluşturulur)
+  - Her ikisi de 18:00'de → match-scheduler ve match-tick kapsamında
+
+───────────────────────────────────────────────────────────────────
+HATA-3: teamsPlayedToday OLUŞTURULUYOR AMA KULLANILMIYOR
+───────────────────────────────────────────────────────────────────
+Durum: ✅ DÜZELTİLDİ (commit 695f3c1)
+
+Dosya: src/app/api/cron/update-form-ratings/route.ts
+Konum: Satır 63-113
+
+Uygulanan Kod:
+  - Bugün tamamlanan maçlardan home/away team_id'leri toplanır
+  - teamsPlayedToday Set'i oluşturulur
+  - isGeneralMatchDay = teamsPlayedToday.size > 0
+  - Maç günü: recovery = max(2, 5 + staminaBonus) → +5-7
+  - Dinlenme günü: recovery = 15 + staminaBonus → +15-17
+
+Etki:
+  ✅ Maç oynayan günlerde kondisyon toparlanması azalıyor
+  ✅ Maç -13 kondisyon + toparlanma +5-7 = net -6~-8 (mantıklı)
+  ✅ Dinlenme günlerinde +15-17 toparlanma (tam iyileşme)
+
+───────────────────────────────────────────────────────────────────
+HATA-4: TransferWindow KALDIRILMASI
+───────────────────────────────────────────────────────────────────
+Durum: ✅ DÜZELTİLDİ (commit 695f3c1)
+
+Dosya: src/lib/fm/transferWindow.ts
+
+  isTransferWindowOpen() → her zaman true döndürüyor
+  transferWindowStatus() → { isOpen: true, label: 'Transfer penceresi açık' }
+
+Seçenek A uygulandı: Dosya silinmedi, sadece her zaman true döndürüyor.
+GameContext'teki import ve çağrılar değişmedi → kırılma riski yok.
+
+───────────────────────────────────────────────────────────────────
+HATA-5: RAW JSON.parse() ÇÖKMELERE AÇIK
+───────────────────────────────────────────────────────────────────
+Durum: ✅ DÜZELTİLDİ (commit 695f3c1)
+
+Dosya: src/app/api/cron/match-tick/route.ts
+Konum: Satır 29-33 (safeJsonParse tanımı)
+
+  function safeJsonParse<T>(val: unknown, fallback: T): T {
+    if (val === null || val === undefined) return fallback;
+    if (typeof val === 'object') return val as T;
+    try { return JSON.parse(val as string) as T; } catch { return fallback; }
+  }
+
+Kullanıldığı yerler:
+  ✅ Satır 371: safeJsonParse<Player[]>(session.home_players, [])
+  ✅ Satır 372: safeJsonParse<Player[]>(session.away_players, [])
+  ✅ Satır 373: safeJsonParse<ActiveTactic>(session.home_tactic_obj, {})
+  ✅ Satır 374: safeJsonParse<ActiveTactic>(session.away_tactic_obj, {})
+  ✅ Satır 382: safeJsonParse<Record<string,unknown>>(session.referee_data, {})
+  ✅ Satır 1320: safeJsonParse<any>(cupSeasonRow.data, null)
+  ✅ Satır 1321: if (!csData) return; // null guard
+
+Etki:
+  ✅ Bozuk JSON gelirse match-tick çökmez, fallback değer kullanılır
+  ✅ Kupa verisi null/bozuksa atlanır, kilitlenme olmaz
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BÖLÜM 4 — KONDİSYON/ANTRENMAN ZAMANLAMA DOĞRULAMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+vercel.json cron schedule'lar (UTC):
+
+  match-scheduler:  "0 9,15 * * 0-6"
+    → İstanbul 12:00 ve 18:00 ✅ (Hafta içi lig + hafta sonu kupa)
+
+  apply-training:   "5 12,18 * * 1-5"
+    → İstanbul 15:05 ve 21:05 ✅ (Maç başlangıcından 5 dk sonra)
+
+  match-tick:       "*/2 7-20 * * 0-6"
+    → Her 2 dakikada bir İstanbul 10:00-23:00 ✅
+
+  match-reminder:   "50 8,14 * * 1-4"
+    → İstanbul 11:50 ve 17:50 ✅ (Maçtan 10 dk önce)
+
+Maç-antrenman çakışma kontrolü:
+  ✅ 12:00 maç başlar → 12:02 match-tick ilerletir
+  ✅ 15:05 antrenman uygulanır → maçla çakışmaz
+  ✅ 18:00 maç başlar → 18:02 match-tick ilerletir
+  ✅ 21:05 antrenman uygulanır → maçla çakışmaz
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VERCEL SERVERLESS TEMİZLİK ÖZETİ (commit 1e600e3)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Silinen dosyalar: 18 (gateway.mjs, server.js + 16 yerel script)
+Değiştirilen dosyalar:
+  - next.config.ts: output: "standalone" kaldırıldı
+  - vercel.json: installCommand kaldırıldı
+Eklenen dosyalar:
+  - Dockerfile (standalone Docker dağıtımı)
+  - .dockerignore
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DOĞRULAMA SONUÇLARI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✅ npm run build — BAŞARILI (hata yok)
+  ✅ localhost:3000 — 200 OK
+  ✅ Git status — Temiz (commit edilmemiş değişiklik yok)
+  ✅ GitHub push — Tamamlandı (1e600e3)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SPRINT 1 DURUM ÖZETİ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  #  Hata                                    Durum
+  ─  ──────────────────────────────────────  ───────
+  1  seasons.current_tur güncelleme         ✅ Tamam
+  2  Playoff semi2 match_time 20→18         ✅ Tamam
+  3  teamsPlayedToday kondisyon recovery    ✅ Tamam
+  4  TransferWindow her zaman açık          ✅ Tamam
+  5  safeJsonParse wrapper                  ✅ Tamam
+
+  + Vercel serverless temizlik              ✅ Tamam
+  + Dockerfile eklendi                     ✅ Tamam
+
+═══════════════════════════════════════════════════════════════════

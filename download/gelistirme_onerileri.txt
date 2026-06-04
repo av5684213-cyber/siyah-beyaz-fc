@@ -1,0 +1,195 @@
+════════════════════════════════════════════════════════════════
+  SİYAH-BEYAZ-FC — GELİŞTİRME ÖNERİLERİ VE EKSİKLİKLER
+  Tarih: 2026-05-26
+════════════════════════════════════════════════════════════════
+
+═══ KRİTİK GÜVENLİK EKSİKLİKLERİ ═══
+
+1. [GÜVENLİK] RLS Politikaları Eksik
+   SORUN: anon key istemcide sızdırılabilir. Kullanıcılar supabase.from('players').update()
+   ile doğrudan rating, para, kondisyon değiştirebilir.
+   ÇÖZÜM: Tüm kritik tablolara RLS ekle. Client-side UPDATE yerine Supabase RPC
+   (Stored Procedure) kullan. İstemci sadece fonksiyonları tetiklemeli.
+   ÖNCELİK: YÜKSEK
+
+2. [GÜVENLİK] Admin Route Koruması Yetersiz
+   SORUN: /api/admin/* sadece CRON_SECRET ile korunuyor. Herhangi bir kullanıcı
+   secret'i bilirse admin paneline erişebilir.
+   ÇÖZÜM: Admin route'lara profile.is_admin kontrolü ekle (Supabase auth + metadata).
+   ÖNCELİK: YÜKSEK
+
+3. [GÜVENLİK] Transfer Race Condition
+   SORUN: İki menajer aynı salisede aynı oyuncuya teklif yaparsa veri çakışabilir.
+   ÇÖZÜM: Transfer işlemlerini SELECT FOR UPDATE içeren PostgreSQL transaction'ı yap.
+   Supabase RPC ile sunucu tarafında çalıştır.
+   ÖNCELİK: YÜKSEK
+
+4. [GÜVENLİK] CORS Yapılandırması Belirsiz
+   SORUN: next.config.ts'de CORS header'ları net tanımlanmamış.
+   Varsayılan olarak tüm origin'lere açık olabilir.
+   ÇÖZÜM: Allowed-Origin listesi oluştur. Sadece oyun domain'i ve preview domain'leri izinle.
+   ÖNCELİK: ORTA
+
+═══ VERİTABANI İYİLEŞTİRMELERİ ═══
+
+5. [VERİTABANI] Eksik Composite İndeksler
+   SORUN: fixtures tablosunda (status, match_date) composite index yok.
+   Her cron job'da full table scan yapılıyor.
+   ÇÖZÜM: CREATE INDEX idx_fixtures_status_date ON fixtures(status, match_date);
+   Ayrıca: league_standings(league_id, season_id), players(profile_id, position)
+   ÖNCELİK: ORTA
+
+6. [VERİTABANI] Cascade Delete Eksikliği
+   SORUN: profiles silindiğinde players, league_teams, fixtures tablolarında
+   kayıtlar kalıyor. Zombi veri birikir.
+   ÇÖZÜM: FK constraint'lere ON DELETE CASCADE ekle.
+   ÖNCELİK: ORTA
+
+7. [VERİTABANI] Migration Versiyon Çakışması
+   SORUN: Birden fazla migration dosyası aynı kolonları farklı DEFAULT değerlerle tanımlıyor.
+   ÇÖZÜM: Tek bir unified migration dosyasına birleştir. Eski dosyaları arşivle.
+   ÖNCELİK: DÜŞÜK
+
+═══ PERFORMANS İYİLEŞTİRMELERİ ═══
+
+8. [PERFORMANS] GameContext Re-Render Sorunu
+   SORUN: 20+ state tek provider'da. Herhangi bir state değişince tüm consumer'lar
+   yeniden render ediliyor. Özellikle squad değişince tüm sekmeler re-render oluyor.
+   ÇÖZÜM: State'i parçalara böl (ProfileContext, SquadContext, TrainingContext).
+   Veya Zustand store'larla replace et (selector-based subscription).
+   ÖNCELİK: YÜKSEK
+
+9. [PERFORMANS] Bot İşlemleri Tek Thread'de Sıralı
+   SORUN: bot-actions cron'u tüm botları for döngüsüyle tek tek işliyor.
+   50+ bot olduğunda Vercel timeout (60s) riski var.
+   ÇÖZÜM: Promise.all() ile paralel işleme (5-10 batch). Veya chunk'lara bölüp
+   birden fazla cron invocation tetikle.
+   ÖNCELİK: ORTA
+
+10. [PERFORMANS] Büyük JSONB Kolonları Gereksiz Çekiliyor
+    SORUN: profiles.sponsors ve profiles.stadium_upgrades her sorguda çekiliyor.
+    Ama sadece finans ve stadyum sekmelerinde gerekli.
+    ÇÖZÜM: Lazy loading — sadece ilgili sekmede fetch et.
+    Veya ayrı endpoint: /api/profile/sponsors, /api/profile/stadium-upgrades
+    ÖNCELİK: DÜŞÜK
+
+11. [PERFORMANS] Realtime Bağlantı Yönetimi
+    SORUN: Her sekme açılışında yeni WebSocket bağlantısı kuruluyor.
+    Çok sekmeli kullanımda Supabase limit aşımı olabilir.
+    ÇÖZÜM: Singleton channel pattern. Tek bir subscription point,
+    component bazında subscribe/unsubscribe.
+    ÖNCELİK: ORTA
+
+═══ OYUN MEKANİĞİ GELİŞTİRMELERİ ═══
+
+12. [OYUN] AI Rakip Menajerler
+    SORUN: Bot takımlar sadece transfer yapıyor. Maç içinde taktik değişikliği
+    yapmıyorlar. Ligdeki konumlarına göre strateji belirlemiyorlar.
+    ÇÖZÜM: Bot AI modülü yaz. Lig pozisyonuna göre: üst sıra → dengeli,
+    düşme hattında → hücumcu, güvenli → deneyimli oyunculara şans ver.
+    Maç içi: gerideyken mentality artır, öndeyken defansif geç.
+    ÖNCELİK: YÜKSEK
+
+13. [OYUN] Kondisyon Düşüşü Formülü
+    SORUN: Maç içinde kondisyon düşüşü sabit (0.15 + stamina/1000).
+    Gerçekçilik için son 15 dakikada düşüş hızlanmalı.
+    ÇÖZÜM: Dakika > 75 ise kondisyon düşüşü ×1.5 uygula.
+    Bu, son dakikalarda sakatlık ve gol olasılığını artırır (zaten lateGameDesperation var
+    ama kondisyon bazlı dinamik etki yok).
+    ÖNCELİK: ORTA
+
+14. [OYUN] Markov Zinciri Maç Motoru
+    SORUN: Maç simülasyonu tamamen rastgele (Math.random).
+    Gerçekçi bir Markov Zinciri modeli ile durum geçişleri yapılabilir.
+    ÇÖZÜM: Her dakikada "oyun durumu" (sahada hakimiyet, pres altında,
+    kontra atak, set parçası vb.) state machine ile takip et.
+    Her durumun kendi olasılık dağılımı olsun.
+    ÖNCELİK: DÜŞÜK (uzun vadeli)
+
+15. [OYUN] Canlı Taktik Değişikliği
+    SORUN: Kullanıcı maç içinde taktik değiştirdiğinde bu bir sonraki maça
+    yansıyor. Mevcut maçın kalan dakikalarına etki etmiyor.
+    ÇÖZÜM: match-tick cron'unda kullanıcının son taktik değişikliğini oku
+    ve kalan dakikalarda yeni taktik çarpanlarını uygula.
+    /api/match/update-tactic endpoint'i zaten var ama tam entegre değil.
+    ÖNCELİK: ORTA
+
+16. [OYUN] Gelişmiş Oyuncu Nitelik Matrisi
+    SORUN: Match engine'de bazı nitelikler kullanılmıyor (firstTouch, crossing,
+    marking, tackling vb.). Sadece 9 temel yetenek ve finishing/goalkeeping
+    doğrudan kullanılıyor.
+    ÇÖZÜM: Her pozisyon için spesifik nitelik ağırlıkları ekle:
+    - CB: tackling %30, marking %25, positioning %20, heading %15, strength %10
+    - ST: finishing %35, composure %20, offTheBall %20, heading %15, speed %10
+    Bu ağırlıkları goalChance ve event generation'da kullan.
+    ÖNCELİK: ORTA
+
+═══ KULLANICI DENEYİMİ İYİLEŞTİRMELERİ ═══
+
+17. [UX] Maç Simülasyonu İlerleme Çubuğu
+    SORUN: match/[id] sayfasında maç simüle edilirken kullanıcı boş ekrana bakıyor.
+    ÇÖZÜM: Progress bar veya skeleton ekle. match-tick ile artırımlı simülasyon
+    yapıldığından, her tick'te progress güncellenebilir.
+    ÖNCELİK: ORTA
+
+18. [UX] Bildirim Tercihleri Detaylı Kontrol
+    SORUN: Push bildirimleri "hepsi veya hiçbiri" şeklinde.
+    Kullanıcı sadece maç sonuçlarını almak isteyebilir.
+    ÇÖZÜM: NotificationSettings'de toggle'lar zaten var ama backend'de
+    filtreleme yapılmıyor. sendPushToProfile fonksiyonuna preference check ekle.
+    ÖNCELİK: DÜŞÜK
+
+19. [UX] Mobil Uyumluluk (320px)
+    SORUN: Küçük telefon ekranlarında bazı bileşenler taşıyor.
+    ÇÖZÜM: 320px breakpoint testi yap. Özellikle: DashboardTab stats grid,
+    TacticsCommandCenter kadro listesi, FinancialTab grafikleri.
+    ÖNCELİK: DÜŞÜK
+
+═══ YENİ ÖZELLİK ÖNERİLERİ ═══
+
+20. [YENİ] Menajer Sözleşme Sistemi
+    Menajerin kulüple sözleşmesi olsun. Başarısızlık sözleşme feshi riski taşısın.
+    3 sezon üst üste düşme → işten çıkarma → yeni kulüple başlama.
+
+21. [YENİ] Genç Oyuncu Kiralama Sistemi
+    A takımda süre alamayan genç oyuncuları alt lige kiralama.
+    Kiralanan oyuncu deneyim puanı kazansın, sahibi takım gelişim takip etsin.
+
+22. [YENİ] Basın Konferansı Mekanizması
+    Maç sonrası basın toplantısı. Cevaplar moral/medya etkisi yapsın.
+    Agresif cevap → hakemler daha sert, rakipler daha motive.
+    Diplomatik cevap → medya puanı artar, sponsor bonus.
+
+23. [YENİ] Taktik Antrenman Sistemi
+    Normal antrenman dışında "taktik antrenman" slotu.
+    Formasyon değişikliğinde oyuncuların adaptasyon süreci olsun.
+    Yeni formasyonda 2-3 hafta düşük etkinlik → sonra tam etkinlik.
+
+24. [YENİ] Sezon İçi Turnuvalar
+    Lig + Kupa dışında: Süper Kupa, Şampiyonlar Ligi tarzı continental turnuva.
+    Farklı liglerin şampiyonları birbirine karşı oynasın.
+
+25. [YENİ] Oyuncu Mutluluk/Sadakat Sistemi
+    Oyuncuların memnuniyet puanı olsun. Az süre → mutsuz → transfer isteği.
+    Yüksek sadakat → düşük maaş kabul, kaptanlık bonusu.
+
+26. [YENİ] Scout Raporu Zamanla Eskime
+    Scout raporu oluşturulduktan 3 hafta sonra accuracy düşsün.
+    Güncel rapor için yeniden scout yapılmalı.
+
+27. [YENİ] Ekonomik Kriz/Boom Event'leri
+    Rastgele ekonomik olaylar: "Sponsor krizi" (tüm sponsor gelirleri %20 düşer 4 hafta),
+    "TV anlaşması yenilendi" (yayın geliri %30 artar), "Yeni stadyum projesi" vb.
+
+28. [YENİ] Kadro Derinliği ve Yorgunluk Yönetimi
+    18 oyuncuyla 34 hafta oynamak kondisyon sorunları yaratır.
+    Kadro derinliği uyarısı: 18'ten az oyuncu → "Kadro yetersiz" uyarısı.
+    Otomatik rotasyon önerisi: yorgun oyuncuları dinlendir.
+
+29. [YENİ] Sezon Ortası Transfer Penceresi
+    Sezonun 17. haftasında 2 haftalık transfer penceresi açılsın.
+    Bu dönemde ücretsiz transfer ve kiralama yapılabilisin.
+
+30. [YENİ] Rekor Kitabı
+    En çok gol atan oyuncu, en çok şampiyon olan takım, en uzun yenilmezlik serisi
+    gibi tüm zamanların rekorlarını takip eden bir sayfa.

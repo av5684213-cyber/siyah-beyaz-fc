@@ -1,0 +1,178 @@
+════════════════════════════════════════════════════════════════
+  SİYAH-BEYAZ-FC — OYUN MANTIK ÖZETİ
+  Tarih: 2026-05-26
+════════════════════════════════════════════════════════════════
+
+1. GENEL MİMARİ
+═══════════════
+Next.js 16 + TypeScript + Supabase (PostgreSQL) + Vercel Cron
+Tek sayfalık uygulama (SPA), React Context ile state yönetimi.
+Supabase hem veritabanı hem Realtime (WebSocket) yayınları için.
+Kullanıcı tarayıcı kapansa bile oyun dünyası cron job'larla devam eder.
+
+2. YENİ KULLANICI KAYIT AKIŞI
+═════════════════════════════
+1. Kullanıcı "/auth/register" sayfasında takım adı, menajer adı ve felsefe seçer
+2. 5 felsefe seçeneği: Dengeli, Zengin Başkan (+50M), Altyapı Ekolü (akademi lv.3),
+   Yıldızlar Karması (%10 kalite bonusu), Marka Değeri (+20 itibar)
+3. Başlangıç: 100M €, 250 kredi, 30 itibar, 10.000 hayran
+4. Sistem 4. Lig'de bir bot takımı bulur ve kullanıcıya atar
+5. Bulamazsa yeni lig grubu oluşturulur (17 bot + 1 kullanıcı)
+6. Sezon, fikstür, sıralama ve hakem ataması otomatik yapılır
+
+3. LİG SİSTEMİ
+══════════════
+4 kademeli lig: 1. Lig → 2. Lig → 3. Lig → 4. Lig
+Her ligde 18 takım (1 gerçek + 17 bot varsayılan)
+Sezon: 34 hafta, haftada 5 gün (Pzt-Cum), günde 2 maç = 10 maç/hafta
+Toplam: 3 tam hafta (30 maç) + 4. hafta Pzt-Sal (4 maç) = 34 maç
+Son maç: 4. haftanın Salısı 18:00
+
+Yükselme/Düşme:
+- 1. sıra: Doğrudan üst lige
+- 2-5. sıra: Playoff (yarı final + final) → kazanan yükselir
+- Son 2 sıra: Alt lige düşer
+- 4. Lig'de düşme yok
+
+4. MAÇ SİMÜLASYONU (ENHANCED MATCH ENGINE)
+════════════════════════════════════════════
+Dakika dakika (1-90) simülasyon:
+- Her dakika: momentum → olay olasılıkları → gol şansı → olay üretimi
+- Gol şansı formülü: base(3%) × strengthRatio × (finishing/(finishing+gk×0.5))
+  × taktikBonus × pozisyonEtkinliği × evSahibiAvantajı × havaDurumu
+- Ev sahibi avantajı: overall ×1.15, attack ×1.12, midfield ×1.10, defense ×1.10
+- Pozisyon etkinliği: rating × (0.7 + 0.3 × effectiveness) — doğru pozisyonda +%30, yanlışta -%30
+- Kondisyon düşüşü: dakika başına 0.15 + stamina/1000
+- 60+ dk: yorgun oyuncular otomatik değişiklik
+- 70+ dk: Panikçi oyuncular %40 daha az gol ihtimali
+- 80+ dk: Geride olan takım %25 artış (late game desperation)
+- Hakem sistemi: faul, sarı/kırmızı kart, VAR, penaltı
+- Trait sistemi: ofansif traitler goalChance'i artırır, defansif azaltır (±0.03 sınır)
+
+5. EKONOMİ SİSTEMİ
+═══════════════════
+GELİR:
+- Maç günü: Bilet satışı (seyirci × fiyat), VIP (%8), loca, hatıra, yemek/otopark
+- Ticari: Sponsor (kit/shirt/stadium/training), forma satışları, mağaza pasif
+- Yayın: Haftalık TV geliri (lig seviyesine göre ×1-0.06), maç başı bonus
+- Transfer: Oyuncu satış (%2.5 vergi kesintisi)
+- Ödül: Lig sıralaması ödül havuzu (1. Lig: 50M, 4. Lig: 1.5M)
+
+GİDER:
+- Maaşlar: Oyuncu maaşları + menajer komisyonu (%3)
+- Tesis: Stadyum bakım, antrenman tesisi, tıp merkezi, altyapı
+- Operasyon: Akademi işletme, personel, seyahat, sigorta
+- Transfer amortismanı: 3 sezona yayılır
+
+FFP (Finansal Fair Play):
+- Sağlıklı: maaş/gelir <85%
+- Uyarı: maaş/gelir 85-95%
+- Kritik: maaş/gelir >95% veya nakit <3 hafta
+- Batık: nakit negatif → en pahalı oyuncu serbest bırakılır
+
+DİNAMİK PİYASA (YENİ):
+- Sponsor gelirleri lig pozisyonuna göre: ilk %15 → %20 bonus, son %20 → %10 ceza
+- Enflasyon: sezon sonuna doğru %3 artış
+- Piyasa değeri: rating²·⁵ × 3000 × yaşFaktörü × potansiyelPremium × form × talep
+
+6. ANTRENMAN SİSTEMİ
+═══════════════════
+10 program: Fiziksel Yükleme, Teknik Driller, Savunma Okulu, Bitiricilik Kampı,
+Kaleci Antrenmanı, Set Parçası, Zihinsel Hazırlık, Kondisyon & Toparlanma,
+Takım Kimyası, Pozisyon Adaptasyonu
+Günde 2 antrenman limiti (15:00 ve 21:00)
+Kondisyon maliyeti: -2 (zihinsel) ile -12 (fiziksel)
+Kondisyon & Toparlanma programı kondisyon KAZANDIRIR (+20)
+Hafta içi cron ile otomatik uygulanır
+
+7. GENÇLİK AKADEMİSİ
+═══════════════════
+Yaş aralığı: 15-18 (düzeltildi)
+Akademi seviye 1-10: yüksek seviye = yüksek rating/potansiyel + wonderkid şansı
+Wonderkid şansı: seviye 1'de %0.5, seviye 10'da %20
+6 tesis (5 seviye each): Antrenman saha, spor salonu, tıp merkezi,
+analiz odası, gözlem ağı, yurt
+A takıma terfi: genç oyuncu → A takım oyuncusuna dönüşür, Supabase'e kaydedilir
+
+8. SAKATLIK SİSTEMİ
+═══════════════════
+Risk: kondisyon <40 → %1.5, <60 → %0.5, aksi → %0.1 (dakika bazlı)
+Şiddet: hafif (%50, 1-3 gün), orta (%35, 4-10 gün), ağır (%15, 11-30 gün)
+İyileşme: kron ile otomatik (süresi dolan sakatlıklar)
+Fizyoterapist: 1-5 yıldız, 2-16 gün kısaltma
+FORM DÜŞÜŞÜ (YENİ): İyileşen oyuncuların form_rating düşer
+- Hafif sakatlık: -10 form
+- Orta sakatlık: -15 form
+- Ağır sakatlık: -25 form
+2-3 hafta düşük formla oynama simüle edilir
+
+9. OYUNCU GELİŞİMİ
+══════════════════
+Haftalık OVR güncelleme (Pazar):
+- Antrenman katkısı: katılım × 0.2
+- Maç performansı: son 5 maç ortalaması / 20
+- Potansiyel bonus: max +2
+- Yaş cezası: 30+ her yıl -0.5, max -3
+- Yeni OVR = min(potential, max(40, eski + toplamDeğişim))
+
+Yaşlanma (sezon sonu):
+- Herkes +1 yaş
+- 31+ hız düşüşü, 33+ pas/dayanıklılık düşüşü
+- Emeklilik: 40+ zorunlu, 38-39 koşullu, 36-37 ağır koşullar
+- Emekli oyuncular Hall of Fame'e eklenir
+
+10. CRON JOB'LAR (17 ADET)
+═══════════════════════════
+| Cron | Sıklık | Amaç |
+|------|--------|------|
+| weekly-income | Haftalık | Sponsor + TV geliri, finansal sağlık |
+| match-simulator | Maç saatinde | Fikstürleri kuyruğa ekle |
+| process-match-queue | Sürekli | Kuyruktan maç simüle et |
+| match-scheduler | Maç saatinde | Canlı maç oturumu başlat |
+| match-tick | 2 dakikada bir | Canlı maçı ilerlet |
+| match-reminder | Maç öncesi | Push bildirim |
+| update-player-ovr | Haftalık | OVR güncelleme |
+| update-form-ratings | Günlük | Form puanı, sakatlık temizleme |
+| bot-actions | Düzenli | Bot takım transfer/kadro |
+| season-end | Sezon sonu | Tüm sezon sonu işlemleri |
+| youth-training | Haftalık | Genç antrenman |
+| weekly-fans | Haftalık | Hayran dalgalanması |
+| weekly-evolution | Haftalık | Evrim, form/moral güncelleme |
+| apply-training | Hafta içi 2× | Antrenman etkisi |
+| auction-cleanup | Saatlik | Açık artırma çözümleme |
+
+Tüm cron job'lar CRON_SECRET ile korunur + cron_locks tablosu ile çift işlem önleme
+
+11. SEZON SONU İŞLEMLERİ
+════════════════════════
+1. Şampiyon ve 17 ödül türü belirlenir (golden boot, MVP, best GK vb.)
+2. Bildirimler gönderilir
+3. Hall of Fame güncellenir
+4. Kiralık oyuncular geri çağrılır
+5. Sponsorluklar temizlenir
+6. Yükselme/Düşme uygulanır
+7. Lig puanları sıfırlanır
+8. rating_start_of_season snapshot alınır
+9. Oyuncular yaşlanır (+1)
+10. Emeklilik kontrolü
+11. Yaşa bağlı yetenek düşüşü
+12. Gençlik akademisi üretimi
+13. Yeni sezon: fikstür + sıralama + hakem ataması
+14. Kupa turnuvası başlatılır
+
+12. GÜVENLİK
+═══════════
+- proxy.ts: CSP, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy
+- Rate limiting: genel 60/dk, cron 10/dk, auth 5/dk
+- Cron lock: Supabase tabanlı dağıtık kilitleme (cron_locks)
+- CRON_SECRET: tüm cron endpoint'leri bearer token ile korunur
+
+13. BİLPMEYENLER / EKSİKLER
+═══════════════════════════
+- RLS (Row Level Security) politikaları tamamlanmadı — istemci tarafı direkt Supabase sorguları hala mümkün
+- Edge Functions yerine client-side güncelleme yapılıyor (para, kadro vb.)
+- Transfer race condition: SELECT FOR UPDATE yok
+- WebSocket connection pooling yok
+- Admin route'ları sadece CRON_SECRET ile korunuyor, kullanıcı admin rolü kontrolü yok
+- Büyük JSONB kolonları (sponsors, stadium_upgrades) her sorguda gereksiz çekiliyor
+- GameContext'te 20+ state tek provider'da → gereksiz re-render
