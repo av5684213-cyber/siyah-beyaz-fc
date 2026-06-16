@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { generatePlayerDemands } from '@/lib/fm/playerDemands';
+import { checkApiRateLimit } from '@/lib/fm/apiSecurity';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { getAuthenticatedUserId } from '@/lib/apiAuth';
 
@@ -30,6 +31,12 @@ export async function POST(request: NextRequest) {
       playerRating,
     } = body;
     const buyerId = getAuthenticatedUserId(request, bodyBuyerId);
+
+    // -- Rate limit check --
+    if (buyerId) {
+      const rateLimitResponse = await checkApiRateLimit(buyerId, 'player_buy');
+      if (rateLimitResponse) return rateLimitResponse;
+    }
 
     // Validate required fields
     if (!listingId || !buyerId || !buyerTeam) {

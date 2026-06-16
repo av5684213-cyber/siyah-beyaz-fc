@@ -40,3 +40,17 @@ dev.log
 *.tsbuildinfo
 next-env.d.ts
 __pycache__/
+
+# Dev-only directories (not needed for Vercel serverless deployment)
+.zscripts/
+examples/
+agent-ctx/
+python/
+mini-services/
+
+# Legacy Prisma/SQLite (project uses Supabase)
+prisma/
+db/
+
+# Dev uploads (not referenced in code)
+upload/

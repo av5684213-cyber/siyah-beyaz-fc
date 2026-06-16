@@ -140,6 +140,51 @@ export async function checkRateLimit(
   }
 }
 
+// ─── Kullanıcı Bazlı Rate Limit ──────────────────────────────────────
+
+/**
+ * Yaygın API aksiyonları için öntanımlı rate limit yapılandırması.
+ * checkUserRateLimit içinde action parametresiyle eşleştirilir.
+ */
+export const ACTION_RATE_LIMITS: Record<string, { maxRequests: number; windowMs: number }> = {
+  'player_buy': { maxRequests: 5, windowMs: 60000 },        // 5/min
+  'transfer_list': { maxRequests: 10, windowMs: 60000 },    // 10/min
+  'team_create': { maxRequests: 1, windowMs: 3600000 },     // 1/hour
+  'staff_hire': { maxRequests: 5, windowMs: 60000 },        // 5/min
+  'scout_search': { maxRequests: 20, windowMs: 60000 },     // 20/min
+  'notification_send': { maxRequests: 30, windowMs: 60000 }, // 30/min
+};
+
+/**
+ * Kullanıcı bazlı API endpoint rate limiting.
+ * userId ve action'ı birleştirerek benzersiz bir anahtar oluşturur.
+ * ACTION_RATE_LIMITS'de tanımlı aksiyonlar için öntanımlı limitleri kullanır,
+ * belirtilirse maxRequests/windowMs parametreleriyle override edebilir.
+ *
+ * Supabase kullanılamadığında mevcut bellek içi fallback mekanizmasına düşer.
+ *
+ * @param userId      Kullanıcı ID'si
+ * @param action      Aksiyon adı (ör: 'player_buy', 'team_create')
+ * @param maxRequests Pencere içinde izin verilen maksimum istek (ACTION_RATE_LIMITS'ten veya varsayılan 10)
+ * @param windowMs    Pencere uzunluğu milisaniye cinsinden (ACTION_RATE_LIMITS'ten veya varsayılan 60000)
+ * @returns İzin durumu, kalan hak ve sıfırlama süresi
+ */
+export async function checkUserRateLimit(
+  userId: string,
+  action: string,
+  maxRequests: number = 10,
+  windowMs: number = 60000
+): Promise<{ allowed: boolean; remaining: number; resetIn: number }> {
+  // ACTION_RATE_LIMITS'ten öntanımlı değerleri al, parametre olarak verilmişse onları kullan
+  const actionConfig = ACTION_RATE_LIMITS[action];
+  const effectiveMaxRequests = actionConfig?.maxRequests ?? maxRequests;
+  const effectiveWindowMs = actionConfig?.windowMs ?? windowMs;
+
+  // rate_limits tablosunda userId:action formatında anahtarla kontrol et
+  const key = `user:${userId}:${action}`;
+  return checkRateLimit(key, effectiveMaxRequests, effectiveWindowMs);
+}
+
 // ─── Temizlik ──────────────────────────────────────────────────────
 
 /**

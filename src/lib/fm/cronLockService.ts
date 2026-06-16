@@ -19,6 +19,40 @@ export interface CronLock {
 }
 
 /**
+ * Job bazlı önerilen TTL süreleri (saniye cinsinden).
+ * acquireCronLock çağrısında parametrik TTL kullanmak için referans sağlar.
+ */
+export const JOB_TTL_CONFIG: Record<string, number> = {
+  'match-tick': 100,          // 100s TTL (runs every 2 min)
+  'match-scheduler': 300,     // 5 min TTL
+  'match-scheduler-cup': 300,
+  'match-scheduler-playoff': 300,
+  'match-simulator': 300,
+  'process-match-queue': 120,  // 2 min TTL (runs every 5 min)
+  'season-end': 900,           // 15 min TTL (heavy operation)
+  'bot-actions': 300,
+  'bot-economy-check': 300,
+  'weekly-evolution': 600,
+  'weekly-income': 300,
+  'auction-cleanup': 120,
+  'daily-tasks': 300,
+  'generate-regens': 300,
+  'default': 300,
+};
+
+/**
+ * Job adına göre önerilen TTL süresini döner.
+ * Önce JOB_TTL_CONFIG'de arar, bulamazsa 'default' girişini kullanır,
+ * o da yoksa 300 saniye döner.
+ *
+ * @param jobName Job adı
+ * @returns Önerilen TTL süresi (saniye)
+ */
+export function getRecommendedTTL(jobName: string): number {
+  return JOB_TTL_CONFIG[jobName] ?? JOB_TTL_CONFIG['default'] ?? 300;
+}
+
+/**
  * Cron kilidi almayı dener.
  * Aynı job_name için aktif kilit varsa (henüz süresi dolmamışsa) null döner.
  *
@@ -69,9 +103,20 @@ export async function acquireCronLock(
       .maybeSingle();
 
     if (existingLock) {
-      // Başka bir instance çalışıyor
-      console.log(`[cronLock] Job "${jobName}" already locked by ${existingLock.instance_id} (expires: ${existingLock.expires_at})`);
-      return null;
+      // Dead-lock detection: fallback/error-fallback instance_id'leri eski/stale kilit olarak kabul et
+      const staleInstanceId = existingLock.instance_id || '';
+      if (staleInstanceId.startsWith('fallback-') || staleInstanceId.startsWith('error-fallback-')) {
+        console.warn(`[cronLock] Job "${jobName}" has stale lock from ${staleInstanceId}, removing dead lock`);
+        await supabase
+          .from('cron_locks')
+          .delete()
+          .eq('id', existingLock.id);
+        // Devam et — kilidi yeniden almaya çalış
+      } else {
+        // Başka bir instance çalışıyor
+        console.log(`[cronLock] Job "${jobName}" already locked by ${existingLock.instance_id} (expires: ${existingLock.expires_at})`);
+        return null;
+      }
     }
 
     // 3. Kilit al (atomik insert — eğer arada başka instance aldıysa unique constraint ihlali olur)

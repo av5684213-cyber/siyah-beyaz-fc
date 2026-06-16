@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { generateScoutingReport, type ScoutFilters } from '@/lib/fm/aiScout';
 import { verifyProfileExists } from '@/lib/fm/security';
+import { checkApiRateLimit } from '@/lib/fm/apiSecurity';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { getAuthenticatedUserId } from '@/lib/apiAuth';
 
@@ -23,6 +24,10 @@ export async function POST(request: NextRequest) {
     if (!profileId) {
       return NextResponse.json({ error: 'profileId gerekli' }, { status: 400 });
     }
+
+    // -- Rate limit check --
+    const rateLimitResponse = await checkApiRateLimit(profileId, 'scout_search');
+    if (rateLimitResponse) return rateLimitResponse;
 
     if (!isSupabaseConfigured()) {
       return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });

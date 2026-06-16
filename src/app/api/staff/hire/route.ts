@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { verifyProfileExists } from '@/lib/fm/security';
+import { checkApiRateLimit } from '@/lib/fm/apiSecurity';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { getAuthenticatedUserId } from '@/lib/apiAuth';
 
@@ -79,6 +80,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { userId: bodyUserId, type, stars } = body;
     const userId = getAuthenticatedUserId(request, bodyUserId);
+
+    // -- Rate limit check --
+    if (userId) {
+      const rateLimitResponse = await checkApiRateLimit(userId, 'staff_hire');
+      if (rateLimitResponse) return rateLimitResponse;
+    }
 
     // -- Validate inputs --
     if (!userId || !type || !stars) {

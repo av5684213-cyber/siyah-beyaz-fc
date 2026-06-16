@@ -383,7 +383,35 @@ export const WEATHER_MODIFIERS: Record<string, { passingMod: number; speedMod: n
 };
 
 // ─── Hava Durumu Dağılımı ─────────────────────────────────────────────
-/** Rastgele hava durumu seçim havuzu (~%50 güneşli, ~%17 diğerleri) */
+
+/**
+ * Mevsimsel hava durumu dağılımı.
+ * Kış aylarında kar olasılığı artar, yaz aylarında güneşli olasılığı artar.
+ * @param month — Ay (1-12)
+ * @returns Hava durumu dağılım dizisi
+ */
+export function getSeasonalWeatherDistribution(month: number = new Date().getMonth() + 1): string[] {
+  // Kış: Aralık-Şubat (12,1,2) → daha çok kar ve yağmur
+  // İlkbahar: Mart-Mayıs (3,4,5) → daha çok yağmur ve rüzgar
+  // Yaz: Haziran-Ağustos (6,7,8) → daha çok güneşli
+  // Sonbahar: Eylül-Kasım (9,10,11) → karışık
+  
+  if (month === 12 || month <= 2) {
+    // Kış: güneşli az, kar ve yağmur artar
+    return ['sunny', 'rainy', 'snowy', 'snowy', 'windy'];
+  } else if (month >= 3 && month <= 5) {
+    // İlkbahar: güneşli ve yağmur dengeli
+    return ['sunny', 'sunny', 'rainy', 'rainy', 'windy'];
+  } else if (month >= 6 && month <= 8) {
+    // Yaz: çoğunlukla güneşli
+    return ['sunny', 'sunny', 'sunny', 'sunny', 'rainy'];
+  } else {
+    // Sonbahar: karışık
+    return ['sunny', 'sunny', 'rainy', 'snowy', 'windy'];
+  }
+}
+
+/** Geriye uyumluluk: eski sabit dağılım (yaz varsayımı) */
 export const WEATHER_DISTRIBUTION: string[] = ['sunny', 'sunny', 'sunny', 'rainy', 'snowy', 'windy'];
 
 // ─── Ev Sahibi Avantajı ───────────────────────────────────────────────
@@ -413,6 +441,50 @@ export const ATMOSPHERE_HOME_ADVANTAGE_TIERS = [
   { maxAtmos: 80, advantage: 0.22 },
   { maxAtmos: 100, advantage: 0.25 },
 ] as const;
+
+/**
+ * Dinamik ev sahibi avantajı hesaplar.
+ * Atmosfer skoru ve takım OVR farkına göre ev sahibi avantajını ayarlar.
+ * 
+ * @param atmosphereScore — Stadyum atmosfer skoru (0-100, 50 = nötr)
+ * @param ovrDiff — Ev sahibi OVR - Deplasman OVR (pozitif = ev sahibi güçlü)
+ * @returns Her kategori için ev sahibi çarpanı
+ */
+export function calculateDynamicHomeAdvantage(
+  atmosphereScore: number = 50,
+  ovrDiff: number = 0
+): { overall: number; attack: number; midfield: number; defense: number } {
+  const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
+
+  // 1. Atmosfer bazlı baz avantaj
+  let baseAdvantage = 0.18; // varsayılan
+  for (const tier of ATMOSPHERE_HOME_ADVANTAGE_TIERS) {
+    if (atmosphereScore <= tier.maxAtmos) {
+      baseAdvantage = tier.advantage;
+      break;
+    }
+  }
+  
+  // 2. OVR farkı modifikasyonu
+  // Ev sahibi güçlüyse (ovrDiff > 0): avantaj hafif artar (max +0.03)
+  // Deplasman güçlüyse (ovrDiff < 0): avantaj azalır (min -0.05)
+  // Formül: ovrDiff * 0.001 (her 10 OVR farkı = 0.01 değişim)
+  const ovrMod = clamp(ovrDiff * 0.001, -0.05, 0.03);
+  const adjustedAdvantage = baseAdvantage + ovrMod;
+  
+  // 3. Kategorilere dağıt (orantısal: attack > midfield > defense)
+  const overall = 1 + adjustedAdvantage;
+  const attack = 1 + adjustedAdvantage * 0.95;   // Hücum biraz daha fazla
+  const midfield = 1 + adjustedAdvantage * 0.90;  // Orta saha
+  const defense = 1 + adjustedAdvantage * 0.75;   // Savunma daha az etkilenir
+  
+  return {
+    overall: Math.max(1.0, Math.min(1.35, overall)),
+    attack: Math.max(1.0, Math.min(1.35, attack)),
+    midfield: Math.max(1.0, Math.min(1.35, midfield)),
+    defense: Math.max(1.0, Math.min(1.30, defense)),
+  };
+}
 
 // ─── Deplasman Baskı Etkisi ──────────────────────────────────────────
 // Yüksek atmosferli maçlarda (>70), deneyimsiz deplasman oyuncuları
@@ -611,6 +683,12 @@ export const INJURY_RISK = {
   ratingImpactMedium: -1.0,
   ratingImpactLight: -0.5,
 } as const;
+
+// ─── Fizyoterapist Sakatlık Azaltma ──────────────────────────────────
+// Her yıldız seviyesinin sakatlık riskini azaltma yüzdesi
+// Eski: %8/yıldız (5 yıldız = %40 — çok agresif)
+// Yeni: %4/yıldız (5 yıldız = %20 — daha gerçekçi)
+export const PHYSIO_INJURY_REDUCTION_PER_STAR = 0.04; // %4 per star
 
 // ─── Kondisyon Tüketimi — Eksponansiyel Drain ─────────────────────────
 // cond > 70: az drain (oyuncu taze), cond 50-70: orta drain, cond < 50: ağır drain

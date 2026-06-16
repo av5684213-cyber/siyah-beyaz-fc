@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 import {
   DollarSign,
   TrendingUp,
@@ -218,6 +219,29 @@ export default function FinancialTab({
     () => calculateWeeklyExpenses(squad, profile.stadium_upgrades, profile.academy_level, leagueTier),
     [squad, profile, leagueTier]
   );
+
+  // ── Pozisyon grubuna göre maaş dağılımı ────────────────────────────
+  const salaryByPosition = useMemo(() => {
+    const groups: Record<string, { label: string; salary: number; count: number; color: string }> = {
+      GK:  { label: 'Kaleci',   salary: 0, count: 0, color: '#f59e0b' },
+      DEF: { label: 'Defans',   salary: 0, count: 0, color: '#3b82f6' },
+      MID: { label: 'Orta Saha', salary: 0, count: 0, color: '#8b5cf6' },
+      FWD: { label: 'Forvet',   salary: 0, count: 0, color: '#ef4444' },
+    };
+    for (const p of squad || []) {
+      const pos = (p.position as string) || 'MID';
+      if (groups[pos]) {
+        groups[pos].salary += (p.salary as number) || 0;
+        groups[pos].count += 1;
+      }
+    }
+    return (['GK', 'DEF', 'MID', 'FWD'] as const).map(key => ({
+      position: groups[key].label,
+      salary: groups[key].salary,
+      count: groups[key].count,
+      color: groups[key].color,
+    }));
+  }, [squad]);
 
   const money = profile.money ?? 0;
   const sponsors = (profile.sponsors ?? []) as unknown as Sponsor[];
@@ -844,6 +868,146 @@ export default function FinancialTab({
                   </div>
                 );
               })()}
+            </div>
+
+            {/* ── Haftalık Maaş Dağılımı ── */}
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.01] p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <BarChart3 size={14} className="text-white/30" />
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-white/30">Haftalık Maaş Dağılımı</h3>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-[9px] text-white/20">
+                    Toplam: <span className="text-white/50 font-black font-mono">{fmtMoney(fin.totalWages)}</span>
+                  </span>
+                  {wageUtilization > 90 && (
+                    <span className="flex items-center gap-1 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest border rounded-full text-red-400 bg-red-500/10 border-red-500/20 animate-pulse">
+                      <AlertTriangle size={8} />
+                      FFP Aşılıyor
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Bar Chart */}
+              <div className="w-full h-52">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={salaryByPosition} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                    <XAxis
+                      dataKey="position"
+                      tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.4)' }}
+                      axisLine={{ stroke: 'rgba(255,255,255,0.06)' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.3)' }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(v: number) => fmtMoney(v)}
+                      width={65}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1a1f2e',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: '10px',
+                        fontSize: '11px',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                      }}
+                      labelStyle={{ color: 'rgba(255,255,255,0.6)', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                      formatter={(value: number, name: string) => [fmtMoney(value), 'Haftalık Maaş']}
+                      cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                    />
+                    <ReferenceLine
+                      y={wageBillLimit}
+                      stroke={wageUtilization > 90 ? '#ef4444' : wageUtilization > 75 ? '#f59e0b' : '#10b981'}
+                      strokeDasharray="6 4"
+                      strokeWidth={1.5}
+                      label={{
+                        value: `FFP Tavanı (${fmtMoney(wageBillLimit)})`,
+                        position: 'right',
+                        fill: wageUtilization > 90 ? '#ef4444' : wageUtilization > 75 ? '#f59e0b' : '#10b981',
+                        fontSize: 9,
+                        fontWeight: 700,
+                      }}
+                    />
+                    <Bar dataKey="salary" radius={[4, 4, 0, 0]} maxBarSize={56}>
+                      {salaryByPosition.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.8} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Position Summary Cards */}
+              <div className="grid grid-cols-4 gap-2 mt-4">
+                {salaryByPosition.map((pos) => (
+                  <div key={pos.position} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-2.5 text-center">
+                    <div
+                      className="w-2 h-2 rounded-full mx-auto mb-1.5"
+                      style={{ backgroundColor: pos.color }}
+                    />
+                    <div className="text-[8px] text-white/25 font-bold uppercase tracking-widest mb-0.5">{pos.position}</div>
+                    <div className="text-[11px] font-black font-mono" style={{ color: pos.color }}>{fmtMoney(pos.salary)}</div>
+                    <div className="text-[8px] text-white/15 mt-0.5">{pos.count} oyuncu</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* FFP Cap vs Current */}
+              <div className="mt-4 pt-3 border-t border-white/[0.06]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-white/25">Maaş vs FFP Tavanı</span>
+                  <span className={`text-[10px] font-black font-mono ${
+                    wageUtilization > 90 ? 'text-red-400' : wageUtilization > 75 ? 'text-amber-400' : 'text-emerald-400'
+                  }`}>
+                    {wageUtilization > 100 ? '⚠ AŞILIYOR' : `%${wageUtilization} kullanım`}
+                  </span>
+                </div>
+                <div className="w-full h-3 bg-white/[0.04] rounded-full overflow-hidden relative">
+                  {/* FFP limit marker */}
+                  <div
+                    className="absolute top-0 bottom-0 w-0.5 bg-white/30 z-10"
+                    style={{ left: '100%' }}
+                  />
+                  <motion.div
+                    className={`h-full rounded-full ${
+                      wageUtilization > 100 ? 'bg-red-500' :
+                      wageUtilization > 90 ? 'bg-red-500' :
+                      wageUtilization > 75 ? 'bg-amber-500' :
+                      'bg-emerald-500'
+                    }`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(100, wageUtilization)}%` }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1.5">
+                  <span className="text-[8px] text-white/15">
+                    Maaş: <span className="text-white/40 font-bold font-mono">{fmtMoney(fin.totalWages)}</span>
+                  </span>
+                  <span className="text-[8px] text-white/15">
+                    Tavan: <span className="text-white/40 font-bold font-mono">{fmtMoney(wageBillLimit)}</span>
+                  </span>
+                </div>
+                {wageUtilization > 90 && (
+                  <div className="mt-2 flex items-start gap-1.5 px-2 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
+                    <AlertTriangle size={10} className="text-red-400 shrink-0 mt-0.5" />
+                    <span className="text-[9px] text-red-400 font-medium leading-relaxed">
+                      Toplam maaşlar FFP tavanını {wageUtilization > 100 ? 'aşıyor' : 'tehdit ediyor'}.
+                      {wageUtilization > 100 ? ' Acil maaş düşürme veya oyuncu satışı gerekli.' : ' Oyuncu satışı veya maaş indirimini değerlendirin.'}
+                    </span>
+                  </div>
+                )}
+                {wageUtilization > 0 && wageUtilization <= 70 && (
+                  <div className="mt-2 text-[9px] text-emerald-400/50 text-center">
+                    FFP uyumlu — {fmtMoney(Math.max(0, wageBillLimit - fin.totalWages))} transfer bütçesi mevcut
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Sezon P&L Tahmini */}
