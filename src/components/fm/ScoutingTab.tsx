@@ -1408,7 +1408,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
               onClick={() => setDiamondDiscovery(null)}
               className="w-full py-3 bg-amber-500/20 border border-amber-500/30 rounded-xl text-amber-400 font-black text-sm"
             >
-              Tamam
+              Kadroma Al →
             </button>
           </motion.div>
         </motion.div>
