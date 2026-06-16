@@ -8,12 +8,6 @@ import {
   Activity, 
   Settings, 
   LayoutDashboard,
-  Zap,
-  Database,
-  Cloud,
-  CloudOff,
-  Upload,
-  RefreshCw,
   TrendingUp,
   Wallet,
   Target,
@@ -23,11 +17,9 @@ import {
   Shield,
   Clock,
 } from 'lucide-react';
-import type { ConnectionStatus } from '@/lib/fm/persistence';
-import { checkConnectionHealth } from '@/lib/fm/persistence';
-import { migrateLocalStorageToSupabase } from '@/lib/fm/migration';
-import { isSupabaseConfigured } from '@/lib/supabase';
+
 import { toTitleCase } from '@/lib/fm/ui-helpers';
+import { t } from '@/lib/fm/i18n';
 
 interface AppHeaderProps {
   profile: {
@@ -39,24 +31,10 @@ interface AppHeaderProps {
     primary_color?: string;
     secondary_color?: string;
   } | null;
-  dbStatus: ConnectionStatus;
-  dbLatency: number | null;
-  showMigrationBanner: boolean;
-  onCheckDb: () => void;
-  onMigrate: () => void;
-  onNuke: () => void;
-  migrating: boolean;
 }
 
 export function AppHeader({ 
-  profile, 
-  dbStatus, 
-  dbLatency, 
-  showMigrationBanner, 
-  onCheckDb, 
-  onMigrate, 
-  onNuke,
-  migrating 
+  profile
 }: AppHeaderProps) {
   const [now, setNow] = React.useState<Date | null>(null);
 
@@ -102,57 +80,21 @@ export function AppHeader({
           <div className="flex items-center gap-3 mt-1.5 text-[9px] uppercase font-bold tracking-[0.2em] text-white/40">
             <span className="flex items-center gap-1 font-black">
               <Activity size={10} style={{ color: profile?.secondary_color || '#ef4444' }} /> 
-              {profile?.league_name?.toUpperCase() || 'SÜPER LİG'}
+              {profile?.league_name?.toUpperCase() || t('header_super_lig')}
             </span>
             <span className="w-1 h-1 bg-white/20 rounded-full" />
-            <span className="flex items-center gap-1"><CalendarDays size={10} /> {profile?.current_day}. GÜN</span>
+            <span className="flex items-center gap-1"><CalendarDays size={10} /> {profile?.current_day}. {t('header_day')}</span>
             <span className="w-1 h-1 bg-white/20 rounded-full" />
-            <span className="flex items-center gap-1 text-amber-400/60"><Clock size={10} /> Kalan: {Math.max(0, 34 - ((profile?.current_day || 1) % 34 || 34))} Gün</span>
+            <span className="flex items-center gap-1 text-amber-400/60"><Clock size={10} /> {t('header_remaining')} {Math.max(0, 34 - ((profile?.current_day || 1) % 34 || 34))} {t('header_days')}</span>
           </div>
         </div>
       </div>
       
       <div className="flex items-center gap-3 sm:gap-6">
-        <button 
-          onClick={onNuke}
-          className="hidden md:flex items-center gap-2 px-3 py-1 rounded-md text-[8px] font-bold uppercase tracking-widest bg-red-600/10 border border-red-600/30 text-red-500 hover:bg-red-600/20 transition-all"
-        >
-          <Zap size={8} fill="currentColor" />
-          SİSTEMİ SIFIRLA
-        </button>
-        <div className="flex flex-col items-end gap-2">
-          {/* Supabase Connection Badge */}
-          <button 
-            onClick={onCheckDb}
-            className={`flex items-center gap-2 px-3 py-1 rounded-md text-[8px] font-bold uppercase tracking-widest border transition-all ${
-              dbStatus === 'connected' 
-                ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10' 
-                : dbStatus === 'disconnected'
-                ? 'bg-besiktas-red/5 border-besiktas-red/20 text-besiktas-red hover:bg-besiktas-red/10'
-                : 'bg-amber-500/5 border-amber-500/20 text-amber-400 hover:bg-amber-500/10'
-            }`}
-          >
-            <div className={`w-1.5 h-1.5 rounded-full ${dbStatus === 'connected' ? 'bg-emerald-500 animate-pulse' : 'bg-current'}`} />
-            {dbStatus === 'connected' ? 'SECURE_CLOUD' : dbStatus === 'not_configured' ? 'DB_LOCAL_STORAGE' : dbStatus === 'disconnected' ? 'OFFLINE' : 'DB_SYNCING...'}
-          </button>
-
-          {/* Migration Button */}
-          {dbStatus === 'connected' && showMigrationBanner && (
-            <button
-              onClick={onMigrate}
-              disabled={migrating}
-              className="flex items-center gap-2 px-3 py-1 rounded-md text-[8px] font-bold uppercase tracking-widest bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 hover:text-white transition-all disabled:opacity-50"
-            >
-              {migrating ? <RefreshCw size={8} className="animate-spin" /> : <Upload size={8} />}
-              {migrating ? 'MIGRATING...' : 'SYNC DATA'}
-            </button>
-          )}
-        </div>
-
         <div className="h-10 w-px bg-white/5 hidden sm:block" />
 
         <div className="flex flex-col items-end gap-0.5 text-right px-4 border-l border-white/5 whitespace-nowrap">
-          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold">TR Zamanı</p>
+          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold">{t('header_tr_time')}</p>
           <div className="flex flex-col items-end leading-none">
             <span className="font-mono text-sm font-bold text-white/80 tabular-nums">
               {trTime ? trTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
@@ -164,7 +106,7 @@ export function AppHeader({
         </div>
 
         <div className="text-right flex flex-col items-end border-l border-white/5 pl-4">
-          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold mb-0.5">BÜTÇE (€)</p>
+          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold mb-0.5">{t('header_budget')}</p>
           <div className="flex items-center gap-2 justify-end">
             <Wallet size={12} className="text-emerald-400/60" />
             <p className="font-mono text-lg font-medium tracking-tighter text-emerald-400">
@@ -178,7 +120,7 @@ export function AppHeader({
         </div>
 
         <div className="text-right flex flex-col items-end border-l border-white/5 pl-4">
-          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold mb-0.5">KREDİ (KR)</p>
+          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold mb-0.5">{t('header_credits')}</p>
           <div className="flex items-center gap-2 justify-end">
             <div className="w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center border border-amber-600 shadow-[0_0_10px_rgba(251,191,36,0.3)]">
                <span className="text-[8px] font-black text-amber-900">K</span>

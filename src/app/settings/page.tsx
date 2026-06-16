@@ -10,18 +10,14 @@ import { showToast } from '@/components/fm/ToastNotifications';
 import NotificationCategorySettings from '@/components/fm/NotificationCategorySettings';
 import TeamColorPicker from '@/components/fm/TeamColorPicker';
 import { applyTeamColors } from '@/lib/fm/themeSystem';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { t, type TranslationKeys } from '@/lib/fm/i18n';
 
-const LANGUAGES = [
-  { code: 'tr', label: 'Türkçe', active: true },
-  { code: 'en', label: 'English', active: false },
-  { code: 'de', label: 'Deutsch', active: false },
-  { code: 'es', label: 'Español', active: false },
-  { code: 'fr', label: 'Français', active: false },
-  { code: 'ar', label: 'العربية', active: false },
-];
+// Languages are now managed by LanguageContext — all active
 
 export default function SettingsPage() {
   const { profile, setProfile } = useFM();
+  const { locale, setLocale, supportedLocales } = useLanguage();
 
   // Team Name
   const [teamName, setTeamName] = useState(profile?.team_name || '');
@@ -35,9 +31,6 @@ export default function SettingsPage() {
 
   // Sound Effects
   const [soundEnabled, setSoundEnabled] = useState(true);
-
-  // Language
-  const [language, setLanguage] = useState('tr');
 
   // Theme
   const [currentTheme, setCurrentTheme] = useState<string>('dark');
@@ -67,15 +60,28 @@ export default function SettingsPage() {
 
   // ── Save handlers ──
 
+  const CREDIT_COST_TEAM_NAME = 25;
+  const CREDIT_COST_TEAM_COLORS = 25;
+
   const handleSaveTeamName = async () => {
     if (!profile) return;
     if (!teamName.trim()) {
       showToast('Takım adı boş olamaz.', 'error');
       return;
     }
+    if (teamName.trim() === profile.team_name) {
+      showToast('Takım adı zaten bu.', 'info');
+      return;
+    }
+    // Kredi kontrolü
+    if ((profile.credits || 0) < CREDIT_COST_TEAM_NAME) {
+      showToast(`Takım adı değiştirmek için ${CREDIT_COST_TEAM_NAME} kredi gerekli. Mevcut: ${profile.credits || 0}`, 'error');
+      return;
+    }
     setSavingTeam(true);
     try {
-      setProfile((prev: any) => ({ ...prev, team_name: teamName.trim() }));
+      const newCredits = (profile.credits || 0) - CREDIT_COST_TEAM_NAME;
+      setProfile((prev: any) => ({ ...prev, team_name: teamName.trim(), credits: newCredits }));
 
       // Also update localStorage
       try {
@@ -83,6 +89,7 @@ export default function SettingsPage() {
         if (stored) {
           const parsed = JSON.parse(stored);
           parsed.team_name = teamName.trim();
+          parsed.credits = newCredits;
           localStorage.setItem('fm_profile', JSON.stringify(parsed));
         }
       } catch {}
@@ -93,13 +100,13 @@ export default function SettingsPage() {
         if (supabase) {
           const { error } = await supabase
             .from('profiles')
-            .update({ team_name: teamName.trim() })
+            .update({ team_name: teamName.trim(), credits: newCredits })
             .eq('id', profile.id);
           if (error) throw error;
         }
       }
 
-      showToast('Takım adı güncellendi!', 'success');
+      showToast(`Takım adı güncellendi! (-${CREDIT_COST_TEAM_NAME} KR)`, 'success');
     } catch (err) {
       console.error('Takım adı kaydedilemedi:', err);
       showToast('Takım adı kaydedilemedi.', 'error');
@@ -110,12 +117,23 @@ export default function SettingsPage() {
 
   const handleSaveColors = async () => {
     if (!profile) return;
+    if (primaryColor === profile.primary_color && secondaryColor === profile.secondary_color) {
+      showToast('Renkler zaten bu.', 'info');
+      return;
+    }
+    // Kredi kontrolü
+    if ((profile.credits || 0) < CREDIT_COST_TEAM_COLORS) {
+      showToast(`Takım renklerini değiştirmek için ${CREDIT_COST_TEAM_COLORS} kredi gerekli. Mevcut: ${profile.credits || 0}`, 'error');
+      return;
+    }
     setSavingColors(true);
     try {
+      const newCredits = (profile.credits || 0) - CREDIT_COST_TEAM_COLORS;
       setProfile((prev: any) => ({
         ...prev,
         primary_color: primaryColor,
         secondary_color: secondaryColor,
+        credits: newCredits,
       }));
 
       // Also update localStorage
@@ -125,6 +143,7 @@ export default function SettingsPage() {
           const parsed = JSON.parse(stored);
           parsed.primary_color = primaryColor;
           parsed.secondary_color = secondaryColor;
+          parsed.credits = newCredits;
           localStorage.setItem('fm_profile', JSON.stringify(parsed));
         }
       } catch {}
@@ -135,13 +154,13 @@ export default function SettingsPage() {
         if (supabase) {
           const { error } = await supabase
             .from('profiles')
-            .update({ primary_color: primaryColor, secondary_color: secondaryColor })
+            .update({ primary_color: primaryColor, secondary_color: secondaryColor, credits: newCredits })
             .eq('id', profile.id);
           if (error) throw error;
         }
       }
 
-      showToast('Takım renkleri güncellendi!', 'success');
+      showToast(`Takım renkleri güncellendi! (-${CREDIT_COST_TEAM_COLORS} KR)`, 'success');
       
       // Apply team colors to CSS variables immediately
       applyTeamColors({ primary: primaryColor, secondary: secondaryColor });
@@ -225,50 +244,51 @@ export default function SettingsPage() {
           <Link
             href="/"
             className="flex items-center justify-center w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 text-white/60 hover:text-white hover:border-zinc-600 transition-colors"
-            aria-label="Geri dön"
+            aria-label={t('go_back')}
           >
             <ArrowLeft size={20} />
           </Link>
           <div className="flex items-center gap-3">
             <Settings size={22} className="text-amber-500" />
-            <h1 className="text-lg font-black uppercase tracking-tight">Ayarlar</h1>
+            <h1 className="text-lg font-black uppercase tracking-tight">{t('settings_title')}</h1>
           </div>
         </div>
       </motion.header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-5">
         {/* ── Team Name ── */}
-        <SettingCard icon={<Palette size={18} />} title="Takım Adı">
+        <SettingCard icon={<Palette size={18} />} title={t('settings_team_name')}>
           <div className="space-y-3">
             <input
               type="text"
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
-              placeholder="Takım adını gir..."
+              placeholder={t('settings_team_name') + '...'}
               maxLength={50}
               className="w-full bg-black border border-zinc-700 rounded-xl px-4 py-3 text-sm font-bold text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors"
             />
+            <p className="text-[11px] text-amber-400/70 font-bold">{t('settings_credit_cost', { cost: CREDIT_COST_TEAM_NAME })} • {t('settings_current_credits', { credits: profile?.credits || 0 })}</p>
             <button
               onClick={handleSaveTeamName}
-              disabled={savingTeam || teamName === profile?.team_name}
+              disabled={savingTeam || teamName === profile?.team_name || (profile?.credits || 0) < CREDIT_COST_TEAM_NAME}
               className="w-full py-3 bg-amber-500 text-black font-black uppercase tracking-widest rounded-xl
                 hover:bg-amber-400 active:scale-[0.98] transition-all flex items-center justify-center gap-2
                 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Save size={16} />
-              {savingTeam ? 'Kaydediliyor...' : 'Kaydet'}
+              {savingTeam ? t('saving') : `${t('save')} (${CREDIT_COST_TEAM_NAME} KR)`}
             </button>
           </div>
         </SettingCard>
 
         {/* ── Team Colors ── */}
-        <SettingCard icon={<Palette size={18} />} title="Takım Renkleri">
+        <SettingCard icon={<Palette size={18} />} title={t('settings_team_colors')}>
           <div className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Primary Color */}
               <div>
                 <label className="text-[11px] font-bold text-zinc-400 uppercase block mb-2">
-                  Ana Renk
+                  {t('settings_primary_color')}
                 </label>
                 <div className="flex items-center gap-3">
                   <div className="relative">
@@ -292,7 +312,7 @@ export default function SettingsPage() {
               {/* Secondary Color */}
               <div>
                 <label className="text-[11px] font-bold text-zinc-400 uppercase block mb-2">
-                  İkincil Renk
+                  {t('settings_secondary_color')}
                 </label>
                 <div className="flex items-center gap-3">
                   <div className="relative">
@@ -316,7 +336,7 @@ export default function SettingsPage() {
 
             {/* Preview */}
             <div className="p-4 bg-black/60 rounded-xl border border-zinc-800">
-              <p className="text-[10px] text-zinc-500 uppercase font-bold mb-3">Önizleme</p>
+              <p className="text-[10px] text-zinc-500 uppercase font-bold mb-3">{t('settings_preview')}</p>
               <div className="flex items-center gap-4">
                 <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center shadow-lg"
@@ -337,25 +357,26 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            <p className="text-[11px] text-amber-400/70 font-bold">{t('settings_credit_cost', { cost: CREDIT_COST_TEAM_COLORS })} • {t('settings_current_credits', { credits: profile?.credits || 0 })}</p>
             <button
               onClick={handleSaveColors}
-              disabled={savingColors || (primaryColor === profile?.primary_color && secondaryColor === profile?.secondary_color)}
+              disabled={savingColors || (primaryColor === profile?.primary_color && secondaryColor === profile?.secondary_color) || (profile?.credits || 0) < CREDIT_COST_TEAM_COLORS}
               className="w-full py-3 bg-amber-500 text-black font-black uppercase tracking-widest rounded-xl
                 hover:bg-amber-400 active:scale-[0.98] transition-all flex items-center justify-center gap-2
                 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Save size={16} />
-              {savingColors ? 'Kaydediliyor...' : 'Kaydet'}
+              {savingColors ? t('saving') : `${t('save')} (${CREDIT_COST_TEAM_COLORS} KR)`}
             </button>
           </div>
         </SettingCard>
 
         {/* ── Notification Preferences ── */}
-        <SettingCard icon={<Bell size={18} />} title="Bildirim Tercihleri">
+        <SettingCard icon={<Bell size={18} />} title={t('settings_notification_prefs')}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-bold text-white">Push Bildirimleri</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Maç hatırlatmaları ve önemli olaylar</p>
+              <p className="text-sm font-bold text-white">{t('settings_push_notifications')}</p>
+              <p className="text-xs text-zinc-500 mt-0.5">{t('settings_push_desc')}</p>
             </div>
             <ToggleSwitch enabled={pushEnabled} onToggle={handleTogglePush} />
           </div>
@@ -363,14 +384,14 @@ export default function SettingsPage() {
 
         {/* ── Notification Category Settings ── */}
         {profile?.id && (
-          <SettingCard icon={<Bell size={18} />} title="Bildirim Kategorileri">
+          <SettingCard icon={<Bell size={18} />} title={t('settings_notification_categories')}>
             <NotificationCategorySettings userId={profile.id} />
           </SettingCard>
         )}
 
         {/* ── Team Color Picker (Theme System) ── */}
         {profile?.id && (
-          <SettingCard icon={<Palette size={18} />} title="Tema Renkleri">
+          <SettingCard icon={<Palette size={18} />} title={t('settings_theme_colors')}>
             <TeamColorPicker
               userId={profile.id}
               initialPrimary={primaryColor}
@@ -380,23 +401,23 @@ export default function SettingsPage() {
         )}
 
         {/* ── Sound Effects ── */}
-        <SettingCard icon={<Volume2 size={18} />} title="Ses Efektleri">
+        <SettingCard icon={<Volume2 size={18} />} title={t('settings_sound_effects')}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-bold text-white">Ses Efektleri</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Gol, transfer ve bildirim sesleri</p>
+              <p className="text-sm font-bold text-white">{t('settings_sound_effects')}</p>
+              <p className="text-xs text-zinc-500 mt-0.5">{t('settings_sound_desc')}</p>
             </div>
             <ToggleSwitch enabled={soundEnabled} onToggle={handleToggleSound} />
           </div>
         </SettingCard>
 
         {/* ── Dark/Light Mode ── */}
-        <SettingCard icon={<Sun size={18} />} title="Görünüm">
+        <SettingCard icon={<Sun size={18} />} title={t('settings_appearance')}>
           <div className="space-y-3">
             {[
-              { id: 'dark', label: 'Karanlık', desc: 'Varsayılan koyu tema', icon: <Moon size={16} /> },
-              { id: 'light', label: 'Aydınlık', desc: 'Açık arka planlı tema', icon: <Sun size={16} /> },
-              { id: 'high-contrast', label: 'Yüksek Kontrast', desc: 'Parlak metin, koyu gri arka plan', icon: <Contrast size={16} /> },
+              { id: 'dark', label: t('settings_dark'), desc: t('settings_dark_desc'), icon: <Moon size={16} /> },
+              { id: 'light', label: t('settings_light'), desc: t('settings_light_desc'), icon: <Sun size={16} /> },
+              { id: 'high-contrast', label: t('settings_high_contrast'), desc: t('settings_high_contrast_desc'), icon: <Contrast size={16} /> },
             ].map((theme) => {
               const isActive = currentTheme === theme.id;
               return (
@@ -439,30 +460,25 @@ export default function SettingsPage() {
         </SettingCard>
 
         {/* ── Language Selection ── */}
-        <SettingCard icon={<Globe size={18} />} title="Dil Seçimi">
+        <SettingCard icon={<Globe size={18} />} title={t('settings_language')}>
           <div className="space-y-2">
-            {LANGUAGES.map((lang) => (
+            {supportedLocales.map((lang) => (
               <button
                 key={lang.code}
-                onClick={() => lang.active && setLanguage(lang.code)}
-                disabled={!lang.active}
+                onClick={() => setLocale(lang.code)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
-                  lang.active
-                    ? language === lang.code
-                      ? 'border-amber-500/50 bg-amber-500/10 text-amber-400'
-                      : 'border-zinc-700 bg-black text-white hover:border-zinc-600'
-                    : 'border-zinc-800 bg-zinc-900/50 text-zinc-600 cursor-not-allowed'
+                  locale === lang.code
+                    ? 'border-amber-500/50 bg-amber-500/10 text-amber-400'
+                    : 'border-zinc-700 bg-black text-white hover:border-zinc-600'
                 }`}
               >
-                <span className="text-sm font-bold">{lang.label}</span>
-                {!lang.active && (
-                  <span className="text-[10px] font-black uppercase tracking-wider bg-zinc-800 text-zinc-500 px-2.5 py-1 rounded-lg">
-                    Yakında
-                  </span>
-                )}
-                {lang.active && language === lang.code && (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold">{lang.nativeLabel}</span>
+                  <span className="text-[10px] text-white/30 font-medium">{lang.label}</span>
+                </div>
+                {locale === lang.code && (
                   <span className="text-[10px] font-black uppercase tracking-wider text-amber-500">
-                    ✓ Aktif
+                    ✓ {t('active')}
                   </span>
                 )}
               </button>

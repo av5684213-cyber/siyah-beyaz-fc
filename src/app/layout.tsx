@@ -3,10 +3,10 @@ import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { FMProvider } from "@/lib/fm/GameContext";
 import { MatchProvider } from "@/lib/fm/MatchContext";
 import { ToastProvider } from "@/lib/fm/ToastContext";
-import { DemoBanner } from "@/components/DemoBanner";
 import LayoutMobileNav from "@/components/LayoutMobileNav";
 import TeamThemeProvider from "@/components/TeamThemeProvider";
 
@@ -49,7 +49,7 @@ export default function RootLayout({
       <body className="antialiased min-h-screen bg-background text-foreground transition-colors duration-300">
         <TeamThemeProvider />
         <AuthProvider>
-        <DemoBanner />
+        <LanguageProvider>
         <FMProvider>
           <MatchProvider>
             <ToastProvider>
@@ -59,6 +59,7 @@ export default function RootLayout({
             </ToastProvider>
           </MatchProvider>
         </FMProvider>
+        </LanguageProvider>
         </AuthProvider>
         <LayoutMobileNav />
         <Toaster />

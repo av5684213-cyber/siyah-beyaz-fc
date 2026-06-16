@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Globe, ShoppingCart, TrendingUp, Users, DollarSign, ArrowRight, ShieldCheck, Trophy, LayoutList, Database, Clock, Timer, Gavel, XCircle, Coins, FileText, Handshake } from 'lucide-react';
+import { Globe, ShoppingCart, TrendingUp, Users, DollarSign, ArrowRight, ShieldCheck, Trophy, LayoutList, Clock, Timer, Gavel, XCircle, Coins, FileText, Handshake } from 'lucide-react';
 import CreditPurchaseModal from './CreditPurchaseModal';
 import { getMarketListings, listPlayerOnMarket, buyPlayerFromMarket, getGlobalLeaderboard, MarketListing, placeBid, initFreeAgentsOnMarket, cancelAuction, AuctionBid, getAuctionBids, getMyAuctions } from '@/lib/fm/multiplayer';
 import { isSupabaseConfigured, getSupabase } from '@/lib/supabase';
@@ -474,14 +474,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
           </button>
         </div>
         
-        <a 
-          href="/sql-download/free_agents.sql" 
-          download 
-          className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all text-white/60"
-        >
-          <Database size={14} />
-          SQL İNDİR
-        </a>
+
       </div>
 
       <AnimatePresence mode="wait">

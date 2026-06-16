@@ -7,7 +7,8 @@ import {
   ArrowLeft, Target, Activity, Footprints, Shield, HeartPulse,
   Zap, TrendingUp, DollarSign, Timer, Users
 } from 'lucide-react';
-import { isSupabaseConfigured, getSupabase } from '@/lib/supabase';
+// Player data now fetched via /api/players/[id] (service role, RLS bypass)
+import { t } from '@/lib/fm/i18n';
 import {
   toTitleCase, localizePosFull, formatPosBadge, getPosBadgeStyle,
   fmStatColor, fmStatBg, cap99, getPosGroup
@@ -118,22 +119,19 @@ export default function PlayerDetailPage() {
   }, [playerId]);
 
   const fetchPlayer = async () => {
-    if (!isSupabaseConfigured()) return;
-    const supabase = getSupabase();
-    if (!supabase) return;
-
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('players')
-        .select('*')
-        .eq('id', playerId)
-        .maybeSingle();
-
-      if (error) console.error('Player fetch error:', error.message);
-      else setPlayer(data);
+      const res = await fetch(`/api/players/${playerId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPlayer(data);
+      } else {
+        console.error('Player fetch error:', res.status, res.statusText);
+        setPlayer(null);
+      }
     } catch (err) {
       console.error('Player fetch error:', err);
+      setPlayer(null);
     } finally {
       setLoading(false);
     }
@@ -150,7 +148,7 @@ export default function PlayerDetailPage() {
   if (!player) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white">
-        <p className="text-sm font-bold">Oyuncu bulunamadı.</p>
+        <p className="text-sm font-bold">{t('player_not_found')}</p>
       </div>
     );
   }

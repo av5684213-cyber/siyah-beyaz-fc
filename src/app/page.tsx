@@ -840,7 +840,7 @@ export default function Home() {
         {isSoundEnabled() ? '🔊' : '🔇'}
       </button>
 
-      <AppHeader profile={profile} dbStatus={dbStatus} dbLatency={dbLatency} showMigrationBanner={showMigrationBanner} onCheckDb={handleCheckDb} onMigrate={handleMigrate} onNuke={handleNuke} migrating={migrating} />
+      <AppHeader profile={profile} />
       <ToastNotifications showTrainingToast={showTrainingToast} migrationResult={migrationResult} onDismissMigration={() => setMigrationResult(null)} />
       <RealTimeLeagueManager />
       

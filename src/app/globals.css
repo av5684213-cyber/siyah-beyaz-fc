@@ -70,6 +70,131 @@
   --chart-5: 340 75% 55%;
 }
 
+/* ── LIGHT THEME OVERRIDES ──
+   Hardcoded dark colors (bg-black, text-white, etc.) override
+   for light mode. This ensures the entire UI adapts. */
+.light {
+  color-scheme: light;
+}
+
+/* Main backgrounds */
+.light .bg-black,
+.light .min-h-screen.bg-black {
+  background-color: hsl(0 0% 97%) !important;
+}
+
+.light .bg-zinc-900,
+.light .bg-zinc-900\/40,
+.light .bg-zinc-900\/50,
+.light .bg-zinc-900\/60,
+.light .bg-zinc-900\/80 {
+  background-color: hsl(0 0% 100%) !important;
+}
+
+.light .bg-zinc-800 {
+  background-color: hsl(0 0% 95%) !important;
+}
+
+.light .bg-zinc-950 {
+  background-color: hsl(0 0% 93%) !important;
+}
+
+/* Cards and panels */
+.light .bg-white\/5,
+.light .bg-white\/10 {
+  background-color: hsl(0 0% 94%) !important;
+}
+
+/* Text colors */
+.light .text-white {
+  color: hsl(0 0% 10%) !important;
+}
+
+.light .text-white\/40,
+.light .text-white\/50,
+.light .text-white\/60 {
+  color: hsl(0 0% 40%) !important;
+}
+
+.light .text-white\/70,
+.light .text-white\/80 {
+  color: hsl(0 0% 30%) !important;
+}
+
+.light .text-white\/20,
+.light .text-white\/25,
+.light .text-white\/30 {
+  color: hsl(0 0% 55%) !important;
+}
+
+.light .text-zinc-400,
+.light .text-zinc-500,
+.light .text-zinc-600 {
+  color: hsl(0 0% 45%) !important;
+}
+
+/* Borders */
+.light .border-white\/5,
+.light .border-white\/10 {
+  border-color: hsl(0 0% 88%) !important;
+}
+
+.light .border-zinc-700,
+.light .border-zinc-800 {
+  border-color: hsl(0 0% 85%) !important;
+}
+
+.light .border-b.border-white\/5,
+.light .border-b.border-zinc-800 {
+  border-bottom-color: hsl(0 0% 88%) !important;
+}
+
+/* Inputs */
+.light input.bg-black,
+.light select.bg-black,
+.light textarea.bg-black {
+  background-color: hsl(0 0% 100%) !important;
+  border-color: hsl(0 0% 85%) !important;
+  color: hsl(0 0% 10%) !important;
+}
+
+.light input.text-white,
+.light select.text-white,
+.light textarea.text-white {
+  color: hsl(0 0% 10%) !important;
+}
+
+/* Header specific */
+.light header,
+.light .sticky.top-0 {
+  background-color: hsl(0 0% 97% / 0.9) !important;
+  border-bottom-color: hsl(0 0% 90%) !important;
+}
+
+/* Buttons in light mode - keep amber/accent colors intact */
+.light .bg-amber-500 {
+  /* Keep amber buttons as is */
+}
+
+/* Color picker in light mode */
+.light input[type="color"] {
+  border-color: hsl(0 0% 85%) !important;
+}
+
+/* Scrollbar light */
+.light ::-webkit-scrollbar-track {
+  background: hsl(0 0% 95%);
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: hsl(0 0% 80%);
+  border-radius: 4px;
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: hsl(0 0% 70%);
+}
+
 /* ── HIGH CONTRAST (Dark with brighter whites) ── */
 .high-contrast {
   --background: 0 0% 3%;
