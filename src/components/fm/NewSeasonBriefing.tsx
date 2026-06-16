@@ -19,7 +19,7 @@ interface NewSeasonBriefingProps {
   season: number;
   profileId?: string;
   leagueId?: string;
-  retiredPlayers?: { name: string; age: number; goals: number; matches: number }[];
+  retiredPlayers?: { name: string; age: number; goals: number; matches: number; seasons: number }[];
 }
 
 // Award type labels in Turkish
@@ -90,49 +90,34 @@ export default function NewSeasonBriefing({
   // ── Yükselme konfeti efekti ──
   useEffect(() => {
     if (!isOpen || !wasPromoted) return;
-
     const style = document.createElement('style');
-    style.id = 'nsb-confetti-style';
+    style.id = 'nsb-conf-css';
     style.textContent = `
-      @keyframes nsbConfettiFall {
-        0%   { transform: translateY(-10vh) rotate(0deg) scale(1); opacity: 1; }
-        80%  { opacity: 1; }
-        100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; }
+      @keyframes nsbFall {
+        0%   { transform: translateY(-5vh) rotate(0deg) scale(1); opacity:1; }
+        85%  { opacity:1; }
+        100% { transform: translateY(110vh) rotate(600deg) scale(0.4); opacity:0; }
       }
-      .nsb-conf-piece {
-        position: fixed;
-        pointer-events: none;
-        z-index: 9998;
-        top: -20px;
-        animation: nsbConfettiFall linear forwards;
-        border-radius: 2px;
-      }
+      .nsb-c { position:fixed; pointer-events:none; z-index:9997;
+               top:-15px; border-radius:2px; animation:nsbFall linear forwards; }
     `;
     document.head.appendChild(style);
-
-    const COLORS = ['#10b981','#f59e0b','#3b82f6','#ef4444','#a855f7','#ec4899','#14b8a6'];
-    const pieces: HTMLElement[] = [];
-
-    for (let i = 0; i < 60; i++) {
-      const el = document.createElement('div');
-      el.className = 'nsb-conf-piece';
-      el.style.left             = `${Math.random() * 100}vw`;
-      el.style.width            = `${6 + Math.random() * 8}px`;
-      el.style.height           = `${6 + Math.random() * 8}px`;
-      el.style.background       = COLORS[Math.floor(Math.random() * COLORS.length)];
-      el.style.animationDuration = `${2 + Math.random() * 3}s`;
-      el.style.animationDelay   = `${Math.random() * 2}s`;
-      if (Math.random() > 0.5) el.style.borderRadius = '50%';
-      document.body.appendChild(el);
-      pieces.push(el);
+    const cols = ['#10b981','#f59e0b','#3b82f6','#ef4444','#a855f7','#ec4899','#14b8a6'];
+    const els: HTMLElement[] = [];
+    for (let i = 0; i < 65; i++) {
+      const e = document.createElement('div');
+      e.className = 'nsb-c';
+      e.style.cssText = `left:${Math.random()*100}vw;width:${7+Math.random()*7}px;`
+        + `height:${7+Math.random()*7}px;background:${cols[i%cols.length]};`
+        + `animation-duration:${2.2+Math.random()*2.5}s;`
+        + `animation-delay:${Math.random()*2}s;`
+        + (Math.random()>.45 ? 'border-radius:50%;' : '');
+      document.body.appendChild(e);
+      els.push(e);
     }
-
-    const cleanup = () => {
-      pieces.forEach(p => p.remove());
-      document.getElementById('nsb-confetti-style')?.remove();
-    };
-    const timer = setTimeout(cleanup, 7000);
-    return () => { clearTimeout(timer); cleanup(); };
+    const clear = () => { els.forEach(e=>e.remove()); document.getElementById('nsb-conf-css')?.remove(); };
+    const t = setTimeout(clear, 7000);
+    return () => { clearTimeout(t); clear(); };
   }, [isOpen, wasPromoted]);
 
   if (!isOpen) return null;
@@ -299,27 +284,29 @@ export default function NewSeasonBriefing({
               <motion.div
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 text-left"
+                transition={{ delay: 0.6 }}
+                className="bg-white/[0.03] border border-white/8 rounded-2xl p-5 text-left"
               >
-                <p className="text-[9px] uppercase tracking-widest text-white/25 text-center mb-3">
+                <p className="text-[9px] uppercase tracking-widest text-white/20 text-center mb-4">
                   Bu Sezon Vedaya Durdu
                 </p>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {retiredPlayers.map((r, i) => (
-                    <div key={i} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                    <div key={i} className="flex items-center justify-between py-2.5 border-b border-white/5 last:border-0">
                       <div>
                         <p className="text-sm font-black text-white">{r.name}</p>
-                        <p className="text-[10px] text-white/40">{r.age} yaşında emekli</p>
+                        <p className="text-[10px] text-white/35">
+                          {r.age} yaşında · {r.seasons || 1} sezon seninle
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] text-white/50">{r.matches} maç</p>
-                        <p className="text-[10px] text-emerald-400/70">{r.goals} gol</p>
+                        <p className="text-xs font-black text-emerald-400/70">{r.goals} gol</p>
+                        <p className="text-[10px] text-white/35">{r.matches} maç</p>
                       </div>
                     </div>
                   ))}
                 </div>
-                <p className="text-[9px] text-white/15 italic text-center mt-3">
+                <p className="text-[9px] text-white/12 italic text-center mt-4">
                   "Her efsanenin bir son sahnesi vardır."
                 </p>
               </motion.div>

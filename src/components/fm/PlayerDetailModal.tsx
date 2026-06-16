@@ -465,7 +465,7 @@ export default function PlayerDetailModal({
           return (
             <div className="mt-4 p-4 bg-gradient-to-br from-amber-500/5 to-emerald-500/5 border border-amber-500/15 rounded-xl space-y-3">
               <p className="text-[9px] uppercase tracking-widest text-amber-400/60 font-black">
-                Seninle Gelişimi
+                ⭐ Seninle Gelişimi
               </p>
               {joinOvr && yearsWithUs && (
                 <p className="text-xs text-white/60 leading-relaxed">

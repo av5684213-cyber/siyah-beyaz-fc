@@ -231,7 +231,7 @@ export default function Home() {
     promoted: boolean;
     relegated: boolean;
     season: number;
-    retiredPlayers: { name: string; age: number; goals: number; matches: number }[];
+    retiredPlayers: { name: string; age: number; goals: number; matches: number; seasons: number }[];
   }>({
     leagueName: '',
     promoted: false,
@@ -613,6 +613,7 @@ export default function Home() {
               age:  (p as any).age || 0,
               goals: (p as any).goals || 0,
               matches: (p as any).matches_played || 0,
+              seasons: (p as any).seasons_with_team || 1,
             })),
         });
 
