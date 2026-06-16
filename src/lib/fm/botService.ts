@@ -72,9 +72,9 @@ const TIER_TARGET_AVG_OVR: Record<number, number> = {
 // ── Tier bazlı bütçe oranı (düşük tier botlar daha çok harcasın) ──
 // Difficulty bazlı bütçe yerine, lig tier'ına göre bütçe oranı
 const TIER_BUDGET_RATIO: Record<number, number> = {
-  1: 0.25,  // Süper Lig: toplam paranın %25'i
-  2: 0.30,  // 1. Lig: %30
-  3: 0.35,  // 2. Lig: %35
+  1: 0.20,  // Süper Lig: toplam paranın %20'si
+  2: 0.25,  // 1. Lig: %25
+  3: 0.32,  // 2. Lig: %32
   4: 0.40,  // 3. Lig: %40 (düşük tier botlar kadro kalitesini artırsın)
 };
 
@@ -220,9 +220,6 @@ export async function processBotTransfers(
     }
     const tierBudgetRatio = TIER_BUDGET_RATIO[botTier] || TIER_BUDGET_RATIO[4];
 
-    // Tier bazlı hedef OVR ayarlaması
-    const tierTarget = TIER_TARGET_AVG_OVR[botTier || 1] || 64;
-
     // 2. Fetch bot's squad
     const { data: squad, error: squadError } = await supabase
       .from('players')
@@ -233,21 +230,13 @@ export async function processBotTransfers(
       return { bought: false, sold: false, details: ['Failed to fetch squad'] };
     }
 
-    // Lig tier'ına göre hedef OVR — botlar kadro kalitesini tier'a uydurmaya çalışır
-    const { data: botLeagueRow } = await supabase
-      .from('league_teams').select('league_id').eq('profile_id', botUserId).maybeSingle();
-    let tierTargetOvr = 55;
-    if (botLeagueRow?.league_id) {
-      const { data: lg } = await supabase
-        .from('leagues').select('tier').eq('id', botLeagueRow.league_id).maybeSingle();
-      const t = (lg as any)?.tier || 4;
-      tierTargetOvr = ({ 1: 78, 2: 70, 3: 63, 4: 55 } as Record<number, number>)[t] || 55;
-    }
+    // Lig tier'ına göre hedef OVR — TIER_TARGET_AVG_OVR kullan
+    const targetOvr = TIER_TARGET_AVG_OVR[botTier] || 56;
     const currentAvgOvr = squad.length
-      ? squad.reduce((s, p) => s + ((p as any).rating || 0), 0) / squad.length
+      ? squad.reduce((s: number, p: any) => s + ((p as any).rating || 0), 0) / squad.length
       : 0;
-    const needsUpgrade = currentAvgOvr < tierTargetOvr - 3;
-    const minBuyOvr = needsUpgrade ? Math.floor(currentAvgOvr) + 1 : 0;
+    const needsUpgrade = currentAvgOvr < targetOvr - 3;
+    const minBuyOvr = needsUpgrade ? Math.floor(currentAvgOvr) + 2 : 0;
 
     // ── Günlük transfer limiti kontrolü ──
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -384,13 +373,18 @@ export async function processBotTransfers(
             const pSalary = pData.salary || Math.round((pData.rating || 40) * 500); // Tahmini maaş
             // BUG-4: Maaş bütçesi kontrolü — availableSalarySpace kullan
             if (pSalary > salaryInfo.availableSalarySpace && pSalary > 0) return false;
-            return l.price <= budget && (pData.rating || 0) >= minBuyOvr;
+            return l.price <= budget;
           });
 
-          if (affordable.length > 0) {
+          // Tier bazlı minimum OVR filtresi
+          const finalAffordable = affordable.filter((l: any) =>
+            ((l as any).player_data?.rating || 0) >= minBuyOvr
+          );
+
+          if (finalAffordable.length > 0) {
           // ── Çok Kriterli Satın Alma Skoru + BUG-4 VFM ──
           // Ağırlıklar: mevki uyumu %30, fiyat/performans %20, yaş/potansiyel %15, form %10, VFM %25
-          const scored = affordable.map((l: any) => {
+          const scored = finalAffordable.map((l: any) => {
             const pData = l.player_data || {};
             const pRating = pData.rating || 30;
             const pAge = pData.age || 25;
