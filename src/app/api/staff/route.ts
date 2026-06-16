@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { getAuthenticatedUserId } from '@/lib/apiAuth';
 
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: true, message: 'Supabase yapılandırılmamış.' }, { status: 500 });
     }
 
-    const supabase = getSupabase();
+    const supabase = getServiceSupabase();
     if (!supabase) {
       return NextResponse.json({ error: true, message: 'Supabase client null.' }, { status: 500 });
     }

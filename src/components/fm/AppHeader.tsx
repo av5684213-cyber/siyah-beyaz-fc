@@ -20,6 +20,7 @@ import {
 
 import { toTitleCase } from '@/lib/fm/ui-helpers';
 import { t } from '@/lib/fm/i18n';
+import Image from 'next/image';
 
 interface AppHeaderProps {
   profile: {
@@ -57,12 +58,16 @@ export function AppHeader({
       <div className="flex items-center gap-5">
         <div className="relative">
           <div 
-            className="w-12 h-12 rounded-xl rotate-3 flex items-center justify-center shadow-lg transition-transform hover:scale-105"
-            style={{ backgroundColor: profile?.primary_color || '#ffffff' }}
+            className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-transform hover:scale-105 overflow-hidden"
+            style={{ backgroundColor: '#000' }}
           >
-            <Trophy 
-              className="w-6 h-6 -rotate-3" 
-              style={{ color: profile?.secondary_color || '#000000' }}
+            <Image
+              src="/game-icon.png"
+              alt="Touchline Manager"
+              width={48}
+              height={48}
+              className="w-full h-full object-cover"
+              priority
             />
           </div>
           <div 

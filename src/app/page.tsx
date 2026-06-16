@@ -887,7 +887,7 @@ export default function Home() {
           <nav className="hidden lg:flex flex-col gap-1 bg-gradient-to-b from-zinc-900 to-black p-3 rounded-2xl border border-white/5 w-64 h-fit sticky top-[100px] z-40">
             <div className="pb-4 mb-3 border-b border-white/5">
               <div className="flex items-center gap-3 px-2">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-white/5 rotate-0 transition-transform"><Shield size={20} className="text-black" /></div>
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-white/5 rotate-0 transition-transform overflow-hidden"><img src="/game-icon.png" alt="Touchline Manager" className="w-full h-full object-cover" /></div>
                 <div>
                   <p className="text-sm font-black uppercase tracking-wider text-white">MANAGER Pro</p>
                   <p className="text-[9px] uppercase tracking-widest text-white/30 font-bold">Football Sim</p>

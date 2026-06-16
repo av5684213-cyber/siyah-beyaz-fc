@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function POST(request: NextRequest) {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });
   }
 
-  const supabase = getSupabase();
+  const supabase = getServiceSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase istemcisi oluşturulamadı' }, { status: 500 });
   }

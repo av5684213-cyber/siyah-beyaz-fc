@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function POST(request: NextRequest) {
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }, { status: 500 });
   }
 
-  const supabase = getSupabase();
+  const supabase = getServiceSupabase();
   if (!supabase) {
     console.error('[POST /api/rental/list] Supabase client null.');
     return NextResponse.json({

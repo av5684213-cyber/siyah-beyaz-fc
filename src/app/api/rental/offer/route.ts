@@ -11,7 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { RENTAL_COMMISSION_KR } from '@/lib/fm/constants';
 
 export async function POST(request: NextRequest) {
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }, { status: 500 });
   }
 
-  const supabase = getSupabase();
+  const supabase = getServiceSupabase();
   if (!supabase) {
     console.error('[POST /api/rental/offer] Supabase client could not be created. getSupabase() returned null.');
     return NextResponse.json({

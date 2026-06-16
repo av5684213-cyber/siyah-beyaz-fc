@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { verifyProfileExists } from '@/lib/fm/security';
 import { checkApiRateLimit } from '@/lib/fm/apiSecurity';
 import { createErrorResponse } from '@/lib/api-error-handler';
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: true, message: 'Supabase yapilandirilmamis.' }, { status: 500 });
     }
 
-    const supabase = getSupabase();
+    const supabase = getServiceSupabase();
     if (!supabase) {
       return NextResponse.json({ error: true, message: 'Supabase client null.' }, { status: 500 });
     }

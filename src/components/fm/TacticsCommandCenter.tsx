@@ -370,6 +370,8 @@ export default function TacticsCommandCenter({
   const [sortBy, setSortBy] = useState<string>('Poz');
   // ── Touch/Mobile: Tap-to-select & swap ──
   const [selectedForSwap, setSelectedForSwap] = useState<{ type: 'pitch' | 'bench'; idx: number; playerId: string } | null>(null);
+  // ── Position-based player selection modal ──
+  const [positionPicker, setPositionPicker] = useState<{ targetIdx: number; positionGroup: string; targetSlot: 'pitch' | 'bench' } | null>(null);
 
   // ── Shared swap logic (used by both tap-to-swap and touch drag) ──
   const performSwap = useCallback((srcIdx: number, srcType: 'pitch' | 'bench', tgtIdx: number, tgtType: 'pitch' | 'bench') => {
@@ -503,6 +505,44 @@ export default function TacticsCommandCenter({
 
   const players = squad.slice(0, 11);
   const bench = squad.slice(11);
+
+  // ── Position group labels ──
+  const POS_GROUP_LABELS: Record<string, string> = {
+    GK: 'Kaleci',
+    DEF: 'Defans',
+    MID: 'Orta Saha',
+    FWD: 'Forvet',
+  };
+
+  // ── Get position group for a player ──
+  const getPlayerPosGroup = (p: Player): string => {
+    return POS_TO_GROUP[(p.specificPosition || p.position) as keyof typeof POS_TO_GROUP] || 'MID';
+  };
+
+  // ── Get players of same position group (for swap) ──
+  const getPlayersForPositionGroup = (group: string): Player[] => {
+    if (group === 'ALL') return [...squad];
+    return squad.filter(p => getPlayerPosGroup(p) === group);
+  };
+
+  // ── Handle position-based player selection ──
+  const handlePositionPick = (pickedPlayerId: string) => {
+    if (!positionPicker) return;
+    const { targetIdx, targetSlot } = positionPicker;
+    const pickedIdx = squad.findIndex(p => p.id === pickedPlayerId);
+    if (pickedIdx === -1 || pickedIdx === targetIdx) {
+      setPositionPicker(null);
+      return;
+    }
+
+    let newSquad = [...squad];
+    const temp = newSquad[targetIdx];
+    newSquad[targetIdx] = newSquad[pickedIdx];
+    newSquad[pickedIdx] = temp;
+    newSquad = newSquad.map((p, i) => ({ ...p, is_starter: i < 11 }));
+    onSquadUpdate(newSquad);
+    setPositionPicker(null);
+  };
 
   // ═══ Takım Kimya Skoru ═══
   const teamChemistry = useMemo(() => {
@@ -948,7 +988,9 @@ export default function TacticsCommandCenter({
                   if (selectedForSwap) {
                     handleTapPlayer('pitch', idx);
                   } else {
-                    onPlayerClick?.(player);
+                    // Open position-based player picker
+                    const posGroup = getPlayerPosGroup(player);
+                    setPositionPicker({ targetIdx: idx, positionGroup: posGroup, targetSlot: 'pitch' });
                   }
                 },
                 onTouchStart: touchDragStart(player.id, idx, 'pitch'),
@@ -996,7 +1038,9 @@ export default function TacticsCommandCenter({
                         if (selectedForSwap) {
                           handleTapPlayer('bench', actualIdx);
                         } else {
-                          onPlayerClick?.(player);
+                          // Open position-based player picker for bench swap
+                          const posGroup = getPlayerPosGroup(player);
+                          setPositionPicker({ targetIdx: actualIdx, positionGroup: posGroup, targetSlot: 'bench' });
                         }
                       }}
                       data-bench-idx={actualIdx}
@@ -1356,6 +1400,142 @@ export default function TacticsCommandCenter({
       </div>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* ── Position-Based Player Selection Modal ── */}
+      <AnimatePresence>
+        {positionPicker && (() => {
+          const currentPlayer = squad[positionPicker.targetIdx];
+          const availablePlayers = getPlayersForPositionGroup(positionPicker.positionGroup);
+          const groupLabel = positionPicker.positionGroup === 'ALL' ? 'Tüm Oyuncular' : (POS_GROUP_LABELS[positionPicker.positionGroup] || positionPicker.positionGroup);
+          const groupColor = positionPicker.positionGroup === 'ALL' ? '#ffffff' : positionPicker.positionGroup === 'GK' ? '#7AB4E8' : positionPicker.positionGroup === 'DEF' ? '#7EDBC8' : positionPicker.positionGroup === 'MID' ? '#F0C87A' : '#E87878';
+          return (
+            <motion.div
+              key="position-picker"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[200] flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+              onClick={() => setPositionPicker(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl"
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center border" style={{ backgroundColor: `${groupColor}15`, borderColor: `${groupColor}30` }}>
+                      <Users size={18} style={{ color: groupColor }} />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black uppercase tracking-wider text-white">
+                        {groupLabel} Oyuncuları
+                      </h3>
+                      <p className="text-[9px] text-white/30 font-bold uppercase tracking-wider">
+                        {positionPicker.targetSlot === 'pitch' ? 'İlk 11' : 'Yedek'} pozisyonu için oyuncu seçin
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setPositionPicker(null)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Current player info */}
+                {currentPlayer && (
+                  <div className="mb-4 px-4 py-3 rounded-xl border border-white/5" style={{ backgroundColor: `${groupColor}08` }}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-black uppercase tracking-widest text-white/30">Mevcut Oyuncu:</span>
+                      <span className="text-[11px] font-black text-white uppercase">{toTitleCase(currentPlayer.name)}</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: `${groupColor}20`, color: groupColor }}>
+                        {currentPlayer.specificPosition || currentPlayer.position}
+                      </span>
+                      <span className="text-[9px] font-black text-emerald-400">⭐ {currentPlayer.rating}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Player list */}
+                <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar">
+                  {availablePlayers.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 gap-3">
+                      <Users size={32} className="text-white/10" />
+                      <p className="text-xs text-white/20 font-bold">Bu mevkiide oyuncu bulunmuyor</p>
+                    </div>
+                  ) : (
+                    availablePlayers
+                      .sort((a, b) => b.rating - a.rating)
+                      .map(p => {
+                        const isCurrentPlayer = p.id === currentPlayer?.id;
+                        const isInStarting11 = squad.indexOf(p) < 11;
+                        const cond = playerConditions[p.id] || 100;
+                        return (
+                          <button
+                            key={p.id}
+                            onClick={() => handlePositionPick(p.id)}
+                            className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${
+                              isCurrentPlayer
+                                ? 'bg-amber-500/10 border-amber-500/30'
+                                : 'bg-black/40 border-white/5 hover:border-white/20 hover:bg-white/[0.03]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[9px] font-black border" style={{ backgroundColor: `${groupColor}10`, borderColor: `${groupColor}25`, color: groupColor }}>
+                                {p.specificPosition || p.position}
+                              </div>
+                              <div>
+                                <span className="text-[11px] font-bold text-white uppercase block leading-tight">{toTitleCase(p.name)}</span>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-[8px] font-bold text-white/30">⭐ {p.rating}</span>
+                                  <span className={`text-[8px] font-bold ${cond >= 70 ? 'text-emerald-400' : cond >= 40 ? 'text-amber-400' : 'text-red-400'}`}>Kond: {cond}%</span>
+                                  {isInStarting11 && !isCurrentPlayer && (
+                                    <span className="text-[7px] font-black uppercase px-1 py-0.5 rounded bg-emerald-500/15 text-emerald-400">İLK 11</span>
+                                  )}
+                                  {isCurrentPlayer && (
+                                    <span className="text-[7px] font-black uppercase px-1 py-0.5 rounded bg-amber-500/15 text-amber-400">SEÇİLİ</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg font-black italic" style={{ color: groupColor }}>{p.rating}</span>
+                              <ArrowRightLeft size={14} className="text-white/20" />
+                            </div>
+                          </button>
+                        );
+                    })
+                  )}
+                </div>
+
+                {/* All players / Position filter toggle */}
+                <div className="mt-3 pt-3 border-t border-white/5">
+                  <button
+                    onClick={() => {
+                      if (positionPicker.positionGroup === 'ALL') {
+                        // Go back to position group filter - get the original group from the current player
+                        const posGroup = currentPlayer ? getPlayerPosGroup(currentPlayer) : 'MID';
+                        setPositionPicker(prev => prev ? { ...prev, positionGroup: posGroup } : null);
+                      } else {
+                        setPositionPicker(prev => prev ? { ...prev, positionGroup: 'ALL' } : null);
+                      }
+                    }}
+                    className="w-full py-2.5 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                  >
+                    {positionPicker.positionGroup === 'ALL' ? 'Sadece Aynı Mevkiidekileri Göster' : 'Tüm Oyuncuları Göster'}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
     </div>
   );
