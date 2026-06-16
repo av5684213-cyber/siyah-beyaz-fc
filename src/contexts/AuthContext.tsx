@@ -11,6 +11,7 @@ interface AuthContextValue {
   isDemoMode: boolean;
   signUp: (email: string, password: string, metadata?: { team_name?: string; manager_name?: string }) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signInWithGoogle: (token: string) => Promise<{ error: string | null; userId?: string; hasProfile?: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -104,6 +105,53 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return { error: error?.message ?? null };
   }, []);
 
+  const signInWithGoogle = useCallback(async (token: string) => {
+    try {
+      const response = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        return { error: data.error || 'Google girişi başarısız', userId: undefined, hasProfile: undefined };
+      }
+
+      // Google auth başarılı — internal user ID ile demo benzeri session oluştur
+      const googleUser = {
+        id: data.userId,
+        email: data.email || '',
+        aud: 'authenticated',
+        role: 'authenticated',
+        app_metadata: { provider: 'google' },
+        user_metadata: {
+          full_name: data.name || '',
+          avatar_url: data.picture || '',
+        },
+        created_at: new Date().toISOString(),
+      } as unknown as User;
+
+      const googleToken = btoa(`google-${data.userId}-${Date.now()}-${Math.random()}`);
+      const googleSession = {
+        access_token: googleToken,
+        token_type: 'bearer',
+        expires_at: Math.floor(Date.now() / 1000) + 86400,
+        user: googleUser,
+      } as unknown as Session;
+
+      setUser(googleUser);
+      setSession(googleSession);
+      setIsDemoMode(false);
+
+      return { error: null, userId: data.userId, hasProfile: data.hasProfile };
+    } catch (err: any) {
+      console.error('[AuthContext] Google sign-in error:', err);
+      return { error: err.message || 'Bir hata oluştu', userId: undefined, hasProfile: undefined };
+    }
+  }, []);
+
   const signOut = useCallback(async () => {
     // Supabase oturumunu kapat (yapılandırılmışsa)
     if (isSupabaseConfigured()) {
@@ -118,7 +166,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isDemoMode, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isDemoMode, signUp, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );
