@@ -1,5 +1,5 @@
 // =============================================================================
-// Siyah Beyaz FC — Referee System
+// Touchline Manager — Referee System
 // =============================================================================
 // 6 hakem/lig, kişilik tipleri, maç motoru entegrasyonu.
 // Hakemler faul, kart, penaltı, ofsayt kararlarını etkiler.

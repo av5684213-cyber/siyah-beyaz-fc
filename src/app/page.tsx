@@ -814,7 +814,7 @@ export default function Home() {
           onComplete={(tab) => {
             setShowOnboarding(false);
             if (tab) setActiveTab(tab);
-            toast({ title: 'Hoş geldin, Menajer!', description: 'Siyah Beyaz FC artık senin takımın!' });
+            toast({ title: 'Hoş geldin, Menajer!', description: 'Touchline Manager artık senin takımın!' });
           }}
           onDismiss={() => setShowOnboarding(false)}
           userId={profile?.id}
@@ -1205,10 +1205,10 @@ export default function Home() {
                       });
 
                       if (profile) {
-                        saveMatchResult(profile.id, results, profile.team_name || 'Siyah Beyaz FC', 'Rakip Takım');
+                        saveMatchResult(profile.id, results, profile.team_name || 'Touchline FC', 'Rakip Takım');
                         setLastMatch({ 
                           result: results, 
-                          homeTeamName: profile.team_name || 'Siyah Beyaz FC', 
+                          homeTeamName: profile.team_name || 'Touchline FC', 
                           awayTeamName: 'Rakip Takım' 
                         });
                         
@@ -1420,7 +1420,7 @@ export default function Home() {
                         setSelectedPlayer(listing.player_data);
                         setSelectedListing(listing);
                       }}
-                      teamName={profile?.team_name || 'Siyah Beyaz FC'}
+                      teamName={profile?.team_name || 'Touchline FC'}
                       isAdmin={isAdmin}
                     />
                   </div>
@@ -1743,7 +1743,7 @@ export default function Home() {
         <RivalMessagingPanel 
           userId={userId}
           userName={profile.manager_name || 'Manager'}
-          teamName={profile.team_name || 'Siyah Beyaz FC'}
+          teamName={profile.team_name || 'Touchline FC'}
         />
       )}
 

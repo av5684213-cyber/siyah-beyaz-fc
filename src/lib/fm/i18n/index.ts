@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Internationalization (i18n) Module
+ * Touchline Manager — Internationalization (i18n) Module
  *
  * Supports: tr, en, de, es, fr, ar
  * Usage: import { t, useLocale } from '@/lib/fm/i18n'

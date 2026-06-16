@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — API Route Entegrasyon Testleri
+ * Touchline Manager — API Route Entegrasyon Testleri
  *
  * API route'larını mock Supabase ile test eder:
  * - /api/league/standings: Mock data dönüşü, sanitizeTeamName mantığı

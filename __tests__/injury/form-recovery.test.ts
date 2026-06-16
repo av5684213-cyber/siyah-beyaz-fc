@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Sakatlık Dönüşü Form Düşüşü Testleri (BUG-9)
+ * Touchline Manager — Sakatlık Dönüşü Form Düşüşü Testleri (BUG-9)
  *
  * recoverFromInjury ve updateReturnToForm fonksiyonlarının testleri:
  * - recoverFromInjury: Sakatlık süresine göre sharpness/confidence düşüşü

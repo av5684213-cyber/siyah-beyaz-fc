@@ -19,7 +19,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Siyah Beyaz FM | Pro Manager",
+  title: "Touchline Manager | Pro Manager",
   description: "Online futbol menajerlik oyunu. Kadronuzu yönetin, taktik kurun, şampiyonluğa ulaşın.",
   keywords: ["futbol manager", "football manager", "online", "türkçe"],
   manifest: "/manifest.json",
@@ -27,10 +27,10 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "SBFC",
+    title: "TLM",
   },
   openGraph: {
-    title: "Siyah Beyaz FM",
+    title: "Touchline Manager",
     description: "Online futbol menajerlik oyunu",
     type: "website",
   },

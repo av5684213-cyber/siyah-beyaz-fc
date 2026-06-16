@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — API League Standings Testleri
+ * Touchline Manager — API League Standings Testleri
  *
  * /api/league/standings route'unun mantığını test eder:
  * - sanitizeTeamName: Takım ismi temizleme

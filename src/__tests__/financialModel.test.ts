@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Finansal Model Testleri
+ * Touchline Manager — Finansal Model Testleri
  *
  * financialModel.ts modülünün tüm fonksiyonlarını test eder:
  * - calculateWeeklyRevenue: Haftalık gelir hesaplama

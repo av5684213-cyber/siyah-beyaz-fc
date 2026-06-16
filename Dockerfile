@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════
-# Siyah Beyaz FC — Standalone Docker Dağıtımı
+# Touchline Manager — Standalone Docker Dağıtımı
 # ═══════════════════════════════════════════════════════════
 #
 # Kullanım:

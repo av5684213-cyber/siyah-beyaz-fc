@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Sakatlık Yöneticisi Testleri
+ * Touchline Manager — Sakatlık Yöneticisi Testleri
  *
  * injuryManager.ts modülünün tüm fonksiyonlarını test eder:
  * - calculateInjuryRisk: Dayanıklılığa göre sakatlık riski

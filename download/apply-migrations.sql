@@ -1,5 +1,5 @@
 -- =============================================================
--- Siyah Beyaz FC - Missing Schema Migration Script
+-- Touchline Manager - Missing Schema Migration Script
 -- Run this in the Supabase SQL Editor (Dashboard > SQL Editor)
 -- This script creates missing tables and columns
 -- =============================================================

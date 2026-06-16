@@ -1,4 +1,4 @@
-// Siyah Beyaz FC — Barrel Export
+// Touchline Manager — Barrel Export
 // Tüm modüller bu dosya üzerinden erişilebilir.
 // Yeni kodlar için domain bazlı import'lar tercih edilmelidir:
 //   import { ... } from '@/lib/fm/engine'

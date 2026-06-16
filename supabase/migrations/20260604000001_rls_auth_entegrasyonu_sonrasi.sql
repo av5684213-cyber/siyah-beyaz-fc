@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- Siyah Beyaz FC — RLS Politikaları (Supabase Auth Entegrasyonu Sonrası)
+-- Touchline Manager — RLS Politikaları (Supabase Auth Entegrasyonu Sonrası)
 -- Tarih: 2026-06-04
 -- Migration: 20260604000001
 -- ═══════════════════════════════════════════════════════════════════════════

@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Transfer Market ve Açık Artırma Testleri
+ * Touchline Manager — Transfer Market ve Açık Artırma Testleri
  *
  * transfer_market tablosu ve market_listings tablosu mantığını test eder:
  * - Açık artırma süre kontrolü

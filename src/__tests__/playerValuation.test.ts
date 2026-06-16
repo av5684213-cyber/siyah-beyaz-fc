@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Oyuncu Değerleme Testleri
+ * Touchline Manager — Oyuncu Değerleme Testleri
  * 
  * Python update_player_values.py'deki hesaplama mantığının
  * JavaScript versiyonu testleri.

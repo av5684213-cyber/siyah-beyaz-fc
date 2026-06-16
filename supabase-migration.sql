@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- Siyah Beyaz FC — Supabase Migration SQL (GÜNCEL)
+-- Touchline Manager — Supabase Migration SQL (GÜNCEL)
 -- Bu SQL'i Supabase Dashboard → SQL Editor'de çalıştırın
 -- Tarih: 2026-05-20
 -- ═══════════════════════════════════════════════════════════════════════════

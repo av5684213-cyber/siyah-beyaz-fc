@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Sezon Sonu Entegrasyon Testleri
+ * Touchline Manager — Sezon Sonu Entegrasyon Testleri
  *
  * Sezon sonu işlemlerinin uçtan uca test edilmesi:
  * - Yaşlanma (tüm oyuncular +1 yaş)

@@ -57,7 +57,7 @@ export default function LoginPage() {
             Giriş Yap
           </h1>
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/30 mt-2">
-            Siyah Beyaz FM
+            Touchline Manager
           </p>
         </div>
 

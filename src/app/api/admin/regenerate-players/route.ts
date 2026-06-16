@@ -9,7 +9,7 @@ import { generateStableSquad } from '@/lib/fm/playerGenerator';
 
 export async function POST(request: NextRequest) {
   // Authorization check
-  const adminSecret = process.env.CRON_SECRET || process.env.ADMIN_SECRET || 'siyah-beyaz-admin-2026';
+  const adminSecret = process.env.CRON_SECRET || process.env.ADMIN_SECRET || 'touchline-admin-2026';
   if (!adminSecret || request.headers.get('authorization') !== `Bearer ${adminSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

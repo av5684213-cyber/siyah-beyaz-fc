@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- Siyah Beyaz FC — GERÇEK RLS (Satır Seviyesi Güvenlik) MİGRASYONU
+-- Touchline Manager — GERÇEK RLS (Satır Seviyesi Güvenlik) MİGRASYONU
 -- Tarih: 2026-05-29
 -- Migration: 20260529000011
 -- ═══════════════════════════════════════════════════════════════════════════

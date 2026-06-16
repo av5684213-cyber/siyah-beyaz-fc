@@ -169,7 +169,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
             if (prof) {
               setTeamData({
                 manager: prof.manager_name || 'Bilinmiyor',
-                stadium: prof.stadium_name || 'Siyah Beyaz Arena',
+                stadium: prof.stadium_name || 'Touchline Arena',
                 reputation: prof.reputation || 75,
                 form: ['W', 'D', 'W', 'W', 'L'],
                 id: prof.id,
@@ -178,7 +178,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
             } else {
               setTeamData({
                 manager: 'AI Teknik Direktor',
-                stadium: 'Siyah Beyaz Arena',
+                stadium: 'Touchline Arena',
                 reputation: 50 + Math.floor(Math.random() * 30),
                 form: null
               });
@@ -187,7 +187,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
         } else {
           setTeamData({
             manager: 'AI Teknik Direktor',
-            stadium: 'Siyah Beyaz Arena',
+            stadium: 'Touchline Arena',
             reputation: 50 + Math.floor(Math.random() * 30),
             form: null
           });

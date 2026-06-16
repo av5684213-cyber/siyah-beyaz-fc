@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Maç Hesaplayıcı Testleri
+ * Touchline Manager — Maç Hesaplayıcı Testleri
  * 
  * Poisson dağılımı, puan hesaplama, takım gücü hesaplama
  * ve maç olayı üretimi testleri.

@@ -90,7 +90,7 @@ async function migrateUsers() {
 
   for (const profile of profilesToMigrate) {
     const oldId = profile.id;
-    const email = profile.email || `${oldId.substring(0, 8)}@migrated.siyahbeyaz.fm`;
+    const email = profile.email || `${oldId.substring(0, 8)}@migrated.touchlinemanager.com`;
     const password = generateRandomPassword();
     const teamName = profile.team_name || 'Göç Menajeri';
 

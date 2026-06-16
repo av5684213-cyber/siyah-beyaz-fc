@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════════
--- Siyah Beyaz FC — TAM ŞEMA MİGRASYONU v2 (TÜM HATALAR DÜZELTİLDİ)
+-- Touchline Manager — TAM ŞEMA MİGRASYONU v2 (TÜM HATALAR DÜZELTİLDİ)
 -- Tarih: 2026-05-27
 -- Açıklama: Tüm veritabanı şemasını tek dosyada birleştirir.
 --           Bu dosya TEK KAYNAK olarak kullanılmalıdır.

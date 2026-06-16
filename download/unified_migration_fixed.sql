@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════════
--- Siyah Beyaz FC — UNIFIED MIGRATION FILE (FIXED)
+-- Touchline Manager — UNIFIED MIGRATION FILE (FIXED)
 -- Tarih: 2026-03-05
 -- Açıklama: Tüm veritabanı şemasını tek dosyada birleştirir.
 --           Bu dosya TEK KAYNAK (single source of truth) olarak kullanılmalıdır.

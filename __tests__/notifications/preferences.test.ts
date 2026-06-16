@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — BUG-14: Notification Preferences Test
+ * Touchline Manager — BUG-14: Notification Preferences Test
  *
  * Tests for the notification category preference system:
  * - Default preferences include all new categories

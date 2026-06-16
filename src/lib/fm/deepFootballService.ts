@@ -35,7 +35,7 @@ export class DeepFootballService {
       "Köstebek skandalı: Taktikler sızdı mı?",
       "Taraftar gruplarından ortak deklarasyon.",
       "Federasyon'dan disiplin uyarısı!",
-      "Siyahbeyazfc'de 06:00 antrenmanı fırtına gibi geçti! Yeni taktikler denendi.",
+      "Touchline FC'de 06:00 antrenmanı fırtına gibi geçti! Yeni taktikler denendi.",
       "Operasyon Odası'ndan sızan bilgiler: Lobi 18:00 maçı için düğmeye bastı!",
       "Maç öncesi 'Yorgun' denen yıldız, 30 dakikalık (90 dk simüle) maçta döküldü.",
       "Spiker bile şaşırdı! Sahada görülen taktiksel diziliş rakibi felç etti."

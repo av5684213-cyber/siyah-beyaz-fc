@@ -1,5 +1,5 @@
 -- ============================================================
--- Siyah Beyaz FC — Chat ve Mesajlasma icin RLS Politikalari
+-- Touchline Manager — Chat ve Mesajlasma icin RLS Politikalari
 -- Tarih: 2024-05-16 (GUNCELLEME v3: idempotent, dogru kolonlar)
 -- ============================================================
 -- NOT: DROP POLICY ve FK REFERENCES yasak!

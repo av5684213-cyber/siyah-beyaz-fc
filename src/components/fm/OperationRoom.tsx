@@ -93,7 +93,7 @@ export default function OperationRoom({ trainingState, budget, onUpdateState, on
           </div>
           <div>
             <h2 className="text-lg font-black italic uppercase tracking-tighter text-white">Operasyon Odası</h2>
-            <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Siyah Beyaz FC Gizli Operatör Paneli</p>
+            <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Touchline Manager Gizli Operatör Paneli</p>
           </div>
         </div>
         <div className="text-right">

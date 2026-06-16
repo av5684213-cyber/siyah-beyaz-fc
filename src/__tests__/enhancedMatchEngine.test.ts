@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Maç Motoru Testleri
+ * Touchline Manager — Maç Motoru Testleri
  *
  * enhancedMatchEngine.ts modülünün saf fonksiyonlarını test eder:
  * - simulateEnhancedMatch: Tohumlanmış (seeded) maç simülasyonu

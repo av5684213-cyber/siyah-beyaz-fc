@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- Siyah Beyaz FC — KAPSAMLI ŞEMA DÜZELTME MİGRASYONU
+-- Touchline Manager — KAPSAMLI ŞEMA DÜZELTME MİGRASYONU
 -- Tarih: 2026-05-26
 -- Açıklama: Eksik kısıtlamalar, birincil anahtarlar ve RLS politikalarını düzeltir
 -- ═══════════════════════════════════════════════════════════════════════════

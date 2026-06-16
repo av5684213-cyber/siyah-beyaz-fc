@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — BUG-15: Regen System Test
+ * Touchline Manager — BUG-15: Regen System Test
  *
  * Tests for the regen (re-generation) player system:
  * - Position group mapping

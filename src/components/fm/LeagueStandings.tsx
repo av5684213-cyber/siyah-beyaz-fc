@@ -539,7 +539,7 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
           const teamId = row.team_id;
           const isUser = row.teams?.is_user_team || 
                         (profile && (teamName === profile.team_name || teamId === profile.id || teamId === profile.team_id)) ||
-                        (teamId === 'Siyahbeyazfc_001');
+                        (teamId === 'TouchlineFC_001');
           const isBot = row.teams?.is_bot || false;
           const zoneIcon = getZoneIcon(idx, effectiveActiveLeague);
           

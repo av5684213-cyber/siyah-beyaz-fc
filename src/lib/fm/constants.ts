@@ -148,7 +148,7 @@ export function antrenmanIdDonustur(id: string): string {
   return TRAINING_ID_ESLEME[id] || id;
 }
 
-export const INITIAL_TEAM_NAME = 'Siyahbeyazfc';
+export const INITIAL_TEAM_NAME = 'Touchline FC';
 export const STARTING_MONEY = 10_000_000;
 
 // ═══════════════════════════════════════════════════

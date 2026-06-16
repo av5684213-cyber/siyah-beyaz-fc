@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Emeklilik Testleri
+ * Touchline Manager — Emeklilik Testleri
  *
  * retirement.ts modülünün shouldPlayerRetire fonksiyonunu test eder:
  * - Yaş ≥ 40 → her zaman emekli

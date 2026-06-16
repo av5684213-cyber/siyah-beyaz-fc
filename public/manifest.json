@@ -1,6 +1,6 @@
 {
-  "name": "Siyah Beyaz FM",
-  "short_name": "SBFC",
+  "name": "Touchline Manager",
+  "short_name": "TLM",
   "description": "Online futbol menajerlik oyunu",
   "start_url": "/",
   "display": "standalone",

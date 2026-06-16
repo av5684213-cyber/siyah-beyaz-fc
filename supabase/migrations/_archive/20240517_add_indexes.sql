@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════
--- Siyah Beyaz FC — Performans İndeksleri (DUZELTILMIS VERSIYON)
+-- Touchline Manager — Performans İndeksleri (DUZELTILMIS VERSIYON)
 -- Sorgu hızını artırmak için kritik sütunlara indeks ekler.
 -- DÜZELTMELER:
 --   - players.owner_team_id → players.profile_id (gerçek kolon adı)

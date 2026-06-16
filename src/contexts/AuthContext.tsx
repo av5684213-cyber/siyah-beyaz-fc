@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const demoId = DEMO_USER_ID;
       const demoUser = {
         id: demoId,
-        email: 'demo@siyahbeyazfm.com',
+        email: 'demo@touchlinemanager.com',
         aud: 'authenticated',
         role: 'authenticated',
         app_metadata: {},

@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Bot AI Testleri
+ * Touchline Manager — Bot AI Testleri
  *
  * botService.ts modülünün saf yardımcı fonksiyonlarını test eder.
  * NOT: processBotTransfers, selectMatchSquad gibi Supabase bağımlı

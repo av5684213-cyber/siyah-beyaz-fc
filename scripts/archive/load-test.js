@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Siyah Beyaz FC — Load Test Script
+ * Touchline Manager — Load Test Script
  * 
  * Kullanım:
  *   node load-test.js [--concurrent=10] [--duration=30] [--base-url=http://localhost:3000]

@@ -1,4 +1,4 @@
-# Siyah Beyaz FC — Football Manager
+# Touchline Manager — Football Manager
 
 Profesyonel futbol menajerliği simülasyonu. Kendi takımını kur, transferleri yap, taktikleri belirle ve ligde zirveye çık.
 

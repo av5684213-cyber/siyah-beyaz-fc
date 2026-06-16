@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// Siyah Beyaz FC — Service Worker (Web Push Bildirimleri + Offline Cache)
+// Touchline Manager — Service Worker (Web Push Bildirimleri + Offline Cache)
 // ═══════════════════════════════════════════════════════════════
 
 /// <reference lib="webworker" />
@@ -118,7 +118,7 @@ self.addEventListener('push', (event) => {
 
   try {
     const data = event.data.json();
-    const title = data.title || 'Siyah Beyaz FC';
+    const title = data.title || 'Touchline Manager';
     const options: NotificationOptions = {
       body: data.body || '',
       icon: data.icon || '/icon-192.png',

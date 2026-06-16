@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Siyah Beyaz FC — Yük Testi Scripti
+ * Touchline Manager — Yük Testi Scripti
  *
  * 100 eşzamanlı kullanıcıyı simüle ederek temel API endpoint'lerini test eder.
  * Sonuçları load-test-results.txt dosyasına yazar.

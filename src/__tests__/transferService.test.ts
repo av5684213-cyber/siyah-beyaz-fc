@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Transfer Servisi Testleri
+ * Touchline Manager — Transfer Servisi Testleri
  *
  * multiplayer.ts modülündeki transfer fonksiyonlarını test eder:
  * - listPlayerOnMarket: Oyuncu listeleme mantığı

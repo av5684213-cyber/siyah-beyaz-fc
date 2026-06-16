@@ -35,7 +35,7 @@ if (!isSupabaseConfigured()) {
     // VAPID ayarları
     const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
     const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '';
-    const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@siyahbeyazfc.com';
+    const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@touchlinemanager.com';
 
     if (!vapidPublicKey || !vapidPrivateKey) {
       return NextResponse.json({

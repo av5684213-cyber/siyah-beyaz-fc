@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Sezon Sonu İşlemleri Testleri
+ * Touchline Manager — Sezon Sonu İşlemleri Testleri
  *
  * Sezon sonu cron route mantığının test edilebilir saf fonksiyonlarını test eder:
  * - Sezon tamamlanma kontrolü (34 maç)

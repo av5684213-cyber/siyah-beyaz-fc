@@ -1,5 +1,5 @@
 /**
- * Siyah Beyaz FC — Lig Sıralama ve Fikstür Testleri
+ * Touchline Manager — Lig Sıralama ve Fikstür Testleri
  *
  * league.ts modülünün saf fonksiyonlarını test eder:
  * - generateRoundRobin: Round-robin fikstür üretimi

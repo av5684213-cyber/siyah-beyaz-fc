@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- Siyah Beyaz FC — BİRLEŞİK MİGRASYON DOSYASI (Unified Core Schema)
+-- Touchline Manager — BİRLEŞİK MİGRASYON DOSYASI (Unified Core Schema)
 -- Tarih: 2026-05-25
 -- Açıklama: Tüm çekirdek tablolar, kolonlar, indeksler, RLS politikaları,
 --           RPC fonksiyonları ve tetikleyicileri tek dosyada birleştirir.

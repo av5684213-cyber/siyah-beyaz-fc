@@ -52,7 +52,7 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     id: 5,
     title: 'Tebrikler, Menajer!',
     description:
-      'Artık Siyah Beyaz FC\'nin teknik direktörüsün! Takımını yönet, genç yetenekleri keşfet, taktik değiştir ve efsane ol. İyi şanslar!',
+      'Artık Touchline Manager\'ın teknik direktörüsün! Takımını yönet, genç yetenekleri keşfet, taktik değiştir ve efsane ol. İyi şanslar!',
     icon: <span className="text-4xl">🏆</span>,
   },
 ];
