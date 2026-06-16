@@ -250,17 +250,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = useCallback(async () => {
-    // Clear persisted Google auth
+    // 1. Google GSI auto-select'i devre dışı bırak
+    //    Bu, kullanıcı logout yaptıktan sonra Google'ın otomatik
+    //    tekrar giriş yapmasını (One Tap) engeller
+    if (typeof window !== 'undefined') {
+      try {
+        const google = (window as any).google;
+        if (google?.accounts?.id) {
+          google.accounts.id.disableAutoSelect();
+        }
+      } catch {}
+    }
+
+    // 2. Persisted Google auth'u temizle
     clearPersistedAuth();
 
-    // Sign out of Supabase Auth if configured
+    // 3. Tüm fm_ localStorage anahtarlarını temizle
+    if (typeof window !== 'undefined') {
+      try {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith('fm_') || key.startsWith('sb_') || key.includes('auth'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+      } catch {}
+    }
+
+    // 4. Supabase Auth oturumunu kapat
     if (isSupabaseConfigured()) {
       try {
         const supabase = getSupabase()!;
         await supabase.auth.signOut();
       } catch {}
     }
-    // Clear state
+
+    // 5. State'i temizle
     setUser(null);
     setSession(null);
   }, []);

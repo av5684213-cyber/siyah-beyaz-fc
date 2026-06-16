@@ -763,15 +763,18 @@ export default function Home() {
   const benchSlice = useMemo(() => squad.slice(11), [squad]);
   const awayTeamSlice = useMemo(() => squad.slice(11, 22).length > 0 ? squad.slice(11, 22) : squad.slice(0, 11), [squad]);
 
-  // Auth check: if not authenticated, redirect to login
+  // Auth check: Kullanıcı auth olmamışsa (gizli sekme dahil) hemen login'e yönlendir.
+  // Hiçbir takım verisi / UI gösterme — gizli sekmede flash görünmeyi engeller.
   if (!authUser && !authLoading) {
     if (typeof window !== 'undefined') {
-      window.location.href = '/auth/login';
+      // Redirect öncesinde sayfayı tamamen boşalt
+      window.location.replace('/auth/login');
       return null;
     }
   }
 
-  // Loading state for auth
+  // Auth yüklenirken bekle — hiçbir içerik gösterme
+  // (gizli sekmede brief takım görünmesini engellemek için)
   if (authLoading || (!userId && authUser)) {
     return (
       <div className="h-screen bg-black flex items-center justify-center">

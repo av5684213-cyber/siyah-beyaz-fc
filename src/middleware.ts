@@ -10,7 +10,11 @@ import { checkRateLimit, cleanupRateLimits } from '@/lib/fm/supabaseRateLimit';
  * - x-profile-id header'ını ayarlar (API route'lar için)
  * - Güvenlik header'ları ekler
  * - API route'larını rate limit ile korur
- * - Auth gerekmeyen sayfalarda (login, register, api/auth) oturum kontrolü yapmaz
+ *
+ * NOT: Google Sign-In kullanıcıları Supabase cookie yerine localStorage
+ * kullandığı için middleware'de auth redirect YAPILMAZ. Client-side
+ * AuthContext + page.tsx redirect'i var. Bu, gizli sekmede bile çalışır
+ * çünkü localStorage boşsa AuthContext user=null verir, page.tsx redirect eder.
  */
 
 // Düzenli temizliği 5 dakikada bir çalıştır (fire-and-forget)
@@ -111,6 +115,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // 4. Supabase Auth oturum yenileme + x-profile-id header
+  //    Google Sign-In kullanıcıları localStorage kullandığı için
+  //    middleware'de auth redirect YAPILMAZ — client-side yönetilir.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 

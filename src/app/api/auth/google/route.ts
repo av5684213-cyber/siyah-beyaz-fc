@@ -194,27 +194,73 @@ export async function POST(request: NextRequest) {
     }
     // ─── End migration ────────────────────────────────────────────────
 
-    // New user — create placeholder profile
-    const placeholderProfile = {
+    // ─── New user → Auto-assign a bot club ──────────────────────────
+    // Online oyun: her yeni Google kullanıcısına otomatik bot kulüp ver
+    // ManagerRegistration adımını atla — kullanıcı hemen oyuna dahil olur
+
+    // 1. Boşta bir bot kulüp bul (henüz real manager'a verilmemiş)
+    //    Önce "user_claimed" olmayan botları seç
+    const { data: availableBotTeams } = await supabase
+      .from('league_teams')
+      .select('id, team_name, league_id, profile_id')
+      .eq('is_bot', true)
+      .limit(50);
+
+    // Bu bot'lardan profile_id'si bir gerçek kullanıcı (is_bot=false profile) olanı çıkar
+    // Yani: bot takım var ama profile_id'si gerçek kullanıcıya ait değilse al
+    let botTeam: any = null;
+
+    if (availableBotTeams && availableBotTeams.length > 0) {
+      // Bot'ların profile_id'lerini topla
+      const botProfileIds = availableBotTeams
+        .map(t => t.profile_id)
+        .filter(Boolean);
+
+      // Bu profile_id'lerden gerçek kullanıcı olanları bul
+      const { data: realProfiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .in('id', botProfileIds)
+        .eq('is_bot', false);
+
+      const realProfileIds = new Set((realProfiles || []).map(p => p.id));
+
+      // Gerçek kullanıcıya ait olmayan bot takımları al
+      const freeBots = availableBotTeams.filter(t =>
+        !t.profile_id || !realProfileIds.has(t.profile_id)
+      );
+
+      if (freeBots.length > 0) {
+        // Rastgele bir bot seç
+        botTeam = freeBots[Math.floor(Math.random() * freeBots.length)];
+      }
+    }
+
+    // 2. Yeni kullanıcı için profil oluştur
+    const managerName = name || 'Yeni Menajer';
+    const teamName = botTeam?.team_name || `Takım ${internalUserId.slice(-6)}`;
+    const teamLogo = picture || null;
+
+    const newProfile = {
       id: internalUserId,
-      manager_name: name || 'Yeni Menajer',
-      team_name: null,
+      manager_name: managerName,
+      team_name: teamName,
       email,
-      team_logo: picture || null,
-      money: 0,
-      credits: 0,
+      team_logo: teamLogo,
+      money: 25_000_000,       // 25M başlangıç bütçesi
+      credits: 250,             // 250 kredi
       level: 1,
       xp: 0,
-      fans: 0,
-      reputation: 0,
+      fans: 1000,
+      reputation: 30,
       is_bot: false,
-      onboarding_completed: false,
+      onboarding_completed: true,  // ManagerRegistration'i atla
       created_at: new Date().toISOString(),
     };
 
     const { error: profileError } = await supabase
       .from('profiles')
-      .upsert(placeholderProfile);
+      .upsert(newProfile);
 
     if (profileError) {
       console.error('[google-auth] Profile upsert error:', profileError.message);
@@ -223,16 +269,57 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`[google-auth] New user: ${name} (${email})`);
+    // 3. Bot kulübün sahipliğini yeni kullanıcıya devret
+    if (botTeam) {
+      console.log(`[google-auth] Auto-assigning bot team "${botTeam.team_name}" to ${internalUserId}`);
+
+      // league_teams kaydını güncelle: profile_id = yeni kullanıcı, is_bot = false
+      const { error: claimError } = await supabase
+        .from('league_teams')
+        .update({
+          profile_id: internalUserId,
+          is_bot: false,
+        })
+        .eq('id', botTeam.id);
+
+      if (claimError) {
+        console.error('[google-auth] Failed to claim bot team:', claimError.message);
+      } else {
+        // Bot profilini sil (artık gerçek kullanıcıya ait)
+        if (botTeam.profile_id) {
+          await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', botTeam.profile_id)
+            .eq('is_bot', true);
+        }
+
+        // Bot'un oyuncularını yeni kullanıcıya devret
+        await supabase
+          .from('players')
+          .update({ profile_id: internalUserId })
+          .eq('profile_id', botTeam.profile_id);
+
+        console.log(`[google-auth] Bot team claimed: ${botTeam.team_name}`);
+      }
+    } else {
+      console.warn(`[google-auth] No free bot team available for ${internalUserId}`);
+      // Bot takım yoksa yine de profil oluşturuldu, kullanıcı ManagerRegistration'a gidecek
+    }
+
+    console.log(`[google-auth] New user auto-onboarded: ${name} (${email}) — team: ${teamName}`);
 
     return NextResponse.json({
       success: true,
       userId: internalUserId,
-      hasProfile: false,
-      onboardingCompleted: false,
+      hasProfile: true,
+      onboardingCompleted: true,
+      teamName,
+      managerName,
       email,
       name,
       picture,
+      autoAssigned: true,
     });
 
   } catch (err: any) {
