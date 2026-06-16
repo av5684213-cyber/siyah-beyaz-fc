@@ -56,6 +56,21 @@ export default function OperationRoom({ trainingState, budget, onUpdateState, on
         }
       }
     }
+
+    // Operasyonu veritabanına kaydet (doğrudan insert — RPC fallback)
+    try {
+      const sb = getSupabase();
+      if (sb && op) {
+        await sb.from('active_operations').insert({
+          profile_id: userId,
+          op_id: op.id,
+          impact_type: (op as any).impactType || 'luck',
+          impact_value: (op as any).impactValue || 0.05,
+          target_profile_id: null,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        });
+      }
+    } catch { /* sessizce geç */ }
   };
 
   const getTierColor = (tier: number) => {

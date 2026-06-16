@@ -326,6 +326,40 @@ export async function GET(request: NextRequest) {
       console.warn('[update-form-ratings] S3-3 form change alert hatası:', formAlertErr);
     }
 
+    // Sezonsal moral değişimi
+    try {
+      if (supabase) {
+      const { data: allProfiles } = await supabase
+        .from('profiles').select('id, current_day, league_position').eq('is_bot', false);
+      for (const prof of (allProfiles || [])) {
+        const weekNum = Math.floor((prof.current_day || 0) / 7);
+        let moraleDelta = 0;
+        // Sezon başı heyecanı (1-4. hafta): +2
+        if (weekNum >= 1 && weekNum <= 4) moraleDelta += 2;
+        // Kış yorgunluğu (17-22. hafta): -1
+        if (weekNum >= 17 && weekNum <= 22) moraleDelta -= 1;
+        // Sezon sonu baskısı (28-34. hafta)
+        if (weekNum >= 28) {
+          const pos = prof.league_position || 9;
+          if (pos <= 3) moraleDelta += 3;
+          if (pos >= 17) moraleDelta -= 3;
+        }
+        if (moraleDelta !== 0 && prof.id) {
+          const { data: pls } = await supabase
+            .from('players').select('id, morale').eq('profile_id', prof.id);
+          for (const p of pls || []) {
+            const newMorale = Math.min(100, Math.max(0, (p.morale || 60) + moraleDelta));
+            if (newMorale !== p.morale) {
+              await supabase.from('players').update({ morale: newMorale }).eq('id', p.id);
+            }
+          }
+        }
+      }
+      }
+    } catch (seasonalErr) {
+      console.warn('[update-form-ratings] Sezonsal moral:', seasonalErr);
+    }
+
     const allErrors = [
       ...formResult.errors.slice(0, 5),
       ...cleanupResult.errors.slice(0, 5),

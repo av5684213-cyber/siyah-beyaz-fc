@@ -81,6 +81,9 @@ export default function MatchPage() {
   const [halfTimeTalkDone, setHalfTimeTalkDone] = useState(false);
   const [halfTimeTalkChoice, setHalfTimeTalkChoice] = useState<string | null>(null);
 
+  // ── Head-to-Head state ──
+  const [h2h, setH2h] = useState<{ wins: number; draws: number; losses: number; total: number } | null>(null);
+
   const FORMATIONS = ['4-4-2', '4-3-3', '3-5-2', '4-5-1', '4-2-3-1', '5-3-2', '3-4-3'];
   const TACTICS: { id: string; label: string; desc: string; goalMod: number }[] = [
     { id: 'normal', label: 'Normal', desc: 'Dengeli oyun', goalMod: 0 },
@@ -428,6 +431,36 @@ export default function MatchPage() {
     const interval = setInterval(() => loadFixture(), intervalMs);
     return () => clearInterval(interval);
   }, [fixture?.status, loadFixture]);
+
+  // ── Head-to-Head geçmiş karşılaşmalar ──
+  useEffect(() => {
+    if (!profileId || !fixture) return;
+    const sb = getSupabase();
+    if (!sb) return;
+    const myTeamId = fixture.home_team_id;
+    const theirTeamId = fixture.away_team_id;
+    if (!myTeamId || !theirTeamId) return;
+    (async () => {
+      try {
+        const { data: pastMatches } = await sb
+          .from('fixtures')
+          .select('home_score, away_score, home_team_id')
+          .eq('status', 'completed')
+          .or(`and(home_team_id.eq.${myTeamId},away_team_id.eq.${theirTeamId}),and(home_team_id.eq.${theirTeamId},away_team_id.eq.${myTeamId})`)
+          .limit(20);
+        if (!pastMatches || pastMatches.length === 0) return;
+        let wins = 0, draws = 0, losses = 0;
+        for (const m of pastMatches) {
+          const myScore = m.home_team_id === myTeamId ? m.home_score : m.away_score;
+          const oppScore = m.home_team_id === myTeamId ? m.away_score : m.home_score;
+          if (myScore > oppScore) wins++;
+          else if (myScore === oppScore) draws++;
+          else losses++;
+        }
+        setH2h({ wins, draws, losses, total: pastMatches.length });
+      } catch { /* sessizce geç */ }
+    })();
+  }, [profileId, fixture]);
 
   // ─── Duygusal katman: Canlı maçta gol kutlama ─────────────────
   useEffect(() => {
@@ -1210,6 +1243,28 @@ export default function MatchPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                 >
+                  {h2h && h2h.total > 0 && (
+                    <div className="mb-3 p-3 bg-white/[0.03] border border-white/8 rounded-xl">
+                      <p className="text-[8px] uppercase tracking-widest text-white/25 mb-2">Geçmiş Karşılaşmalar</p>
+                      <div className="flex justify-around">
+                        <div className="text-center">
+                          <p className="text-lg font-black text-emerald-400">{h2h.wins}</p>
+                          <p className="text-[9px] text-white/30">Galibiyet</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-black text-white/50">{h2h.draws}</p>
+                          <p className="text-[9px] text-white/30">Beraberlik</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-black text-red-400">{h2h.losses}</p>
+                          <p className="text-[9px] text-white/30">Mağlubiyet</p>
+                        </div>
+                      </div>
+                      <p className="text-center text-[9px] text-white/20 mt-2">
+                        Toplam {h2h.total} karşılaşma
+                      </p>
+                    </div>
+                  )}
                   {profileId && teamName ? (
                     <MatchChatWithRival
                       matchId={fixtureId}

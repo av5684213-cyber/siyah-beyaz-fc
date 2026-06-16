@@ -656,24 +656,25 @@ if (!isSupabaseConfigured()) {
             const targetsHome = op.target_profile_id === _opHomeProfileId;
             const targetsAway = op.target_profile_id === _opAwayProfileId;
 
+            const v = Number(op.impact_value) || 0;
             switch (op.impact_type) {
               case 'luck':
-                if (isHomeOp) opGoalModHome += op.impact_value;
-                if (isAwayOp) opGoalModAway += op.impact_value;
-                if (targetsHome) opGoalModHome -= op.impact_value;
-                if (targetsAway) opGoalModAway -= op.impact_value;
+                if (isHomeOp) opGoalModHome += v;
+                if (isAwayOp) opGoalModAway += v;
+                if (targetsHome) opGoalModHome -= v;
+                if (targetsAway) opGoalModAway -= v;
                 break;
               case 'stamina':
-                if (targetsHome) opGoalModHome -= op.impact_value * 0.5;
-                if (targetsAway) opGoalModAway -= op.impact_value * 0.5;
+                if (targetsHome) opGoalModHome -= v * 0.4;
+                if (targetsAway) opGoalModAway -= v * 0.4;
                 break;
               case 'error_rate':
-                if (targetsHome) opGoalModAway += op.impact_value;
-                if (targetsAway) opGoalModHome += op.impact_value;
+                if (targetsHome) opGoalModAway += v * 0.5;
+                if (targetsAway) opGoalModHome += v * 0.5;
                 break;
               case 'defense':
-                if (isHomeOp) opGoalModHome += op.impact_value * 0.3;
-                if (isAwayOp) opGoalModAway += op.impact_value * 0.3;
+                if (isHomeOp) opGoalModHome += v * 0.25;
+                if (isAwayOp) opGoalModAway += v * 0.25;
                 break;
             }
           }
@@ -1095,6 +1096,96 @@ if (!isSupabaseConfigured()) {
           } catch (injuryErr) {
             console.warn(`[match-tick] Injury application failed:`, injuryErr);
           }
+
+          // ── Sezon rekoru kontrolü ──
+          try {
+            if (homeProfileId || awayProfileId) {
+              const { data: allGoalEvents } = await supabase
+                .from('match_events')
+                .select('player_id, team')
+                .in('event_type', ['goal', 'penalty_goal', 'free_kick_goal'])
+                .eq('fixture_id', fixtureId);
+              for (const ev of allGoalEvents || []) {
+                const scorerProfileId = ev.team === 'home' ? homeProfileId : awayProfileId;
+                if (!scorerProfileId || !ev.player_id) continue;
+                const { data: scorer } = await supabase
+                  .from('players').select('name, goals').eq('id', ev.player_id).maybeSingle();
+                if (!scorer) continue;
+                const seasonGoals = (scorer.goals || 0);
+                // league_id'yi season_id'den çöz
+                let recordLeagueId = '';
+                try {
+                  if (session.season_id) {
+                    const { data: seasonRow } = await supabase
+                      .from('seasons').select('league_id').eq('id', session.season_id).maybeSingle();
+                    recordLeagueId = seasonRow?.league_id || '';
+                  }
+                } catch { /* sessizce geç */ }
+                const { data: record } = await supabase
+                  .from('season_records')
+                  .select('record_value')
+                  .eq('league_id', recordLeagueId)
+                  .eq('record_type', 'season_goals')
+                  .maybeSingle();
+                const prevRecord = record?.record_value || 0;
+                if (seasonGoals > prevRecord && seasonGoals >= 15) {
+                  await supabase.from('season_records').upsert({
+                    league_id: recordLeagueId,
+                    record_type: 'season_goals',
+                    record_value: seasonGoals,
+                    player_name: scorer.name,
+                  });
+                  try {
+                    const { sendPushToProfile } = await import('@/lib/push-notifications');
+                    await sendPushToProfile(scorerProfileId, {
+                      title: 'SEZON REKORU!',
+                      body: `${scorer.name} bu sezon ${seasonGoals} gol attı — lig rekoru!`,
+                    });
+                  } catch { /* push sessizce geç */ }
+                  await supabase.from('notifications').insert({
+                    profile_id: scorerProfileId,
+                    title: 'Sezon Rekoru!',
+                    body: `${scorer.name} ${seasonGoals} gol ile lig sezon rekoru kırdı!`,
+                    type: 'record_broken',
+                    is_read: false,
+                  });
+                }
+              }
+            }
+          } catch { /* sessizce geç */ }
+
+          // ── Sigorta ödemesi kontrolü ──
+          try {
+            const { data: allInjuryEvents } = await supabase
+              .from('match_events')
+              .select('player_id')
+              .eq('fixture_id', fixtureId)
+              .eq('event_type', 'injury');
+            for (const ev of allInjuryEvents || []) {
+              if (!ev.player_id) continue;
+              const { data: injuredP } = await supabase
+                .from('players').select('id, is_insured, market_value, profile_id').eq('id', ev.player_id).maybeSingle();
+              if (injuredP?.is_insured && injuredP.profile_id) {
+                const payout = Math.round((injuredP.market_value || 0) * 0.15);
+                if (payout > 0) {
+                  const { data: prof } = await supabase
+                    .from('profiles').select('money').eq('id', injuredP.profile_id).maybeSingle();
+                  if (prof) {
+                    await supabase.from('profiles')
+                      .update({ money: (prof.money || 0) + payout })
+                      .eq('id', injuredP.profile_id);
+                  }
+                  await supabase.from('notifications').insert({
+                    profile_id: injuredP.profile_id,
+                    title: 'Sigorta Ödemesi',
+                    body: `Sakatlık sigortası devreye girdi: +${payout.toLocaleString('tr-TR')}€`,
+                    type: 'insurance_payout',
+                    is_read: false,
+                  });
+                }
+              }
+            }
+          } catch { /* sessizce geç */ }
 
           // ── Lig puan tablosunu güncelle ──
           try {

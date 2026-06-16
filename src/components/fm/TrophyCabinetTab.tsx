@@ -9,6 +9,7 @@ import { loadAllSeasonSummaries, loadSeasonAwards, getChampionshipCount } from '
 import { loadHallOfFame, type HallOfFameEntry } from '@/lib/fm/hallOfFameService';
 import { loadTrophies, loadBadges, type TrophyEntry, type BadgeEntry, BADGE_DEFINITIONS, type BadgeType } from '@/lib/fm/celebrationSystem';
 import { AchievementBadgeGrid, CompactBadgeList } from '@/components/fm/AchievementBadge';
+import LeaderboardTab from './LeaderboardTab';
 
 // ─── Props ────────────────────────────────────────────────────────────
 
@@ -178,6 +179,8 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
   const [trophyEntries, setTrophyEntries] = useState<TrophyEntry[]>([]);
   const [badgeEntries, setBadgeEntries] = useState<BadgeEntry[]>([]);
 
+  const [cabinetTab, setCabinetTab] = useState<'trophies' | 'leaderboard'>('trophies');
+
   // Özet ve ödülleri yükle
   useEffect(() => {
     if (!profileId) return;
@@ -286,6 +289,19 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
         </div>
       </div>
 
+      <div className="flex gap-2 mb-4">
+        <button onClick={() => setCabinetTab('trophies')}
+          className={`px-4 py-2 rounded-lg text-[10px] font-black ${cabinetTab==='trophies' ? 'bg-white/10 text-white' : 'text-white/30'}`}>
+          KUPALAR
+        </button>
+        <button onClick={() => setCabinetTab('leaderboard')}
+          className={`px-4 py-2 rounded-lg text-[10px] font-black ${cabinetTab==='leaderboard' ? 'bg-white/10 text-white' : 'text-white/30'}`}>
+          GLOBAL TABLO
+        </button>
+      </div>
+
+      {cabinetTab === 'trophies' && (
+      <>
       {/* Özet Kartları */}
       <div className="grid grid-cols-4 gap-3">
         <StatBox label="Şampiyonluk" value={championships} icon={<span className="text-xl">🏆</span>} />
@@ -563,6 +579,11 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
             })}
           </div>
         </div>
+      )}
+      </>
+      )}
+      {cabinetTab === 'leaderboard' && (
+        <LeaderboardTab />
       )}
     </div>
   );

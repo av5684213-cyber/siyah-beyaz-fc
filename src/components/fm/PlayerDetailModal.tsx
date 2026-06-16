@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { motion } from 'motion/react';
 import {
   X as XIcon, Star, ChevronDown, ChevronRight, User, Activity,
-  Target, Shield, Footprints, ShoppingCart, BarChart2, Dumbbell, TrendingUp, AlertTriangle, AlertCircle, Zap,
+  Target, Shield, Briefcase, Footprints, ShoppingCart, BarChart2, Dumbbell, TrendingUp, AlertTriangle, AlertCircle, Zap,
   Ruler, Scale, Eye, Gavel, Timer, XCircle, Globe, Heart, HeartPulse, FileText
 } from 'lucide-react';
 import {
@@ -141,7 +141,7 @@ export default function PlayerDetailModal({
   const { scoutPlayer, watchlist, toggleWatchlist } = useFM();
   const { success: toastSuccess, error: toastError, warning: toastWarning, info: toastInfo } = useToast();
   const [player, setPlayer] = useState<Player>(initialPlayer);
-  const [activeTab, setActiveTab] = useState<'genel' | 'bilgi' | 'performans' | 'istatistikler' | 'market' | 'antrenman'>(marketListing ? 'market' : 'genel');
+  const [activeTab, setActiveTab] = useState<'genel' | 'bilgi' | 'performans' | 'istatistikler' | 'kariyer' | 'market' | 'antrenman'>(marketListing ? 'market' : 'genel');
   const [devLog, setDevLog] = useState<any[]>([]);
 
   // Keep local state in sync
@@ -389,6 +389,7 @@ export default function PlayerDetailModal({
     { id: 'bilgi' as const, label: 'Kişisel Bilgi' },
     { id: 'performans' as const, label: 'Performans' },
     { id: 'istatistikler' as const, label: 'İstatistikler' },
+    { id: 'kariyer' as const, label: 'Kariyer', icon: <Briefcase size={13} /> },
     ...(isOwned ? [{ id: 'antrenman' as const, label: 'Antrenman' }] : []),
     { id: 'market' as const, label: marketListing ? 'Satın Al' : 'Global Transfer' },
   ];
@@ -454,6 +455,51 @@ export default function PlayerDetailModal({
             </div>
           </div>
         )}
+        {/* KARİYER GELİŞİMİ BÖLÜMÜ */}
+        {(player as any).rating_start_of_season > 0 && (() => {
+          const startOvr = (player as any).rating_start_of_season as number;
+          const currentOvr = Math.round(player.rating || 65);
+          const diff = currentOvr - startOvr;
+          const joinOvr = (player as any).join_ovr as number | undefined;
+          const yearsWithUs = (player as any).seasons_with_team as number | undefined;
+          return (
+            <div className="mt-4 p-4 bg-gradient-to-br from-amber-500/5 to-emerald-500/5 border border-amber-500/15 rounded-xl space-y-3">
+              <p className="text-[9px] uppercase tracking-widest text-amber-400/60 font-black">
+                Seninle Gelişimi
+              </p>
+              {joinOvr && yearsWithUs && (
+                <p className="text-xs text-white/60 leading-relaxed">
+                  {(player.age || 25) - (yearsWithUs || 0)} yaşında {joinOvr} OVR ile geldi.{' '}
+                  {yearsWithUs} sezonda <span className="text-amber-400 font-black">{joinOvr} → {currentOvr} OVR</span>&apos;ye ulaştı.
+                  {(player as any).goals_with_team > 10 && ` ${(player as any).goals_with_team} gol attı.`}
+                </p>
+              )}
+              <div className="flex items-center gap-3">
+                <div className="text-center w-12">
+                  <p className="text-[8px] text-white/30">Bu sezon başı</p>
+                  <p className="text-lg font-black text-white/50">{startOvr}</p>
+                </div>
+                <div className="flex-1">
+                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, Math.max(0, Math.abs(diff) * 8))}%` }}
+                      transition={{ duration: 1, ease: 'easeOut' }}
+                      className={`h-full rounded-full ${diff > 0 ? 'bg-gradient-to-r from-emerald-600 to-emerald-400' : 'bg-red-500'}`}
+                    />
+                  </div>
+                  <p className={`text-center text-[10px] font-black mt-1 ${diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-red-400' : 'text-white/30'}`}>
+                    {diff > 0 ? `+${diff} OVR bu sezon` : diff < 0 ? `${diff} OVR geriledi` : 'Değişim yok'}
+                  </p>
+                </div>
+                <div className="text-center w-12">
+                  <p className="text-[8px] text-white/30">Şimdi</p>
+                  <p className={`text-lg font-black ${diff > 0 ? 'text-emerald-400' : 'text-white'}`}>{currentOvr}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
   }, [player, activeTab, devLog]);
@@ -1177,6 +1223,24 @@ export default function PlayerDetailModal({
                       Sözleşme Uzat
                     </button>
                   )}
+                  {!player.is_injured && (
+                    <button
+                      onClick={async () => {
+                        const isInsured = !!(player as any).is_insured;
+                        if (isInsured) return;
+                        const sbModule = await import('@/lib/supabase');
+                        const sb = sbModule.getSupabase();
+                        if (!sb) return;
+                        const weeklyPremium = Math.round((player.market_value || 0) * 0.002);
+                        await sb.from('players').update({ is_insured: true }).eq('id', player.id);
+                        toastSuccess(`Sigortalandı — Haftalık prim: ${weeklyPremium.toLocaleString('tr-TR')}€`);
+                      }}
+                      className="w-full text-left px-3 py-2.5 text-[11px] text-white/50 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2"
+                    >
+                      <Shield size={13} className="text-emerald-400/50" />
+                      {!(player as any).is_insured ? 'Sigorta Yaptır' : 'Sigortalı'}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -1254,6 +1318,15 @@ export default function PlayerDetailModal({
             SECTION 3D — İSTATİSTİKLER TAB
         ══════════════════════════════════════════════ */}
         {istatistiklerSection}
+
+        {/* ══════════════════════════════════════════════
+            SECTION — KARİYER TAB
+        ══════════════════════════════════════════════ */}
+        {activeTab === 'kariyer' && (
+          <motion.div key="kariyer" initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.2 }}>
+            <PlayerCareerSection playerId={player.id} currentOvr={Math.round(player.rating || 65)} playerName={player.name || ''} />
+          </motion.div>
+        )}
 
         {/* ══════════════════════════════════════════════
             SECTION — ANTRENMAN TAB

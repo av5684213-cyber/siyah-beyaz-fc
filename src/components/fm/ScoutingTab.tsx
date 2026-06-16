@@ -453,6 +453,8 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
   // Arama hatası mesajı state'i
   const [searchError, setSearchError] = useState<string>('');
 
+  const [diamondDiscovery, setDiamondDiscovery] = useState<{player: any; tier: 'diamond'|'elite'} | null>(null);
+
   const handleAdvancedSearch = async () => {
     if (!profile) return;
 
@@ -583,6 +585,20 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
       });
 
       setAdvancedResults(mappedResults);
+
+      // Gizli yetenek keşif kontrolü
+      if (mappedResults && mappedResults.length > 0) {
+        for (const p of mappedResults) {
+          const scoutedOvr = p.rating || 0;
+          const hiddenPot = p.potential || 0;
+          const isElite = hiddenPot >= 85 && scoutedOvr < 72;
+          const isDiamond = hiddenPot >= 78 && scoutedOvr < 65;
+          if (isDiamond || isElite) {
+            setDiamondDiscovery({ player: p, tier: isDiamond ? 'diamond' : 'elite' });
+            break;
+          }
+        }
+      }
 
       // ── Aramayı geçmişe kaydet ──
       const searchRecord: SavedSearch = {
@@ -1352,6 +1368,51 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Gizli Yetenek Keşif Overlay */}
+      {diamondDiscovery && (
+        <motion.div
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
+          initial={{ opacity:0 }} animate={{ opacity:1 }}
+          onClick={() => setDiamondDiscovery(null)}
+        >
+          <motion.div
+            initial={{ scale:0.5, opacity:0, rotate:-10 }}
+            animate={{ scale:1, opacity:1, rotate:0 }}
+            transition={{ type:'spring', stiffness:300, damping:20 }}
+            className="bg-gradient-to-br from-amber-500/20 to-emerald-500/10 border border-amber-400/40 rounded-3xl p-8 text-center max-w-xs mx-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <motion.p className="text-6xl mb-4"
+              animate={{ scale:[1,1.3,1], rotate:[0,15,-15,0] }}
+              transition={{ duration:1, repeat:2 }}
+            >
+              {diamondDiscovery.tier === 'diamond' ? '💎' : '⭐'}
+            </motion.p>
+            <p className="text-[10px] uppercase tracking-widest font-black text-amber-400 mb-2">
+              {diamondDiscovery.tier === 'diamond' ? 'GİZLİ ELMAS KEŞFEDİLDİ!' : 'YÜKSEK YETENEK!'}
+            </p>
+            <h2 className="text-xl font-black text-white mb-1">
+              {diamondDiscovery.player.name?.split(' ').pop()}
+            </h2>
+            <p className="text-white/50 text-sm mb-4">
+              {diamondDiscovery.player.age} yaş · Mevcut OVR: {Math.round(diamondDiscovery.player.rating || 0)}
+            </p>
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 mb-4">
+              <p className="text-amber-400 font-black text-lg">
+                Gerçek Potansiyel: {diamondDiscovery.player.potential}
+              </p>
+              <p className="text-white/30 text-[10px]">Senden önce kimse bilmiyordu.</p>
+            </div>
+            <button
+              onClick={() => setDiamondDiscovery(null)}
+              className="w-full py-3 bg-amber-500/20 border border-amber-500/30 rounded-xl text-amber-400 font-black text-sm"
+            >
+              Tamam
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
     </motion.div>
   );
 });

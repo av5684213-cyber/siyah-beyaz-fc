@@ -62,6 +62,13 @@ const DIFFICULTY_CONFIG: Record<number, { transferBudget: number; sellThreshold:
   3: { transferBudget: 0.35, sellThreshold: 0.15, buyRatingBoost: 5 },   // Hard
 };
 
+const TIER_TARGET_AVG_OVR: Record<number, number> = {
+  1: 80,  // Süper Lig
+  2: 72,  // 1. Lig
+  3: 64,  // 2. Lig
+  4: 56,  // 3. Lig
+};
+
 // ── Tier bazlı bütçe oranı (düşük tier botlar daha çok harcasın) ──
 // Difficulty bazlı bütçe yerine, lig tier'ına göre bütçe oranı
 const TIER_BUDGET_RATIO: Record<number, number> = {
@@ -212,6 +219,9 @@ export async function processBotTransfers(
       botTier = (lg2 as any)?.tier || 4;
     }
     const tierBudgetRatio = TIER_BUDGET_RATIO[botTier] || TIER_BUDGET_RATIO[4];
+
+    // Tier bazlı hedef OVR ayarlaması
+    const tierTarget = TIER_TARGET_AVG_OVR[botTier || 1] || 64;
 
     // 2. Fetch bot's squad
     const { data: squad, error: squadError } = await supabase

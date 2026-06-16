@@ -19,6 +19,7 @@ import { useFM } from '@/lib/fm/GameContext';
 import { generateWeeklyNews } from '@/lib/fm/mediaSystem';
 import type { Profile, Player } from '@/lib/fm/types';
 import { isSupabaseConfigured, getSupabase } from '@/lib/supabase';
+import LeagueForumPanel from './LeagueForumPanel';
 
 // ═══════════════════════════════════════════════════
 //  TİP TANIMLARI
@@ -394,6 +395,8 @@ export default function NewspaperTab() {
   const [standingsLoading, setStandingsLoading] = useState(false);
   const [standingsError, setStandingsError] = useState<string>('');
 
+  const [newsTab, setNewsTab] = useState<'news' | 'forum'>('news');
+
   // ── Kullanıcının liglerini bul ──
   useEffect(() => {
     if (!profile?.id) return;
@@ -672,6 +675,19 @@ export default function NewspaperTab() {
         </div>
       </motion.div>
 
+      <div className="flex gap-2 mb-4">
+        <button onClick={() => setNewsTab('news')}
+          className={`px-4 py-2 rounded-lg text-[10px] font-black ${newsTab==='news' ? 'bg-white/10 text-white' : 'text-white/30'}`}>
+          HABERLER
+        </button>
+        <button onClick={() => setNewsTab('forum')}
+          className={`px-4 py-2 rounded-lg text-[10px] font-black ${newsTab==='forum' ? 'bg-white/10 text-white' : 'text-white/30'}`}>
+          LİG FORUMU
+        </button>
+      </div>
+
+      {newsTab === 'news' && (
+      <>
       {/* Headlines Section */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 px-1">
@@ -923,6 +939,11 @@ export default function NewspaperTab() {
           </div>
         </div>
       </div>
+      </>
+      )}
+      {newsTab === 'forum' && (
+        <LeagueForumPanel userId={profile?.id || ''} leagueId={activeLeagueId || ''} />
+      )}
     </motion.div>
   );
 }

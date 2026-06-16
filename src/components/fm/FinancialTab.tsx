@@ -197,6 +197,8 @@ export default function FinancialTab({
   const [activeSection, setActiveSection] = useState<'overview' | 'revenue' | 'expenses' | 'sponsors' | 'ffp' | 'pnl'>('overview');
   const [sponsorOffer, setSponsorOffer] = useState<Sponsor | null>(null);
   const [showOfferModal, setShowOfferModal] = useState(false);
+  const [negotiating, setNegotiating] = useState<string | null>(null);
+  const [customOffer, setCustomOffer] = useState<number>(0);
 
   // ── Gerçek finansal model hesaplaması ────────────────────────────
   const fin = useMemo(() => buildFinancialOverview(profile, squad, {
@@ -757,21 +759,60 @@ export default function FinancialTab({
                       </div>
                     )}
 
-                    <div className="flex gap-3">
-                      <button
-                        onClick={handleRejectOffer}
-                        className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-white/5 text-white/40 border border-white/10 rounded-xl hover:bg-white/10 transition-all"
-                      >
-                        Reddet
-                      </button>
-                      <button
-                        onClick={handleAcceptOffer}
-                        className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-1.5"
-                      >
-                        <Check size={12} />
-                        Kabul Et
-                      </button>
-                    </div>
+                    {(sponsorOffer as any)?.bonusCondition && (
+                      <p className="text-[9px] text-amber-400/60 mt-2">
+                        Bonus: {(sponsorOffer as any).bonusCondition} → +{((sponsorOffer as any).bonusAmount || 0).toLocaleString('tr-TR')}€
+                      </p>
+                    )}
+
+                    {negotiating === (sponsorOffer as any)?.id ? (
+                      <div className="space-y-2 mt-3">
+                        <p className="text-[9px] text-white/40">Haftalık teklifiniz (min: {Math.round(((sponsorOffer as any)?.weeklyPayout || 0) * 0.7).toLocaleString('tr-TR')}€)</p>
+                        <input
+                          type="number"
+                          value={customOffer}
+                          onChange={e => {
+                            const min = Math.round(((sponsorOffer as any)?.weeklyPayout || 0) * 0.7);
+                            const max = Math.round(((sponsorOffer as any)?.weeklyPayout || 0) * 1.3);
+                            setCustomOffer(Math.min(max, Math.max(min, Number(e.target.value) || 0)));
+                          }}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white"
+                        />
+                        <div className="flex gap-2">
+                          <button onClick={() => {
+                            const modifiedOffer = { ...sponsorOffer, weeklyPayout: customOffer };
+                            onAcceptSponsor?.(modifiedOffer as any);
+                            setShowOfferModal(false);
+                            setSponsorOffer(null);
+                            setNegotiating(null);
+                          }} className="flex-1 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-400 text-[10px] font-black">
+                            Anlaş
+                          </button>
+                          <button onClick={() => setNegotiating(null)}
+                            className="px-3 py-1.5 border border-white/10 rounded-lg text-white/30 text-[10px]">
+                            İptal
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 mt-3">
+                        <button onClick={handleAcceptOffer}
+                          className="flex-1 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-400 text-[10px] font-black">
+                          Kabul Et
+                        </button>
+                        <button onClick={() => {
+                          setNegotiating((sponsorOffer as any)?.id || 'default');
+                          setCustomOffer((sponsorOffer as any)?.weeklyPayout || 0);
+                        }}
+                          className="px-3 py-2 border border-white/10 rounded-lg text-white/40 hover:text-white text-[10px]">
+                          Pazarlık
+                        </button>
+                        <button onClick={handleRejectOffer}
+                          className="px-3 py-2 border border-white/10 rounded-lg text-red-400/50 hover:text-red-400 text-[10px]">
+                          Reddet
+                        </button>
+                      </div>
+                    )}
                   </motion.div>
                 </motion.div>
               )}

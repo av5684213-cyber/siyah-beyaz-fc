@@ -1137,7 +1137,7 @@ async function processLeagueSeasonEnd(
       .update({ is_retiring: true })
       .gte('age', 40)
       .eq('is_retiring', false)
-      .select('id, name, age, profile_id, position, team_name');
+      .select('id, name, age, profile_id, position, team_name, goals, assists, matches_played, championships');
 
     if (!retireErr && retiringPlayers && retiringPlayers.length > 0) {
       console.log(`[season-end] Emeklilik: ${retiringPlayers.length} oyuncu emekli oldu (40+ yaş)`);
@@ -1146,27 +1146,31 @@ async function processLeagueSeasonEnd(
       for (const rp of retiringPlayers) {
         if (!(rp as any).profile_id) continue;
         try {
-          const pid  = (rp as any).profile_id as string;
-          const name = (rp as any).name         as string || 'Oyuncu';
-          const age  = (rp as any).age          as number || 0;
-          const g    = (rp as any).goals        as number || 0;
-          const a    = (rp as any).assists      as number || 0;
-          const m    = (rp as any).matches_played as number || 0;
-
+          const pid   = (rp as any).profile_id as string;
+          const name  = (rp as any).name as string || 'Oyuncu';
+          const age   = (rp as any).age as number || 0;
+          const goals = (rp as any).goals as number || 0;
+          const asts  = (rp as any).assists as number || 0;
+          const mps   = (rp as any).matches_played as number || 0;
+          const champ = (rp as any).championships as number || 0;
           await supabase.from('notifications').insert({
             profile_id: pid,
             title: `${name} Emekli Oldu`,
-            body: `${age} yaşında ${m} maçlık kariyerini noktaladı. ${g} gol, ${a} asist. Efsane olarak hatırlanacak.`,
+            body: `${age} yaşında ${mps} maçlık kariyerini noktaladı.`
+              + ` ${goals} gol, ${asts} asist`
+              + (champ > 0 ? `, ${champ} şampiyonluk` : '')
+              + `. Efsane olarak hatırlanacak.`,
             type: 'player_retirement',
-            metadata: JSON.stringify({ player_id: (rp as any).id, goals: g, assists: a, matches: m }),
+            metadata: JSON.stringify({ player_id: (rp as any).id, goals, assists: asts, matches: mps }),
             is_read: false,
           });
-
-          const { sendPushToProfile } = await import('@/lib/push-notifications');
-          await sendPushToProfile(pid, {
-            title: `${name} emekli oldu`,
-            body: `${age} yaş · ${m} maç · ${g} gol. Güle güle.`,
-          });
+          try {
+            const { sendPushToProfile } = await import('@/lib/push-notifications');
+            await sendPushToProfile(pid, {
+              title: `${name} emekli oldu`,
+              body: `${age} yaş · ${mps} maç · ${goals} gol. Güle güle.`,
+            });
+          } catch { /* push bildirim başarısız olursa sessizce geç */ }
         } catch { /* sessizce geç */ }
       }
 
