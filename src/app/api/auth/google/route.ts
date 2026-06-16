@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Veritabanı bağlantısı kurulamadı' }, { status: 500 });
     }
 
-    // Check existing profile
+    // Check existing profile for this Google user
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('id, team_name, manager_name, league_name, is_bot, onboarding_completed')
@@ -103,6 +103,96 @@ export async function POST(request: NextRequest) {
         picture,
       });
     }
+
+    // ─── Migration: Claim legacy demo profile if exists ───────────────
+    // Demo modundan kalma profilleri (00000000-0000-0000-0000-000000000001)
+    // yeni Google ID'sine taşı. Bu, kullanıcıların DEV_MODE=true iken
+    // oluşturdukları takımlarını kaybetmemesini sağlar.
+    const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+    const { data: demoProfile } = await supabase
+      .from('profiles')
+      .select('id, team_name, manager_name, is_bot, onboarding_completed')
+      .eq('id', DEMO_USER_ID)
+      .maybeSingle();
+
+    if (demoProfile && demoProfile.team_name && !demoProfile.is_bot) {
+      console.log(`[google-auth] Migrating demo profile "${demoProfile.team_name}" to ${internalUserId}`);
+
+      // 1. Demo profilin tüm verilerini al
+      const { data: fullDemoProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', DEMO_USER_ID)
+        .maybeSingle();
+
+      if (fullDemoProfile) {
+        // 2. Yeni profil oluştur (eski verilerle, yeni ID ile)
+        const newProfile = {
+          ...fullDemoProfile,
+          id: internalUserId,
+          email,
+          team_logo: picture || fullDemoProfile.team_logo,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert(newProfile);
+
+        if (insertError) {
+          console.error('[google-auth] Profile migration insert error:', insertError.message);
+        } else {
+          // 3. Bağımlı tablolarda profile_id / user_id / id'yi güncelle
+          const updates = [
+            { table: 'league_teams', column: 'profile_id' },
+            { table: 'players', column: 'profile_id' },
+            { table: 'active_tactics', column: 'id' },
+            { table: 'training_state', column: 'id' },
+            { table: 'user_facilities', column: 'profile_id' },
+            { table: 'watchlist', column: 'user_id' },
+            { table: 'staff', column: 'user_id' },
+            { table: 'notifications', column: 'profile_id' },
+            { table: 'daily_tasks', column: 'user_id' },
+            { table: 'scouted_players', column: 'profile_id' },
+            { table: 'player_career_stats', column: 'profile_id' },
+            { table: 'transfer_market', column: 'seller_profile_id' },
+          ];
+
+          for (const { table, column } of updates) {
+            try {
+              await supabase
+                .from(table)
+                .update({ [column]: internalUserId })
+                .eq(column, DEMO_USER_ID);
+            } catch (e) {
+              // Tablo yoksa veya kolon yoksa sessizce geç
+              console.warn(`[google-auth] Migration update skipped: ${table}.${column}`);
+            }
+          }
+
+          // 4. Eski demo profili sil
+          await supabase.from('profiles').delete().eq('id', DEMO_USER_ID);
+
+          console.log(`[google-auth] Migration complete: ${demoProfile.team_name} -> ${internalUserId}`);
+
+          return NextResponse.json({
+            success: true,
+            userId: internalUserId,
+            hasProfile: true,
+            onboardingCompleted: demoProfile.onboarding_completed ?? true,
+            teamName: demoProfile.team_name,
+            managerName: demoProfile.manager_name,
+            email,
+            name,
+            picture,
+            migrated: true,
+          });
+        }
+      }
+    }
+    // ─── End migration ────────────────────────────────────────────────
 
     // New user — create placeholder profile
     const placeholderProfile = {
