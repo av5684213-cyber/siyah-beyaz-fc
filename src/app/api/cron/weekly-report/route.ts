@@ -10,6 +10,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Vercel Hobby plan: günde 1 kez çalışır — sadece Pazartesi işle
+  const dayOfWeek = new Date().getUTCDay(); // 0=Pazar, 1=Pazartesi
+  if (dayOfWeek !== 1) {
+    return NextResponse.json({ message: `Haftalık rapor sadece Pazartesi oluşturulur (bugün: ${['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'][dayOfWeek]})`, skipped: true });
+  }
+
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     const { data: profiles } = await supabase.from('profiles').select('id');

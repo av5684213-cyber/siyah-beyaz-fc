@@ -139,6 +139,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Vercel Hobby plan: günde 1 kez çalışır — sadece Salı işle
+  const dayOfWeek = new Date().getUTCDay(); // 0=Pazar, 2=Salı
+  if (dayOfWeek !== 2) {
+    return NextResponse.json({ message: `Regen üretimi sadece Salı yapılır (bugün: ${['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'][dayOfWeek]})`, skipped: true });
+  }
+
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });
   }

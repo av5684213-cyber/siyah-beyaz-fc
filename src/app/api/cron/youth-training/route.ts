@@ -23,7 +23,13 @@ export async function GET(request: NextRequest) {
   if (!cronSecret || request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  if (!isSupabaseConfigured()) {
+  // Vercel Hobby plan: günde 1 kez çalışır — sadece Pazartesi işle
+  const dayOfWeek = new Date().getUTCDay(); // 0=Pazar, 1=Pazartesi
+  if (dayOfWeek !== 1) {
+    return NextResponse.json({ message: `Gençlik antrenmanı sadece Pazartesi yapılır (bugün: ${['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'][dayOfWeek]})`, skipped: true });
+  }
+
+if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
   }
 

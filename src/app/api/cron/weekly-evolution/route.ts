@@ -82,6 +82,12 @@ export async function GET(request: NextRequest) {
   if (!cronSecret || request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  // Vercel Hobby plan: günde 1 kez çalışır — sadece Pazar işle
+  const dayOfWeek = new Date().getUTCDay(); // 0=Pazar
+  if (dayOfWeek !== 0) {
+    return NextResponse.json({ message: `Haftalık evrim sadece Pazar uygulanır (bugün: ${['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'][dayOfWeek]})`, skipped: true });
+  }
+
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });
   }

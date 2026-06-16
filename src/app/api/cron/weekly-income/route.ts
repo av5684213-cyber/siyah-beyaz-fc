@@ -31,6 +31,12 @@ if (process.env.VERCEL === '1' && !vercelCronSig) {
   console.warn('[weekly-income] Missing X-Vercel-Cron-Signature header — possible external invocation');
   // Don't block — Vercel may not always send this header. Just log the warning.
 }
+// Vercel Hobby plan: günde 1 kez çalışır — sadece Pazartesi işle
+  const dayOfWeek = new Date().getUTCDay(); // 0=Pazar, 1=Pazartesi
+  if (dayOfWeek !== 1) {
+    return NextResponse.json({ message: `Haftalık gelir sadece Pazartesi dağıtılır (bugün: ${['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'][dayOfWeek]})`, skipped: true });
+  }
+
 if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
   }
