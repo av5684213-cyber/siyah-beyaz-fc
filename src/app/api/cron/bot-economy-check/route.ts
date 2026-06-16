@@ -12,7 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getSupabase, getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
 
 const SALARY_BUDGET_RATIO = 0.60;
 const CRITICAL_BALANCE_RATIO = 0.3; // Bakiye haftalık maaşın %30'undan azsa kritik
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
   }
 
-  const supabase = getSupabase();
+  const supabase = getServiceSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase client is null' }, { status: 500 });
   }

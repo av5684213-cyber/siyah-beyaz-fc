@@ -1270,25 +1270,36 @@ if (!isSupabaseConfigured()) {
             }
           }
 
-          // ── "Maç Bitti" bildirimi ──
-          const endTitle = '🏁 Maç Sona Erdi!';
-          const endBody = `${session.home_team_name || 'Ev Sahibi'} ${newHomeScore} - ${newAwayScore} ${session.away_team_name || 'Deplasman'}`;
+          // ── "Maç Bitti" bildirimi — kişiselleştirilmiş ──
+          const homeWon = newHomeScore > newAwayScore;
+          const isDraw = newHomeScore === newAwayScore;
 
           for (const profileId of [homeProfileId, awayProfileId]) {
             if (!profileId) continue;
+            const isHome = profileId === homeProfileId;
+            const won = isHome ? homeWon : !homeWon;
+            const draw = isDraw;
+            const icon = won ? '🏆' : draw ? '🤝' : '💔';
+            const myScore = isHome ? newHomeScore : newAwayScore;
+            const oppScore = isHome ? newAwayScore : newHomeScore;
+            const resultText = won ? 'Galibiyet!' : draw ? 'Beraberlik' : 'Mağlubiyet';
+            const oppName = isHome ? (session.away_team_name || 'Rakip') : (session.home_team_name || 'Ev Sahibi');
+            const venueText = isHome ? '' : ' deplasman maçı';
+
             try {
               await sendPushToProfile(profileId, {
-                title: endTitle,
-                body: endBody,
+                title: `${icon} ${myScore}-${oppScore} ${resultText}`,
+                body: `${oppName}${venueText} karşısında`,
                 icon: '/favicon.ico',
                 url: `/match/${fixtureId}`,
-                type: 'match_reminder',
+                type: 'match_result',
               });
             } catch (pushErr) {
               console.warn(`[match-tick] End match push failed:`, pushErr);
             }
             await insertInAppNotification(
-              supabase, profileId, endTitle, endBody,
+              supabase, profileId, `${icon} ${myScore}-${oppScore} ${resultText}`,
+              `${oppName}${venueText} karşısında`,
               'match_ended', fixtureId,
             );
           }

@@ -845,7 +845,8 @@ export async function POST(request: NextRequest) {
 
       // 35. match_sessions.match_date kolonu (hava tutarlılığı için)
       await client.query(`ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS match_date TEXT`);
-      results.push('match_sessions.match_date column added (weather consistency)');
+      await client.query(`ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS last_updated TIMESTAMPTZ DEFAULT NOW()`);
+      results.push('match_sessions.match_date + last_updated columns added');
 
       // 36. Eksik players kolonları (clean_sheets, matches_played, is_youth, yellow_cards, red_cards)
       await client.query(`ALTER TABLE players ADD COLUMN IF NOT EXISTS clean_sheets INTEGER DEFAULT 0`);
