@@ -9,9 +9,9 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
   },
 
-  // Self-hosted dağıtım: standalone output (Docker için gerekli)
-  // Vercel kullanılmadığından her zaman aktif
-  output: 'standalone' as const,
+  // Vercel dağıtımında output ayarı gerekmez (kendi formatını kullanır)
+  // Self-hosted/Docker dağıtımı için yorum satırını açın:
+  // output: 'standalone' as const,
 
   typescript: {
     ignoreBuildErrors: true,
