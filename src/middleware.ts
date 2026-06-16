@@ -68,7 +68,8 @@ export async function middleware(request: NextRequest) {
     const isAllowed = allowedOrigins.includes(origin) ||
       origin.match(/\.supabase\.co$/) ||
       origin.match(/\.space\.chatglm\.site$/) ||
-      origin.match(/\.space-z\.ai$/);
+      origin.match(/\.space-z\.ai$/) ||
+      origin.match(/^https:\/\/(www\.)?tlinemanager\.com(\.tr)?$/);
 
     if (isAllowed) {
       corsResponse.headers.set('Access-Control-Allow-Origin', origin);

@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleButtonReady, setGoogleButtonReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const googleButtonRef = useRef<HTMLDivElement>(null);
   const gsiInitialized = useRef(false);
@@ -65,11 +66,23 @@ export default function LoginPage() {
   // Render Google button when GSI is ready
   useEffect(() => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (!clientId) return;
+    if (!clientId) {
+      setError('Google Client ID yapılandırılmamış. Yönetici ile iletişime geçin.');
+      return;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 50; // 10 saniye (200ms x 50)
 
     const tryRender = () => {
       const google = (window as any).google;
-      if (!google?.accounts?.id) return false;
+      if (!google?.accounts?.id) {
+        attempts++;
+        if (attempts >= maxAttempts) {
+          setError('Google Sign-In yüklenemedi. İnternet bağlantınızı kontrol edin.');
+        }
+        return false;
+      }
 
       if (!gsiInitialized.current) {
         google.accounts.id.initialize({
@@ -93,6 +106,7 @@ export default function LoginPage() {
           width: 400,
           locale: 'tr',
         });
+        setGoogleButtonReady(true);
       }
       return true;
     };
@@ -195,9 +209,17 @@ export default function LoginPage() {
           {/* Google Sign-In — PRIMARY METHOD */}
           {googleClientId ? (
             <div className="space-y-4">
-              <div className="flex justify-center">
+              <div className="flex justify-center relative min-h-[44px] items-center">
                 {/* Official Google rendered button */}
                 <div ref={googleButtonRef} className="overflow-hidden rounded-full" />
+
+                {/* Loading placeholder while GSI script loads */}
+                {!googleButtonReady && !googleLoading && (
+                  <div className="flex items-center gap-2 text-white/30 text-xs font-bold uppercase tracking-wider">
+                    <Activity className="animate-spin" size={14} />
+                    <span>Google yükleniyor...</span>
+                  </div>
+                )}
 
                 {/* Fallback button while GSI loads */}
                 {googleLoading && (
