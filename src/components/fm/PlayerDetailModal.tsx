@@ -1233,12 +1233,18 @@ export default function PlayerDetailModal({
                         if (!sb) return;
                         const weeklyPremium = Math.round((player.market_value || 0) * 0.002);
                         await sb.from('players').update({ is_insured: true }).eq('id', player.id);
-                        toastSuccess(`Sigortalandı — Haftalık prim: ${weeklyPremium.toLocaleString('tr-TR')}€`);
+                        toastSuccess(`✅ Sigortalandı — Haftalık prim: ${weeklyPremium.toLocaleString('tr-TR')}€`);
                       }}
-                      className="w-full text-left px-3 py-2.5 text-[11px] text-white/50 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2"
+                      className={`w-full text-left px-3 py-2.5 text-[11px] transition-colors flex items-center gap-2 ${
+                        (player as any).is_insured
+                          ? 'text-emerald-400 bg-emerald-500/5'
+                          : 'text-white/50 hover:text-white hover:bg-white/5'
+                      }`}
                     >
-                      <Shield size={13} className="text-emerald-400/50" />
-                      {!(player as any).is_insured ? 'Sigorta Yaptır' : 'Sigortalı'}
+                      {(player as any).is_insured
+                        ? '🛡 Sigortalı'
+                        : `🛡 Sigorta (${Math.round((player.market_value || 0) * 0.002).toLocaleString('tr-TR')}€/hafta)`
+                      }
                     </button>
                   )}
                 </div>

@@ -1103,7 +1103,7 @@ if (!isSupabaseConfigured()) {
               const { data: allGoalEvents } = await supabase
                 .from('match_events')
                 .select('player_id, team')
-                .in('event_type', ['goal', 'penalty_goal', 'free_kick_goal'])
+                .in('event_type', ['goal', 'penalty_goal', 'free_kick_goal', 'own_goal'])
                 .eq('fixture_id', fixtureId);
               for (const ev of allGoalEvents || []) {
                 const scorerProfileId = ev.team === 'home' ? homeProfileId : awayProfileId;
@@ -1111,7 +1111,7 @@ if (!isSupabaseConfigured()) {
                 const { data: scorer } = await supabase
                   .from('players').select('name, goals').eq('id', ev.player_id).maybeSingle();
                 if (!scorer) continue;
-                const seasonGoals = (scorer.goals || 0);
+                const seasonGoals = (scorer.goals || 0) + 1;
                 // league_id'yi season_id'den çöz
                 let recordLeagueId = '';
                 try {
@@ -1134,6 +1134,7 @@ if (!isSupabaseConfigured()) {
                     record_type: 'season_goals',
                     record_value: seasonGoals,
                     player_name: scorer.name,
+                    season_id: session.season_id,
                   });
                   try {
                     const { sendPushToProfile } = await import('@/lib/push-notifications');
@@ -1177,7 +1178,7 @@ if (!isSupabaseConfigured()) {
                   }
                   await supabase.from('notifications').insert({
                     profile_id: injuredP.profile_id,
-                    title: 'Sigorta Ödemesi',
+                    title: '🛡 Sigorta Ödemesi',
                     body: `Sakatlık sigortası devreye girdi: +${payout.toLocaleString('tr-TR')}€`,
                     type: 'insurance_payout',
                     is_read: false,
