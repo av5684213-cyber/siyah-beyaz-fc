@@ -28,6 +28,11 @@ export default function MobileNav({ activeTab, onTabChange }: MobileNavProps) {
   const pathname = usePathname();
   const router = useRouter();
 
+  // Auth sayfalarında (login/register) mobil nav bar'ı gizle
+  if (pathname.startsWith('/auth/')) {
+    return null;
+  }
+
   const getIsActive = (item: typeof NAV_ITEMS[number]) => {
     // If we have tab-based navigation (main page), use activeTab
     if (activeTab !== undefined && pathname === '/') {
