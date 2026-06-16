@@ -214,10 +214,10 @@ function ResultIndicator({ result }: { result: 'W' | 'D' | 'L' | null }) {
 
 // ─── Team Shield Icon ─────────────────────────────────────────────
 function TeamShield({ name, isUser, size = 'sm' }: { name: string; isUser: boolean; size?: 'sm' | 'lg' }) {
-  const sz = size === 'lg' ? 'w-10 h-10 text-[10px]' : 'w-8 h-8 text-[9px]';
+  const sz = size === 'lg' ? 'w-10 h-10 text-[10px]' : 'w-7 h-7 text-[8px]';
   return (
     <div
-      className={`${sz} rounded-lg flex items-center justify-center font-black shrink-0 ${
+      className={`${sz} rounded-md flex items-center justify-center font-black shrink-0 ${
         isUser
           ? 'bg-gradient-to-br from-amber-500/30 to-amber-700/20 text-amber-300 border border-amber-500/40 shadow-[0_0_8px_rgba(245,158,11,0.15)]'
           : 'bg-white/[0.06] text-white/40 border border-white/10'
@@ -914,17 +914,17 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                           {/* Center: Match Info */}
                           <div className="flex-1 flex items-center gap-2 md:gap-4 min-w-0">
                             {/* Home Team */}
-                            <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
+                            <div className="flex-1 flex items-center justify-end gap-1.5 min-w-0">
                               <span
                                 onClick={() => {
                                   if (!isUserHome && onRivalClick) {
                                     onRivalClick(fixture.home_team_id || '', homeName);
                                   }
                                 }}
-                                className={`text-[11px] md:text-xs font-black uppercase italic tracking-tighter truncate transition-all ${
+                                className={`text-[10px] md:text-[11px] font-black uppercase tracking-tight whitespace-nowrap transition-all ${
                                   fixture.home_team_id === userTeamId
                                     ? 'text-white'
-                                    : 'text-white/40 group-hover:text-white/60 hover:text-amber-400 cursor-pointer'
+                                    : 'text-white/50 group-hover:text-white/70 hover:text-amber-400 cursor-pointer'
                                 }`}
                               >
                                 {homeName}
@@ -968,7 +968,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                             </div>
 
                             {/* Away Team */}
-                            <div className="flex-1 flex items-center justify-start gap-2 min-w-0">
+                            <div className="flex-1 flex items-center justify-start gap-1.5 min-w-0">
                               <TeamShield name={awayName} isUser={fixture.away_team_id === userTeamId} />
                               {isUserAway && <VenueBadge isHome={false} />}
                               <span
@@ -977,10 +977,10 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                                     onRivalClick(fixture.away_team_id || '', awayName);
                                   }
                                 }}
-                                className={`text-[11px] md:text-xs font-black uppercase italic tracking-tighter truncate transition-all ${
+                                className={`text-[10px] md:text-[11px] font-black uppercase tracking-tight whitespace-nowrap transition-all ${
                                   fixture.away_team_id === userTeamId
                                     ? 'text-white'
-                                    : 'text-white/40 group-hover:text-white/60 hover:text-amber-400 cursor-pointer'
+                                    : 'text-white/50 group-hover:text-white/70 hover:text-amber-400 cursor-pointer'
                                 }`}
                               >
                                 {awayName}

@@ -167,7 +167,33 @@ async function generateFixturesManually(
   let matchDate = new Date(startDate + 'T00:00:00Z');
   const fixtureRows: any[] = [];
 
+  // ─── Yardımcı: İş günü hesaplama (Pzt-Per, hafta sonu atla) ───
+  // Her tur 1 iş günü = 34 tur ~ 7 hafta (1-2 ayda bir sezon)
+  const nextBusinessDay = (d: Date): Date => {
+    const r = new Date(d);
+    // JS: 0=Paz, 1=Pzt, ..., 5=Cmt, 6=Paz
+    // İş günleri: Pzt(1)-Per(4)
+    while (r.getDay() === 0 || r.getDay() >= 5) {
+      r.setDate(r.getDate() + 1);
+    }
+    return r;
+  };
+  const addBusinessDays = (d: Date, n: number): Date => {
+    const r = new Date(d);
+    let added = 0;
+    while (added < n) {
+      r.setDate(r.getDate() + 1);
+      if (r.getDay() >= 1 && r.getDay() <= 4) added++;
+    }
+    return r;
+  };
+
+  // İlk maç günü = startDate'in ilk iş günü (Pzt-Per)
+  const firstMatchDay = nextBusinessDay(matchDate);
+
   for (let round = 0; round < totalRounds; round++) {
+    // Bu turun tarihi: ilk maç günü + round iş günü
+    const roundDate = addBusinessDays(firstMatchDay, round);
     const roundTeams = [fixed, ...rotating];
     let matchCount = 0;
 
@@ -192,7 +218,7 @@ async function generateFixturesManually(
         away_team_id: awayId,
         season_id: seasonId,
         tur: round + 1,
-        match_date: matchDate.toISOString().split('T')[0],
+        match_date: roundDate.toISOString().split('T')[0],
         match_time: matchTime,
         status: 'scheduled',
         competition_type: 'league',
@@ -200,9 +226,8 @@ async function generateFixturesManually(
         away_score: 0,
       });
 
-      // Rövanş (ikinci yarı)
-      const reverseDate = new Date(matchDate.getTime());
-      reverseDate.setDate(reverseDate.getDate() + totalRounds * 7);
+      // Rövanş (ikinci yarı) — totalRounds iş günü sonra
+      const reverseDate = addBusinessDays(roundDate, totalRounds);
       fixtureRows.push({
         id: crypto.randomUUID(),
         home_team_id: awayId,
@@ -222,9 +247,8 @@ async function generateFixturesManually(
 
     // Rotating dizisini döndür
     rotating.push(rotating.shift()!);
-
-    // Sonraki tur +7 gün
-    matchDate.setDate(matchDate.getDate() + 7);
+    // NOT: matchDate'i +7 gün eklemek yerine addBusinessDays kullanıyoruz
+    // (round değişkeni zaten iş günü offset'i hesaplıyor)
   }
 
   // Toplu ekleme (50'şerli batch)
