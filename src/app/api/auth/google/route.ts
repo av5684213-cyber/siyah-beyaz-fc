@@ -2,16 +2,40 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { checkRateLimit } from '@/lib/fm/supabaseRateLimit';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { v5 as uuidv5 } from 'uuid';
 
 /**
  * POST /api/auth/google
  *
  * Google Sign-In callback endpoint.
- * Receives a Google ID token (JWT), verifies it, and:
- * 1. Checks if a profile exists for this Google user
- * 2. If yes → returns the profile + session
- * 3. If no  → creates a placeholder profile (user will complete registration)
+ *
+ * Akış:
+ * 1. Google ID token'ı verify et (Google tokeninfo endpoint)
+ * 2. googleId'den deterministik UUID v5 üret (profiles.id UUID tipinde)
+ * 3. Profile var mı kontrol et → returning user, success döndür
+ * 4. Yoksa: boşta bir bot takım bul, kullanıcına devret
+ *    - league_teams.profile_id → yeni kullanıcı UUID
+ *    - league_teams.is_bot → false
+ *    - players.profile_id → yeni kullanıcı UUID
+ *    - Diğer ilgili tablolar (active_tactics, training_state, vb.) migrate
+ *    - Bot'un eski profiles satırını sil
+ * 5. Bot yoksa: minimal profile oluştur, hasProfile=false döndür
+ *    → ManagerRegistration gösterilir (kullanıcı manuel kulüp kurar)
  */
+
+// UUID v5 namespace — Touchline Manager'ın sabit namespace'i
+// Bu değer değişmezse, aynı googleId her zaman aynı UUID üretir
+const TM_NAMESPACE = '7c1f9b3a-2d4e-5f6a-8b9c-0d1e2f3a4b5c';
+
+/**
+ * Google sub (kullanıcı ID) değerinden deterministik UUID v5 üretir.
+ * Aynı googleId her zaman aynı UUID döndürür — bu sayede kullanıcı
+ * tekrar giriş yaptığında aynı profile'a erişir.
+ */
+function generateUserIdFromGoogleId(googleId: string): string {
+  return uuidv5(`google:${googleId}`, TM_NAMESPACE);
+}
+
 export async function POST(request: NextRequest) {
   const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   const rateCheck = await checkRateLimit(`google-auth:${clientIp}`, 10, 60000);
@@ -37,7 +61,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Google Auth yapılandırılmamış' }, { status: 500 });
     }
 
-    // Verify Google ID token via Google's tokeninfo endpoint
+    // ─── 1. Google ID token verify ───────────────────────────────
     const verifyResponse = await fetch(
       `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(token)}`,
       { method: 'GET' }
@@ -50,13 +74,11 @@ export async function POST(request: NextRequest) {
 
     const googleData = await verifyResponse.json();
 
-    // Audience check
     if (googleData.aud !== GOOGLE_CLIENT_ID) {
       console.warn('[google-auth] Audience mismatch:', googleData.aud);
       return NextResponse.json({ error: 'Geçersiz Google token' }, { status: 401 });
     }
 
-    // Token expiry check
     if (googleData.exp && Date.now() / 1000 > Number(googleData.exp)) {
       return NextResponse.json({ error: 'Google token süresi dolmuş' }, { status: 401 });
     }
@@ -70,260 +92,312 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Google ID alınamadı' }, { status: 400 });
     }
 
-    // Consistent internal user ID from Google sub
-    const internalUserId = `google-${googleId}`;
+    // ─── 2. Deterministik UUID üret ───────────────────────────────
+    const internalUserId = generateUserIdFromGoogleId(googleId);
 
     const supabase = getServiceSupabase();
     if (!supabase) {
       return NextResponse.json({ error: 'Veritabanı bağlantısı kurulamadı' }, { status: 500 });
     }
 
-    // Check existing profile for this Google user
-    const { data: existingProfile } = await supabase
+    // ─── 3. Mevcut profil kontrolü ────────────────────────────────
+    const { data: existingProfile, error: existingErr } = await supabase
       .from('profiles')
-      .select('id, team_name, manager_name, league_name, is_bot, onboarding_completed')
+      .select('id, team_name, manager_name, league_name, is_bot, onboarding_completed, email')
       .eq('id', internalUserId)
       .maybeSingle();
 
-    if (existingProfile && !existingProfile.is_bot) {
-      console.log(`[google-auth] Returning user: ${existingProfile.team_name}`);
+    if (existingErr) {
+      console.error('[google-auth] Profile query error:', existingErr.message);
+    }
 
-      if (email) {
-        await supabase.from('profiles').update({ email }).eq('id', internalUserId);
+    if (existingProfile && !existingProfile.is_bot) {
+      // Returning user — email'i güncelle (ilk girişte NULL olabilir)
+      if (email && existingProfile.email !== email) {
+        await supabase
+          .from('profiles')
+          .update({ email, team_logo: picture || null })
+          .eq('id', internalUserId);
       }
+
+      console.log(`[google-auth] Returning user: ${existingProfile.team_name} (${internalUserId})`);
 
       return NextResponse.json({
         success: true,
         userId: internalUserId,
         hasProfile: true,
-        onboardingCompleted: existingProfile.onboarding_completed ?? false,
+        onboardingCompleted: existingProfile.onboarding_completed ?? true,
         teamName: existingProfile.team_name,
         managerName: existingProfile.manager_name,
         email,
+        name,
         picture,
       });
     }
 
-    // ─── Migration: Claim legacy demo profile if exists ───────────────
-    // Demo modundan kalma profilleri (00000000-0000-0000-0000-000000000001)
-    // yeni Google ID'sine taşı. Bu, kullanıcıların DEV_MODE=true iken
-    // oluşturdukları takımlarını kaybetmemesini sağlar.
-    const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-    const { data: demoProfile } = await supabase
-      .from('profiles')
-      .select('id, team_name, manager_name, is_bot, onboarding_completed')
-      .eq('id', DEMO_USER_ID)
-      .maybeSingle();
-
-    if (demoProfile && demoProfile.team_name && !demoProfile.is_bot) {
-      console.log(`[google-auth] Migrating demo profile "${demoProfile.team_name}" to ${internalUserId}`);
-
-      // 1. Demo profilin tüm verilerini al
-      const { data: fullDemoProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', DEMO_USER_ID)
-        .maybeSingle();
-
-      if (fullDemoProfile) {
-        // 2. Yeni profil oluştur (eski verilerle, yeni ID ile)
-        const newProfile = {
-          ...fullDemoProfile,
-          id: internalUserId,
-          email,
-          team_logo: picture || fullDemoProfile.team_logo,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert(newProfile);
-
-        if (insertError) {
-          console.error('[google-auth] Profile migration insert error:', insertError.message);
-        } else {
-          // 3. Bağımlı tablolarda profile_id / user_id / id'yi güncelle
-          const updates = [
-            { table: 'league_teams', column: 'profile_id' },
-            { table: 'players', column: 'profile_id' },
-            { table: 'active_tactics', column: 'id' },
-            { table: 'training_state', column: 'id' },
-            { table: 'user_facilities', column: 'profile_id' },
-            { table: 'watchlist', column: 'user_id' },
-            { table: 'staff', column: 'user_id' },
-            { table: 'notifications', column: 'profile_id' },
-            { table: 'daily_tasks', column: 'user_id' },
-            { table: 'scouted_players', column: 'profile_id' },
-            { table: 'player_career_stats', column: 'profile_id' },
-            { table: 'transfer_market', column: 'seller_profile_id' },
-          ];
-
-          for (const { table, column } of updates) {
-            try {
-              await supabase
-                .from(table)
-                .update({ [column]: internalUserId })
-                .eq(column, DEMO_USER_ID);
-            } catch (e) {
-              // Tablo yoksa veya kolon yoksa sessizce geç
-              console.warn(`[google-auth] Migration update skipped: ${table}.${column}`);
-            }
-          }
-
-          // 4. Eski demo profili sil
-          await supabase.from('profiles').delete().eq('id', DEMO_USER_ID);
-
-          console.log(`[google-auth] Migration complete: ${demoProfile.team_name} -> ${internalUserId}`);
-
-          return NextResponse.json({
-            success: true,
-            userId: internalUserId,
-            hasProfile: true,
-            onboardingCompleted: demoProfile.onboarding_completed ?? true,
-            teamName: demoProfile.team_name,
-            managerName: demoProfile.manager_name,
-            email,
-            name,
-            picture,
-            migrated: true,
-          });
-        }
-      }
-    }
-    // ─── End migration ────────────────────────────────────────────────
-
-    // ─── New user → Auto-assign a bot club ──────────────────────────
+    // ─── 4. Yeni kullanıcı → Bot takım claim et ───────────────────
     // Online oyun: her yeni Google kullanıcısına otomatik bot kulüp ver
-    // ManagerRegistration adımını atla — kullanıcı hemen oyuna dahil olur
 
-    // 1. Boşta bir bot kulüp bul (henüz real manager'a verilmemiş)
-    //    Önce "user_claimed" olmayan botları seç
-    const { data: availableBotTeams } = await supabase
+    // 4a. Boşta bot takım bul: is_bot=true ve profile_id'si hâlâ bot profile'ına ait
+    //     (yani henüz gerçek kullanıcı tarafından claim edilmemiş)
+    const { data: availableBotTeams, error: botQueryErr } = await supabase
       .from('league_teams')
-      .select('id, team_name, league_id, profile_id')
+      .select('id, name, league_id, profile_id, is_bot')
       .eq('is_bot', true)
-      .limit(50);
+      .limit(200);
 
-    // Bu bot'lardan profile_id'si bir gerçek kullanıcı (is_bot=false profile) olanı çıkar
-    // Yani: bot takım var ama profile_id'si gerçek kullanıcıya ait değilse al
+    if (botQueryErr) {
+      console.error('[google-auth] Bot team query error:', botQueryErr.message);
+    }
+
     let botTeam: any = null;
 
     if (availableBotTeams && availableBotTeams.length > 0) {
       // Bot'ların profile_id'lerini topla
       const botProfileIds = availableBotTeams
-        .map(t => t.profile_id)
+        .map((t: any) => t.profile_id)
         .filter(Boolean);
 
-      // Bu profile_id'lerden gerçek kullanıcı olanları bul
-      const { data: realProfiles } = await supabase
-        .from('profiles')
-        .select('id')
-        .in('id', botProfileIds)
-        .eq('is_bot', false);
+      // Bu profile_id'lerden gerçek kullanıcı (is_bot=false) olanları bul
+      // — onlar zaten claim edilmiş, atla
+      let claimedProfileIds = new Set<string>();
+      if (botProfileIds.length > 0) {
+        const { data: realProfiles } = await supabase
+          .from('profiles')
+          .select('id')
+          .in('id', botProfileIds)
+          .eq('is_bot', false);
+        claimedProfileIds = new Set((realProfiles || []).map(p => p.id));
+      }
 
-      const realProfileIds = new Set((realProfiles || []).map(p => p.id));
-
-      // Gerçek kullanıcıya ait olmayan bot takımları al
-      const freeBots = availableBotTeams.filter(t =>
-        !t.profile_id || !realProfileIds.has(t.profile_id)
+      // Henüz claim edilmemiş bot takımları filtrele
+      const freeBots = availableBotTeams.filter((t: any) =>
+        !t.profile_id || !claimedProfileIds.has(t.profile_id)
       );
 
       if (freeBots.length > 0) {
-        // Rastgele bir bot seç
+        // Rastgele bir bot seç — her kullanıcıya farklı bot verilir
         botTeam = freeBots[Math.floor(Math.random() * freeBots.length)];
       }
     }
 
-    // 2. Yeni kullanıcı için profil oluştur
-    const managerName = name || 'Yeni Menajer';
-    const teamName = botTeam?.team_name || `Takım ${internalUserId.slice(-6)}`;
-    const teamLogo = picture || null;
-
-    const newProfile = {
-      id: internalUserId,
-      manager_name: managerName,
-      team_name: teamName,
-      email,
-      team_logo: teamLogo,
-      money: 25_000_000,       // 25M başlangıç bütçesi
-      credits: 250,             // 250 kredi
-      level: 1,
-      xp: 0,
-      fans: 1000,
-      reputation: 30,
-      is_bot: false,
-      onboarding_completed: true,  // ManagerRegistration'i atla
-      created_at: new Date().toISOString(),
-    };
-
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .upsert(newProfile);
-
-    if (profileError) {
-      console.error('[google-auth] Profile upsert error:', profileError.message);
-      if (!profileError.message.includes('duplicate') && !profileError.message.includes('unique')) {
-        return NextResponse.json({ error: 'Profil oluşturulamadı' }, { status: 500 });
-      }
-    }
-
-    // 3. Bot kulübün sahipliğini yeni kullanıcıya devret
     if (botTeam) {
-      console.log(`[google-auth] Auto-assigning bot team "${botTeam.team_name}" to ${internalUserId}`);
+      console.log(`[google-auth] Auto-assigning bot team "${botTeam.name}" (id=${botTeam.id}) to ${internalUserId}`);
 
-      // league_teams kaydını güncelle: profile_id = yeni kullanıcı, is_bot = false
+      const botProfileId = botTeam.profile_id;
+
+      // 4b. Bot profile'ını al — verilerini yeni kullanıcıya kopyalayacağız
+      let botProfileData: any = null;
+      if (botProfileId) {
+        const { data: botProf } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', botProfileId)
+          .maybeSingle();
+        botProfileData = botProf;
+      }
+
+      // 4c. Yeni profile oluştur — bot'un verilerini kopyala, ama yeni UUID ve Google bilgileri ile
+      const newProfileData: Record<string, any> = botProfileData
+        ? { ...botProfileData }
+        : {
+          money: 25_000_000,
+          credits: 250,
+          level: 1,
+          xp: 0,
+          fans: 1000,
+          reputation: 30,
+          league_tier: 4,
+          academy_level: 1,
+          stadium_capacity: 5000,
+          ticket_price: 30,
+          region: 'tr',
+          role: 'user',
+          is_bot: false,
+        };
+
+      // Bot-specific alanları sıfırla
+      newProfileData.id = internalUserId;
+      newProfileData.email = email;
+      newProfileData.team_logo = picture || newProfileData.team_logo || null;
+      newProfileData.manager_name = name || newProfileData.manager_name || 'Yeni Menajer';
+      newProfileData.is_bot = false;
+      newProfileData.bot_difficulty = null;
+      newProfileData.onboarding_completed = true; // ManagerRegistration atla
+      newProfileData.created_at = new Date().toISOString();
+      newProfileData.updated_at = new Date().toISOString();
+
+      // team_name'i koru — bot'un takım adı kullanıcıya geçer
+      // (Eğer bot'ta team_name yoksa, league_teams.name'i kullan)
+      if (!newProfileData.team_name && botTeam.name) {
+        newProfileData.team_name = botTeam.name;
+      }
+
+      const { error: profileInsertError } = await supabase
+        .from('profiles')
+        .insert(newProfileData);
+
+      if (profileInsertError) {
+        console.error('[google-auth] Profile insert error:', profileInsertError.message);
+        // Profile insert başarısız — bot claim etmeden minimal profile dene
+        return await createMinimalProfile(supabase, internalUserId, email, name, picture, botTeam.name);
+      }
+
+      // 4d. league_teams kaydını güncelle: profile_id = yeni kullanıcı, is_bot = false
       const { error: claimError } = await supabase
         .from('league_teams')
         .update({
           profile_id: internalUserId,
           is_bot: false,
+          bot_difficulty: null,
         })
         .eq('id', botTeam.id);
 
       if (claimError) {
-        console.error('[google-auth] Failed to claim bot team:', claimError.message);
-      } else {
-        // Bot profilini sil (artık gerçek kullanıcıya ait)
-        if (botTeam.profile_id) {
-          await supabase
-            .from('profiles')
-            .delete()
-            .eq('id', botTeam.profile_id)
-            .eq('is_bot', true);
-        }
+        console.error('[google-auth] league_teams update error:', claimError.message);
+        // Profile oluşturuldu ama league_team claim edilemedi — kullanıcı yine de giriş yapabilir
+        // (ManagerRegistration akışına düşebilir)
+      }
 
-        // Bot'un oyuncularını yeni kullanıcıya devret
-        await supabase
+      // 4e. Players tablosunu migrate: bot profile_id → yeni kullanıcı UUID
+      if (botProfileId && botProfileId !== internalUserId) {
+        const { error: playersMigrateError } = await supabase
           .from('players')
           .update({ profile_id: internalUserId })
-          .eq('profile_id', botTeam.profile_id);
+          .eq('profile_id', botProfileId);
 
-        console.log(`[google-auth] Bot team claimed: ${botTeam.team_name}`);
+        if (playersMigrateError) {
+          console.warn('[google-auth] Players migration error:', playersMigrateError.message);
+        } else {
+          console.log(`[google-auth] Players migrated: ${botProfileId} → ${internalUserId}`);
+        }
+
+        // 4f. Diğer ilişkili tabloları migrate
+        const tableMigrations: Array<{ table: string; column: string }> = [
+          { table: 'active_tactics', column: 'id' },
+          { table: 'training_state', column: 'id' },
+          { table: 'user_facilities', column: 'profile_id' },
+          { table: 'watchlist', column: 'user_id' },
+          { table: 'staff', column: 'user_id' },
+          { table: 'notifications', column: 'profile_id' },
+          { table: 'daily_tasks', column: 'user_id' },
+          { table: 'scouted_players', column: 'profile_id' },
+          { table: 'player_career_stats', column: 'profile_id' },
+          { table: 'user_academy', column: 'profile_id' },
+          { table: 'team_sponsorships', column: 'profile_id' },
+        ];
+
+        for (const { table, column } of tableMigrations) {
+          try {
+            const { error: migrateErr } = await supabase
+              .from(table)
+              .update({ [column]: internalUserId })
+              .eq(column, botProfileId);
+            if (migrateErr && !migrateErr.message.includes('does not exist') && !migrateErr.message.includes('schema cache')) {
+              console.warn(`[google-auth] Migration warning for ${table}.${column}:`, migrateErr.message);
+            }
+          } catch (e: any) {
+            // Tablo yoksa sessizce geç
+          }
+        }
+
+        // 4g. Eski bot profile'ını sil
+        const { error: botDeleteError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', botProfileId)
+          .eq('is_bot', true);
+
+        if (botDeleteError) {
+          console.warn('[google-auth] Bot profile delete error:', botDeleteError.message);
+        } else {
+          console.log(`[google-auth] Old bot profile deleted: ${botProfileId}`);
+        }
       }
-    } else {
-      console.warn(`[google-auth] No free bot team available for ${internalUserId}`);
-      // Bot takım yoksa yine de profil oluşturuldu, kullanıcı ManagerRegistration'a gidecek
+
+      console.log(`[google-auth] ✅ New user onboarded: ${name} (${email}) — team: ${newProfileData.team_name}`);
+
+      return NextResponse.json({
+        success: true,
+        userId: internalUserId,
+        hasProfile: true,
+        onboardingCompleted: true,
+        teamName: newProfileData.team_name,
+        managerName: newProfileData.manager_name,
+        email,
+        name,
+        picture,
+        autoAssigned: true,
+        botTeamName: botTeam.name,
+      });
     }
 
-    console.log(`[google-auth] New user auto-onboarded: ${name} (${email}) — team: ${teamName}`);
+    // ─── 5. Bot yok → minimal profile + ManagerRegistration'a düş ───
+    // Bot havuzu doldu (90 kullanıcı 90 bot'u aldı). Yeni kullanıcı
+    // manuel kurulum akışına (ManagerRegistration) düşer.
+    console.warn(`[google-auth] No free bot team available for ${internalUserId} — falling back to manual registration`);
 
-    return NextResponse.json({
-      success: true,
-      userId: internalUserId,
-      hasProfile: true,
-      onboardingCompleted: true,
-      teamName,
-      managerName,
-      email,
-      name,
-      picture,
-      autoAssigned: true,
-    });
-
+    return await createMinimalProfile(supabase, internalUserId, email, name, picture, null);
   } catch (err: any) {
     console.error('[google-auth] Error:', err);
     return createErrorResponse(err, { route: '/api/auth/google', method: 'POST' });
   }
+}
+
+/**
+ * Bot takım yoksa minimal profile oluştur.
+ * Kullanıcı ManagerRegistration adımına düşer — manuel kulüp kurar.
+ */
+async function createMinimalProfile(
+  supabase: any,
+  internalUserId: string,
+  email: string,
+  name: string,
+  picture: string,
+  fallbackTeamName: string | null
+): Promise<NextResponse> {
+  const minimalProfile = {
+    id: internalUserId,
+    manager_name: name || 'Yeni Menajer',
+    team_name: fallbackTeamName || null,
+    email,
+    team_logo: picture || null,
+    money: 25_000_000,
+    credits: 250,
+    level: 1,
+    xp: 0,
+    fans: 1000,
+    reputation: 30,
+    league_tier: 4,
+    academy_level: 1,
+    stadium_capacity: 5000,
+    ticket_price: 30,
+    region: 'tr',
+    role: 'user',
+    is_bot: false,
+    onboarding_completed: false, // ManagerRegistration göster
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error: minimalInsertError } = await supabase
+    .from('profiles')
+    .insert(minimalProfile);
+
+  if (minimalInsertError) {
+    console.error('[google-auth] Minimal profile insert error:', minimalInsertError.message);
+    // Profile oluşturulamasa bile userId döndür — client ManagerRegistration'a yönlendirir
+    // (ManagerRegistration initTeam'i profile oluşturmayı dener)
+  }
+
+  return NextResponse.json({
+    success: true,
+    userId: internalUserId,
+    hasProfile: false, // ManagerRegistration göster
+    onboardingCompleted: false,
+    email,
+    name,
+    picture,
+    noBotsAvailable: true,
+  });
 }

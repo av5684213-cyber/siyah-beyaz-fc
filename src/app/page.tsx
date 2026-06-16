@@ -724,9 +724,10 @@ export default function Home() {
     // Supabase auth oturumunu kapat
     await authSignOut();
 
-    // Sayfayı yenile (tüm state'i sıfırla)
+    // Login sayfasına yönlendir — logged_out=1 parametresi ile
+    // Google One Tap'in otomatik tetiklenmesini engelliyoruz
     if (typeof window !== 'undefined') {
-      window.location.href = '/';
+      window.location.replace('/auth/login?logged_out=1');
     }
   };
 

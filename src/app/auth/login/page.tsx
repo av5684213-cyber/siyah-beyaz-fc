@@ -1,21 +1,36 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'motion/react';
 import { Shield, Mail, Lock, Activity, ArrowRight, Trophy, Users, Zap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Activity className="w-8 h-8 text-white animate-spin opacity-20" />
+      </div>
+    }>
+      <LoginPageInner />
+    </Suspense>
+  );
+}
+
+function LoginPageInner() {
   const { signIn, signInWithGoogle, user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isLoggedOut = searchParams.get('logged_out') === '1';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleButtonReady, setGoogleButtonReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logoutNotice, setLogoutNotice] = useState<boolean>(isLoggedOut);
   const googleButtonRef = useRef<HTMLDivElement>(null);
   const gsiInitialized = useRef(false);
 
@@ -45,6 +60,7 @@ export default function LoginPage() {
     (window as any).handleGoogleSignIn = async (response: any) => {
       setGoogleLoading(true);
       setError(null);
+      setLogoutNotice(false); // Kullanıcı aktif giriş yaptıyor, logout bildirimini kapat
 
       const { error: authError, hasProfile } = await signInWithGoogle(response.credential);
 
@@ -89,10 +105,19 @@ export default function LoginPage() {
           client_id: clientId,
           callback: (window as any).handleGoogleSignIn,
           ux_mode: 'popup',
-          auto_select: false,
+          auto_select: false,          // Asla otomatik seçim yapma
           cancel_on_tap_outside: false,
         });
         gsiInitialized.current = true;
+
+        // Logout sonrası: Google'ın auto-select'ini devre dışı bırak
+        // Bu, kullanıcı logout yaptıktan sonra Google'ın otomatik
+        // tekrar giriş yapmasını (One Tap auto-select) engeller
+        if (isLoggedOut) {
+          try {
+            google.accounts.id.disableAutoSelect();
+          } catch {}
+        }
       }
 
       // Render the official Google button
@@ -118,7 +143,7 @@ export default function LoginPage() {
     }, 200);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isLoggedOut]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -203,6 +228,18 @@ export default function LoginPage() {
               className="bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-3 text-xs font-bold text-red-400"
             >
               {error}
+            </motion.div>
+          )}
+
+          {/* Logout notification banner */}
+          {logoutNotice && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-3 text-xs font-bold text-emerald-400 flex items-center gap-2"
+            >
+              <Shield size={14} className="shrink-0" />
+              <span>Başarıyla çıkış yapıldı. Tekrar giriş yapmak için Google ile devam edin.</span>
             </motion.div>
           )}
 
