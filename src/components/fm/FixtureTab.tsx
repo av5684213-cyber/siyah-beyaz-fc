@@ -59,6 +59,14 @@ interface FixtureTabProps {
 // Helpers
 // ═══════════════════════════════════════════════════════════════════════
 
+/**
+ * Maç tamamlanmış mı? 'finished' ve 'completed' aynı anlama gelir.
+ * Farklı süreçler farklı status değerleri kullanıyor — ikisini de kabul et.
+ */
+function isFixtureFinished(status: string): boolean {
+  return status === 'finished' || status === 'completed';
+}
+
 function sanitizeName(raw: unknown): string {
   try {
     if (raw === null || raw === undefined) return 'Bilinmiyor';
@@ -396,7 +404,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
     (targetTeamId: string | null, count = 5): FormResult[] => {
       if (!targetTeamId) return [];
       return fixtures
-        .filter(f => f.status === 'finished' && (f.home_team_id === targetTeamId || f.away_team_id === targetTeamId))
+        .filter(f => isFixtureFinished(f.status) && (f.home_team_id === targetTeamId || f.away_team_id === targetTeamId))
         .sort((a, b) => a.tur - b.tur)
         .slice(-count)
         .map(f => {
@@ -417,7 +425,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
     (teamIdToCheck: string | null, count = 5): FormResult[] => {
       if (!teamIdToCheck) return [];
       return fixtures
-        .filter(f => f.status === 'finished' && (f.home_team_id === teamIdToCheck || f.away_team_id === teamIdToCheck))
+        .filter(f => isFixtureFinished(f.status) && (f.home_team_id === teamIdToCheck || f.away_team_id === teamIdToCheck))
         .sort((a, b) => a.tur - b.tur)
         .slice(-count)
         .map(f => {
@@ -435,7 +443,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
   // ─── Computed: Filtered fixtures ────────────────────────────────
   const filteredFixtures = useMemo(() => {
     return fixtures.filter(f => {
-      const isPlayed = f.status === 'finished';
+      const isPlayed = isFixtureFinished(f.status);
       if (filter === 'upcoming') return !isPlayed;
       if (filter === 'played') return isPlayed;
       return true;
@@ -443,6 +451,8 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
   }, [fixtures, filter]);
 
   const nextMatch = fixtures.find(f => f.status === 'scheduled' || f.status === 'user_pending' || f.status === 'live');
+
+  // DİKKAT: completed ve finished aynı anlama gelir — form/sıralama hesaplamasında ikisini de kullan
 
   // ─── Grouped by month ──────────────────────────────────────────
   const groupedByMonth = useMemo(() => {
@@ -472,14 +482,14 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
 
   // ─── Current gameweek ──────────────────────────────────────────
   const currentGameweek = useMemo(() => {
-    const playedTurs = fixtures.filter(f => f.status === 'finished').map(f => f.tur);
+    const playedTurs = fixtures.filter(f => isFixtureFinished(f.status)).map(f => f.tur);
     return playedTurs.length > 0 ? Math.max(...playedTurs) : 0;
   }, [fixtures]);
 
   // ─── Get user result for a fixture ─────────────────────────────
   const getUserResult = useCallback(
     (fixture: Fixture): FormResult | null => {
-      if (!userTeamId || fixture.status !== 'finished') return null;
+      if (!userTeamId || !isFixtureFinished(fixture.status)) return null;
       const isHome = fixture.home_team_id === userTeamId;
       const scored = isHome ? fixture.home_score : fixture.away_score;
       const conceded = isHome ? fixture.away_score : fixture.home_score;
@@ -493,7 +503,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
   // ─── Season progress ───────────────────────────────────────────
   const seasonProgress = useMemo(() => {
     const totalWeeks = 34;
-    const played = new Set(fixtures.filter(f => f.status === 'finished').map(f => f.tur)).size;
+    const played = new Set(fixtures.filter(f => isFixtureFinished(f.status)).map(f => f.tur)).size;
     return Math.round((played / totalWeeks) * 100);
   }, [fixtures]);
 
@@ -825,7 +835,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                     const matchDate = fixture.match_date ? new Date(fixture.match_date) : null;
                     const isUserHome = fixture.home_team_id === userTeamId;
                     const isUserAway = fixture.away_team_id === userTeamId;
-                    const isFinished = fixture.status === 'finished';
+                    const isFinished = isFixtureFinished(fixture.status);
                     const isScheduled = fixture.status === 'scheduled' || fixture.status === 'user_pending';
                     const isLive = fixture.status === 'live';
                     const userResult = getUserResult(fixture);

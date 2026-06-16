@@ -149,15 +149,47 @@ export const loadLeague = async () => {
   return local ? JSON.parse(local) : [];
 };
 
-export const loadFixtures = async (teamId: string) => {
+export const loadFixtures = async (teamId: string, seasonId?: string) => {
   if (isSupabaseConfigured()) {
     const supabase = getSupabase();
-    const { data } = await supabase
+    let query = supabase
       .from('fixtures')
       .select('*, home:home_team_id(name), away:away_team_id(name)')
-      .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`)
-      .order('tur', { ascending: true });
-    
+      .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`);
+
+    // Sezon filtresi: belirtilmemişse aktif sezonu bul
+    if (seasonId) {
+      query = query.eq('season_id', seasonId);
+    } else {
+      // Takımın ligini bul, aktif sezonu al
+      try {
+        const { data: teamData } = await supabase
+          .from('league_teams')
+          .select('league_id')
+          .eq('id', teamId)
+          .maybeSingle();
+
+        if (teamData?.league_id) {
+          const { data: activeSeason } = await supabase
+            .from('seasons')
+            .select('id')
+            .eq('league_id', teamData.league_id)
+            .eq('is_finished', false)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (activeSeason) {
+            query = query.eq('season_id', activeSeason.id);
+          }
+        }
+      } catch {
+        // Filtre uygulanamazsa tüm sezonların fikstürlerini getir
+      }
+    }
+
+    const { data } = await query.order('tur', { ascending: true });
+
     if (data) return data;
   }
   return [];
