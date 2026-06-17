@@ -282,30 +282,33 @@ export default function TacticsRolesPanel({
   );
 
   // ── Render: Pitch Visualization ────────────────────────────────────────
+  // Saha DİKEY — kale AŞAĞIDA, forvet YUKARIDA
+  // Pozisyon koordinatları (GK y:5 yukarıda, ST y:82 aşağıda) CSS scaleY(-1)
+  // ile ters çevrilir: GK y:95 (aşağı), ST y:18 (yukarı)
   const renderPitch = () => (
-    <div className="relative w-full aspect-[3/2] rounded-xl overflow-hidden border-2 border-white/[0.08]">
+    <div className="relative w-full aspect-[2/3] max-h-[520px] mx-auto rounded-xl overflow-hidden border-2 border-white/[0.08]">
       {/* Pitch background */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(180deg, #0f2a0f 0%, #1a3a1a 30%, #1e3e1e 50%, #1a3a1a 70%, #0f2a0f 100%)',
+            'linear-gradient(90deg, #0f2a0f 0%, #1a3a1a 30%, #1e3e1e 50%, #1a3a1a 70%, #0f2a0f 100%)',
         }}
       />
 
-      {/* Pitch markings */}
+      {/* Pitch markings — kale aşağıda */}
       <div className="absolute inset-0">
-        {/* Center line */}
-        <div className="absolute top-1/2 left-[4%] right-[4%] h-px bg-white/10" />
+        {/* Center line (yatay) */}
+        <div className="absolute top-1/2 left-0 right-0 h-px bg-white/10" />
         {/* Center circle */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-24 sm:h-24 rounded-full border border-white/10" />
         {/* Center dot */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white/20" />
-        {/* Top penalty area */}
+        {/* Top penalty area (rakip kale — yukarıda) */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[50%] h-[14%] border-b border-l border-r border-white/10" />
         {/* Top goal area */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[24%] h-[6%] border-b border-l border-r border-white/10" />
-        {/* Bottom penalty area */}
+        {/* Bottom penalty area (kendi kale — aşağıda) */}
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[50%] h-[14%] border-t border-l border-r border-white/10" />
         {/* Bottom goal area */}
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[24%] h-[6%] border-t border-l border-r border-white/10" />
@@ -313,66 +316,72 @@ export default function TacticsRolesPanel({
         <div className="absolute top-0 left-[4%] right-[4%] bottom-0 border-l border-r border-white/[0.06]" />
       </div>
 
-      {/* Player dots */}
-      {formation.positions.map((slot, idx) => {
-        const player = squad[idx];
-        const roleId = player
-          ? playerRoles[player.id] ?? slot.defaultRole
-          : slot.defaultRole;
-        const role = ROLES.find((r) => r.id === roleId);
-        const posGroup = getPositionGroup(slot.pos);
-        const isSelected =
-          selectedSlot?.index === idx && selectedSlot?.position === slot.pos;
+      {/* Player dots — y eksenini ters çevir (kale aşağıda) */}
+      <div className="absolute inset-0" style={{ transform: 'scaleY(-1)' }}>
+        {formation.positions.map((slot, idx) => {
+          const player = squad[idx];
+          const roleId = player
+            ? playerRoles[player.id] ?? slot.defaultRole
+            : slot.defaultRole;
+          const role = ROLES.find((r) => r.id === roleId);
+          const posGroup = getPositionGroup(slot.pos);
+          const isSelected =
+            selectedSlot?.index === idx && selectedSlot?.position === slot.pos;
 
-        return (
-          <button
-            key={`${slot.pos}-${idx}`}
-            className="absolute -translate-x-1/2 -translate-y-1/2 z-10 group"
-            style={{
-              left: `${slot.x}%`,
-              top: `${slot.y}%`,
-            }}
-            onClick={() => handleSlotClick(idx, slot.pos)}
-          >
-            {/* Glow ring */}
-            <div
-              className={`absolute -inset-2 rounded-full transition-all duration-200 ${
-                isSelected
-                  ? `bg-amber-500/30 ${CATEGORY_GLOW[posGroup] ?? ''} shadow-lg`
-                  : 'bg-transparent group-hover:bg-white/10'
-              }`}
-            />
-            {/* Main dot */}
-            <div
-              className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-[11px] font-bold border-2 transition-all duration-200 ${
-                isSelected
-                  ? 'border-amber-400 bg-zinc-900 scale-110'
-                  : `border-white/30 bg-zinc-900/90 group-hover:border-white/50`
-              }`}
+          return (
+            <button
+              key={`${slot.pos}-${idx}`}
+              className="absolute -translate-x-1/2 -translate-y-1/2 z-10 group"
+              style={{
+                left: `${slot.x}%`,
+                top: `${slot.y}%`,
+              }}
+              onClick={() => handleSlotClick(idx, slot.pos)}
             >
-              <span className="truncate px-0.5 text-white/90">
-                {player ? player.name.charAt(0).toUpperCase() : '?'}
-              </span>
-              {/* Role indicator */}
-              {role && (
-                <div
-                  className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] ${
-                    CATEGORY_DOT_COLORS[posGroup] ?? 'bg-zinc-500'
-                  }`}
-                >
-                  {role.icon}
-                </div>
-              )}
-            </div>
-            {/* Label */}
-            <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap">
-              <span className="text-[8px] sm:text-[9px] font-bold text-white/40 uppercase tracking-wider">
-                {slot.pos}
-              </span>
-            </div>
-          </button>
-        );
-      })}
+              {/* Glow ring */}
+              <div
+                className={`absolute -inset-2 rounded-full transition-all duration-200 ${
+                  isSelected
+                    ? `bg-amber-500/30 ${CATEGORY_GLOW[posGroup] ?? ''} shadow-lg`
+                    : 'bg-transparent group-hover:bg-white/10'
+                }`}
+              />
+              {/* Main dot — yazıyı tekrar düz çevir */}
+              <div
+                className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-[11px] font-bold border-2 transition-all duration-200 ${
+                  isSelected
+                    ? 'border-amber-400 bg-zinc-900 scale-110'
+                    : `border-white/30 bg-zinc-900/90 group-hover:border-white/50`
+                }`}
+                style={{ transform: 'scaleY(-1)' }}
+              >
+                <span className="truncate px-0.5 text-white/90">
+                  {player ? player.name.charAt(0).toUpperCase() : '?'}
+                </span>
+                {/* Role indicator */}
+                {role && (
+                  <div
+                    className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] ${
+                      CATEGORY_DOT_COLORS[posGroup] ?? 'bg-zinc-500'
+                    }`}
+                  >
+                    {role.icon}
+                  </div>
+                )}
+              </div>
+              {/* Label — yazıyı tekrar düz çevir */}
+              <div
+                className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap"
+                style={{ transform: 'translateX(-50%) scaleY(-1)' }}
+              >
+                <span className="text-[8px] sm:text-[9px] font-bold text-white/40 uppercase tracking-wider">
+                  {slot.pos}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
 
       {/* Role Selector Popup */}
       {selectedSlot && selectedPlayer && (
