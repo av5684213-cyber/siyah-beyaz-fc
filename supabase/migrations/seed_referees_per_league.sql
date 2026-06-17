@@ -13,6 +13,9 @@
 -- 1. league_id kolonunu NULL yapılabilir yap (güvenlik)
 ALTER TABLE referees ALTER COLUMN league_id DROP NOT NULL;
 
+-- 1b. Check constraint'i kaldır (Türkçe/İngilizce karışık değerler için)
+ALTER TABLE referees DROP CONSTRAINT IF EXISTS referees_personality_check;
+
 -- 2. Eski genel (league_id=NULL) hakemleri temizle (artık liglere atanacak)
 DELETE FROM referees WHERE league_id IS NULL;
 
@@ -52,12 +55,12 @@ BEGIN
         FOR i IN 0..8 LOOP  -- 9 hakem (0-8)
             -- 6 kişilik arasında döngüsel dağıt
             v_personality := CASE (i % 6)
-                WHEN 0 THEN 'strict'
-                WHEN 1 THEN 'balanced'
-                WHEN 2 THEN 'lenient'
-                WHEN 3 THEN 'home_bias'
-                WHEN 4 THEN 'volatile'
-                WHEN 5 THEN 'var_lover'
+                WHEN 0 THEN 'katil'
+                WHEN 1 THEN 'dengeci'
+                WHEN 2 THEN 'hosgorulu'
+                WHEN 3 THEN 'ev_sahibi'
+                WHEN 4 THEN 'degisken'
+                WHEN 5 THEN 'var_sever'
             END;
 
             -- İsim — her hakem farklı
@@ -67,12 +70,12 @@ BEGIN
 
             -- Sertlik — kişiliğe göre
             v_strictness := CASE v_personality
-                WHEN 'strict' THEN 70 + (i % 4) * 2      -- 70-76
-                WHEN 'balanced' THEN 48 + (i % 4) * 2     -- 48-54
-                WHEN 'lenient' THEN 24 + (i % 4) * 2      -- 24-30
-                WHEN 'home_bias' THEN 52 + (i % 4) * 2    -- 52-58
-                WHEN 'volatile' THEN 40 + (i % 4) * 2     -- 40-46
-                WHEN 'var_lover' THEN 36 + (i % 4) * 2    -- 36-42
+                WHEN 'katil' THEN 70 + (i % 4) * 2      -- 70-76
+                WHEN 'dengeci' THEN 48 + (i % 4) * 2     -- 48-54
+                WHEN 'hosgorulu' THEN 24 + (i % 4) * 2   -- 24-30
+                WHEN 'ev_sahibi' THEN 52 + (i % 4) * 2   -- 52-58
+                WHEN 'degisken' THEN 40 + (i % 4) * 2    -- 40-46
+                WHEN 'var_sever' THEN 36 + (i % 4) * 2   -- 36-42
             END;
 
             v_experience := 4 + (i % 5);  -- 4-8
