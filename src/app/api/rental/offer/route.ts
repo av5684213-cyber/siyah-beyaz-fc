@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+    const bodyUserId = body.userId || body.ownerTeamId || body.profileId;
     const { listingId, playerId, renterTeamId, durationWeeks = 12 } = body;
 
     if (!playerId || !renterTeamId) {

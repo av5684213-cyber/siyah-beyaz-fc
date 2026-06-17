@@ -99,6 +99,36 @@ export async function GET(request: NextRequest) {
     }
 
     // Sadece lig fikstürlerini getir (kupa değil)
+    // [40] Önce fikstür var mı kontrol et, yoksa generate_league_fixtures çağır
+    const { count: fixtureCount } = await supabase
+      .from('fixtures')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'scheduled')
+      .eq('match_date', today)
+      .in('competition_type', ['league', null]);
+
+    if (!fixtureCount || fixtureCount === 0) {
+      // Fikstür yok — sezon bul ve generate_league_fixtures çağır
+      console.log('[cron/match-scheduler] Bugün için fikstür yok, generate_league_fixtures çağrılıyor...');
+      const { data: activeSeasons } = await supabase
+        .from('seasons')
+        .select('id, league_id')
+        .eq('is_finished', false)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (activeSeasons && activeSeasons.length > 0) {
+        for (const season of activeSeasons) {
+          try {
+            await supabase.rpc('generate_league_fixtures', { p_season_id: season.id });
+            console.log(`[cron/match-scheduler] Fikstür üretildi: sezon ${season.id}`);
+          } catch (fixErr) {
+            console.warn(`[cron/match-scheduler] generate_league_fixtures hatası: ${fixErr}`);
+          }
+        }
+      }
+    }
+
     const { data: pendingFixtures, error: fixturesError } = await supabase
       .from('fixtures')
       .select('id, home_team_id, away_team_id, tur, season_id, match_date, match_time, competition_type')

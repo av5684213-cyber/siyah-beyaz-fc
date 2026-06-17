@@ -4,7 +4,7 @@
  * Sadece selimporsuk@gmail.com erişebilir.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 
 const ADMIN_EMAIL = 'selimporsuk@gmail.com';
 
@@ -42,7 +42,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });
   }
 
-  const supabase = getServiceSupabase();
+  let supabase = getServiceSupabase();
+  if (!supabase) supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase client null' }, { status: 500 });
   }

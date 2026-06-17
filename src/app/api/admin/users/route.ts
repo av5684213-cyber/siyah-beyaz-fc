@@ -5,7 +5,7 @@
  * Sadece selimporsuk@gmail.com
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 
 const ADMIN_EMAIL = 'selimporsuk@gmail.com';
 export const dynamic = 'force-dynamic';

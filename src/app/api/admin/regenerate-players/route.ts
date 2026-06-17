@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { generateAllAttributes, getPositionKey } from '@/lib/fm/attributeGenerator';
 
 export async function POST(request: NextRequest) {
@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });
   }
 
-  const supabase = getServiceSupabase();
+  let supabase = getServiceSupabase();
+  if (!supabase) supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Veritabanı bağlantısı yok' }, { status: 500 });
   }

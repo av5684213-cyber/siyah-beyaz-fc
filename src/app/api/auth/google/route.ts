@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { checkRateLimit } from '@/lib/fm/supabaseRateLimit';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { v5 as uuidv5 } from 'uuid';
@@ -95,7 +95,8 @@ export async function POST(request: NextRequest) {
     // ─── 2. Deterministik UUID üret ───────────────────────────────
     const internalUserId = generateUserIdFromGoogleId(googleId);
 
-    const supabase = getServiceSupabase();
+    let supabase = getServiceSupabase();
+    if (!supabase) supabase = getSupabase();
     if (!supabase) {
       return NextResponse.json({ error: 'Veritabanı bağlantısı kurulamadı' }, { status: 500 });
     }

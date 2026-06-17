@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { RENTAL_COMMISSION_KR } from '@/lib/fm/constants';
 
 export async function POST(request: NextRequest) {
@@ -17,13 +17,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });
   }
 
-  const supabase = getServiceSupabase();
+  let supabase = getServiceSupabase();
+  if (!supabase) supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase istemcisi oluşturulamadı' }, { status: 500 });
   }
 
   try {
     const body = await request.json();
+    const bodyUserId = body.userId || body.ownerTeamId || body.profileId;
     const { agreementId, response, ownerTeamId } = body;
 
     if (!agreementId || !response || !ownerTeamId) {

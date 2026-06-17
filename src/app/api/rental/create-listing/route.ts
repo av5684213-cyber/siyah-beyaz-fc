@@ -7,21 +7,24 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { getAuthenticatedUserId } from '@/lib/apiAuth';
 
 export async function POST(request: NextRequest) {
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });
   }
 
-  const supabase = getServiceSupabase();
+  let supabase = getServiceSupabase();
+  if (!supabase) supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase istemcisi oluşturulamadı' }, { status: 500 });
   }
 
   try {
     const body = await request.json();
+    const bodyUserId = body.userId || body.ownerTeamId || body.profileId;
     const { playerId, ownerTeamId, dailyCost = 0, durationWeeks = 17 } = body;
 
     if (!playerId) {

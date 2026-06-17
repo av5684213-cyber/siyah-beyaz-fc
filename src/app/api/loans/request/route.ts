@@ -14,7 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { isValidUserId } from '@/lib/fm/security';
 import { calculateLoanFeeEuro, getInflationFactor } from '@/lib/fm/inflation';
 import { createErrorResponse } from '@/lib/api-error-handler';
@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });
   }
 
-  const supabase = getServiceSupabase();
+  let supabase = getServiceSupabase();
+  if (!supabase) supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase istemcisi oluşturulamadı' }, { status: 500 });
   }

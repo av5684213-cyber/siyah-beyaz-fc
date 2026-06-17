@@ -10,8 +10,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { getAuthenticatedUserId } from '@/lib/apiAuth';
 
 export async function POST(request: NextRequest) {
   if (!isSupabaseConfigured()) {
@@ -23,7 +24,8 @@ export async function POST(request: NextRequest) {
     }, { status: 500 });
   }
 
-  const supabase = getServiceSupabase();
+  let supabase = getServiceSupabase();
+  if (!supabase) supabase = getSupabase();
   if (!supabase) {
     console.error('[POST /api/rental/list] Supabase client null.');
     return NextResponse.json({
@@ -35,6 +37,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+    const bodyUserId = body.userId || body.ownerTeamId || body.profileId;
     const { playerId, ownerTeamId, dailyCost = 0, durationWeeks = 17 } = body;
 
     console.log('[POST /api/rental/list] Request:', { playerId, ownerTeamId, dailyCost, durationWeeks });

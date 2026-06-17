@@ -714,6 +714,102 @@ CREATE TABLE IF NOT EXISTS cron_locks (
   locked_by TEXT
 );
 
+-- ═══ EKSİK TABLOLAR (2. hata raporundan) ═══
+
+-- [26] league_standings — puan tablosu
+CREATE TABLE IF NOT EXISTS league_standings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  league_id UUID REFERENCES leagues(id) ON DELETE CASCADE,
+  season_id UUID REFERENCES seasons(id) ON DELETE CASCADE,
+  team_id UUID REFERENCES league_teams(id) ON DELETE CASCADE,
+  profile_id TEXT,
+  played INTEGER DEFAULT 0,
+  won INTEGER DEFAULT 0,
+  drawn INTEGER DEFAULT 0,
+  lost INTEGER DEFAULT 0,
+  goals_for INTEGER DEFAULT 0,
+  goals_against INTEGER DEFAULT 0,
+  goal_difference INTEGER DEFAULT 0,
+  points INTEGER DEFAULT 0,
+  form TEXT,
+  position INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(season_id, team_id)
+);
+CREATE INDEX IF NOT EXISTS idx_league_standings_season ON league_standings(season_id);
+CREATE INDEX IF NOT EXISTS idx_league_standings_league ON league_standings(league_id);
+
+-- [27] training_attendances — antrenman katılımı
+CREATE TABLE IF NOT EXISTS training_attendances (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  player_id TEXT REFERENCES players(id) ON DELETE CASCADE,
+  profile_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
+  training_date DATE DEFAULT CURRENT_DATE,
+  attended BOOLEAN DEFAULT true,
+  intensity INTEGER DEFAULT 50,
+  data JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_training_attendances_player ON training_attendances(player_id);
+CREATE INDEX IF NOT EXISTS idx_training_attendances_profile ON training_attendances(profile_id);
+
+-- [28] live_matches — canlı maç takibi (match_sessions ile birleştirilebilir ama ayrı tutuluyor)
+CREATE TABLE IF NOT EXISTS live_matches (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  fixture_id UUID REFERENCES fixtures(id) ON DELETE CASCADE,
+  current_minute INTEGER DEFAULT 0,
+  home_score INTEGER DEFAULT 0,
+  away_score INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'pre_match',
+  home_possession INTEGER DEFAULT 50,
+  away_possession INTEGER DEFAULT 50,
+  home_shots INTEGER DEFAULT 0,
+  away_shots INTEGER DEFAULT 0,
+  home_shots_on_target INTEGER DEFAULT 0,
+  away_shots_on_target INTEGER DEFAULT 0,
+  last_event TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_live_matches_fixture ON live_matches(fixture_id);
+
+-- [29] match_player_stats — maç sonrası oyuncu istatistikleri
+CREATE TABLE IF NOT EXISTS match_player_stats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  match_id UUID,
+  fixture_id UUID REFERENCES fixtures(id) ON DELETE CASCADE,
+  player_id TEXT,
+  player_name TEXT,
+  team TEXT,
+  position TEXT,
+  rating INTEGER DEFAULT 0,
+  goals INTEGER DEFAULT 0,
+  assists INTEGER DEFAULT 0,
+  yellow_cards INTEGER DEFAULT 0,
+  red_cards INTEGER DEFAULT 0,
+  saves INTEGER DEFAULT 0,
+  fouls INTEGER DEFAULT 0,
+  minutes_played INTEGER DEFAULT 90,
+  data JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_match_player_stats_fixture ON match_player_stats(fixture_id);
+CREATE INDEX IF NOT EXISTS idx_match_player_stats_player ON match_player_stats(player_id);
+
+-- [30] trainings — antrenman programları
+CREATE TABLE IF NOT EXISTS trainings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
+  training_type TEXT DEFAULT 'balanced',
+  intensity INTEGER DEFAULT 50,
+  focus TEXT,
+  player_ids TEXT[] DEFAULT '{}',
+  session_date DATE DEFAULT CURRENT_DATE,
+  results JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_trainings_profile ON trainings(profile_id);
+
 CREATE TABLE IF NOT EXISTS transfer_market (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   player_id TEXT REFERENCES players(id) ON DELETE CASCADE,
@@ -928,6 +1024,165 @@ BEGIN
 END;
 $$;
 
+-- ═══ TRANSFER RPC'LERİ ═══
+
+-- [31a] rpc_list_player_on_market — oyuncuyu transfer listesine ekle
+CREATE OR REPLACE FUNCTION rpc_list_player_on_market(
+  p_seller_id TEXT,
+  p_player_id TEXT,
+  p_price BIGINT,
+  p_min_price BIGINT,
+  p_max_price BIGINT,
+  p_seller_name TEXT
+)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE
+  v_listing_id UUID;
+BEGIN
+  -- Önce aynı oyuncunun aktif listing'i var mı kontrol et
+  SELECT id INTO v_listing_id FROM transfer_market
+  WHERE player_id = p_player_id AND status = 'active' LIMIT 1;
+
+  IF v_listing_id IS NOT NULL THEN
+    RETURN jsonb_build_object('success', false, 'reason', 'already_listed');
+  END IF;
+
+  INSERT INTO transfer_market (player_id, seller_id, asking_price, status, is_auction, created_at)
+  VALUES (p_player_id, p_seller_id, p_price, 'active', false, NOW())
+  RETURNING id INTO v_listing_id;
+
+  -- Oyuncuyu satılık olarak işaretle
+  UPDATE players SET is_for_sale = true WHERE id = p_player_id;
+
+  RETURN jsonb_build_object('success', true, 'listing_id', v_listing_id);
+END;
+$$;
+
+-- [31b] rpc_market_buy — oyuncuyu transferden satın al (atomik)
+CREATE OR REPLACE FUNCTION rpc_market_buy(
+  p_listing_id UUID,
+  p_buyer_id TEXT,
+  p_buyer_team TEXT
+)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE
+  v_listing transfer_market%ROWTYPE;
+  v_seller_money BIGINT;
+  v_buyer_money BIGINT;
+  v_price BIGINT;
+  v_tax BIGINT;
+  v_seller_revenue BIGINT;
+  v_player_id TEXT;
+BEGIN
+  -- Listing'i kilitle ve al
+  SELECT * INTO v_listing FROM transfer_market
+  WHERE id = p_listing_id AND status = 'active'
+  FOR UPDATE SKIP LOCKED;
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'reason', 'not_found_or_inactive');
+  END IF;
+
+  v_price := v_listing.asking_price;
+  v_tax := ROUND(v_price * 0.10);
+  v_seller_revenue := v_price - v_tax;
+  v_player_id := v_listing.player_id;
+
+  -- Alıcı bakiyesi kontrol
+  SELECT money INTO v_buyer_money FROM profiles WHERE id = p_buyer_id;
+  IF v_buyer_money IS NULL OR v_buyer_money < v_price THEN
+    RETURN jsonb_build_object('success', false, 'reason', 'insufficient_funds');
+  END IF;
+
+  -- Satıcı bakiyesini artır
+  UPDATE profiles SET money = money + v_seller_revenue WHERE id = v_listing.seller_id;
+
+  -- Alıcı bakiyesini düş
+  UPDATE profiles SET money = money - v_price WHERE id = p_buyer_id;
+
+  -- Oyuncuyu transfer et
+  UPDATE players SET profile_id = p_buyer_id, team_name = p_buyer_team, is_for_sale = false
+  WHERE id = v_player_id;
+
+  -- Listing'i kapat
+  UPDATE transfer_market SET status = 'sold' WHERE id = p_listing_id;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'price', v_price,
+    'tax_amount', v_tax,
+    'seller_revenue', v_seller_revenue,
+    'player_id', v_player_id
+  );
+END;
+$$;
+
+-- [31c] rpc_cancel_listing — transfer listesini iptal et
+CREATE OR REPLACE FUNCTION rpc_cancel_listing(
+  p_listing_id UUID,
+  p_seller_id TEXT
+)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE transfer_market SET status = 'cancelled'
+  WHERE id = p_listing_id AND seller_id = p_seller_id AND status = 'active';
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'reason', 'not_found');
+  END IF;
+
+  RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- [31d] rpc_accept_transfer — transfer teklifini kabul et
+CREATE OR REPLACE FUNCTION rpc_accept_transfer(
+  p_listing_id UUID,
+  p_seller_id TEXT
+)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE transfer_market SET status = 'accepted'
+  WHERE id = p_listing_id AND seller_id = p_seller_id AND status = 'pending';
+
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'reason', 'not_found');
+  END IF;
+
+  RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- [31e] rpc_train_player — oyuncuyu antrenman yap (mevcut RPC ile aynı)
+-- Bu RPC zaten mevcut olabilir, DROP IF EXISTS ile güvenli
+SELECT drop_function_if_exists('rpc_train_player');
+CREATE OR REPLACE FUNCTION rpc_train_player(
+  p_player_id TEXT,
+  p_profile_id TEXT,
+  p_focus TEXT DEFAULT 'balanced'
+)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE
+  v_player players%ROWTYPE;
+  v_gain INTEGER;
+BEGIN
+  SELECT * INTO v_player FROM players WHERE id = p_player_id AND profile_id = p_profile_id;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'reason', 'player_not_found');
+  END IF;
+
+  v_gain := 1 + floor(random() * 3);
+  UPDATE players SET
+    finishing = LEAST(99, COALESCE(finishing, 40) + CASE WHEN p_focus = 'attacking' THEN v_gain ELSE 0 END),
+    tackling = LEAST(99, COALESCE(tackling, 40) + CASE WHEN p_focus = 'defending' THEN v_gain ELSE 0 END),
+    passing = LEAST(99, COALESCE(passing, 40) + CASE WHEN p_focus = 'balanced' THEN v_gain ELSE 0 END),
+    cond = GREATEST(0, COALESCE(cond, 100) - 5)
+  WHERE id = p_player_id;
+
+  RETURN jsonb_build_object('success', true, 'gain', v_gain);
+END;
+$$;
+
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 9. RLS POLICIES (public read for most tables)
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -942,6 +1197,65 @@ ALTER TABLE match_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE referees ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_types ENABLE ROW LEVEL SECURITY;
 -- staff DISABLED yukarıda
+
+-- [37] transfer_market, loan_listings ve yeni tablolar için RLS
+ALTER TABLE transfer_market ENABLE ROW LEVEL SECURITY;
+ALTER TABLE loan_listings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE league_standings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE live_matches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE match_player_stats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE training_attendances ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trainings ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  CREATE POLICY "transfer_market_select_all" ON transfer_market FOR SELECT USING (true);
+  CREATE POLICY "transfer_market_insert_all" ON transfer_market FOR INSERT WITH CHECK (true);
+  CREATE POLICY "transfer_market_update_all" ON transfer_market FOR UPDATE USING (true);
+  CREATE POLICY "transfer_market_delete_all" ON transfer_market FOR DELETE USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "loan_listings_select_all" ON loan_listings FOR SELECT USING (true);
+  CREATE POLICY "loan_listings_insert_all" ON loan_listings FOR INSERT WITH CHECK (true);
+  CREATE POLICY "loan_listings_update_all" ON loan_listings FOR UPDATE USING (true);
+  CREATE POLICY "loan_listings_delete_all" ON loan_listings FOR DELETE USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "league_standings_select_all" ON league_standings FOR SELECT USING (true);
+  CREATE POLICY "league_standings_insert_all" ON league_standings FOR INSERT WITH CHECK (true);
+  CREATE POLICY "league_standings_update_all" ON league_standings FOR UPDATE USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "live_matches_select_all" ON live_matches FOR SELECT USING (true);
+  CREATE POLICY "live_matches_insert_all" ON live_matches FOR INSERT WITH CHECK (true);
+  CREATE POLICY "live_matches_update_all" ON live_matches FOR UPDATE USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "match_player_stats_select_all" ON match_player_stats FOR SELECT USING (true);
+  CREATE POLICY "match_player_stats_insert_all" ON match_player_stats FOR INSERT WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "training_attendances_select_all" ON training_attendances FOR SELECT USING (true);
+  CREATE POLICY "training_attendances_insert_all" ON training_attendances FOR INSERT WITH CHECK (true);
+  CREATE POLICY "training_attendances_update_all" ON training_attendances FOR UPDATE USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "trainings_select_all" ON trainings FOR SELECT USING (true);
+  CREATE POLICY "trainings_insert_all" ON trainings FOR INSERT WITH CHECK (true);
+  CREATE POLICY "trainings_update_all" ON trainings FOR UPDATE USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 DO $$ BEGIN
   CREATE POLICY "profiles_select_all" ON profiles FOR SELECT USING (true);
