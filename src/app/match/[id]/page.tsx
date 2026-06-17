@@ -347,6 +347,45 @@ function MatchPageInner() {
           e.is_revealed === undefined || e.is_revealed === null || e.is_revealed === true
         );
         setEvents(filtered as MatchEventRow[]);
+      } else if (fixtureData.status === 'completed' || fixtureData.status === 'finished') {
+        // FALLBACK: match_events tablosu boşsa, match_sessions.events JSONB'den dene
+        // (eski maçlar veya match-tick kaydetmemişse)
+        try {
+          const { data: sessionData } = await supabase
+            .from('match_sessions')
+            .select('events, home_players, away_players, home_score, away_score, current_minute')
+            .eq('fixture_id', fixtureId)
+            .maybeSingle();
+
+          if (sessionData?.events && Array.isArray(sessionData.events) && sessionData.events.length > 0) {
+            // match_sessions.events JSONB'den MatchEventRow'a dönüştür
+            const mappedEvents: MatchEventRow[] = sessionData.events.map((e: any, idx: number) => ({
+              id: e.id || `session-${idx}`,
+              fixture_id: fixtureId,
+              event_type: e.type || e.event_type || 'COMMENTARY',
+              minute: e.minute ?? 0,
+              team: e.team || null,
+              player_name: e.player || e.player_name || null,
+              player_id: e.player_id || null,
+              description: e.text || e.description || null,
+              data: e.data || {},
+              is_revealed: true,
+              detail: e.detail || null,
+            }));
+            setEvents(mappedEvents);
+            console.log(`[MatchPage] match_events boş, match_sessions.events'ten ${mappedEvents.length} olay yüklendi`);
+          }
+
+          // Eğer oyuncu verisi de yoksa, match_sessions'tan yükle
+          if (sessionData?.home_players && Array.isArray(sessionData.home_players) && sessionData.home_players.length > 0) {
+            setHomePlayers(sessionData.home_players as PlayerStatRow[]);
+          }
+          if (sessionData?.away_players && Array.isArray(sessionData.away_players) && sessionData.away_players.length > 0) {
+            setAwayPlayers(sessionData.away_players as PlayerStatRow[]);
+          }
+        } catch (sessionErr) {
+          console.warn('[MatchPage] match_sessions fallback başarısız:', sessionErr);
+        }
       }
 
       // Canlı maç dakikasını live_matches tablosundan çek
@@ -711,6 +750,39 @@ function MatchPageInner() {
   const isScheduled = matchStatus === 'scheduled';
   const isLive = matchStatus === 'live';
   const isFinished = matchStatus === 'completed' || matchStatus === 'finished';
+
+  // Bitmiş maç ama events yoksa — "tekrar izle" çalışamaz, uyarı göster
+  if (isFinished && events.length === 0) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-zinc-900 border border-amber-500/20 rounded-2xl p-6 text-center space-y-4">
+          <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto">
+            <Activity className="w-7 h-7 text-amber-400" />
+          </div>
+          <h2 className="text-lg font-black text-white uppercase tracking-tight">Maç Kaydı Bulunamadı</h2>
+          <p className="text-xs text-white/40">
+            Bu maçın olay kaydı mevcut değil. Maç çok eski veya kayıt sırasında
+            bir sorun yaşanmış olabilir.
+          </p>
+          <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-left">
+            <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">MAÇ BİLGİSİ</p>
+            <p className="text-xs text-white/70 font-bold">
+              {fixture.home?.name} {fixture.home_score} - {fixture.away_score} {fixture.away?.name}
+            </p>
+            <p className="text-[10px] text-white/40 mt-1">
+              {fixture.match_date} · {fixture.match_time} · {fixture.tur}. Hafta
+            </p>
+          </div>
+          <button
+            onClick={() => window.location.href = '/fixture'}
+            className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-black text-xs uppercase tracking-widest transition-all"
+          >
+            Fikstüre Dön
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">

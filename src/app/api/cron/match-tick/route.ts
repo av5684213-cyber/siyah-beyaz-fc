@@ -1034,6 +1034,34 @@ if (!isSupabaseConfigured()) {
               .eq('is_revealed', false);
           } catch {}
 
+          // ── KALICI KAYIT: Tüm olayları match_sessions.events JSONB'ye de yaz ──
+          // Bu sayede sezon boyunca "tekrar izle" her zaman çalışır.
+          // match_events tablosu bir şekilde silinse bile match_sessions.events yedek olur.
+          try {
+            const { data: allEvents } = await supabase
+              .from('match_events')
+              .select('*')
+              .eq('fixture_id', fixtureId)
+              .order('minute', { ascending: true });
+
+            if (allEvents && allEvents.length > 0) {
+              await supabase
+                .from('match_sessions')
+                .update({
+                  events: allEvents,
+                  status: 'completed',
+                  current_minute: 90,
+                  home_score: newHomeScore,
+                  away_score: newAwayScore,
+                  completed_at: new Date().toISOString(),
+                })
+                .eq('fixture_id', fixtureId);
+              console.log(`[match-tick] Match ${fixtureId}: ${allEvents.length} olay match_sessions'a kalıcı kaydedildi`);
+            }
+          } catch (persistErr) {
+            console.warn(`[match-tick] match_sessions kalıcı kayıt hatası:`, persistErr);
+          }
+
           // ── Kart cezalarını uygula (S3-2 FIX: nextMatchDate ile) ──
           try {
             const { data: allCardEvents } = await supabase
