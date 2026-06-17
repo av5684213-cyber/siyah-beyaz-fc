@@ -122,17 +122,26 @@ const MatchDay = ({
   
   // Schedule-based cycle status (replaces GameCycleManager)
   //
-  // HAFTA İÇİ (Pzt-Cum) GÜNDE 2 SLOT:
-  //   Slot 1: 12:00 - 13:30 (9 maç, 10'ar dk arayla)
-  //   Slot 2: 18:00 - 19:30 (9 maç, 10'ar dk arayla)
+  // SEZON KURALARI (KULLANICI NET TALEBİ):
+  // - Lig 18 takım, çift devreli round-robin = 34 tur (her takım 34 maç)
+  // - Her tur 9 maç, 10'ar dk arayla oynanır (12:00-13:30 veya 18:00-19:30)
+  // - Hafta içi 5 gün (Pzt-Cum), her gün 2 tur: 12:00 + 18:00
+  // - Hafta sonu (Cmt-Paz) lige ara
+  // - 34 tur bittiğinde → pazartesiye kadar sezon ara
+  // - Cuma 18:00 sonrası = hafta sonu zaten ara (sezon devam ediyorsa)
   //
-  // Her slot 9 maç içerir (lig 18 takım):
-  //   12:00 → Maç 1, 12:10 → Maç 2, ..., 13:20 → Maç 9
-  //   18:00 → Maç 1, 18:10 → Maç 2, ..., 19:20 → Maç 9
+  // 34 tur / günde 2 tur = 17 iş günü = 3 hafta + 2 gün
+  // Sezon Pzt başlar → 3 hafta sonra Salı 18:00'de 34. tur oynanır → Çar günü sezon ara
+  //
+  // SEASON_START: ilk pazartesi. Şimdilik hardcoded — ileride Supabase seasons.start_date'den okunabilir.
+  const SEASON_START = new Date('2026-06-22T00:00:00+03:00'); // Pzt, 22 Haziran 2026
+  const TOTAL_TURS = 34;
+  const TURS_PER_DAY = 2; // 12:00 + 18:00
+
   const getCycleStatus = useCallback(() => {
     const now = new Date();
     const trDate = addHours(now, 3);
-    const dayOfWeek = trDate.getDay();
+    const dayOfWeek = trDate.getDay(); // 0=Pazar, 1=Pzt, ..., 6=Cumartesi
     const currentHour = trDate.getHours();
     const currentMinute = trDate.getMinutes();
     const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
@@ -145,110 +154,201 @@ const MatchDay = ({
 
     const totalMinutes = currentHour * 60 + currentMinute; // 12:00=720, 13:30=810, 18:00=1080, 19:30=1170
 
-    // ── HAFTA İÇİ ──
-    if (isWeekday) {
-      // SLOT 1 CANLI: 12:00 (720) - 13:30 (810) — 9 maç sırayla oynanıyor
-      if (totalMinutes >= 720 && totalMinutes < 810) {
-        const matchIndex = Math.floor((totalMinutes - 720) / 10);
-        const matchStartMin = 720 + matchIndex * 10;
-        const matchStartTime = `${String(Math.floor(matchStartMin / 60)).padStart(2, '0')}:${String(matchStartMin % 60).padStart(2, '0')}`;
-        return {
-          phase: 'LIVE_MATCH' as const,
-          nextEventTime: '13:30',
-          countDownMinutes: 810 - totalMinutes,
-          isTrainingWindow: false,
-          currentSlot: '12:00' as const,
-          slotLabel: 'ÖĞLE SLOTU' as const,
-          nextSlot: '18:00' as const,
-          currentMatchIndex: matchIndex,
-          currentMatchTime: matchStartTime,
-          matchesLeft: 9 - matchIndex,
-          previousSlot: null,
-        };
-      }
+    // ── İş günü sayısı (sezon başından bugüne, hafta sonları hariç) ──
+    let workDays = 0;
+    const cursor = new Date(SEASON_START);
+    cursor.setHours(0, 0, 0, 0);
+    const todayMidnight = new Date(trDate);
+    todayMidnight.setHours(0, 0, 0, 0);
 
-      // SLOT 2 CANLI: 18:00 (1080) - 19:30 (1170)
-      if (totalMinutes >= 1080 && totalMinutes < 1170) {
-        const matchIndex = Math.floor((totalMinutes - 1080) / 10);
-        const matchStartMin = 1080 + matchIndex * 10;
-        const matchStartTime = `${String(Math.floor(matchStartMin / 60)).padStart(2, '0')}:${String(matchStartMin % 60).padStart(2, '0')}`;
-        return {
-          phase: 'LIVE_MATCH' as const,
-          nextEventTime: '19:30',
-          countDownMinutes: 1170 - totalMinutes,
-          isTrainingWindow: false,
-          currentSlot: '18:00' as const,
-          slotLabel: 'AKŞAM SLOTU' as const,
-          nextSlot: 'Yarın 12:00' as const,
-          currentMatchIndex: matchIndex,
-          currentMatchTime: matchStartTime,
-          matchesLeft: 9 - matchIndex,
-          previousSlot: '12:00 (9 maç oynandı)' as const,
-        };
-      }
+    while (cursor <= todayMidnight) {
+      const dow = cursor.getDay();
+      if (dow >= 1 && dow <= 5) workDays++;
+      cursor.setDate(cursor.getDate() + 1);
+    }
 
-      // Sabah 10:00'dan önce → bekleme
-      if (totalMinutes < 600) {
-        return {
-          phase: 'IDLE' as const,
-          nextEventTime: '12:00',
-          countDownMinutes: 720 - totalMinutes,
-          isTrainingWindow: false,
-          currentSlot: null,
-          nextSlot: '12:00' as const,
-        };
-      }
+    // Bugünün turları (eğer sezon içindeysek)
+    // workDays=1 → 1. gün → 12:00 tur=1, 18:00 tur=2
+    // workDays=2 → 2. gün → 12:00 tur=3, 18:00 tur=4
+    // ...
+    // workDays=17 → 17. gün → 12:00 tur=33, 18:00 tur=34
+    const morningTur = workDays > 0 ? (workDays - 1) * 2 + 1 : 0;
+    const eveningTur = workDays > 0 ? (workDays - 1) * 2 + 2 : 0;
 
-      // 10:00 - 11:59 → 12:00 ÖĞLE slot'una hazırlık
-      if (totalMinutes >= 600 && totalMinutes < 720) {
-        return {
-          phase: 'PRE_MATCH' as const,
-          nextEventTime: '12:00',
-          countDownMinutes: 720 - totalMinutes,
-          isTrainingWindow: false,
-          currentSlot: null,
-          nextSlot: '12:00' as const,
-          slotLabel: 'ÖĞLE SLOTU' as const,
-          previousSlot: null,
-        };
-      }
+    // Bir sonraki pazartesi tarihini hesapla
+    const nextMonday = new Date(todayMidnight);
+    const daysToMon = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+    nextMonday.setDate(todayMidnight.getDate() + daysToMon);
 
-      // 13:30 - 17:59 → Öğle slot bitti, akşam slot bekleniyor
-      if (totalMinutes >= 810 && totalMinutes < 1080) {
-        return {
-          phase: 'PRE_MATCH' as const,
-          nextEventTime: '18:00',
-          countDownMinutes: 1080 - totalMinutes,
-          isTrainingWindow: false,
-          currentSlot: null,
-          nextSlot: '18:00' as const,
-          slotLabel: 'AKŞAM SLOTU' as const,
-          previousSlot: '12:00 (9 maç oynandı)' as const,
-        };
-      }
-
-      // 19:30+ → gün bitti (18 maç oynandı), yarınki maça bekle
-      const nextDay = dayNames[(dayOfWeek + 1) % 7];
+    // ── HAFTA SONU → LİGE ARA ──
+    if (!isWeekday) {
       return {
         phase: 'IDLE' as const,
-        nextEventTime: `${nextDay} 12:00`,
+        nextEventTime: `${nextWeekday()} 12:00`,
         countDownMinutes: 0,
         isTrainingWindow: false,
         currentSlot: null,
-        nextSlot: `${nextDay} 12:00` as const,
-        previousSlot: '12:00 + 18:00 (18 maç oynandı)' as const,
+        nextSlot: `${nextWeekday()} 12:00` as const,
+        previousSlot: 'HAFTA SONU LİGE ARA VERİLDİ' as const,
+        reason: 'WEEKEND' as const,
+        workDays,
+        morningTur,
+        eveningTur,
       };
     }
 
-    // ── HAFTA SONU ──
+    // ── SEZON BİTTİ (workDays > 17) → PAZARTESİYE KADAR ARA ──
+    if (workDays > 17) {
+      return {
+        phase: 'IDLE' as const,
+        nextEventTime: `${dayNames[nextMonday.getDay()]} 12:00`,
+        countDownMinutes: 0,
+        isTrainingWindow: false,
+        currentSlot: null,
+        nextSlot: `${dayNames[nextMonday.getDay()]} 12:00` as const,
+        previousSlot: '34 TUR TAMAMLANDI - SEZON BİTTİ' as const,
+        reason: 'SEASON_END' as const,
+        workDays,
+        morningTur: 0,
+        eveningTur: 0,
+      };
+    }
+
+    // ── HAFTA İÇİ, SEZON DEVAM EDİYOR ──
+    // SLOT 1 CANLI: 12:00 (720) - 13:30 (810) — 9 maç sırayla
+    if (totalMinutes >= 720 && totalMinutes < 810) {
+      const matchIndex = Math.floor((totalMinutes - 720) / 10);
+      const matchStartMin = 720 + matchIndex * 10;
+      const matchStartTime = `${String(Math.floor(matchStartMin / 60)).padStart(2, '0')}:${String(matchStartMin % 60).padStart(2, '0')}`;
+      return {
+        phase: 'LIVE_MATCH' as const,
+        nextEventTime: '13:30',
+        countDownMinutes: 810 - totalMinutes,
+        isTrainingWindow: false,
+        currentSlot: '12:00' as const,
+        slotLabel: 'ÖĞLE SLOTU' as const,
+        nextSlot: '18:00' as const,
+        currentMatchIndex: matchIndex,
+        currentMatchTime: matchStartTime,
+        matchesLeft: 9 - matchIndex,
+        previousSlot: null,
+        reason: null as any,
+        workDays,
+        morningTur,
+        eveningTur,
+      };
+    }
+
+    // SLOT 2 CANLI: 18:00 (1080) - 19:30 (1170)
+    if (totalMinutes >= 1080 && totalMinutes < 1170) {
+      const matchIndex = Math.floor((totalMinutes - 1080) / 10);
+      const matchStartMin = 1080 + matchIndex * 10;
+      const matchStartTime = `${String(Math.floor(matchStartMin / 60)).padStart(2, '0')}:${String(matchStartMin % 60).padStart(2, '0')}`;
+      const isLastTurOfDay = eveningTur >= TOTAL_TURS;
+      return {
+        phase: 'LIVE_MATCH' as const,
+        nextEventTime: '19:30',
+        countDownMinutes: 1170 - totalMinutes,
+        isTrainingWindow: false,
+        currentSlot: '18:00' as const,
+        slotLabel: 'AKŞAM SLOTU' as const,
+        nextSlot: isLastTurOfDay ? 'Yeni Sezon Pazartesi 12:00' as const : 'Yarın 12:00' as const,
+        currentMatchIndex: matchIndex,
+        currentMatchTime: matchStartTime,
+        matchesLeft: 9 - matchIndex,
+        previousSlot: '12:00 (9 maç oynandı)' as const,
+        reason: isLastTurOfDay ? 'LAST_TUR' as const : null as any,
+        workDays,
+        morningTur,
+        eveningTur,
+      };
+    }
+
+    // Sabah 10:00'dan önce → bekleme
+    if (totalMinutes < 600) {
+      return {
+        phase: 'IDLE' as const,
+        nextEventTime: '12:00',
+        countDownMinutes: 720 - totalMinutes,
+        isTrainingWindow: false,
+        currentSlot: null,
+        nextSlot: '12:00' as const,
+        reason: null as any,
+        workDays,
+        morningTur,
+        eveningTur,
+      };
+    }
+
+    // 10:00 - 11:59 → 12:00 ÖĞLE slot'una hazırlık
+    if (totalMinutes >= 600 && totalMinutes < 720) {
+      return {
+        phase: 'PRE_MATCH' as const,
+        nextEventTime: '12:00',
+        countDownMinutes: 720 - totalMinutes,
+        isTrainingWindow: false,
+        currentSlot: null,
+        nextSlot: '12:00' as const,
+        slotLabel: 'ÖĞLE SLOTU' as const,
+        previousSlot: null,
+        reason: null as any,
+        workDays,
+        morningTur,
+        eveningTur,
+      };
+    }
+
+    // 13:30 - 17:59 → Öğle slot bitti, akşam slot bekleniyor
+    if (totalMinutes >= 810 && totalMinutes < 1080) {
+      const isLastDay = eveningTur >= TOTAL_TURS;
+      return {
+        phase: 'PRE_MATCH' as const,
+        nextEventTime: '18:00',
+        countDownMinutes: 1080 - totalMinutes,
+        isTrainingWindow: false,
+        currentSlot: null,
+        nextSlot: '18:00' as const,
+        slotLabel: 'AKŞAM SLOTU' as const,
+        previousSlot: isLastDay ? `12:00 (Tur ${morningTur}/${TOTAL_TURS} - SON TUR)` as const : `12:00 (Tur ${morningTur}/${TOTAL_TURS} oynandı)` as const,
+        reason: null as any,
+        workDays,
+        morningTur,
+        eveningTur,
+      };
+    }
+
+    // 19:30+ → gün bitti
+    // Eğer bu son tur günüydüyse → sezon bitti
+    if (eveningTur >= TOTAL_TURS) {
+      return {
+        phase: 'IDLE' as const,
+        nextEventTime: `${dayNames[nextMonday.getDay()]} 12:00`,
+        countDownMinutes: 0,
+        isTrainingWindow: false,
+        currentSlot: null,
+        nextSlot: `${dayNames[nextMonday.getDay()]} 12:00` as const,
+        previousSlot: '34 TUR TAMAMLANDI - SEZON BİTTİ' as const,
+        reason: 'SEASON_END' as const,
+        workDays,
+        morningTur: 0,
+        eveningTur: 0,
+      };
+    }
+
+    // Cuma 18:00 sonrası → hafta sonu başlıyor
+    const isFriday = dayOfWeek === 5;
     return {
       phase: 'IDLE' as const,
-      nextEventTime: `${nextWeekday()} 12:00`,
+      nextEventTime: isFriday ? `${nextWeekday()} 12:00` : 'Yarın 12:00',
       countDownMinutes: 0,
       isTrainingWindow: false,
       currentSlot: null,
-      nextSlot: `${nextWeekday()} 12:00` as const,
-      previousSlot: null,
+      nextSlot: isFriday ? `${nextWeekday()} 12:00` as const : 'Yarın 12:00' as const,
+      previousSlot: `Tur ${morningTur} + ${eveningTur}/${TOTAL_TURS} oynandı${isFriday ? ' - HAFTA SONU ARA' : ''}` as const,
+      reason: isFriday ? ('FRIDAY_END' as const) : null as any,
+      workDays,
+      morningTur,
+      eveningTur,
     };
   }, []);
 
@@ -958,7 +1058,7 @@ const MatchDay = ({
           <div>
             <h2 className="text-3xl md:text-4xl font-black italic tracking-tighter text-white uppercase">CANLI MAÇ OYNANIYOR</h2>
             <p className="text-red-400 text-[10px] tracking-[0.4em] font-black mt-3 uppercase">
-              {slotLabel} · {currentSlot} · MAÇ {matchIndex + 1}/9 · {matchTime} · {matchesLeft - 1} MAÇ KALDI
+              {slotLabel} · {currentSlot} · TUR {currentSlot === '18:00' ? (cycleStatus as any).eveningTur : (cycleStatus as any).morningTur}/34 · MAÇ {matchIndex + 1}/9 · {matchTime} · {matchesLeft - 1} MAÇ KALDI
             </p>
             {minsToNextMatch > 0 && (
               <p className="text-white/40 text-[9px] tracking-[0.3em] font-bold mt-1.5 uppercase">
@@ -1053,6 +1153,36 @@ const MatchDay = ({
 
   // If match isn't live, show different UI
   if (!isActive && (cycleStatus.phase === 'IDLE' || cycleStatus.phase === 'POST_MATCH' || cycleStatus.phase === 'TRAINING_WINDOW')) {
+    const reason = (cycleStatus as any).reason;
+    const isWeekend = reason === 'WEEKEND';
+    const isSeasonEnd = reason === 'SEASON_END';
+    const isFridayEnd = reason === 'FRIDAY_END';
+
+    // IDLE ekranı başlığı ve mesajı — nedenine göre değişir
+    const title = isSeasonEnd
+      ? 'SEZON BİTTİ'
+      : isWeekend
+      ? 'HAFTA SONU — LİGE ARA VERİLDİ'
+      : isFridayEnd
+      ? 'CUMA AKŞAMI — HAFTA SONU BAŞLIYOR'
+      : 'GÜN BİTTİ';
+
+    const subtitle = isSeasonEnd
+      ? '34 TUR TAMAMLANDI'
+      : isWeekend
+      ? 'PAZARTESİ 12:00\'DE LİG DEVAM EDECEK'
+      : isFridayEnd
+      ? 'PAZARTESİ 12:00\'DE LİG DEVAM EDECEK'
+      : 'YARIN 12:00\'DE MAÇLAR BAŞLAYACAK';
+
+    const message = isSeasonEnd
+      ? '"Sezon 34 tur tamamlandı. Lig şampiyonu belirlendi. Yeni sezon pazartesi 12:00\'de başlayacak."'
+      : isWeekend
+      ? '"Hafta sonu lige ara verildi. Tüm takımlar dinleniyor. Pazartesi 12:00\'de yeni tur başlayacak."'
+      : isFridayEnd
+      ? '"Cuma akşamı maçları tamamlandı. Hafta sonu dinlenme. Pazartesi 12:00\'de lig devam edecek."'
+      : '"Bugünkü 18 maç tamamlandı (12:00 + 18:00 slot\'ları). Yarın 12:00\'de yeni tur başlayacak."';
+
     return (
       <div className="flex flex-col h-full min-h-[600px] bg-black/80 backdrop-blur-md border border-white/5">
         {showTimeWarning && (
@@ -1060,28 +1190,50 @@ const MatchDay = ({
             <MatchTimeWarningBanner />
           </div>
         )}
-        <div className="flex flex-col items-center justify-center flex-1 p-20 space-y-8 text-center">
-        <div className="w-24 h-24 rounded-full border-4 border-besiktas-red border-t-white animate-spin flex items-center justify-center">
-          <div className="w-16 h-16 rounded-full bg-besiktas-red/20" />
+        <div className="flex flex-col items-center justify-center flex-1 p-6 md:p-12 space-y-8 text-center">
+        <div className={`w-24 h-24 rounded-full border-4 animate-spin flex items-center justify-center ${
+          isSeasonEnd ? 'border-amber-500 border-t-white' : 'border-besiktas-red border-t-white'
+        }`}>
+          <div className={`w-16 h-16 rounded-full ${
+            isSeasonEnd ? 'bg-amber-500/20' : 'bg-besiktas-red/20'
+          }`} />
         </div>
         <div>
-          <h2 className="text-4xl font-black italic tracking-tighter text-white uppercase">Sıradaki Maç Hazırlanıyor</h2>
-          <p className="text-white/40 text-[10px] tracking-[0.4em] font-bold mt-4 uppercase">Sıradaki Maç: {cycleStatus.nextEventTime}</p>
-          {cycleStatus.previousSlot && (
-            <p className="text-white/30 text-[9px] tracking-[0.3em] font-bold mt-1.5 uppercase">
-              {cycleStatus.previousSlot}
-            </p>
-          )}
+          <h2 className="text-3xl md:text-4xl font-black italic tracking-tighter text-white uppercase">{title}</h2>
+          <p className={`text-[10px] tracking-[0.4em] font-black mt-4 uppercase ${isSeasonEnd ? 'text-amber-500' : 'text-white/40'}`}>
+            {subtitle}
+          </p>
+          <p className="text-white/30 text-[9px] tracking-[0.3em] font-bold mt-1.5 uppercase">
+            Sıradaki: {cycleStatus.nextEventTime}
+          </p>
         </div>
-        <div className="max-w-md bg-white/5 p-6 border border-white/10 italic text-sm text-white/60 leading-relaxed">
-          &quot;Bugünkü 9 maç tamamlandı. Tüm ligler 12:00-13:30 arasında 10'ar dakika arayla oynandı. Yarın 12:00'de yeni maç günü başlayacak.&quot;
+        <div className={`max-w-md p-6 border italic text-sm text-white/60 leading-relaxed ${
+          isSeasonEnd ? 'bg-amber-500/5 border-amber-500/20' : 'bg-white/5 border-white/10'
+        }`}>
+          &quot;{message}&quot;
+        </div>
+
+        {/* Sezon ilerleme barı */}
+        <div className="w-full max-w-2xl">
+          <div className="flex items-center gap-2 mb-1.5 px-1">
+            <span className="text-[9px] font-black text-white/40 uppercase tracking-wider">SEZON İLERLEMESİ</span>
+            <span className="text-[9px] font-black text-amber-500 ml-auto">
+              {isSeasonEnd ? '34/34 TUR (TAMAMLANDI)' : `${(cycleStatus as any).eveningTur || (cycleStatus as any).morningTur || 0}/34 TUR`}
+            </span>
+          </div>
+          <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all"
+              style={{ width: `${isSeasonEnd ? 100 : Math.min(100, (((cycleStatus as any).eveningTur || (cycleStatus as any).morningTur || 0) / 34) * 100)}%` }}
+            />
+          </div>
         </div>
 
         {/* SIM-5 FIX: Add useful navigation when no live match */}
         <div className="flex flex-col items-center gap-3">
           <p className="text-white/30 text-xs italic text-center">Canlı maçlar artık maç sayfasında gerçek zamanlı olarak simüle edilmektedir.</p>
           <div className="flex flex-wrap gap-3 justify-center">
-            <button 
+            <button
               onClick={() => router.push('/fixture')}
               className="px-8 py-3 bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-amber-500/30 transition-colors active:scale-95"
             >
@@ -1129,13 +1281,29 @@ const MatchDay = ({
             <div>
                 <h2 className="text-3xl md:text-4xl font-black italic tracking-tighter text-white uppercase">Isınma Hareketleri Başladı</h2>
                 <p className="text-amber-500/90 text-[10px] tracking-[0.4em] font-black mt-3 uppercase">
-                  {slotLabel} · MAÇLAR BAŞLIYOR: {cycleStatus.nextEventTime} ({cycleStatus.countDownMinutes} DK KALDI)
+                  {slotLabel} · TUR {(cycleStatus as any).nextSlot === '12:00' ? (cycleStatus as any).morningTur : (cycleStatus as any).eveningTur}/34 · MAÇLAR BAŞLIYOR: {cycleStatus.nextEventTime} ({cycleStatus.countDownMinutes} DK KALDI)
                 </p>
                 {cycleStatus.previousSlot && (
                   <p className="text-white/30 text-[9px] tracking-[0.3em] font-bold mt-1.5 uppercase">
                     ÖNCEKİ SLOT: {cycleStatus.previousSlot}
                   </p>
                 )}
+            </div>
+
+            {/* Sezon ilerleme barı */}
+            <div className="w-full max-w-2xl">
+              <div className="flex items-center gap-2 mb-1.5 px-1">
+                <span className="text-[9px] font-black text-white/40 uppercase tracking-wider">SEZON İLERLEMESİ</span>
+                <span className="text-[9px] font-black text-amber-500 ml-auto">
+                  {((cycleStatus as any).eveningTur || (cycleStatus as any).morningTur || 0)}/34 TUR
+                </span>
+              </div>
+              <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all"
+                  style={{ width: `${Math.min(100, (((cycleStatus as any).eveningTur || (cycleStatus as any).morningTur || 0) / 34) * 100)}%` }}
+                />
+              </div>
             </div>
 
             {/* BUGÜNKÜ MAÇLAR — 2 slot × 9 maç */}
