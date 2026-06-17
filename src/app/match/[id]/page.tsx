@@ -571,6 +571,37 @@ export default function MatchPage() {
 
   // ═══ Yükleniyor ═══
 
+  // KRİTİK: useEffect'ler early return'lardan ÖNCE çağrılmalı.
+  // Eski sürümde bu iki useEffect 'if (loading)' ve 'if (error || !fixture)'
+  // return'larından sonra geliyordu — bu da React error #310
+  // ("Rendered fewer hooks than expected") üretiyordu. Özellikle geçmiş maç
+  // izlerken error state'ine düşülince component tekrar render'da useEffect
+  // çağrılıyor, React hook sayısı değiştiğini görüp crash ediyordu.
+
+  // ── Canlı maç: Strateji sekmesini otomatik aç (bir kez) ──
+  useEffect(() => {
+    if (loading || error || !fixture) return; // loading/error'da hiçbir şey yapma
+    const matchStatus = fixture.match_status;
+    const isLive = matchStatus === 'live';
+    if (isLive && fixtureId) {
+      const seen = sessionStorage.getItem(`strategy_seen_${fixtureId}`);
+      if (!seen) {
+        setActiveTab('strategy');
+        sessionStorage.setItem(`strategy_seen_${fixtureId}`, '1');
+      }
+    }
+  }, [loading, error, fixture, fixtureId]);
+
+  // ── Spoiler Kalkanı: Bitmiş bir maç sayfasını görüntüleyen kullanıcı izlemiş sayılır ──
+  useEffect(() => {
+    if (loading || error || !fixture) return;
+    const matchStatus = fixture.match_status;
+    const isFinished = matchStatus === 'completed' || matchStatus === 'finished';
+    if (isFinished && fixtureId && typeof window !== 'undefined') {
+      localStorage.setItem(`watched_match_${fixtureId}`, 'true');
+    }
+  }, [loading, error, fixture, fixtureId]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -612,24 +643,6 @@ export default function MatchPage() {
   const isScheduled = matchStatus === 'scheduled';
   const isLive = matchStatus === 'live';
   const isFinished = matchStatus === 'completed' || matchStatus === 'finished';
-
-  // ── Canlı maç: Strateji sekmesini otomatik aç (bir kez) ──
-  useEffect(() => {
-    if (isLive && fixtureId) {
-      const seen = sessionStorage.getItem(`strategy_seen_${fixtureId}`);
-      if (!seen) {
-        setActiveTab('strategy');
-        sessionStorage.setItem(`strategy_seen_${fixtureId}`, '1');
-      }
-    }
-  }, [isLive, fixtureId]);
-
-  // ── Spoiler Kalkanı: Bitmiş bir maç sayfasını görüntüleyen kullanıcı izlemiş sayılır ──
-  useEffect(() => {
-    if (isFinished && fixtureId && typeof window !== 'undefined') {
-      localStorage.setItem(`watched_match_${fixtureId}`, 'true');
-    }
-  }, [isFinished, fixtureId]);
 
   return (
     <div className="min-h-screen bg-black text-white">
