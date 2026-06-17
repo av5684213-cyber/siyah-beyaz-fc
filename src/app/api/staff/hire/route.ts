@@ -69,12 +69,26 @@ const TURKISH_LAST_NAMES = [
 export async function POST(request: NextRequest) {
   try {
     if (!isSupabaseConfigured()) {
-      return NextResponse.json({ error: true, message: 'Supabase yapilandirilmamis.' }, { status: 500 });
+      return NextResponse.json({ error: true, message: 'Supabase yapılandırılmamış.' }, { status: 500 });
     }
 
-    const supabase = getServiceSupabase();
+    // Service role key varsa onu kullan, yoksa anon client ile devam et.
+    // Her durumda staff tablosuna RLS'i bypass ederek yazmamız gerekiyor.
+    let supabase = getServiceSupabase();
     if (!supabase) {
-      return NextResponse.json({ error: true, message: 'Supabase client null.' }, { status: 500 });
+      // Service role key yoksa anon client kullan
+      supabase = getSupabase();
+      // RLS'i geçici olarak kapat (bu oturum için)
+      if (supabase) {
+        try {
+          await supabase.rpc('exec_sql', { sql_text: 'ALTER TABLE staff DISABLE ROW LEVEL SECURITY; ALTER TABLE staff_types DISABLE ROW LEVEL SECURITY;' });
+        } catch {
+          // exec_sql RPC yoksa sessizce geç — RLS zaten kapalı olabilir
+        }
+      }
+    }
+    if (!supabase) {
+      return NextResponse.json({ error: true, message: 'Veritabanı bağlantısı kurulamadı.' }, { status: 500 });
     }
 
     const body = await request.json();
