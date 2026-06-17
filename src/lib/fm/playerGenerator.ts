@@ -729,22 +729,22 @@ export const generatePlayer = (
   const leftFoot = preferredFoot === 'Left' ? 100 : 20 + Math.floor(randomFn() * 60);
 
   // Kısa stat'lar (backward compat) - türetilmiş istatistikler
-  const derivedShooting = Math.round(((aStats.finishing || 50) + (aStats.longShots || 50)) / 2);
-  const derivedDefending = Math.round(((aStats.tackling || 50) + (aStats.marking || 50) + (aStats.positioning || 50)) / 3);
+  const derivedShooting = Math.round(((aStats.finishing || (20 + Math.floor(randomFn() * 50))) + (aStats.longShots || (20 + Math.floor(randomFn() * 50)))) / 2);
+  const derivedDefending = Math.round(((aStats.tackling || (20 + Math.floor(randomFn() * 50))) + (aStats.marking || (20 + Math.floor(randomFn() * 50))) + (aStats.positioning || (20 + Math.floor(randomFn() * 50)))) / 3);
   const derivedGoalkeeping = positionGroup === 'GK'
-    ? Math.round(((aStats.goalkeeping || 70) + (aStats.positioning || 70) + (aStats.composure || 70)) / 3)
-    : Math.round(aStats.goalkeeping || 10);
+    ? Math.round(((aStats.goalkeeping || (40 + Math.floor(randomFn() * 50))) + (aStats.positioning || (40 + Math.floor(randomFn() * 50))) + (aStats.composure || (40 + Math.floor(randomFn() * 50)))) / 3)
+    : Math.round(aStats.goalkeeping || Math.floor(randomFn() * 20));
 
   const stats = {
     Klc: derivedGoalkeeping,
     Tk: derivedDefending,
-    Pas: aStats.passing || 50,
+    Pas: aStats.passing || (20 + Math.floor(randomFn() * 50)),
     Sut: derivedShooting,
-    Kfa: aStats.heading || 50,
-    Hiz: aStats.speed || 50,
-    Guc: aStats.strength || 50,
-    Alg: aStats.anticipation || 50,
-    Top: aStats.dribbling || 50,
+    Kfa: aStats.heading || (20 + Math.floor(randomFn() * 50)),
+    Hiz: aStats.speed || (20 + Math.floor(randomFn() * 50)),
+    Guc: aStats.strength || (20 + Math.floor(randomFn() * 50)),
+    Alg: aStats.anticipation || (20 + Math.floor(randomFn() * 50)),
+    Top: aStats.dribbling || (20 + Math.floor(randomFn() * 50)),
   };
 
   const partialPlayer: any = { rating: baseRating, age, potential, traitLevels: restrictedLevels };
@@ -795,39 +795,39 @@ export const generatePlayer = (
     injury_history: [], // Boş sakatlık geçmişi
     
     // Detailed Technical (pozisyon öncelik tablolarından üretilen değerler)
-    finishing: aStats.finishing || 50,
-    dribbling: aStats.dribbling || 50,
-    firstTouch: aStats.firstTouch || 50,
-    crossing: aStats.crossing || 50,
-    marking: aStats.marking || 50,
-    tackling: aStats.tackling || 50,
-    technique: aStats.technique || 50,
-    longShots: aStats.longShots || 50,
-    offTheBall: aStats.offTheBall || 50,
-    heading: aStats.heading || 50,
+    finishing: aStats.finishing || (20 + Math.floor(randomFn() * 50)),
+    dribbling: aStats.dribbling || (20 + Math.floor(randomFn() * 50)),
+    firstTouch: aStats.firstTouch || (20 + Math.floor(randomFn() * 50)),
+    crossing: aStats.crossing || (20 + Math.floor(randomFn() * 50)),
+    marking: aStats.marking || (20 + Math.floor(randomFn() * 50)),
+    tackling: aStats.tackling || (20 + Math.floor(randomFn() * 50)),
+    technique: aStats.technique || (20 + Math.floor(randomFn() * 50)),
+    longShots: aStats.longShots || (20 + Math.floor(randomFn() * 50)),
+    offTheBall: aStats.offTheBall || (20 + Math.floor(randomFn() * 50)),
+    heading: aStats.heading || (20 + Math.floor(randomFn() * 50)),
 
     // Detailed Mental (pozisyon öncelik tablolarından üretilen değerler)
-    determination: aStats.determination || 50,
+    determination: aStats.determination || (20 + Math.floor(randomFn() * 50)),
     aggression: aStats.aggression || 40,
     bravery: aStats.bravery || 40,
-    workRate: aStats.workRate || 50,
-    decisions: aStats.decisions || 50,
-    concentration: aStats.concentration || 50,
+    workRate: aStats.workRate || (20 + Math.floor(randomFn() * 50)),
+    decisions: aStats.decisions || (20 + Math.floor(randomFn() * 50)),
+    concentration: aStats.concentration || (20 + Math.floor(randomFn() * 50)),
     leadership: aStats.leadership || 30,
     anticipation: stats.Alg,
     flair: aStats.flair || 20,
-    positioning: aStats.positioning || 50,
-    composure: aStats.composure || 50,
-    teamwork: aStats.teamwork || 50,
-    vision: aStats.vision || 50,
+    positioning: aStats.positioning || (20 + Math.floor(randomFn() * 50)),
+    composure: aStats.composure || (20 + Math.floor(randomFn() * 50)),
+    teamwork: aStats.teamwork || (20 + Math.floor(randomFn() * 50)),
+    vision: aStats.vision || (20 + Math.floor(randomFn() * 50)),
 
     // Detailed Physical
     acceleration: aStats.acceleration || stats.Hiz,
-    agility: aStats.agility || 50,
-    balance: aStats.balance || 50,
+    agility: aStats.agility || (20 + Math.floor(randomFn() * 50)),
+    balance: aStats.balance || (20 + Math.floor(randomFn() * 50)),
     strength: stats.Guc,
     stamina: aStats.stamina || 60,
-    jumping: aStats.jumping || 50,
+    jumping: aStats.jumping || (20 + Math.floor(randomFn() * 50)),
     leftFoot,
     rightFoot,
     

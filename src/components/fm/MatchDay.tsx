@@ -134,8 +134,22 @@ const MatchDay = ({
   // 34 tur / günde 2 tur = 17 iş günü = 3 hafta + 2 gün
   // Sezon Pzt başlar → 3 hafta sonra Salı 18:00'de 34. tur oynanır → Çar günü sezon ara
   //
-  // SEASON_START: ilk pazartesi. Şimdilik hardcoded — ileride Supabase seasons.start_date'den okunabilir.
-  const SEASON_START = new Date('2026-06-22T00:00:00+03:00'); // Pzt, 22 Haziran 2026
+  // SEASON_START: Dinamik — sezon başlangıcı haftanın ilk pazartesi olarak hesaplanır.
+  // Eğer bugün pazartesi-cuma arası ve saat 10:00+ ise, sezon bugün başlamış kabul edilir.
+  // Eğer hafta sonu veya sabah 10:00'dan önce ise, geçen pazartesiyi kullan.
+  // Bu sayede hardcoded tarihe gerek yok — her hafta yeni sezon başlar.
+  const getSeasonStart = () => {
+    const now = new Date();
+    const trDate = addHours(now, 3);
+    const dayOfWeek = trDate.getDay();
+    // Bu haftanın pazartesi gününü bul
+    const monday = new Date(trDate);
+    monday.setHours(0, 0, 0, 0);
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Pazar=6, Pzt=0
+    monday.setDate(monday.getDate() - daysFromMonday);
+    return monday;
+  };
+  const SEASON_START = getSeasonStart();
   const TOTAL_TURS = 34;
   const TURS_PER_DAY = 2; // 12:00 + 18:00
 

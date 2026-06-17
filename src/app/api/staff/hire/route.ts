@@ -78,14 +78,6 @@ export async function POST(request: NextRequest) {
     if (!supabase) {
       // Service role key yoksa anon client kullan
       supabase = getSupabase();
-      // RLS'i geçici olarak kapat (bu oturum için)
-      if (supabase) {
-        try {
-          await supabase.rpc('exec_sql', { sql_text: 'ALTER TABLE staff DISABLE ROW LEVEL SECURITY; ALTER TABLE staff_types DISABLE ROW LEVEL SECURITY;' });
-        } catch {
-          // exec_sql RPC yoksa sessizce geç — RLS zaten kapalı olabilir
-        }
-      }
     }
     if (!supabase) {
       return NextResponse.json({ error: true, message: 'Veritabanı bağlantısı kurulamadı.' }, { status: 500 });

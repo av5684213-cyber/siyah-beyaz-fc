@@ -176,6 +176,36 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS goals INTEGER DEFAULT 0;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS assists INTEGER DEFAULT 0;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS yellow_cards INTEGER DEFAULT 0;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS red_cards INTEGER DEFAULT 0;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS first_touch INTEGER DEFAULT 40;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS off_the_ball INTEGER DEFAULT 40;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS work_rate INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS long_shots INTEGER DEFAULT 40;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS acceleration INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS agility INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS balance INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS stamina INTEGER DEFAULT 60;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS jumping INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS left_foot INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS right_foot INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS determination INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS aggression INTEGER DEFAULT 40;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS bravery INTEGER DEFAULT 40;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS decisions INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS concentration INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS leadership INTEGER DEFAULT 30;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS anticipation INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS flair INTEGER DEFAULT 20;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS positioning INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS composure INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS teamwork INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS vision INTEGER DEFAULT 50;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS finishing INTEGER DEFAULT 40;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS dribbling INTEGER DEFAULT 40;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS crossing INTEGER DEFAULT 40;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS marking INTEGER DEFAULT 40;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS tackling INTEGER DEFAULT 40;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS technique INTEGER DEFAULT 40;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS heading INTEGER DEFAULT 40;
 
 CREATE INDEX IF NOT EXISTS idx_players_profile ON players(profile_id);
 CREATE INDEX IF NOT EXISTS idx_players_team ON players(team_name);
@@ -796,7 +826,7 @@ BEGIN
 
                 INSERT INTO fixtures (home_team_id, away_team_id, season_id, tur, match_date, match_time, status, competition_type)
                 VALUES (v_away_id, v_home_id, p_season_id, v_round + v_total_rounds,
-                        v_match_date + (v_total_rounds * 7), v_match_time, 'scheduled', 'league');
+                        v_match_date + (v_total_rounds / 2), v_match_time, 'scheduled', 'league');
 
                 v_match_count := v_match_count + 1;
             END IF;
@@ -815,7 +845,7 @@ $$;
 -- assign_bot_to_user
 SELECT drop_function_if_exists('assign_bot_to_user');
 CREATE OR REPLACE FUNCTION assign_bot_to_user(
-  p_profile_id UUID,
+  p_profile_id TEXT,
   p_team_name TEXT,
   p_manager_name TEXT DEFAULT 'Menajer',
   p_philosophy TEXT DEFAULT 'balanced',

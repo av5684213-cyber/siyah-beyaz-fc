@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { verifyProfileExists } from '@/lib/fm/security';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { getAuthenticatedUserId } from '@/lib/apiAuth';
@@ -16,9 +16,10 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: true, message: 'Supabase yapılandırılmamış.' }, { status: 500 });
     }
 
-    const supabase = getServiceSupabase();
+    let supabase = getServiceSupabase();
+    if (!supabase) supabase = getSupabase();
     if (!supabase) {
-      return NextResponse.json({ error: true, message: 'Supabase client null.' }, { status: 500 });
+      return NextResponse.json({ error: true, message: 'Veritabanı bağlantısı yok.' }, { status: 500 });
     }
 
     const body = await request.json();
