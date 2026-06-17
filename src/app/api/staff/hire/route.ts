@@ -99,7 +99,11 @@ export async function POST(request: NextRequest) {
     // -- Validate staff type and get pricing --
     const pricing = STAFF_PRICING[type];
     if (!pricing) {
-      return NextResponse.json({ error: true, message: `Gecersiz personel tipi: ${type}` }, { status: 400 });
+      return NextResponse.json({
+        error: true,
+        message: `Geçersiz personel tipi: ${type}`,
+        debug: { step: 'pricing_validation', type },
+      }, { status: 400 });
     }
 
     const hireFeeKredi = pricing.kredi[stars] || 0;
@@ -112,8 +116,21 @@ export async function POST(request: NextRequest) {
       .eq('type', type)
       .maybeSingle();
 
-    if (typeError || !staffType) {
-      return NextResponse.json({ error: true, message: 'Gecersiz personel tipi (veritabani).' }, { status: 400 });
+    if (typeError) {
+      console.error('[POST /api/staff/hire] staff_types query error:', typeError.message);
+      return NextResponse.json({
+        error: true,
+        message: `Personel tipi sorgulanamadı: ${typeError.message}`,
+        debug: { step: 'staff_types_query', code: typeError.code, message: typeError.message },
+      }, { status: 500 });
+    }
+
+    if (!staffType) {
+      return NextResponse.json({
+        error: true,
+        message: `Veritabanında '${type}' tipi bulunamadı. SQL migration 20260617000003_staff_hire_fix.sql çalıştırılmamış olabilir.`,
+        debug: { step: 'staff_types_not_found', type },
+      }, { status: 400 });
     }
 
     // -- Check max count --
@@ -124,12 +141,25 @@ export async function POST(request: NextRequest) {
       .eq('type', type);
 
     if (countError) {
-      console.error('[POST /api/staff/hire] Count error:', countError.message);
-      return NextResponse.json({ error: true, message: 'Personel sayisi kontrol edilemedi.' }, { status: 500 });
+      console.error('[POST /api/staff/hire] Count error:', countError.message, countError.code);
+      return NextResponse.json({
+        error: true,
+        message: `Personel sayısı kontrol edilemedi: ${countError.message}`,
+        debug: {
+          step: 'count_query',
+          code: countError.code,
+          message: countError.message,
+          hint: countError.hint,
+        },
+      }, { status: 500 });
     }
 
     if ((existingCount || 0) >= staffType.max_count) {
-      return NextResponse.json({ error: true, message: `${staffType.name_tr} icin maksimum ${staffType.max_count} kisi ise alabilirsiniz.` }, { status: 400 });
+      return NextResponse.json({
+        error: true,
+        message: `${staffType.name_tr} için maksimum ${staffType.max_count} kişi işe alabilirsiniz (mevcut: ${existingCount || 0}).`,
+        debug: { step: 'max_count', existing: existingCount || 0, max: staffType.max_count },
+      }, { status: 400 });
     }
 
     // -- Verify profile exists --
