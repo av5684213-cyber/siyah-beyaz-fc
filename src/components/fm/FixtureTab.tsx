@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'motion/react';
+import { FootballLoader } from '@/components/ui/FootballLoader';
 import {
   Calendar,
   Clock,
@@ -386,8 +387,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {loading ? (
           <div className="flex flex-col items-center justify-center h-full gap-3">
-            <RefreshCw className="w-7 h-7 text-amber-500 animate-spin" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Yükleniyor...</p>
+            <FootballLoader size={56} label="Fikstür Yükleniyor" />
           </div>
         ) : filteredFixtures.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 p-8">

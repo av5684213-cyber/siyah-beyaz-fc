@@ -5,13 +5,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'motion/react';
 import { Shield, Mail, Lock, Activity, ArrowRight, Trophy, Users, Zap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { FootballLoader } from '@/components/ui/FootballLoader';
 import Link from 'next/link';
 
 export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <Activity className="w-8 h-8 text-white animate-spin opacity-20" />
+        <FootballLoader size={64} label="Giriş Ekranı" />
       </div>
     }>
       <LoginPageInner />

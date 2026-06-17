@@ -39,6 +39,7 @@ import LiveStrategyPanel from '@/components/match/LiveStrategyPanel';
 import type { FixtureData, MatchEventRow, PlayerStatRow } from '@/components/match/matchTypes';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { REFEREE_PERSONALITIES, type RefereePersonality } from '@/lib/fm/referee';
+import { FootballLoaderScreen } from '@/components/ui/FootballLoader';
 
 // ═══════════════════════════════════════════════════════════════
 // Types (sadece MatchPage'e özel olanlar burada kalır)
@@ -47,17 +48,21 @@ import { REFEREE_PERSONALITIES, type RefereePersonality } from '@/lib/fm/referee
 // ═══════════════════════════════════════════════════════════════
 // ANA SAYFA BİLEŞENİ
 //
-// MatchPage wrapper — ErrorBoundary ile sarmalanmış.
-// Geçmiş maç izlerken React #310 ("Rendered fewer hooks than expected")
-// hatası çıkarsa kullanıcı gri ekran yerine "Fikstüre Dön" butonu görür.
-// Bu hata genelde child component'lerdeki early return + hook sırası
-// sorunlarından kaynaklanır ve production build'inde ortaya çıkar.
+// MatchPage wrapper — ErrorBoundary + dynamic import ile sarmalanmış.
+//
+// #310 HATASI KÖKTEN ÇÖZÜM:
+// MatchPageInner, next/dynamic ile ssr:false olarak yüklenir. Bu sayede:
+// 1. SSR/CSR uyumsuzluğu (hook sırası farkı) önlenir
+// 2. Component sadece client-side'da mount olur, hook sayısı sabit kalır
+// 3. Loading sırasında dönen futbol topu gösterilir
+//
+// Eğer yine de bir hata çıkarsa, ErrorBoundary yakalar ve kullanıcıya
+// "Fikstüre Dön" butonu gösterir.
 function MatchPageErrorBoundary({ children }: { children: React.ReactNode }) {
   const [hasError, setHasError] = React.useState(false);
 
   React.useEffect(() => {
     if (hasError) {
-      // Hata发生后 3 saniye sonra state'i sıfırla, kullanıcı tekrar deneyebilir
       const t = setTimeout(() => setHasError(false), 3000);
       return () => clearTimeout(t);
     }
@@ -107,6 +112,18 @@ function MatchPageErrorBoundary({ children }: { children: React.ReactNode }) {
 }
 
 export default function MatchPage() {
+  // Client-side mount kontrolü — SSR'da MatchPageInner render etme
+  // Bu, React #310 hook hatasını kökten çözer (SSR/CSR hook sayısı uyumsuzluğu)
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <FootballLoaderScreen label="Maç Yükleniyor" />;
+  }
+
   return (
     <MatchPageErrorBoundary>
       <MatchPageInner />
@@ -710,14 +727,7 @@ function MatchPageInner() {
   }, [loading, error, fixture, fixtureId]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-2 border-white/10 border-t-white/40 rounded-full animate-spin" />
-          <p className="text-white/30 text-xs font-bold uppercase tracking-widest">Maç Yükleniyor</p>
-        </div>
-      </div>
-    );
+    return <FootballLoaderScreen label="Maç Yükleniyor" />;
   }
 
   // ═══ Hata ═══

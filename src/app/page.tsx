@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { FootballLoader } from '@/components/ui/FootballLoader';
 
 import { calculateMarketValue, getTransferCorridor, formatCurrency } from '@/lib/fm/valuation';
 import { calculateLoanFeeEuro } from '@/lib/fm/inflation';
@@ -779,7 +780,7 @@ export default function Home() {
   if (authLoading || (!userId && authUser)) {
     return (
       <div className="h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        <FootballLoader size={56} label="Yükleniyor" />
       </div>
     );
   }
@@ -801,7 +802,7 @@ export default function Home() {
   if (loading) {
     return (
       <div className="h-screen bg-black flex items-center justify-center">
-        <Activity className="w-8 h-8 text-white animate-spin opacity-20" />
+        <FootballLoader size={56} label="Takım Yükleniyor" />
       </div>
     );
   }

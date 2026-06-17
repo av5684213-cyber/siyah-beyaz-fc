@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { FootballLoader } from '@/components/ui/FootballLoader';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import TacticsCommandCenter from './TacticsCommandCenter';
@@ -1191,13 +1192,7 @@ const MatchDay = ({
           </div>
         )}
         <div className="flex flex-col items-center justify-center flex-1 p-6 md:p-12 space-y-8 text-center">
-        <div className={`w-24 h-24 rounded-full border-4 animate-spin flex items-center justify-center ${
-          isSeasonEnd ? 'border-amber-500 border-t-white' : 'border-besiktas-red border-t-white'
-        }`}>
-          <div className={`w-16 h-16 rounded-full ${
-            isSeasonEnd ? 'bg-amber-500/20' : 'bg-besiktas-red/20'
-          }`} />
-        </div>
+        <FootballLoader size={80} label={isSeasonEnd ? 'Sezon Tamamlandı' : 'Maç Bekleniyor'} />
         <div>
           <h2 className="text-3xl md:text-4xl font-black italic tracking-tighter text-white uppercase">{title}</h2>
           <p className={`text-[10px] tracking-[0.4em] font-black mt-4 uppercase ${isSeasonEnd ? 'text-amber-500' : 'text-white/40'}`}>
