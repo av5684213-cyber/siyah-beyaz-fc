@@ -117,11 +117,114 @@ async function fetchFixturesForTeam(
       return NextResponse.json({ error: true, message: 'Fikstür yüklenirken hata oluştu.' }, { status: 500 });
     }
 
-    // Sonraki maç (scheduled ve en yakın tarihli)
-    const now = new Date().toISOString().split('T')[0];
-    const nextMatch = (fixtures || [])
-      .filter((f: Record<string, unknown>) => f.status === 'scheduled' && (f.match_date as string) >= now)
-      .sort((a: Record<string, unknown>, b: Record<string, unknown>) => (a.match_date as string).localeCompare(b.match_date as string))[0] || null;
+    // ═══ SONRAKİ MAÇ HESAPLAMA — Akıllı mantık ═══
+    //
+    // Hafta içi 2 slot: 12:00 (Öğle) + 18:00 (Akşam)
+    // Her slot 9 maç, 10'ar dk arayla (12:00-13:30, 18:00-19:30)
+    //
+    // Öncelik sırası:
+    //   1. CANLI MAÇ (status='live') → kullanıcı takımının canlı maçı varsa onu göster
+    //   2. BUGÜNÜN SCHEDULED MAÇI (status='scheduled' AND match_date=today AND match_time >= now)
+    //      — Bugün 12:00-13:30 slot'undaysa 12:00-13:20 maçları
+    //      — Bugün 13:30-17:59 arasındaysa 18:00 maçı
+    //   3. GELECEK MAÇ (status='scheduled' AND match_date > today)
+    //
+    const nowTR = new Date(Date.now() + 3 * 60 * 60 * 1000); // TR saati
+    const todayStr = nowTR.toISOString().split('T')[0]; // YYYY-MM-DD
+    const currentMinutes = nowTR.getHours() * 60 + nowTR.getMinutes();
+
+    // Takımın tüm maçlarını tarihe + saate göre sırala
+    const teamFixtures = (fixtures || []).filter((f: Record<string, unknown>) =>
+      f.home_team_id === leagueTeamId || f.away_team_id === leagueTeamId
+    );
+
+    // Öncelik 1: Canlı maç
+    const liveMatch = teamFixtures.find((f: Record<string, unknown>) => f.status === 'live');
+
+    // Öncelik 2: Bugünün scheduled maçı (saat bazlı)
+    // Eğer 12:00-13:30 arasındaysak → 12:00 slot'unun maçları bugüne ait scheduled
+    // Eğer 13:30-17:59 arasındaysak → 18:00 maçı scheduled
+    const todaysScheduled = teamFixtures
+      .filter((f: Record<string, unknown>) =>
+        f.status === 'scheduled' &&
+        (f.match_date as string) === todayStr
+      )
+      .sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
+        (a.match_time as string).localeCompare(b.match_time as string)
+      );
+
+    // Şu anki slot'ta scheduled maç var mı?
+    // 12:00 slot (720-810): currentMinutes 720-810 arasındaysa, 12:00-13:20 saatli maçlar
+    // 18:00 slot (1080-1170): currentMinutes 1080-1170 arasındaysa, 18:00-19:20 saatli maçlar
+    let nextMatch: Record<string, unknown> | null = null;
+
+    if (liveMatch) {
+      // Canlı maç var → onu göster
+      nextMatch = liveMatch;
+    } else {
+      // Bugünün scheduled maçlarından uygun olanı seç
+      // Eğer 12:00 slot'undaysak (currentMinutes 720-810), 12:00-13:20 saatli scheduled maçları al
+      // Eğer 13:30-17:59 arasındaysak, 18:00-19:20 saatli scheduled maçları al
+      // Eğer 10:00-11:59 arasındaysak, 12:00 saatli maçı al (öğle slot bekleniyor)
+      // Eğer 18:00 slot'undaysak ama canlı maç yoksa (henüz başlamadı), 18:00 saatli maçı al
+      const isInNoonSlot = currentMinutes >= 720 && currentMinutes < 810;
+      const isBetweenSlots = currentMinutes >= 810 && currentMinutes < 1080;
+      const isPreNoon = currentMinutes >= 600 && currentMinutes < 720;
+      const isPreEvening = currentMinutes >= 1080 - 60 && currentMinutes < 1080;
+      const isInEveningSlot = currentMinutes >= 1080 && currentMinutes < 1170;
+
+      let candidates = todaysScheduled;
+      if (isInNoonSlot) {
+        // 12:00-13:29 arası → 12:00-13:20 saatli scheduled maçları al
+        candidates = todaysScheduled.filter((f: Record<string, unknown>) => {
+          const t = (f.match_time as string) || '12:00';
+          const [h, m] = t.split(':').map(Number);
+          const mins = h * 60 + m;
+          return mins >= 720 && mins <= 800; // 12:00 - 13:20
+        });
+      } else if (isBetweenSlots || isPreEvening) {
+        // 13:30-17:59 → 18:00 saatli maçı al
+        candidates = todaysScheduled.filter((f: Record<string, unknown>) => {
+          const t = (f.match_time as string) || '12:00';
+          const [h] = t.split(':').map(Number);
+          return h === 18; // 18:00-18:50
+        });
+      } else if (isPreNoon) {
+        // 10:00-11:59 → 12:00 saatli maçı al
+        candidates = todaysScheduled.filter((f: Record<string, unknown>) => {
+          const t = (f.match_time as string) || '12:00';
+          const [h] = t.split(':').map(Number);
+          return h === 12;
+        });
+      } else if (isInEveningSlot) {
+        // 18:00-19:29 → 18:00-19:20 saatli maçı al
+        candidates = todaysScheduled.filter((f: Record<string, unknown>) => {
+          const t = (f.match_time as string) || '12:00';
+          const [h, m] = t.split(':').map(Number);
+          const mins = h * 60 + m;
+          return mins >= 1080 && mins <= 1160;
+        });
+      }
+
+      // İlk uygun scheduled maç
+      nextMatch = candidates[0] || null;
+
+      // Eğer hâlâ null ise, gelecek maç(lar)a bak
+      if (!nextMatch) {
+        const futureMatch = teamFixtures
+          .filter((f: Record<string, unknown>) =>
+            f.status === 'scheduled' &&
+            ((f.match_date as string) > todayStr ||
+             ((f.match_date as string) === todayStr && (f.match_time as string) > `${String(nowTR.getHours()).padStart(2,'0')}:${String(nowTR.getMinutes()).padStart(2,'0')}`))
+          )
+          .sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+            const dateCmp = (a.match_date as string).localeCompare(b.match_date as string);
+            if (dateCmp !== 0) return dateCmp;
+            return (a.match_time as string).localeCompare(b.match_time as string);
+          })[0];
+        nextMatch = futureMatch || null;
+      }
+    }
 
     // Resolve team names for fixtures where join failed
     const unresolvedIds = new Set<string>();
@@ -162,6 +265,7 @@ async function fetchFixturesForTeam(
       tur: nextMatch.tur,
       match_date: nextMatch.match_date,
       match_time: nextMatch.match_time,
+      status: nextMatch.status,  // 'live' | 'scheduled' | 'completed'
       opponent: nextMatch.home_team_id === leagueTeamId
         ? ((nextMatch.away as Record<string, string>)?.name || 'Bilinmiyor')
         : ((nextMatch.home as Record<string, string>)?.name || 'Bilinmiyor'),

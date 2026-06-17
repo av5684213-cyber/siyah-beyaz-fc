@@ -338,13 +338,33 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
     }
   })();
 
+  // Slot bilgisi — 12:00 → ÖĞLE, 18:00 → AKŞAM
+  const slotLabel = (() => {
+    const t = nextMatch.match_time || '12:00';
+    const [h] = t.split(':').map(Number);
+    if (h === 12) return 'ÖĞLE SLOTU';
+    if (h === 18) return 'AKŞAM SLOTU';
+    return '';
+  })();
+
+  const isLive = nextMatch.status === 'live';
+
   return (
-    <div className="bg-gradient-to-br from-amber-500/[0.06] to-transparent border border-amber-500/15 rounded-2xl p-5">
+    <div className={`bg-gradient-to-br ${isLive ? 'from-red-500/[0.08] to-transparent border-red-500/30' : 'from-amber-500/[0.06] to-transparent border-amber-500/15'} border rounded-2xl p-5`}>
       <div className="flex items-center gap-3 mb-3">
-        <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
-          <Swords size={14} className="text-amber-400" />
+        <div className={`p-2 rounded-lg border ${isLive ? 'bg-red-500/10 border-red-500/20' : 'bg-amber-500/10 border-amber-500/20'}`}>
+          <Swords size={14} className={isLive ? 'text-red-400' : 'text-amber-400'} />
         </div>
-        <h3 className="text-[10px] uppercase font-bold tracking-widest text-white/30">SONRAKİ MAÇ</h3>
+        <h3 className={`text-[10px] uppercase font-bold tracking-widest ${isLive ? 'text-red-400' : 'text-white/30'}`}>
+          {isLive ? '● CANLI MAÇ' : 'SONRAKİ MAÇ'}
+        </h3>
+        {slotLabel && (
+          <span className={`ml-auto text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
+            isLive ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/10 text-amber-400/80'
+          }`}>
+            {slotLabel}
+          </span>
+        )}
       </div>
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
@@ -355,13 +375,18 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
               {nextMatch.is_home ? 'EV SAHİBİ' : 'DEPLASMAN'}
             </span>
             <span className="text-[9px] text-white/20">{nextMatch.tur}. Hafta</span>
+            {isLive && (
+              <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
+                CANLI
+              </span>
+            )}
           </div>
           <p className="text-sm font-bold text-white/80 truncate">{nextMatch.opponent}</p>
           <div className="flex items-center gap-2 mt-1">
             <CalendarDays size={10} className="text-white/20" />
             <span className="text-[10px] text-white/30">{formattedDate} • {nextMatch.match_time || '--:--'}</span>
           </div>
-          {countdown && (
+          {countdown && !isLive && (
             <p className={`text-sm font-black tabular-nums mt-1 ${(
               countdown === 'BAŞLIYOR!' ? 'text-red-400 animate-pulse' : 'text-amber-400'
             )}`}>
@@ -374,9 +399,9 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
             onClick={() => {
               window.location.href = `/match/${nextMatch.id}`;
             }}
-            className="px-4 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 rounded-xl text-[10px] font-black uppercase tracking-widest text-amber-300 transition-all active:scale-95 shrink-0"
+            className={`px-4 py-2.5 ${isLive ? 'bg-red-500/20 hover:bg-red-500/30 border-red-500/40 text-red-300' : 'bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300'} border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shrink-0 ${isLive ? 'animate-pulse' : ''}`}
           >
-            {nextMatch.status === 'live' ? 'Canlı İzle' : 'Maçı İzle'}
+            {nextMatch.status === 'live' ? '● Canlı İzle' : 'Maçı İzle'}
           </button>
         ) : (
           <span className="px-4 py-2.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-[10px] font-bold uppercase tracking-widest text-white/20 shrink-0">
