@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -17,6 +18,9 @@ export async function GET(request: Request) {
   }
 
   try {
+    let supabase = getServiceSupabase();
+    if (!supabase) supabase = getSupabase();
+    if (!supabase) return NextResponse.json({ error: 'DB bağlantısı yok' }, { status: 500 });
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     const { data: profiles } = await supabase.from('profiles').select('id');
     if (!profiles) return NextResponse.json({ message: 'No profiles' });

@@ -276,6 +276,7 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS injury_type TEXT;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS injury_duration INTEGER DEFAULT 0;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS injury_start_week INTEGER;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS injury_end_week INTEGER;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS secondary_positions TEXT[] DEFAULT '{}';
 
 CREATE INDEX IF NOT EXISTS idx_players_profile ON players(profile_id);
 CREATE INDEX IF NOT EXISTS idx_players_team ON players(team_name);
