@@ -784,9 +784,13 @@ export default function Home() {
     );
   }
 
-  // Authenticated but no profile = show team setup
-  // Kullanıcı (demo veya gerçek) profil oluşturmamışsa ManagerRegistration göster
-  if (authUser && !profile && !loading) {
+  // Authenticated but no team set up = show team setup screen
+  // KRİTİK: !profile DEĞİL, !profile?.team_name kontrolü yap.
+  // /api/auth/google minimal profile oluşturuyor (team_name=null) — bu durumda
+  // profile objesi null değildir ama takım kurulmamıştır. ManagerRegistration
+  // gösterilmeli. Eski kontrol !profile olduğu için minimal profile oluştuktan
+  // sonra bile ManagerRegistration gösterilmiyordu → kullanıcı direkt oyuna atıyordu.
+  if (authUser && !loading && (!profile || !profile.team_name)) {
     return <ManagerRegistration />;
   }
 

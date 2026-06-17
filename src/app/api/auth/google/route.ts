@@ -120,7 +120,30 @@ export async function POST(request: NextRequest) {
           .eq('id', internalUserId);
       }
 
-      console.log(`[google-auth] Returning user: ${existingProfile.team_name} (${internalUserId})`);
+      // KRİTİK: Eğer returning user'ın team_name'i YOKSA (minimal profile oluşturulmuş
+      // ama ManagerRegistration henüz tamamlanmamışsa), hasProfile:false döndür.
+      // Bu, client'ın ManagerRegistration ekranını göstermesini sağlar.
+      // Eski sürümde her returning user hasProfile:true alıyordu → ManagerRegistration
+      // atlanıyordu → kullanıcı direkt oyuna atıyordu (VPN sorununun temel nedeni).
+      const hasTeam = !!existingProfile.team_name && existingProfile.team_name.length > 0;
+
+      console.log(`[google-auth] Returning user: team_name="${existingProfile.team_name}" hasTeam=${hasTeam} (${internalUserId})`);
+
+      if (!hasTeam) {
+        // Takım kurulmamış — ManagerRegistration'a düşür
+        // Minimal profile zaten var, hasProfile:false dön → client ManagerRegistration gösterir
+        return NextResponse.json({
+          success: true,
+          userId: internalUserId,
+          hasProfile: false,
+          onboardingCompleted: false,
+          teamName: null,
+          managerName: existingProfile.manager_name,
+          email,
+          name,
+          picture,
+        });
+      }
 
       return NextResponse.json({
         success: true,
