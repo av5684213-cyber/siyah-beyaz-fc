@@ -11,7 +11,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
-import webpush from 'web-push';
+let webpush: any = null;
+try { webpush = require('web-push'); } catch {}
 import { createErrorResponse } from '@/lib/api-error-handler';
 
 export const maxDuration = 60;

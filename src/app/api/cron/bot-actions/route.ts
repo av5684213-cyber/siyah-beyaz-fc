@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { processBotTransfers, selectMatchSquad, getAllBotProfiles, makePreMatchTacticalDecision } from '@/lib/fm/botService';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
@@ -103,7 +103,8 @@ export async function GET(request: NextRequest) {
           const squad = await selectMatchSquad(bot.id);
 
           // KATMAN 1.2: Bot antrenman kaydı — her bot için günlük training_attendances yaz
-          const supabase = getSupabase();
+          let supabase = getServiceSupabase();
+          if (!supabase) supabase = getSupabase();
           if (supabase) {
             await recordBotTrainingAttendance(supabase, bot.id);
           }
