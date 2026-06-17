@@ -37,6 +37,8 @@ const PUBLIC_PATHS = [
   '/sw.js',
   '/workbox-',
   '/icons/',
+  '/logo.svg',
+  '/touchline-manager-logo.png',
 ];
 
 function isPublicPath(pathname: string): boolean {
@@ -117,6 +119,8 @@ export async function middleware(request: NextRequest) {
   // 4. Supabase Auth oturum yenileme + x-profile-id header
   //    Google Sign-In kullanıcıları localStorage kullandığı için
   //    middleware'de auth redirect YAPILMAZ — client-side yönetilir.
+  //    (Google ile giriş yapmış kullanıcıların Supabase auth cookie'si
+  //    olmadığı için burada redirect yapmak onları da login'e atar.)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 

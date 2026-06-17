@@ -98,35 +98,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(false);
 
-  // DEV_MODE is now OFF in production — all users must authenticate
-  const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+  // DEV_MODE tamamen devre dışı — tüm kullanıcılar kayıt/giriş yapmak zorunda.
+  // Eski demo-modu fallback'i (DEMO_USER_ID = '00000000-...-001') kaldırıldı
+  // çünkü Supabase yapılandırılmadığında tüm tarayıcılarda aynı kullanıcıya
+  // giriş yaptırıyordu (başka cihazdan girince başka kullanıcının takımını görme bug'ı).
+  const isDevMode = false;
 
   useEffect(() => {
-    // Only allow DEV_MODE in development environments
-    if (isDevMode || !isSupabaseConfigured()) {
-      const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('sb_demo_user_id');
-      }
-      const demoUser = {
-        id: DEMO_USER_ID,
-        email: 'demo@touchlinemanager.com',
-        aud: 'authenticated',
-        role: 'authenticated',
-        app_metadata: {},
-        user_metadata: {},
-        created_at: new Date().toISOString(),
-      } as unknown as User;
-      const demoToken = btoa(`demo-${DEMO_USER_ID}-${Date.now()}-${Math.random()}`);
-      const demoSession = {
-        access_token: demoToken,
-        token_type: 'bearer',
-        expires_at: Math.floor(Date.now() / 1000) + 86400,
-        user: demoUser,
-      } as unknown as Session;
-      setUser(demoUser);
-      setSession(demoSession);
-      setIsDemoMode(true);
+    // Supabase yapılandırılmamışsa kullanıcıyı giriş yapmış gibi gösterme —
+    // bu durumda loading=false + user=null verilir ve sayfa login'e yönlendirir.
+    if (!isSupabaseConfigured()) {
+      console.warn('[AuthContext] Supabase yapılandırılmamış — kullanıcı giriş yapamaz.');
+      setUser(null);
+      setSession(null);
+      setIsDemoMode(false);
       setLoading(false);
       return;
     }
@@ -134,8 +119,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Production: real auth flow
     const supabase = getSupabase()!;
 
+    // ─── Persisted auth güvenlik kontrolü ─────────────────────────
+    // VPN ile yeni cihazdan girildiğinde veya kullanıcı logout yaptıysa
+    // persisted Google auth'u (localStorage) görmezden gel.
+    // - URL'de ?logged_out=1 varsa → kullanıcı logout yapmış, persisted'i temizle
+    // - persisted expires_at < 1 saat → çok eski, temizle (paranoyak modu)
+    const urlParams = typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search)
+      : null;
+    const isLoggedOutUrl = urlParams?.get('logged_out') === '1';
+
+    if (isLoggedOutUrl) {
+      clearPersistedAuth();
+    }
+
     // 1. Check for persisted Google auth first (for users who logged in via Google)
-    const persisted = readPersistedAuth();
+    // Sadece yukarıdaki güvenlik kontrolünü geçen persisted auth kullanılır.
+    const persisted = isLoggedOutUrl ? null : readPersistedAuth();
     if (persisted) {
       const googleUser = buildUserFromPersisted(persisted);
       const googleToken = btoa(`google-${persisted.userId}-${Date.now()}-${Math.random()}`);

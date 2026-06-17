@@ -201,8 +201,8 @@ export async function POST(request: NextRequest) {
       const newProfileData: Record<string, any> = botProfileData
         ? { ...botProfileData }
         : {
-          money: 25_000_000,
-          credits: 250,
+          money: 50_000_000,
+          credits: 200,
           level: 1,
           xp: 0,
           fans: 1000,
@@ -226,6 +226,11 @@ export async function POST(request: NextRequest) {
       newProfileData.onboarding_completed = true; // ManagerRegistration atla
       newProfileData.created_at = new Date().toISOString();
       newProfileData.updated_at = new Date().toISOString();
+
+      // Tüm yeni oyuncular SABİT 50M € ve 200 kredi ile başlar.
+      // Bot'un eski para/kredi değerlerini override et — finansal eşitlik.
+      newProfileData.money = 50_000_000;
+      newProfileData.credits = 200;
 
       // team_name'i koru — bot'un takım adı kullanıcıya geçer
       // (Eğer bot'ta team_name yoksa, league_teams.name'i kullan)
@@ -362,8 +367,8 @@ async function createMinimalProfile(
     team_name: fallbackTeamName || null,
     email,
     team_logo: picture || null,
-    money: 25_000_000,
-    credits: 250,
+    money: 50_000_000,
+    credits: 200,
     level: 1,
     xp: 0,
     fans: 1000,

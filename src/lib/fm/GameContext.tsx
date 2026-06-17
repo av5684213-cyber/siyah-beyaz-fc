@@ -218,20 +218,18 @@ const FMProviderInner = ({ children }: { children: React.ReactNode }) => {
       // İstemci tarafı fallback: doğrudan tarayıcıda profil ve oyuncu oluştur
       console.warn('[initTeam] API fetch başarısız, istemci tarafı fallback kullanılıyor:', err);
       try {
-        const BASE_MONEY = 25_000_000;
-        const BASE_CREDITS = 250;
+        // Tüm oyuncular SABİT 50M € ve 200 kredi ile başlar.
+        // Felsefe para/kredi DIŞI bonuslar uygular (akademi, itibar, kadro kalitesi).
+        const BASE_MONEY = 50_000_000;
+        const BASE_CREDITS = 200;
         const BASE_REPUTATION = 30;
         const BASE_ACADEMY_LEVEL = 1;
 
-        let startMoney = BASE_MONEY;
-        let startCredits = BASE_CREDITS;
         let startReputation = BASE_REPUTATION;
         let startAcademyLevel = BASE_ACADEMY_LEVEL;
         let squadQualityMod = 1.0;
 
         switch (philosophy) {
-          case 'financial': startMoney += 15_000_000; break;
-          case 'legend': startCredits += 250; break;
           case 'youth': startAcademyLevel = 3; break;
           case 'squad': squadQualityMod = 1.1; break;
           case 'reputation': startReputation += 20; break;
@@ -240,11 +238,11 @@ const FMProviderInner = ({ children }: { children: React.ReactNode }) => {
 
         const fallbackProfile = {
           id: userId,
-          team_name: teamNameInput.trim(),
+          team_name: teamNameInput.trim() || 'Yeni Kulüp',
           league_name: '4. Lig',
           manager_name: managerName.trim(),
-          money: startMoney,
-          credits: startCredits,
+          money: BASE_MONEY,
+          credits: BASE_CREDITS,
           level: 1,
           xp: 0,
           fans: 1000,

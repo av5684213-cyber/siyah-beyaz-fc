@@ -6,6 +6,23 @@ import { createErrorResponse } from '@/lib/api-error-handler';
 import { assignUserToLeague } from '@/lib/fm/leagueHelpers';
 import { generateLocalizedPlayer } from '@/lib/fm/region-generator';
 
+// Rastgele takım adı üretimi — kullanıcı takım adı girmezse kullanılır.
+// Türk futbol kültürüne uygun, akılda kalıcı isimler.
+const TEAM_PREFIXES = [
+  'Yıldırım', 'Boğa', 'Şahin', 'Kartal', 'Aslan', 'Kurt', 'Çığır', 'Fırtına',
+  'Volkan', 'Demir', 'Çelik', 'Bozkurt', 'Karayel', 'Şimşek', 'Anka', 'Zafer',
+  'Maras', 'Efe', 'Türk', 'Anadolu', 'Marmara', 'Ege', 'Karadeniz',
+];
+const TEAM_SUFFIXES = [
+  'Spor', 'FK', 'Kulübü', 'Belediyespor', 'Gençlerbirliği', 'SK',
+];
+
+function generateRandomTeamName(): string {
+  const prefix = TEAM_PREFIXES[Math.floor(Math.random() * TEAM_PREFIXES.length)];
+  const suffix = TEAM_SUFFIXES[Math.floor(Math.random() * TEAM_SUFFIXES.length)];
+  return `${prefix} ${suffix}`;
+}
+
 export async function POST(request: NextRequest) {
   // Rate limiting: 3 registrations per 5 minutes
   const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
@@ -21,8 +38,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { userId, teamName, managerName, philosophy, color1, color2, region } = body;
 
-    // Input validation
-    if (!userId || !teamName || !managerName) {
+    // Input validation — teamName artık opsiyonel (rastgele takım verilir)
+    if (!userId || !managerName) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -31,8 +48,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Geçersiz kullanıcı ID formatı' }, { status: 400 });
     }
 
-    // Sanitize text inputs
-    const safeTeamName = sanitizeInput(teamName, 50);
+    // Sanitize text inputs — teamName boş ise rastgele bir isim üretilir
+    let safeTeamName = sanitizeInput(teamName || '', 50);
+    if (!safeTeamName || safeTeamName.length < 2) {
+      safeTeamName = generateRandomTeamName();
+    }
     const safeManagerName = sanitizeInput(managerName, 50);
     const safePhilosophy = sanitizeInput(philosophy || 'balanced', 20);
     const safeColor1 = sanitizeInput(color1 || '#000000', 7);
@@ -91,32 +111,22 @@ export async function POST(request: NextRequest) {
       console.warn('[register] Supabase yapılandırılmamış — offline/demo modunda kayıt yapılıyor.');
     }
 
-    // ─── FELSEFE BONUSLARI ─────────────────────────────────
-    // Base değerler: 25M € para, 250 kredi, 30 itibar, akademi lv.1
-    // balanced = sadece base değerler (bonus yok)
-    // financial = +15M € bütçe (toplam 40M)
-    // legend = +250 kredi (toplam 500)
-    // youth = akademi lv.3 (base 1)
-    // squad = +%10 kadro kalitesi (rating + potential)
-    // reputation = +20 itibar (toplam 50)
-    const BASE_MONEY = 25_000_000;
-    const BASE_CREDITS = 250;
+    // ─── BAŞLANGIÇ DEĞERLERİ ─────────────────────────────────
+    // Tüm yeni oyuncular SABİT 50M € ve 200 kredi ile başlar.
+    // Felsefe sadece kadro kalitesi / akademi seviyesi / itibar gibi
+    // para veya kredi DIŞI alanları etkiler — finansal eşitlik için.
+    const BASE_MONEY = 50_000_000;
+    const BASE_CREDITS = 200;
     const BASE_REPUTATION = 30;
     const BASE_ACADEMY_LEVEL = 1;
 
-    let startMoney = BASE_MONEY;
-    let startCredits = BASE_CREDITS;
+    const startMoney = BASE_MONEY;
+    const startCredits = BASE_CREDITS;
     let startReputation = BASE_REPUTATION;
     let startAcademyLevel = BASE_ACADEMY_LEVEL;
     let squadQualityMod = 1.0; // squad felsefesi için çarpan
 
     switch (safePhilosophy) {
-      case 'financial':
-        startMoney += 15_000_000; // +15M €
-        break;
-      case 'legend':
-        startCredits += 250; // +250 kredi (toplam 500)
-        break;
       case 'youth':
         startAcademyLevel = 3; // Lv.3 akademi
         break;
@@ -126,9 +136,11 @@ export async function POST(request: NextRequest) {
       case 'reputation':
         startReputation += 20; // +20 itibar (toplam 50)
         break;
+      case 'financial':
+      case 'legend':
       case 'balanced':
       default:
-        // Sadece base değerler, bonus yok
+        // Para ve kredi bonusu YOK — herkes 50M € / 200 kredi ile başlar
         break;
     }
 
