@@ -14,7 +14,8 @@ async function verifyAdmin(request: NextRequest): Promise<boolean> {
   if (adminEmail?.toLowerCase() === ADMIN_EMAIL) return true;
   const adminUserId = request.headers.get('x-admin-user-id');
   if (adminUserId && isSupabaseConfigured()) {
-    const supabase = getServiceSupabase();
+    let supabase = getServiceSupabase();
+    if (!supabase) supabase = getSupabase();
     if (supabase) {
       const { data: profile } = await supabase.from('profiles').select('role, email').eq('id', adminUserId).maybeSingle();
       if (profile?.role === 'admin' || profile?.email?.toLowerCase() === ADMIN_EMAIL) return true;

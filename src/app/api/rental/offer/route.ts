@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
     }, { status: 500 });
   }
 
-  const supabase = getServiceSupabase();
+  let supabase = getServiceSupabase();
+    if (!supabase) supabase = getSupabase();
   if (!supabase) {
     console.error('[POST /api/rental/offer] Supabase client could not be created. getSupabase() returned null.');
     return NextResponse.json({

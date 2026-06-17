@@ -3,7 +3,8 @@ import { getServiceSupabase, getSupabase } from '@/lib/supabase';
 
 export async function GET(request: Request) {
   try {
-    const supabase = getServiceSupabase();
+    let supabase = getServiceSupabase();
+    if (!supabase) supabase = getSupabase();
     if (!supabase) return NextResponse.json({ error: 'no client' }, { status: 500 });
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') || 'championships';
