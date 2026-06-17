@@ -601,10 +601,12 @@ export interface FormationTemplate {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6. FORMATION_TEMPLATES (12 formations)
+// 6. FORMATION_TEMPLATES (14 formations — savunma sayısına göre gruplu)
+// Sıra: 4'lü defans → 3'lü defans → 5'li defans
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const FORMATION_TEMPLATES: FormationTemplate[] = [
+  // ═══ 4'LÜ DEFANS (8 diziliş) ═══
   {
     name: '4-4-2',
     description: 'Klasik İngiliz dizilişi. İki forvet, dört orta saha, dört savunmacı. Dengeli ve güvenilir.',
@@ -657,40 +659,6 @@ export const FORMATION_TEMPLATES: FormationTemplate[] = [
     ],
   },
   {
-    name: '3-5-2',
-    description: 'Üç stoper ve beş orta saha. Kanat beklerle genişlik sağlanır, iki forvet hücumda güçlü.',
-    positions: [
-      { pos: 'GK', x: 50, y: 5, defaultRole: 'shot_stopper' },
-      { pos: 'CB', x: 25, y: 17, defaultRole: 'ball_playing_defender' },
-      { pos: 'CB', x: 50, y: 15, defaultRole: 'no_nonsense_cb' },
-      { pos: 'CB', x: 75, y: 17, defaultRole: 'ball_playing_defender' },
-      { pos: 'LWB', x: 10, y: 40, defaultRole: 'wing_back' },
-      { pos: 'CM', x: 32, y: 38, defaultRole: 'box_to_box' },
-      { pos: 'CDM', x: 50, y: 35, defaultRole: 'defensive_midfielder' },
-      { pos: 'CM', x: 68, y: 38, defaultRole: 'deep_lying_playmaker' },
-      { pos: 'RWB', x: 90, y: 40, defaultRole: 'wing_back' },
-      { pos: 'ST', x: 38, y: 80, defaultRole: 'target_man' },
-      { pos: 'ST', x: 62, y: 80, defaultRole: 'poacher' },
-    ],
-  },
-  {
-    name: '3-4-3',
-    description: 'Üç stoper, dört orta saha ve üç forvet. Hücum ağırlıklı, kanat forvetleri önde.',
-    positions: [
-      { pos: 'GK', x: 50, y: 5, defaultRole: 'sweeper_keeper' },
-      { pos: 'CB', x: 25, y: 17, defaultRole: 'no_nonsense_cb' },
-      { pos: 'CB', x: 50, y: 15, defaultRole: 'ball_playing_defender' },
-      { pos: 'CB', x: 75, y: 17, defaultRole: 'offside_trap_cb' },
-      { pos: 'LM', x: 15, y: 42, defaultRole: 'carrilero' },
-      { pos: 'CM', x: 38, y: 38, defaultRole: 'box_to_box' },
-      { pos: 'CM', x: 62, y: 38, defaultRole: 'deep_lying_playmaker' },
-      { pos: 'RM', x: 85, y: 42, defaultRole: 'carrilero' },
-      { pos: 'LW', x: 18, y: 72, defaultRole: 'inside_forward' },
-      { pos: 'ST', x: 50, y: 82, defaultRole: 'complete_forward' },
-      { pos: 'RW', x: 82, y: 72, defaultRole: 'inside_forward' },
-    ],
-  },
-  {
     name: '4-1-4-1',
     description: 'Tek ön libero, dört orta saha ve tek forvet. Savunma güçlü, kontrollü oyun.',
     positions: [
@@ -725,40 +693,6 @@ export const FORMATION_TEMPLATES: FormationTemplate[] = [
     ],
   },
   {
-    name: '5-3-2',
-    description: 'Beş savunma hattı, üç orta saha, iki forvet. Savunma ağırlıklı, kontratak için ideal.',
-    positions: [
-      { pos: 'GK', x: 50, y: 5, defaultRole: 'shot_stopper' },
-      { pos: 'LWB', x: 8, y: 30, defaultRole: 'wing_back' },
-      { pos: 'CB', x: 28, y: 17, defaultRole: 'no_nonsense_cb' },
-      { pos: 'CB', x: 50, y: 15, defaultRole: 'ball_playing_defender' },
-      { pos: 'CB', x: 72, y: 17, defaultRole: 'no_nonsense_cb' },
-      { pos: 'RWB', x: 92, y: 30, defaultRole: 'wing_back' },
-      { pos: 'CM', x: 30, y: 42, defaultRole: 'box_to_box' },
-      { pos: 'CDM', x: 50, y: 38, defaultRole: 'defensive_midfielder' },
-      { pos: 'CM', x: 70, y: 42, defaultRole: 'deep_lying_playmaker' },
-      { pos: 'ST', x: 38, y: 80, defaultRole: 'target_man' },
-      { pos: 'ST', x: 62, y: 80, defaultRole: 'poacher' },
-    ],
-  },
-  {
-    name: '5-4-1',
-    description: 'Beş savunma, dört orta saha, tek forvet. En katı savunma dizilişi.',
-    positions: [
-      { pos: 'GK', x: 50, y: 5, defaultRole: 'shot_stopper' },
-      { pos: 'LWB', x: 8, y: 28, defaultRole: 'wing_back' },
-      { pos: 'CB', x: 28, y: 17, defaultRole: 'no_nonsense_cb' },
-      { pos: 'CB', x: 50, y: 15, defaultRole: 'offside_trap_cb' },
-      { pos: 'CB', x: 72, y: 17, defaultRole: 'no_nonsense_cb' },
-      { pos: 'RWB', x: 92, y: 28, defaultRole: 'wing_back' },
-      { pos: 'LM', x: 15, y: 48, defaultRole: 'carrilero' },
-      { pos: 'CM', x: 38, y: 42, defaultRole: 'defensive_midfielder' },
-      { pos: 'CM', x: 62, y: 42, defaultRole: 'deep_lying_playmaker' },
-      { pos: 'RM', x: 85, y: 48, defaultRole: 'carrilero' },
-      { pos: 'ST', x: 50, y: 82, defaultRole: 'poacher' },
-    ],
-  },
-  {
     name: '4-3-2-1',
     description: 'Christmas tree dizilişi. Dar orta saha, üç forvet hattı arkasında iki oyuncu. Yaratıcı ve kompakt.',
     positions: [
@@ -776,23 +710,6 @@ export const FORMATION_TEMPLATES: FormationTemplate[] = [
     ],
   },
   {
-    name: '3-4-1-2',
-    description: 'Üç stoper, dört orta saha, bir oyun kurucu ve iki forvet. İtalyan tarzı hücum varyantı.',
-    positions: [
-      { pos: 'GK', x: 50, y: 5, defaultRole: 'shot_stopper' },
-      { pos: 'CB', x: 25, y: 17, defaultRole: 'no_nonsense_cb' },
-      { pos: 'CB', x: 50, y: 15, defaultRole: 'ball_playing_defender' },
-      { pos: 'CB', x: 75, y: 17, defaultRole: 'offside_trap_cb' },
-      { pos: 'LM', x: 12, y: 42, defaultRole: 'carrilero' },
-      { pos: 'CM', x: 38, y: 38, defaultRole: 'box_to_box' },
-      { pos: 'CM', x: 62, y: 38, defaultRole: 'deep_lying_playmaker' },
-      { pos: 'RM', x: 88, y: 42, defaultRole: 'carrilero' },
-      { pos: 'CAM', x: 50, y: 58, defaultRole: 'advanced_playmaker' },
-      { pos: 'ST', x: 38, y: 80, defaultRole: 'target_man' },
-      { pos: 'ST', x: 62, y: 80, defaultRole: 'complete_forward' },
-    ],
-  },
-  {
     name: '4-4-1-1',
     description: 'Dört savunma, dört orta saha, arkasında tek forvet olan bir oyun kurucu. Dengeli ve organizeli.',
     positions: [
@@ -807,6 +724,58 @@ export const FORMATION_TEMPLATES: FormationTemplate[] = [
       { pos: 'RM', x: 85, y: 48, defaultRole: 'winger' },
       { pos: 'CAM', x: 50, y: 62, defaultRole: 'advanced_playmaker' },
       { pos: 'ST', x: 50, y: 82, defaultRole: 'complete_forward' },
+    ],
+  },
+  {
+    name: '4-3-1-2',
+    description: 'Dört savunma, üç orta saha, bir oyun kurucu ve iki forvet. İtalyan tarzı dar ve kompakt.',
+    positions: [
+      { pos: 'GK', x: 50, y: 5, defaultRole: 'shot_stopper' },
+      { pos: 'LB', x: 15, y: 20, defaultRole: 'wing_back' },
+      { pos: 'CB', x: 35, y: 18, defaultRole: 'ball_playing_defender' },
+      { pos: 'CB', x: 65, y: 18, defaultRole: 'no_nonsense_cb' },
+      { pos: 'RB', x: 85, y: 20, defaultRole: 'wing_back' },
+      { pos: 'CDM', x: 50, y: 35, defaultRole: 'defensive_midfielder' },
+      { pos: 'CM', x: 30, y: 45, defaultRole: 'box_to_box' },
+      { pos: 'CM', x: 70, y: 45, defaultRole: 'deep_lying_playmaker' },
+      { pos: 'CAM', x: 50, y: 60, defaultRole: 'advanced_playmaker' },
+      { pos: 'ST', x: 38, y: 82, defaultRole: 'target_man' },
+      { pos: 'ST', x: 62, y: 82, defaultRole: 'poacher' },
+    ],
+  },
+  // ═══ 3'LÜ DEFANS (4 diziliş) ═══
+  {
+    name: '3-5-2',
+    description: 'Üç stoper ve beş orta saha. Kanat beklerle genişlik sağlanır, iki forvet hücumda güçlü.',
+    positions: [
+      { pos: 'GK', x: 50, y: 5, defaultRole: 'shot_stopper' },
+      { pos: 'CB', x: 25, y: 17, defaultRole: 'ball_playing_defender' },
+      { pos: 'CB', x: 50, y: 15, defaultRole: 'no_nonsense_cb' },
+      { pos: 'CB', x: 75, y: 17, defaultRole: 'ball_playing_defender' },
+      { pos: 'LWB', x: 10, y: 40, defaultRole: 'wing_back' },
+      { pos: 'CM', x: 32, y: 38, defaultRole: 'box_to_box' },
+      { pos: 'CDM', x: 50, y: 35, defaultRole: 'defensive_midfielder' },
+      { pos: 'CM', x: 68, y: 38, defaultRole: 'deep_lying_playmaker' },
+      { pos: 'RWB', x: 90, y: 40, defaultRole: 'wing_back' },
+      { pos: 'ST', x: 38, y: 80, defaultRole: 'target_man' },
+      { pos: 'ST', x: 62, y: 80, defaultRole: 'poacher' },
+    ],
+  },
+  {
+    name: '3-4-3',
+    description: 'Üç stoper, dört orta saha ve üç forvet. Hücum ağırlıklı, kanat forvetleri önde.',
+    positions: [
+      { pos: 'GK', x: 50, y: 5, defaultRole: 'sweeper_keeper' },
+      { pos: 'CB', x: 25, y: 17, defaultRole: 'no_nonsense_cb' },
+      { pos: 'CB', x: 50, y: 15, defaultRole: 'ball_playing_defender' },
+      { pos: 'CB', x: 75, y: 17, defaultRole: 'offside_trap_cb' },
+      { pos: 'LM', x: 15, y: 42, defaultRole: 'carrilero' },
+      { pos: 'CM', x: 38, y: 38, defaultRole: 'box_to_box' },
+      { pos: 'CM', x: 62, y: 38, defaultRole: 'deep_lying_playmaker' },
+      { pos: 'RM', x: 85, y: 42, defaultRole: 'carrilero' },
+      { pos: 'LW', x: 18, y: 72, defaultRole: 'inside_forward' },
+      { pos: 'ST', x: 50, y: 82, defaultRole: 'complete_forward' },
+      { pos: 'RW', x: 82, y: 72, defaultRole: 'inside_forward' },
     ],
   },
   {
@@ -843,21 +812,39 @@ export const FORMATION_TEMPLATES: FormationTemplate[] = [
       { pos: 'ST', x: 50, y: 82, defaultRole: 'complete_forward' },
     ],
   },
+  // ═══ 5'Lİ DEFANS (2 diziliş) ═══
   {
-    name: '4-3-1-2',
-    description: 'Dört savunma, üç orta saha, bir oyun kurucu ve iki forvet. İtalyan tarzı dar ve kompakt.',
+    name: '5-4-1',
+    description: 'Beş savunma, dört orta saha, tek forvet. En katı savunma dizilişi.',
     positions: [
       { pos: 'GK', x: 50, y: 5, defaultRole: 'shot_stopper' },
-      { pos: 'LB', x: 15, y: 20, defaultRole: 'wing_back' },
-      { pos: 'CB', x: 35, y: 18, defaultRole: 'ball_playing_defender' },
-      { pos: 'CB', x: 65, y: 18, defaultRole: 'no_nonsense_cb' },
-      { pos: 'RB', x: 85, y: 20, defaultRole: 'wing_back' },
-      { pos: 'CDM', x: 50, y: 35, defaultRole: 'defensive_midfielder' },
-      { pos: 'CM', x: 30, y: 45, defaultRole: 'box_to_box' },
-      { pos: 'CM', x: 70, y: 45, defaultRole: 'deep_lying_playmaker' },
-      { pos: 'CAM', x: 50, y: 60, defaultRole: 'advanced_playmaker' },
-      { pos: 'ST', x: 38, y: 82, defaultRole: 'target_man' },
-      { pos: 'ST', x: 62, y: 82, defaultRole: 'poacher' },
+      { pos: 'LWB', x: 8, y: 28, defaultRole: 'wing_back' },
+      { pos: 'CB', x: 28, y: 17, defaultRole: 'no_nonsense_cb' },
+      { pos: 'CB', x: 50, y: 15, defaultRole: 'offside_trap_cb' },
+      { pos: 'CB', x: 72, y: 17, defaultRole: 'no_nonsense_cb' },
+      { pos: 'RWB', x: 92, y: 28, defaultRole: 'wing_back' },
+      { pos: 'LM', x: 15, y: 48, defaultRole: 'carrilero' },
+      { pos: 'CM', x: 38, y: 42, defaultRole: 'defensive_midfielder' },
+      { pos: 'CM', x: 62, y: 42, defaultRole: 'deep_lying_playmaker' },
+      { pos: 'RM', x: 85, y: 48, defaultRole: 'carrilero' },
+      { pos: 'ST', x: 50, y: 82, defaultRole: 'poacher' },
+    ],
+  },
+  {
+    name: '5-3-2',
+    description: 'Beş savunma hattı, üç orta saha, iki forvet. Savunma ağırlıklı, kontratak için ideal.',
+    positions: [
+      { pos: 'GK', x: 50, y: 5, defaultRole: 'shot_stopper' },
+      { pos: 'LWB', x: 8, y: 30, defaultRole: 'wing_back' },
+      { pos: 'CB', x: 28, y: 17, defaultRole: 'no_nonsense_cb' },
+      { pos: 'CB', x: 50, y: 15, defaultRole: 'ball_playing_defender' },
+      { pos: 'CB', x: 72, y: 17, defaultRole: 'no_nonsense_cb' },
+      { pos: 'RWB', x: 92, y: 30, defaultRole: 'wing_back' },
+      { pos: 'CM', x: 30, y: 42, defaultRole: 'box_to_box' },
+      { pos: 'CDM', x: 50, y: 38, defaultRole: 'defensive_midfielder' },
+      { pos: 'CM', x: 70, y: 42, defaultRole: 'deep_lying_playmaker' },
+      { pos: 'ST', x: 38, y: 80, defaultRole: 'target_man' },
+      { pos: 'ST', x: 62, y: 80, defaultRole: 'poacher' },
     ],
   },
 ];

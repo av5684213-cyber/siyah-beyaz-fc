@@ -908,7 +908,7 @@ export default function TacticsCommandCenter({
            <div className="space-y-6">
              <div className="grid grid-cols-2 gap-4">
                 {[
-                  { label: 'Diziliş', val: activeTactic.formation || '4-4-2', key: 'formation', options: ['4-4-2', '4-3-3', '3-5-2', '5-4-1', '4-2-3-1', '3-4-3', '4-1-4-1', '4-3-2-1', '5-3-2', '4-3-1-2', '3-1-4-2', '4-4-1-1', '4-5-1', '3-3-3-1'] },
+                  { label: 'Diziliş', val: activeTactic.formation || '4-4-2', key: 'formation', options: ['4-4-2', '4-3-3', '4-2-3-1', '4-1-4-1', '4-5-1', '4-3-2-1', '4-4-1-1', '4-3-1-2', '3-5-2', '3-4-3', '3-1-4-2', '3-3-3-1', '5-4-1', '5-3-2'] },
                   { label: 'Tarz', val: activeTactic.playStyle, key: 'playStyle', options: ['dengeli', 'hucum', 'savunma', 'kontra', 'tikitaka', 'Gegenpressing', 'Catenaccio', 'Direct Play', 'Wing Play', 'Total Football', 'Route One', 'Possession Football', 'High Press', 'Parking the Bus'] },
                 ].map(ctrl => (
                   <div key={ctrl.key} className="space-y-1.5">
