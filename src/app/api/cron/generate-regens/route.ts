@@ -15,7 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { acquireCronLock, releaseCronLock } from '@/lib/fm/cronLockService';
 
@@ -149,7 +149,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });
   }
 
-  const supabase = getSupabase();
+  let supabase = getServiceSupabase();
+    if (!supabase) supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase istemcisi oluşturulamadı' }, { status: 500 });
   }

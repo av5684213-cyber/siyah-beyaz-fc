@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import webpush from 'web-push';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { shouldPlayCup, getIstanbulDateTime } from '@/lib/fm/schedule/MatchScheduleManager';
@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });
   }
 
-  const supabase = getSupabase();
+  let supabase = getServiceSupabase();
+    if (!supabase) supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase istemcisi null' }, { status: 500 });
   }

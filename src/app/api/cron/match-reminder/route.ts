@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 let webpush: any = null;
 try { webpush = require('web-push'); } catch {}
 import { createErrorResponse } from '@/lib/api-error-handler';
@@ -27,7 +27,8 @@ if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
   }
 
-  const supabase = getSupabase();
+  let supabase = getServiceSupabase();
+    if (!supabase) supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase client is null' }, { status: 500 });
   }

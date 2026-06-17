@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { processYouthWeeklyTraining, YOUTH_FACILITIES } from '@/lib/fm/youthAcademy';
 import { mapYouthPlayerFromRow, buildStatsObject } from '@/lib/fm/sharedUtils';
 import { createErrorResponse } from '@/lib/api-error-handler';
@@ -33,7 +33,8 @@ if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
   }
 
-  const supabase = getSupabase();
+  let supabase = getServiceSupabase();
+    if (!supabase) supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'Supabase client is null' }, { status: 500 });
   }

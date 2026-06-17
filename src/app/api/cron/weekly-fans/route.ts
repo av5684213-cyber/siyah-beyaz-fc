@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { processWeeklyFansFluctuation } from '@/lib/fm/xpLevelFansService';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
@@ -30,7 +30,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
   }
 
-  const supabase = getSupabase();
+  let supabase = getServiceSupabase();
+    if (!supabase) supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'No Supabase client' }, { status: 500 });
   }
