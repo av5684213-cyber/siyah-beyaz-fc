@@ -46,7 +46,75 @@ import { REFEREE_PERSONALITIES, type RefereePersonality } from '@/lib/fm/referee
 
 // ═══════════════════════════════════════════════════════════════
 // ANA SAYFA BİLEŞENİ
+//
+// MatchPage wrapper — ErrorBoundary ile sarmalanmış.
+// Geçmiş maç izlerken React #310 ("Rendered fewer hooks than expected")
+// hatası çıkarsa kullanıcı gri ekran yerine "Fikstüre Dön" butonu görür.
+// Bu hata genelde child component'lerdeki early return + hook sırası
+// sorunlarından kaynaklanır ve production build'inde ortaya çıkar.
+function MatchPageErrorBoundary({ children }: { children: React.ReactNode }) {
+  const [hasError, setHasError] = React.useState(false);
+
+  React.useEffect(() => {
+    if (hasError) {
+      // Hata发生后 3 saniye sonra state'i sıfırla, kullanıcı tekrar deneyebilir
+      const t = setTimeout(() => setHasError(false), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [hasError]);
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-zinc-900 border border-red-500/20 rounded-2xl p-6 text-center space-y-4">
+          <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto">
+            <Activity className="w-7 h-7 text-red-400" />
+          </div>
+          <h2 className="text-lg font-black text-white uppercase tracking-tight">Maç Yüklenemedi</h2>
+          <p className="text-xs text-white/40">
+            Bu maçın tekrar görüntülenmesi sırasında bir hata oluştu. Maç verileri
+            eksik veya uyumsuz olabilir.
+          </p>
+          <button
+            onClick={() => window.location.href = '/fixture'}
+            className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-black text-xs uppercase tracking-widest transition-all"
+          >
+            Fikstüre Dön
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <React.ErrorBoundary
+      onError={(error, errorInfo) => {
+        console.error('[MatchPage ErrorBoundary] Caught:', error, errorInfo);
+        // Sadece #310 ve benzeri React hook hatalarını yakala
+        if (
+          error?.message?.includes('310') ||
+          error?.message?.includes('Rendered fewer hooks') ||
+          error?.message?.includes('Minified React error')
+        ) {
+          setHasError(true);
+        }
+      }}
+      fallback={<div className="min-h-screen bg-black" />}
+    >
+      {children}
+    </React.ErrorBoundary>
+  );
+}
+
 export default function MatchPage() {
+  return (
+    <MatchPageErrorBoundary>
+      <MatchPageInner />
+    </MatchPageErrorBoundary>
+  );
+}
+
+function MatchPageInner() {
   const params = useParams();
   const router = useRouter();
   const fixtureId = params.id as string;
