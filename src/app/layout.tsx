@@ -9,6 +9,7 @@ import { MatchProvider } from "@/lib/fm/MatchContext";
 import { ToastProvider } from "@/lib/fm/ToastContext";
 import LayoutMobileNav from "@/components/LayoutMobileNav";
 import TeamThemeProvider from "@/components/TeamThemeProvider";
+import { ClientOnly } from "@/components/ui/ClientOnly";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -48,20 +49,30 @@ export default function RootLayout({
       */}
       <body className="antialiased min-h-screen bg-background text-foreground transition-colors duration-300">
         <TeamThemeProvider />
-        <AuthProvider>
-        <LanguageProvider>
-        <FMProvider>
-          <MatchProvider>
-            <ToastProvider>
-              <ErrorBoundary>
-                {children}
-              </ErrorBoundary>
-            </ToastProvider>
-          </MatchProvider>
-        </FMProvider>
-        </LanguageProvider>
-        </AuthProvider>
-        <LayoutMobileNav />
+        {/*
+          ClientOnly: SSR'da hiçbir client component render olmaz.
+          Bu, React #310 ("Rendered fewer hooks than expected") hatasını
+          KÖKTEN çözer — SSR/CSR hook sayısı uyumsuzluğu imkansız hale gelir.
+
+          SSR'da sadece FootballLoaderScreen gösterilir (hook yok).
+          CSR'da useEffect mount=true set eder → tüm Provider'lar + children render olur.
+        */}
+        <ClientOnly>
+          <AuthProvider>
+          <LanguageProvider>
+          <FMProvider>
+            <MatchProvider>
+              <ToastProvider>
+                <ErrorBoundary>
+                  {children}
+                </ErrorBoundary>
+              </ToastProvider>
+            </MatchProvider>
+          </FMProvider>
+          </LanguageProvider>
+          </AuthProvider>
+          <LayoutMobileNav />
+        </ClientOnly>
         <Toaster />
       </body>
     </html>
