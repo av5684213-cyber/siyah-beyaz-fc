@@ -1817,6 +1817,9 @@ export default function Home() {
         onClose={() => setComparePlayers(null)}
         player1={comparePlayers?.[0]}
         player2={comparePlayers?.[1]}
+        squad={squad}
+        onPlayer1Change={(p) => setComparePlayers([p, comparePlayers?.[1] || squad[1]])}
+        onPlayer2Change={(p) => setComparePlayers([comparePlayers?.[0] || squad[0], p])}
       />
     </div>
   );
