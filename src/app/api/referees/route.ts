@@ -21,20 +21,25 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const leagueId = searchParams.get('leagueId');
 
-    if (!leagueId) {
-      return NextResponse.json({ error: true, message: 'leagueId is required.' }, { status: 400 });
-    }
+    // leagueId opsiyonel — verilmezse tüm hakemleri döndür
+    // Eski sürümde leagueId zorunluydu, bu yüzden frontend bazen 400 hatası alıyordu.
 
     // Try to fetch from referees table
     let referees: any[] = [];
     let refError: any = null;
 
     try {
-      const result = await supabase
+      let query = supabase
         .from('referees')
         .select('*')
-        .eq('league_id', leagueId)
         .order('name', { ascending: true });
+
+      // Sadece leagueId verilmişse filterele
+      if (leagueId) {
+        query = query.eq('league_id', leagueId);
+      }
+
+      const result = await query;
       referees = result.data || [];
       refError = result.error;
     } catch (err: any) {

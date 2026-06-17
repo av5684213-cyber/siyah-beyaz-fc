@@ -494,6 +494,30 @@ CREATE TABLE IF NOT EXISTS referees (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ─── Hakem seed verisi (18 hakem — her lig için yeterli) ───────────────
+-- league_id NULL = tüm ligler için genel hakem havuzu
+-- Mevcut hakemler korunur (ON CONFLICT DO NOTHING)
+INSERT INTO referees (id, name, personality, experience, league_id, strictness, total_matches, total_yellows, total_reds, total_penalties) VALUES
+  ('ref-general-01', 'Mehmet Yıldız', 'strict', 7, NULL, 75, 0, 0, 0, 0),
+  ('ref-general-02', 'Ahmet Kaya', 'balanced', 5, NULL, 50, 0, 0, 0, 0),
+  ('ref-general-03', 'Mustafa Demir', 'lenient', 4, NULL, 25, 0, 0, 0, 0),
+  ('ref-general-04', 'Ali Şahin', 'home_bias', 6, NULL, 55, 0, 0, 0, 0),
+  ('ref-general-05', 'Hasan Yıldırım', 'volatile', 5, NULL, 45, 0, 0, 0, 0),
+  ('ref-general-06', 'İbrahim Öztürk', 'var_lover', 6, NULL, 40, 0, 0, 0, 0),
+  ('ref-general-07', 'Yusuf Aydın', 'strict', 8, NULL, 78, 0, 0, 0, 0),
+  ('ref-general-08', 'Murat Özdemir', 'balanced', 5, NULL, 52, 0, 0, 0, 0),
+  ('ref-general-09', 'Emre Arslan', 'lenient', 3, NULL, 28, 0, 0, 0, 0),
+  ('ref-general-10', 'Burak Doğan', 'home_bias', 7, NULL, 58, 0, 0, 0, 0),
+  ('ref-general-11', 'Serkan Kılıç', 'volatile', 4, NULL, 42, 0, 0, 0, 0),
+  ('ref-general-12', 'Hakan Aslan', 'var_lover', 6, NULL, 38, 0, 0, 0, 0),
+  ('ref-general-13', 'Tolga Çetin', 'strict', 7, NULL, 76, 0, 0, 0, 0),
+  ('ref-general-14', 'Erkan Koç', 'balanced', 5, NULL, 51, 0, 0, 0, 0),
+  ('ref-general-15', 'Kemal Kurt', 'lenient', 4, NULL, 26, 0, 0, 0, 0),
+  ('ref-general-16', 'Cemal Özkan', 'home_bias', 6, NULL, 56, 0, 0, 0, 0),
+  ('ref-general-17', 'Selim Şimşek', 'volatile', 5, NULL, 44, 0, 0, 0, 0),
+  ('ref-general-18', 'Kadir Polat', 'var_lover', 7, NULL, 41, 0, 0, 0, 0)
+ON CONFLICT (id) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS rate_limits (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   key TEXT NOT NULL,
@@ -971,7 +995,8 @@ UNION ALL SELECT 'league_teams', COUNT(*) FROM league_teams
 UNION ALL SELECT 'players', COUNT(*) FROM players
 UNION ALL SELECT 'fixtures', COUNT(*) FROM fixtures
 UNION ALL SELECT 'staff_types', COUNT(*) FROM staff_types
-UNION ALL SELECT 'staff', COUNT(*) FROM staff;
+UNION ALL SELECT 'staff', COUNT(*) FROM staff
+UNION ALL SELECT 'referees', COUNT(*) FROM referees;
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- TAMAMLANDI.
