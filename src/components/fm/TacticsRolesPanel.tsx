@@ -839,11 +839,10 @@ export default function TacticsRolesPanel({
     <div className="w-full space-y-4">
       {/* Section 1: Formation Picker + Pitch */}
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
-        {/* Left: Formation + Instructions + Score */}
+        {/* Left: Formation + Instructions (Tactical Score artık üst panelde gösteriliyor) */}
         <div className="space-y-4 max-h-[900px] overflow-y-auto pr-1 custom-scrollbar">
           {renderFormationPicker()}
           {renderInstructions()}
-          {renderTacticalScore()}
         </div>
 
         {/* Right: Pitch */}

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { GameTactics, ActiveTactic, Player } from '@/lib/fm/types';
-import { Info, Shield, Zap, Target, MousePointer2, Clock, Swords, Flame, Users, ArrowRightLeft, CheckCircle, XCircle, AlertTriangle, Star } from 'lucide-react';
+import { Info, Shield, Zap, Target, MousePointer2, Clock, Swords, Flame, Users, ArrowRightLeft, CheckCircle, XCircle, AlertTriangle, Star, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import TacticsRolesPanel from './TacticsRolesPanel';
 import { calculateTacticalScore } from '@/lib/fm/tacticsRoles';
@@ -768,31 +768,97 @@ export default function TacticsCommandCenter({
           ))}
         </div>
 
-        {/* Tactical Score Badge */}
+        {/* Tactical Score Card — detaylı (TacticsRolesPanel'den taşındı) */}
         {tacticalScore && (
-          <div className="flex items-center gap-3 px-4 py-2 bg-black/40 border border-white/8 rounded-xl">
-            <div className="text-[10px] font-black uppercase tracking-widest text-white/30">Taktik Skoru</div>
-            <div className={`text-lg font-black italic tabular-nums ${
-              tacticalScore.overall >= 75 ? 'text-emerald-400' :
-              tacticalScore.overall >= 55 ? 'text-amber-400' : 'text-red-400'
-            }`}>
-              {tacticalScore.overall}
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Star className="w-4 h-4 text-amber-400" />
+              <h3 className="text-xs font-bold uppercase tracking-widest text-white/70">
+                Taktik Puanı
+              </h3>
             </div>
-            <div className="hidden sm:flex flex-col gap-0.5">
-              {[
-                { label: 'Rol', v: tacticalScore.roleCompatibility },
-                { label: 'Talim', v: tacticalScore.instructionSynergy },
-                { label: 'Attr', v: tacticalScore.attributeFit },
-              ].map(({ label, v }) => (
-                <div key={label} className="flex items-center gap-1.5">
-                  <div className="text-[8px] text-white/25 w-7">{label}</div>
-                  <div className="h-1 w-16 bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-white/40 rounded-full" style={{ width: `${v}%` }} />
-                  </div>
-                  <div className="text-[8px] text-white/40 tabular-nums w-5">{v}</div>
+
+            {/* Overall score ring + sub-scores */}
+            <div className="flex items-center gap-5 mb-4">
+              {/* Ring */}
+              <div className="relative w-20 h-20 shrink-0">
+                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+                  <circle
+                    cx="50" cy="50" r="40" fill="none"
+                    className={
+                      tacticalScore.overall >= 75 ? 'text-emerald-400' :
+                      tacticalScore.overall >= 55 ? 'text-amber-400' : 'text-red-400'
+                    }
+                    stroke="currentColor"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeDasharray={2 * Math.PI * 40}
+                    strokeDashoffset={2 * Math.PI * 40 - (tacticalScore.overall / 100) * 2 * Math.PI * 40}
+                    style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className={`text-xl font-black ${
+                    tacticalScore.overall >= 75 ? 'text-emerald-400' :
+                    tacticalScore.overall >= 55 ? 'text-amber-400' : 'text-red-400'
+                  }`}>
+                    {tacticalScore.overall}
+                  </span>
                 </div>
-              ))}
+              </div>
+
+              {/* Sub-scores */}
+              <div className="space-y-1.5 flex-1 min-w-0">
+                {[
+                  { label: 'Rol Uyumu', v: tacticalScore.roleCompatibility },
+                  { label: 'Talimat Sinerjisi', v: tacticalScore.instructionSynergy },
+                  { label: 'Özellik Uyumu', v: tacticalScore.attributeFit },
+                ].map(({ label, v }) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <div className="text-[9px] text-white/40 w-24">{label}</div>
+                    <div className="h-1.5 flex-1 bg-white/5 rounded-full overflow-hidden max-w-[80px]">
+                      <div
+                        className={`h-full rounded-full ${
+                          v >= 75 ? 'bg-emerald-400' :
+                          v >= 55 ? 'bg-amber-400' : 'bg-red-400'
+                        }`}
+                        style={{ width: `${v}%` }}
+                      />
+                    </div>
+                    <div className="text-[9px] text-white/60 tabular-nums w-6">{v}</div>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* Strengths & Weaknesses */}
+            {tacticalScore.breakdown?.strengths?.length > 0 && (
+              <div className="mb-2">
+                <p className="text-[9px] text-emerald-400/60 uppercase tracking-widest font-bold mb-1">
+                  Güçlü Yönler
+                </p>
+                {tacticalScore.breakdown.strengths.map((s: string, i: number) => (
+                  <div key={i} className="flex items-center gap-1.5 mb-0.5">
+                    <Check className="w-3 h-3 text-emerald-400/50 shrink-0" />
+                    <span className="text-[10px] text-white/40">{s}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {tacticalScore.breakdown?.weaknesses?.length > 0 && (
+              <div>
+                <p className="text-[9px] text-red-400/60 uppercase tracking-widest font-bold mb-1">
+                  Zayıf Yönler
+                </p>
+                {tacticalScore.breakdown.weaknesses.map((w: string, i: number) => (
+                  <div key={i} className="flex items-center gap-1.5 mb-0.5">
+                    <AlertTriangle className="w-3 h-3 text-red-400/50 shrink-0" />
+                    <span className="text-[10px] text-white/40">{w}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
