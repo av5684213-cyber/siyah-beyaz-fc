@@ -140,7 +140,7 @@ export async function rpcListPlayerOnMarket(
   sellerName: string,
 ) {
   return rpcCall('rpc_list_player_on_market', {
-    p_profile_id: profileId,
+    p_seller_id: profileId,
     p_player_id: playerId,
     p_price: price,
     p_min_price: minPrice,

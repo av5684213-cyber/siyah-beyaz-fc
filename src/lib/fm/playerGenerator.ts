@@ -724,9 +724,9 @@ export const generatePlayer = (
   }
   const hidden_potential = Math.min(99, potential + Math.floor(randomFn() * 10));
 
-  const preferredFoot = randomFn() > 0.8 ? 'Left' : 'Right';
-  const rightFoot = preferredFoot === 'Right' ? 100 : 20 + Math.floor(randomFn() * 60);
-  const leftFoot = preferredFoot === 'Left' ? 100 : 20 + Math.floor(randomFn() * 60);
+  const preferredFoot = randomFn() > 0.95 ? 'Both' : (randomFn() > 0.8 ? 'Left' : 'Right');
+  const rightFoot = preferredFoot === 'Right' ? 100 : (preferredFoot === 'Both' ? 70 + Math.floor(randomFn() * 30) : 20 + Math.floor(randomFn() * 60));
+  const leftFoot = preferredFoot === 'Left' ? 100 : (preferredFoot === 'Both' ? 70 + Math.floor(randomFn() * 30) : 20 + Math.floor(randomFn() * 60));
 
   // Kısa stat'lar (backward compat) - türetilmiş istatistikler
   const derivedShooting = Math.round(((aStats.finishing || (20 + Math.floor(randomFn() * 50))) + (aStats.longShots || (20 + Math.floor(randomFn() * 50)))) / 2);

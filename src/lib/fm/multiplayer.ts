@@ -241,8 +241,8 @@ export const buyPlayerFromMarket = async (listingId: string, buyerId: string, bu
     return { success: false, error: 'This is an auction listing. Use placeBid instead.' };
   }
 
-  const taxAmount = listing.price * TAX_RATE;
-  const sellerRevenue = listing.price - taxAmount;
+  const taxAmount = (listing.asking_price || listing.price) * TAX_RATE;
+  const sellerRevenue = (listing.asking_price || listing.price) - taxAmount;
 
   const { data: sellerProfile } = await supabase
     .from('profiles')
@@ -270,7 +270,7 @@ export const buyPlayerFromMarket = async (listingId: string, buyerId: string, bu
   return {
     success: true,
     player: listing.player_data,
-    price: listing.price,
+    price: listing.asking_price || listing.price,
     taxAmount,
     sellerRevenue,
   };
@@ -301,7 +301,7 @@ export const placeBid = async (
   if (!listing.is_active) return { success: false, error: 'Listing is no longer active' };
   if (!listing.is_auction) return { success: false, error: 'This is not an auction listing' };
 
-  const currentHigh = listing.current_bid ?? listing.price;
+  const currentHigh = listing.current_bid ?? (listing.asking_price || listing.price);
   if (bidAmount <= currentHigh) {
     return { success: false, error: `Bid must be higher than the current highest bid (${currentHigh.toLocaleString()})` };
   }

@@ -206,6 +206,9 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS marking INTEGER DEFAULT 40;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS tackling INTEGER DEFAULT 40;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS technique INTEGER DEFAULT 40;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS heading INTEGER DEFAULT 40;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS season_yellow_cards INTEGER DEFAULT 0;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS clean_sheets INTEGER DEFAULT 0;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS control INTEGER DEFAULT 50;
 
 CREATE INDEX IF NOT EXISTS idx_players_profile ON players(profile_id);
 CREATE INDEX IF NOT EXISTS idx_players_team ON players(team_name);
@@ -814,8 +817,20 @@ CREATE TABLE IF NOT EXISTS transfer_market (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   player_id TEXT REFERENCES players(id) ON DELETE CASCADE,
   seller_id TEXT REFERENCES profiles(id) ON DELETE CASCADE,
+  seller_name TEXT,
   asking_price BIGINT DEFAULT 0,
+  price BIGINT DEFAULT 0,
+  min_price BIGINT DEFAULT 0,
+  max_price BIGINT DEFAULT 0,
   status TEXT DEFAULT 'active',
+  is_active BOOLEAN DEFAULT true,
+  is_auction BOOLEAN DEFAULT false,
+  starting_price BIGINT DEFAULT 0,
+  reserve_price BIGINT DEFAULT 0,
+  current_bid BIGINT DEFAULT 0,
+  bid_count INTEGER DEFAULT 0,
+  version INTEGER DEFAULT 1,
+  player_data JSONB DEFAULT '{}',
   expires_at TIMESTAMPTZ,
   data JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW()
