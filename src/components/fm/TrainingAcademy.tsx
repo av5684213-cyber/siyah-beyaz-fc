@@ -13,6 +13,7 @@ import type { Player, TrainingState, TrainingAssignment, TrainingProgramId, Trai
 import { TRAINING_PROGRAMS } from '@/lib/fm/constants';
 import { runTrainingSession, isProgramCompatible, getRecommendedProgram } from '@/lib/fm/trainingEngine';
 import { toTitleCase, getPosRowStyle, getPosGroup, getPlayerPos } from '@/lib/fm/ui-helpers';
+import { getSupabase } from '@/lib/supabase';
 import { useFM } from '@/lib/fm/GameContext';
 import { useToast } from '@/hooks/use-toast';
 import TacticLab from './TacticLab';
@@ -562,6 +563,29 @@ export default function TrainingAcademy({
         }
       } catch (saveErr) {
         console.warn('[TrainingAcademy] Failed to save training results:', saveErr);
+      }
+
+      // ═══ GÜNLÜK GÖREV: FULL_TRAINING tamamla ═══
+      // Antrenman tamamlandığında kullanıcının FULL_TRAINING görevini tamamla
+      try {
+        const sb = getSupabase();
+        if (sb && profile?.id) {
+          const { data: tasks } = await sb.from('daily_tasks')
+            .select('id')
+            .eq('profile_id', profile.id)
+            .eq('task_type', 'FULL_TRAINING')
+            .eq('is_completed', false)
+            .gt('expires_at', new Date().toISOString())
+            .limit(1);
+          if (tasks && tasks.length > 0) {
+            await sb.from('daily_tasks')
+              .update({ is_completed: true, completed_at: new Date().toISOString() })
+              .eq('id', tasks[0].id);
+            console.log('[TrainingAcademy] FULL_TRAINING günlük görevi tamamlandı');
+          }
+        }
+      } catch (taskErr) {
+        console.warn('[TrainingAcademy] FULL_TRAINING görev güncelleme hatası:', taskErr);
       }
     } finally {
       setIsTraining(false);

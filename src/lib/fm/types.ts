@@ -384,10 +384,13 @@ export interface MatchResult {
   events: MatchEvent[];
   playerRatings: Record<string, number>;
   staminaLoss: Record<string, number>;
-  playerStats: Record<string, { 
-    goals: number, 
+  playerStats: Record<string, {
+    goals: number,
     assists: number,
-    goalDetails?: Record<string, number>,
+    yellowCards: number;       // kart sayacı
+    redCards: number;          // kırmızı kart sayacı
+    fouls: number;             // faul sayısı
+    goalDetails?: Record<string, number>;
     saveDetails?: Record<string, number>
   }>;
   stats: {
@@ -397,6 +400,8 @@ export interface MatchResult {
   motm?: string;
   /** Oyuncu bazlı farming çarpanı — 1.0 = normal, <1.0 = farming şüphesi */
   farmingMultipliers?: Record<string, number>;
+  /** Simülasyon sırasında oluşan hatalar (debug için) */
+  errors?: string[];
 }
 
 export const FITNESS_THRESHOLDS = {

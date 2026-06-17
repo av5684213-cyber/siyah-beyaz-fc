@@ -23,6 +23,7 @@
     { "path": "/api/cron/auction-cleanup",             "schedule": "0 17 * * *" },
     { "path": "/api/cron/weekly-fans",                 "schedule": "0 18 * * *" },
     { "path": "/api/cron/daily-tasks",                 "schedule": "0 0 * * *" },
+    { "path": "/api/cron/assign-daily-tasks",          "schedule": "0 21 * * *" },
     { "path": "/api/cron/weekly-report",               "schedule": "0 19 * * *" },
     { "path": "/api/cron/bot-economy-check",           "schedule": "0 20 * * *" },
     { "path": "/api/cron/generate-regens",             "schedule": "0 23 * * *" }

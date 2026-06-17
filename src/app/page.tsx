@@ -1288,6 +1288,46 @@ export default function Home() {
                           });
                         }
                       }
+
+                      // ═══ GÜNLÜK GÖREV TAMAMLAMA KONTROLÜ ═══
+                      // Maç sonucuna göre günlük görevleri tamamla
+                      try {
+                        const homeWon = results.score.home > results.score.away;
+                        const scoreDiff = results.score.home - results.score.away;
+
+                        const sb = getSupabase();
+                        if (sb && userId) {
+                          // Görev tiplerini kontrol et ve tamamla
+                          const taskChecks: Array<{ type: string; condition: boolean }> = [
+                            { type: 'WIN_BIG', condition: homeWon && scoreDiff >= 3 },
+                            { type: 'FULL_TRAINING', condition: false }, // antrenman'da tetiklenir
+                          ];
+
+                          for (const check of taskChecks) {
+                            if (!check.condition) continue;
+                            const { data: tasks } = await sb
+                              .from('daily_tasks')
+                              .select('id, task_type, is_completed')
+                              .eq('profile_id', userId)
+                              .eq('task_type', check.type)
+                              .eq('is_completed', false)
+                              .gt('expires_at', new Date().toISOString())
+                              .limit(1);
+
+                            if (tasks && tasks.length > 0) {
+                              await sb.from('daily_tasks')
+                                .update({
+                                  is_completed: true,
+                                  completed_at: new Date().toISOString()
+                                })
+                                .eq('id', tasks[0].id);
+                              console.log(`[onMatchEnd] Günlük görev tamamlandı: ${check.type}`);
+                            }
+                          }
+                        }
+                      } catch (taskErr) {
+                        console.warn('[onMatchEnd] Günlük görev tamamlama hatası:', taskErr);
+                      }
                     }} />
                     </div>
                     {/* Match Chat Panel */}
