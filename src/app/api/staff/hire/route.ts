@@ -194,7 +194,9 @@ export async function POST(request: NextRequest) {
     // -- Insert staff record --
     const totalCostForRecord = hireFeeKredi; // Store kredi portion as total_cost for backward compat
     const salaryWeekly = Math.round(hireFeeEuro / 52); // Weekly salary derived from purchase price
-    const { data: newStaff, error: insertError } = await supabase
+
+    // Insert — join'siz (join insert'i rollback edebilir)
+    const { data: insertData, error: insertError } = await supabase
       .from('staff')
       .insert({
         user_id: userId,
@@ -206,14 +208,55 @@ export async function POST(request: NextRequest) {
         total_cost: totalCostForRecord,
         salary_weekly: salaryWeekly,
       })
-      .select('*, staff_types(name_tr, max_count, base_salary)')
+      .select('*')
       .single();
 
     if (insertError) {
-      console.error('[POST /api/staff/hire] Insert error:', insertError.message);
+      console.error('[POST /api/staff/hire] Insert error:', insertError.message, insertError.code, insertError.details);
       // Refund on failure
-      await supabase.rpc('rpc_update_profile', { p_profile_id: userId, p_updates: { credits: profile.credits, money: profile.money } });
-      return NextResponse.json({ error: true, message: 'Personel kaydedilemedi.' }, { status: 500 });
+      try {
+        await supabase
+          .from('profiles')
+          .update({ credits: profile.credits, money: profile.money })
+          .eq('id', userId);
+      } catch (refundErr) {
+        console.error('[POST /api/staff/hire] Refund error:', refundErr);
+      }
+
+      // Gerçek hata mesajını döndür (debug için)
+      let userMessage = 'Personel kaydedilemedi.';
+      if (insertError.code === '42501') {
+        userMessage = 'Yetki hatası: Personel ekleme izni yok. (RLS policy)';
+      } else if (insertError.code === '23503') {
+        userMessage = 'Geçersiz personel tipi (foreign key).';
+      } else if (insertError.code === '23505') {
+        userMessage = 'Bu personel zaten kayıtlı.';
+      } else if (insertError.message) {
+        userMessage = `Personel kaydedilemedi: ${insertError.message}`;
+      }
+
+      return NextResponse.json({
+        error: true,
+        message: userMessage,
+        debug: {
+          code: insertError.code,
+          details: insertError.details,
+          hint: insertError.hint,
+        },
+      }, { status: 500 });
+    }
+
+    // Join'i ayrı yap (insert başarılı olduktan sonra)
+    let newStaff = insertData;
+    if (insertData?.type) {
+      const { data: staffTypeData } = await supabase
+        .from('staff_types')
+        .select('name_tr, max_count, base_salary')
+        .eq('type', insertData.type)
+        .maybeSingle();
+      if (staffTypeData) {
+        newStaff = { ...insertData, staff_types: staffTypeData };
+      }
     }
 
     return NextResponse.json({
