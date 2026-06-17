@@ -494,6 +494,11 @@ CREATE TABLE IF NOT EXISTS referees (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ─── league_id kolonunu NULL yapılabilir yap ───────────────────────────
+-- Eski sürümlerde league_id NOT NULL olarak tanımlanmış olabilir.
+-- Genel hakem havuzu için league_id NULL olabilmeli.
+ALTER TABLE referees ALTER COLUMN league_id DROP NOT NULL;
+
 -- ─── Hakem seed verisi (18 hakem — her lig için yeterli) ───────────────
 -- league_id NULL = tüm ligler için genel hakem havuzu
 -- Mevcut hakemler korunur (ON CONFLICT DO NOTHING)
