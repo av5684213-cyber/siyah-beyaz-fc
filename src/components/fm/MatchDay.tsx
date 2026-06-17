@@ -121,6 +121,8 @@ const MatchDay = ({
   const [liveFixtureId, setLiveFixtureId] = useState<string | null>(null);
   
   // Schedule-based cycle status (replaces GameCycleManager)
+  // HAFTA İÇİ (Pzt-Cum) GÜNDE 2 MAÇ: 12:00 ve 18:00
+  // Her slot 9 maç içerir: 12:00, 12:10, 12:20 ... 13:20 (ve aynı şekilde 18:00-19:20)
   const getCycleStatus = useCallback(() => {
     const now = new Date();
     const trDate = addHours(now, 3);
@@ -132,47 +134,98 @@ const MatchDay = ({
     // Türkçe gün isimleri
     const dayNames = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
     const nextWeekday = () => {
-      const daysUntilMon = dayOfWeek === 0 ? 1 : 8 - dayOfWeek; // Pazar→1, Cmt→2, ..., Cuma→3
+      const daysUntilMon = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
       return dayNames[(dayOfWeek + daysUntilMon) % 7];
     };
 
-    // ── HAHA İÇİ ──
+    // ── HAFTA İÇİ ──
     if (isWeekday) {
-      // Canlı maç penceresi: tam saat (60 dk) — 12:00–12:59 veya 18:00–18:59
-      if ((currentHour === 12 || currentHour === 18) && currentMinute < 60) {
+      // CANLI: 12:00–13:59 veya 18:00–19:59 (her slot 9 maç × 10 dk = ~90 dk)
+      if ((currentHour === 12 || currentHour === 13) && (currentHour !== 13 || currentMinute < 30)) {
         return {
           phase: 'LIVE_MATCH' as const,
-          nextEventTime: `${String(currentHour).padStart(2, '0')}:59`,
+          nextEventTime: '13:30',
           countDownMinutes: 60 - currentMinute,
           isTrainingWindow: false,
+          currentSlot: '12:00' as const, // hangi slot canlı
+          nextSlot: '18:00' as const,
+        };
+      }
+      if ((currentHour === 18 || currentHour === 19) && (currentHour !== 19 || currentMinute < 30)) {
+        return {
+          phase: 'LIVE_MATCH' as const,
+          nextEventTime: '19:30',
+          countDownMinutes: 60 - currentMinute,
+          isTrainingWindow: false,
+          currentSlot: '18:00' as const,
+          nextSlot: 'Yarın 12:00' as const,
         };
       }
 
       // Sabah 10:00'dan önce → bekleme
       if (currentHour < 10) {
         const mins = (10 - currentHour) * 60 - currentMinute;
-        return { phase: 'IDLE' as const, nextEventTime: '10:00', countDownMinutes: mins, isTrainingWindow: false };
+        return {
+          phase: 'IDLE' as const,
+          nextEventTime: '10:00',
+          countDownMinutes: mins,
+          isTrainingWindow: false,
+          currentSlot: null,
+          nextSlot: '12:00' as const,
+        };
       }
 
       // 10:00–11:59 → 12:00 maçına hazırlık
       if (currentHour >= 10 && currentHour < 12) {
         const mins = (12 - currentHour) * 60 - currentMinute;
-        return { phase: 'PRE_MATCH' as const, nextEventTime: '12:00', countDownMinutes: mins, isTrainingWindow: false };
+        return {
+          phase: 'PRE_MATCH' as const,
+          nextEventTime: '12:00',
+          countDownMinutes: mins,
+          isTrainingWindow: false,
+          currentSlot: null,
+          nextSlot: '12:00' as const,
+          previousSlot: null,
+        };
       }
 
-      // 13:00–17:59 → 18:00 maçına hazırlık
-      if (currentHour >= 13 && currentHour < 18) {
+      // 13:30–17:59 → 12:00 oynandı, 18:00 yaklaşıyor
+      if ((currentHour >= 13 && currentHour < 18) && !(currentHour === 13 && currentMinute < 30)) {
         const mins = (18 - currentHour) * 60 - currentMinute;
-        return { phase: 'PRE_MATCH' as const, nextEventTime: '18:00', countDownMinutes: mins, isTrainingWindow: false };
+        return {
+          phase: 'PRE_MATCH' as const,
+          nextEventTime: '18:00',
+          countDownMinutes: mins,
+          isTrainingWindow: false,
+          currentSlot: null,
+          nextSlot: '18:00' as const,
+          previousSlot: '12:00 (oynandı)' as const,
+        };
       }
 
-      // 19:00+ → gün bitti, yarınki ilk maça bekle
+      // 19:30+ → gün bitti, yarınki ilk maça bekle
       const nextDay = dayNames[(dayOfWeek + 1) % 7];
-      return { phase: 'IDLE' as const, nextEventTime: `${nextDay} 12:00`, countDownMinutes: 0, isTrainingWindow: false };
+      return {
+        phase: 'IDLE' as const,
+        nextEventTime: `${nextDay} 12:00`,
+        countDownMinutes: 0,
+        isTrainingWindow: false,
+        currentSlot: null,
+        nextSlot: `${nextDay} 12:00` as const,
+        previousSlot: '12:00 + 18:00 (oynandı)' as const,
+      };
     }
 
-    // ── HAHA SONU ──
-    return { phase: 'IDLE' as const, nextEventTime: `${nextWeekday()} 12:00`, countDownMinutes: 0, isTrainingWindow: false };
+    // ── HAFTA SONU ──
+    return {
+      phase: 'IDLE' as const,
+      nextEventTime: `${nextWeekday()} 12:00`,
+      countDownMinutes: 0,
+      isTrainingWindow: false,
+      currentSlot: null,
+      nextSlot: `${nextWeekday()} 12:00` as const,
+      previousSlot: null,
+    };
   }, []);
 
   const [cycleStatus, setCycleStatus] = useState(getCycleStatus);
@@ -944,26 +997,110 @@ const MatchDay = ({
   }
 
   if (!isActive && cycleStatus.phase === 'PRE_MATCH') {
+    // Bugün oynanacak maç slotları (hafta içi her gün 2 maç)
+    const todaySlots = [
+      { time: '12:00', label: 'Öğle Maçları', matchCount: 9, period: '12:00 - 13:20' },
+      { time: '18:00', label: 'Akşam Maçları', matchCount: 9, period: '18:00 - 19:20' },
+    ];
+    const upcomingSlot = cycleStatus.nextSlot;
+    const isSlotPlayed = (slotTime: string) => {
+      // 12:00 slot: 13:30'dan sonra oynanmış sayılır
+      // 18:00 slot: 19:30'dan sonra oynanmış sayılır
+      const now = new Date();
+      const trDate = addHours(now, 3);
+      const h = trDate.getHours();
+      const m = trDate.getMinutes();
+      if (slotTime === '12:00') return h > 13 || (h === 13 && m >= 30);
+      if (slotTime === '18:00') return h > 19 || (h === 19 && m >= 30);
+      return false;
+    };
+    const isSlotLive = (slotTime: string) => {
+      const now = new Date();
+      const trDate = addHours(now, 3);
+      const h = trDate.getHours();
+      const m = trDate.getMinutes();
+      if (slotTime === '12:00') return (h === 12) || (h === 13 && m < 30);
+      if (slotTime === '18:00') return (h === 18) || (h === 19 && m < 30);
+      return false;
+    };
+
      return (
-        <div className="flex flex-col h-full min-h-[600px] bg-black/80 backdrop-blur-md border border-white/5">
+        <div className="flex flex-col h-full min-h-[600px] bg-black/80 backdrop-blur-md border border-white/5 overflow-y-auto">
           {showTimeWarning && (
             <div className="px-4 pt-4">
               <MatchTimeWarningBanner />
             </div>
           )}
-          <div className="flex flex-col items-center justify-center flex-1 p-20 space-y-8 text-center">
+          <div className="flex flex-col items-center justify-center flex-1 p-6 md:p-12 space-y-6 text-center">
             <div className="text-amber-500 font-black text-6xl italic animate-pulse">!</div>
             <div>
-                <h2 className="text-4xl font-black italic tracking-tighter text-white uppercase">Isınma Hareketleri Başladı</h2>
-                <p className="text-white/40 text-[10px] tracking-[0.4em] font-bold mt-4 uppercase">Maç Başlıyor: {cycleStatus.nextEventTime} ({cycleStatus.countDownMinutes} DK KALDI)</p>
+                <h2 className="text-3xl md:text-4xl font-black italic tracking-tighter text-white uppercase">Isınma Hareketleri Başladı</h2>
+                <p className="text-amber-500/90 text-[10px] tracking-[0.4em] font-black mt-3 uppercase">
+                  SIRADAKİ MAÇ: {cycleStatus.nextEventTime} ({cycleStatus.countDownMinutes} DK KALDI)
+                </p>
+                {cycleStatus.previousSlot && (
+                  <p className="text-white/30 text-[9px] tracking-[0.3em] font-bold mt-1.5 uppercase">
+                    ÖNCEKİ SLOT: {cycleStatus.previousSlot}
+                  </p>
+                )}
             </div>
-            <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
-                <div className="p-4 bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/40">LOBİ DURUMU: AKTİF</div>
-                <div className="p-4 bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/40">MEDYA: HAZIR</div>
+
+            {/* BUGÜNKÜ MAÇLAR — 2 slot (12:00 + 18:00) */}
+            <div className="w-full max-w-2xl">
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <div className="w-1 h-4 bg-amber-500 rounded-full" />
+                <h3 className="text-xs font-black text-amber-500 uppercase tracking-[0.3em]">BUGÜNKÜ MAÇLAR</h3>
+                <div className="flex-1 h-px bg-gradient-to-r from-amber-500/30 to-transparent" />
+                <span className="text-[9px] font-bold text-white/30 uppercase tracking-wider">HAFTA İÇİ · 2 SLOT</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {todaySlots.map((slot) => {
+                  const played = isSlotPlayed(slot.time);
+                  const live = isSlotLive(slot.time);
+                  const isNext = upcomingSlot === slot.time;
+                  return (
+                    <div
+                      key={slot.time}
+                      className={`relative p-4 rounded-xl border transition-all ${
+                        live
+                          ? 'bg-red-500/10 border-red-500/40 shadow-[0_0_20px_rgba(239,68,68,0.15)]'
+                          : played
+                          ? 'bg-zinc-900/40 border-white/5 opacity-60'
+                          : isNext
+                          ? 'bg-amber-500/10 border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
+                          : 'bg-zinc-900/40 border-white/8'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-black text-white tabular-nums">{slot.time}</span>
+                          {live && (
+                            <span className="px-1.5 py-0.5 bg-red-500 text-white rounded text-[8px] font-black uppercase tracking-wider animate-pulse">CANLI</span>
+                          )}
+                          {played && (
+                            <span className="px-1.5 py-0.5 bg-zinc-500/20 text-white/40 border border-zinc-500/30 rounded text-[8px] font-black uppercase tracking-wider">OYNANDI</span>
+                          )}
+                          {isNext && !live && !played && (
+                            <span className="px-1.5 py-0.5 bg-amber-500 text-black rounded text-[8px] font-black uppercase tracking-wider">SIRADAKİ</span>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-[10px] font-black text-white/70 uppercase tracking-wider">{slot.label}</p>
+                      <p className="text-[9px] text-white/40 mt-1">{slot.matchCount} maç · {slot.period}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+                <div className="p-3 bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-widest text-white/40">LOBİ: AKTİF</div>
+                <div className="p-3 bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-widest text-white/40">MEDYA: HAZIR</div>
             </div>
 
             {/* Canlı maçlar artık maç sayfasında — fikstüre yönlendir */}
-            <button 
+            <button
               onClick={() => router.push('/fixture')}
               className="px-8 py-3 bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-amber-500/30 transition-colors active:scale-95"
             >
