@@ -306,6 +306,11 @@ export async function POST(request: NextRequest) {
           jumping: p.jumping || 50,
           left_foot: p.leftFoot || 50,
           right_foot: p.rightFoot || 50,
+          // [79] Eksik kolonlar
+          secondary_positions: p.secondaryPositions || null,
+          trait_levels: JSON.stringify(p.traitLevels || {}),
+          style_levels: JSON.stringify(p.styleLevels || {}),
+          play_style: p.playStyle || null,
         }))
       );
 

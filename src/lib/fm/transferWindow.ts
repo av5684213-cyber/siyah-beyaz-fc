@@ -15,5 +15,9 @@ export function transferWindowStatus(_currentDay?: number | null): {
   label: string;
   nextOpenWeek?: number;
 } {
-  return { isOpen: true, label: 'Transfer penceresi açık' };
+  const open = isTransferWindowOpen(currentDay);
+  return { 
+    isOpen: open, 
+    label: open ? 'Transfer penceresi açık' : 'Transfer penceresi kapalı (son 5 hafta)'
+  };
 }

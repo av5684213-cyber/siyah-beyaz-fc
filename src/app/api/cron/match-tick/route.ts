@@ -110,6 +110,7 @@ async function updateLeagueStandings(
         gf: (homeStanding.gf || 0) + homeScore,
         ga: (homeStanding.ga || 0) + awayScore,
         points: (homeStanding.points || 0) + (homeScore > awayScore ? 3 : homeScore === awayScore ? 1 : 0),
+        gd: ((homeStanding.gf || 0) + homeScore) - ((homeStanding.ga || 0) + awayScore),
       };
       await supabase.from('league_standings').update(updated).eq('id', homeStanding.id);
       // B1: league_teams.played de güncellenmeli — season-end buna bakıyor
@@ -138,6 +139,7 @@ async function updateLeagueStandings(
         gf: (awayStanding.gf || 0) + awayScore,
         ga: (awayStanding.ga || 0) + homeScore,
         points: (awayStanding.points || 0) + (awayScore > homeScore ? 3 : awayScore === homeScore ? 1 : 0),
+        gd: ((awayStanding.gf || 0) + awayScore) - ((awayStanding.ga || 0) + homeScore),
       };
       await supabase.from('league_standings').update(updated).eq('id', awayStanding.id);
       // B1: league_teams.played de güncellenmeli
