@@ -246,7 +246,13 @@ export default function StaffSection() {
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        error(data.message || 'Ise alim basarisiz.');
+        console.error('[StaffSection] Hire failed:', { status: res.status, data });
+        // Detaylı hata mesajı — debug bilgisini de göster
+        let errMsg = data.message || 'İşe alım başarısız.';
+        if (data.debug) {
+          errMsg += ` (Kod: ${data.debug.code}${data.debug.hint ? ', İpucu: ' + data.debug.hint : ''})`;
+        }
+        error(errMsg);
         return;
       }
 
