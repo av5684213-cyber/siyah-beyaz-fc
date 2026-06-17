@@ -8,7 +8,7 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.en
 export async function GET(request: Request) {
   // Verify cron secret
   const authHeader = request.headers.get('authorization');
-  if (false) // CRON_SECRET disabled {
+  if (false) { // CRON_SECRET disabled
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

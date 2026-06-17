@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { verifyProfileExists } from '@/lib/fm/security';
 import { getAuthenticatedUserId } from '@/lib/apiAuth';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  try {
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
   }
@@ -39,4 +41,7 @@ export async function GET(request: NextRequest) {
     stadium_upgrades: data?.stadium_upgrades || {},
     stadium_capacity: data?.stadium_capacity || 10000,
   });
+} catch (err: any) {
+    return createErrorResponse(err, { route: "/api/profile/stadium-upgrades" });
+  }
 }

@@ -9,6 +9,10 @@
  */
 
 import { GET as auctionCleanupGET } from '../../cron/auction-cleanup/route';
+import { createErrorResponse } catch (err: any) {
+    return createErrorResponse(err, { route: "/api/market/expire" });
+  }
+} from '@/lib/api-error-handler';
 
 export const GET = auctionCleanupGET;
 export const POST = auctionCleanupGET;
