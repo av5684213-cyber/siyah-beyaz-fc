@@ -153,7 +153,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Still listen for Supabase Auth changes (in case user signs in via email/password later)
     } else {
       // 2. Check for Supabase Auth session (email/password users)
-      supabase.auth.getSession().then(({ data: { session: s } }) => {
+      supabase.auth.getSession().then(({ data: { session: s }, error }) => {
+        if (error) console.error('[AuthContext] getSession error:', error.message);
         setSession(s);
         setUser(s?.user ?? null);
         setLoading(false);

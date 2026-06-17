@@ -397,7 +397,7 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
         {nextMatch.status === 'live' || nextMatch.status === 'finished' ? (
           <button
             onClick={() => {
-              window.location.href = `/match/${nextMatch.id}`;
+              if (typeof window !== 'undefined') window.location.href = `/match/${nextMatch.id}`;
             }}
             className={`px-4 py-2.5 ${isLive ? 'bg-red-500/20 hover:bg-red-500/30 border-red-500/40 text-red-300' : 'bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300'} border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shrink-0 ${isLive ? 'animate-pulse' : ''}`}
           >
@@ -608,7 +608,7 @@ export function DashboardTab({
               const keysToKeep = ['sb-auth-token'];
               Object.keys(localStorage).forEach(key => {
                 if (!keysToKeep.some(k => key.includes(k)) && !key.includes('fm_')) {
-                   localStorage.removeItem(key);
+                   if (typeof localStorage !== 'undefined') localStorage.removeItem(key);
                 }
               });
               toast.success('Ön bellek ve gereksiz veriler temizlendi. Projeniz ve takımınız korundu.');
@@ -621,7 +621,7 @@ export function DashboardTab({
           <button
             onClick={() => {
               if (confirm('TÜM VERİLERİN SİLİNECEK VE RASTGELE YENİ BİR TAKIM VERİLECEK. ONAYLIYOR MUSUN?')) {
-                localStorage.clear();
+                if (typeof localStorage !== 'undefined') localStorage.clear();
                 router.refresh();
               }
             }}

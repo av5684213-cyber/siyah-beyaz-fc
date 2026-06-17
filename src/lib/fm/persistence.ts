@@ -16,7 +16,7 @@ const STORAGE_KEYS = {
 export const loadProfile = async (userId: string) => {
   if (isSupabaseConfigured()) {
     const supabase = getSupabase();
-    const { data } = await supabase.from('profiles').select('id,manager_name,team_name,league_name,level,xp,money,fans,reputation,credits,current_day,team_id,defense_powers,ticket_price,academy_level,academy_extra_slots,stadium_capacity,region,active_upgrade_type,active_upgrade_id,active_upgrade_finish_day,active_upgrade_speedup,active_upgrade_started_at,active_upgrade_end_at,stadium_upgrades,sponsors,philosophy,primary_color,secondary_color,stadium_name,is_bot,bot_difficulty,academy_weekly_budget,last_youth_intake_season,total_trophies,total_awards,season_badges,hof_count,created_at,scout_slots,staff_coaches,staff_physios,staff_monthly_fees').eq('id', userId).single();
+    const { data } = await supabase.from('profiles').select('id,manager_name,team_name,league_name,level,xp,money,fans,reputation,credits,current_day,team_id,defense_powers,ticket_price,academy_level,academy_extra_slots,stadium_capacity,region,active_upgrade_type,active_upgrade_id,active_upgrade_finish_day,active_upgrade_speedup,active_upgrade_started_at,active_upgrade_end_at,stadium_upgrades,sponsors,philosophy,primary_color,secondary_color,stadium_name,is_bot,bot_difficulty,academy_weekly_budget,last_youth_intake_season,total_trophies,total_awards,season_badges,hof_count,created_at,scout_slots,staff_coaches,staff_physios,staff_monthly_fees').eq('id', userId).maybeSingle();
     return data || null;
   }
   
@@ -198,7 +198,7 @@ export const loadFixtures = async (teamId: string, seasonId?: string) => {
 export const loadActiveTactic = async (userId: string) => {
   if (isSupabaseConfigured()) {
     const supabase = getSupabase();
-    const { data } = await supabase.from('active_tactics').select('id,tactic_data,updated_at').eq('id', userId).single();
+    const { data } = await supabase.from('active_tactics').select('id,tactic_data,updated_at').eq('id', userId).maybeSingle();
     return data || null;
   }
   const local = localStorage.getItem(STORAGE_KEYS.TACTIC);
@@ -208,7 +208,7 @@ export const loadActiveTactic = async (userId: string) => {
 export const loadTrainingState = async (userId: string) => {
   if (isSupabaseConfigured()) {
     const supabase = getSupabase();
-    const { data } = await supabase.from('training_state').select('id,state,updated_at').eq('id', userId).single();
+    const { data } = await supabase.from('training_state').select('id,state,updated_at').eq('id', userId).maybeSingle();
     return data || null;
   }
   const local = localStorage.getItem(STORAGE_KEYS.TRAINING);
@@ -498,7 +498,7 @@ export const resetLeague = async () => {
       const supabase = getSupabase();
       
       if (savedUserId) {
-        const { data: profile } = await supabase.from('profiles').select('team_name, league_name').eq('id', savedUserId).single();
+        const { data: profile } = await supabase.from('profiles').select('team_name, league_name').eq('id', savedUserId).maybeSingle();
         
         if (profile) {
           // TODO: Migrate to RPC (BUG-1) — player delete will fail once RLS is enforced

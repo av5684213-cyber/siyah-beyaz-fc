@@ -90,6 +90,7 @@ export default function NewSeasonBriefing({
   // ── Yükselme konfeti efekti ──
   useEffect(() => {
     if (!isOpen || !wasPromoted) return;
+    if (typeof document === 'undefined') return;
     const style = document.createElement('style');
     style.id = 'nsb-conf-css';
     style.textContent = `

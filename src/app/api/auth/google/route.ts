@@ -62,10 +62,21 @@ export async function POST(request: NextRequest) {
     }
 
     // ─── 1. Google ID token verify ───────────────────────────────
-    const verifyResponse = await fetch(
-      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(token)}`,
-      { method: 'GET' }
-    );
+    // [87] 5 saniye timeout — Vercel serverless 10sn limit
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    let verifyResponse;
+    try {
+      verifyResponse = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(token)}`,
+        { method: 'GET', signal: controller.signal }
+      );
+    } catch (fetchErr: any) {
+      clearTimeout(timeoutId);
+      console.error('[google-auth] Token verify timeout/error:', fetchErr.message);
+      return NextResponse.json({ error: 'Google token doğrulama zaman aşımı' }, { status: 504 });
+    }
+    clearTimeout(timeoutId);
 
     if (!verifyResponse.ok) {
       console.warn('[google-auth] Token verification failed:', verifyResponse.status);
