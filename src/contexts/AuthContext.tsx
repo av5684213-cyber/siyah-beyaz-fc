@@ -123,7 +123,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // VPN ile yeni cihazdan girildiğinde veya kullanıcı logout yaptıysa
     // persisted Google auth'u (localStorage) görmezden gel.
     // - URL'de ?logged_out=1 varsa → kullanıcı logout yapmış, persisted'i temizle
-    // - persisted expires_at < 1 saat → çok eski, temizle (paranoyak modu)
     const urlParams = typeof window !== 'undefined'
       ? new URLSearchParams(window.location.search)
       : null;
@@ -136,6 +135,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // 1. Check for persisted Google auth first (for users who logged in via Google)
     // Sadece yukarıdaki güvenlik kontrolünü geçen persisted auth kullanılır.
     const persisted = isLoggedOutUrl ? null : readPersistedAuth();
+    const hasPersistedAuth = !!persisted;
+
     if (persisted) {
       const googleUser = buildUserFromPersisted(persisted);
       const googleToken = btoa(`google-${persisted.userId}-${Date.now()}-${Math.random()}`);
@@ -160,10 +161,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     // 3. Listen for auth state changes (real Supabase Auth sessions)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      setLoading(false);
+    //
+    //    KRİTİK: Sadece gerçek Supabase oturum eventi olan SIGNED_IN ve SIGNED_OUT
+    //    ile ilgileniyoruz. Eski sürümde her event (TOKEN_REFRESHED, INITIAL_SESSION vb.)
+    //    user'ı null'a set ediyordu — bu da Google persisted user'ın silinmesine ve
+    //    login ekranının sürekli refresh olmasına (gidip gelmesine) neden oluyordu.
+    //
+    //    Çözüm: Google persisted auth varken, Supabase session null gelse bile
+    //    user'ı silme. Sadece gerçek SIGNED_OUT event'inde temizle.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === 'SIGNED_OUT') {
+        // Gerçek logout — her şeyi temizle
+        clearPersistedAuth();
+        setUser(null);
+        setSession(null);
+        setLoading(false);
+        return;
+      }
+
+      if (event === 'SIGNED_IN' && s?.user) {
+        // Gerçek email/password girişi — persisted auth'u ezip Supabase user'ını kullan
+        setSession(s);
+        setUser(s.user);
+        setLoading(false);
+        return;
+      }
+
+      // Diğer event'ler (INITIAL_SESSION, TOKEN_REFRESHED, USER_UPDATED vb.):
+      // - Eğer persisted Google auth varsa → user'ı koru, Supabase session null olsa bile
+      // - Eğer persisted auth yoksa → sadece session'ı güncelle, user null'sa null kalsın
+      if (!hasPersistedAuth) {
+        setSession(s);
+        setUser(s?.user ?? null);
+        setLoading(false);
+      } else if (s?.user) {
+        // Persisted auth var ama gerçek Supabase session da var — Supabase öncelikli
+        setSession(s);
+        setUser(s.user);
+        setLoading(false);
+      }
+      // Persisted auth var ve Supabase session null → hiçbir şey yapma, user'ı koru
     });
 
     return () => subscription.unsubscribe();

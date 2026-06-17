@@ -162,6 +162,10 @@ async function createMinimalProfile(
   picture: string,
   fallbackTeamName: string | null
 ): Promise<NextResponse> {
+  // selimporsuk@gmail.com → admin/kurucu rolü
+  const FOUNDER_EMAIL = 'selimporsuk@gmail.com';
+  const isFounder = email?.toLowerCase() === FOUNDER_EMAIL;
+
   const minimalProfile = {
     id: internalUserId,
     manager_name: name || 'Yeni Menajer',
@@ -179,7 +183,7 @@ async function createMinimalProfile(
     stadium_capacity: 5000,
     ticket_price: 30,
     region: 'tr',
-    role: 'user',
+    role: isFounder ? 'admin' : 'user', // selimporsuk@gmail.com → admin/owner
     is_bot: false,
     onboarding_completed: false, // ManagerRegistration göster
     created_at: new Date().toISOString(),

@@ -144,6 +144,30 @@ export async function POST(request: NextRequest) {
         break;
     }
 
+    // ─── ADMIN / FOUNDER EMAIL KONTROLÜ ─────────────────────────
+    // selimporsuk@gmail.com ile kayıt olan kullanıcı otomatik admin/owner olur.
+    // Bu kullanıcının ilk kayıt olması durumunda 'founder' (kurucu) rolü verilir.
+    const FOUNDER_EMAIL = 'selimporsuk@gmail.com';
+
+    // Email'i Supabase auth.users'dan al — register API'ye çağrıldığında
+    // client-side email bilgisi olmayabilir, bu yüzden profiles'tan bakıyoruz.
+    let userEmail: string | null = null;
+    if (supabase) {
+      try {
+        // Önce profiles tablosunda var mı diye bak (Google ile giriş yapmış olabilir)
+        const { data: existingProf } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', userId)
+          .maybeSingle();
+        if (existingProf?.email) {
+          userEmail = existingProf.email;
+        }
+      } catch {}
+    }
+
+    const isFounder = userEmail?.toLowerCase() === FOUNDER_EMAIL;
+
     // ─── PROFİL OLUŞTUR ─────────────────────────────────
     const newProfile = {
       id: userId,
@@ -165,6 +189,8 @@ export async function POST(request: NextRequest) {
       reputation: startReputation,
       academy_level: startAcademyLevel,
       is_bot: false,
+      role: isFounder ? 'admin' : 'user',
+      email: userEmail,
       created_at: new Date().toISOString(),
     };
 
