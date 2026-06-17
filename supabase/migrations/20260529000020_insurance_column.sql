@@ -1,1 +1,0 @@
-ALTER TABLE players ADD COLUMN IF NOT EXISTS is_insured BOOLEAN DEFAULT false;
