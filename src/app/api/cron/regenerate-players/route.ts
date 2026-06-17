@@ -11,6 +11,14 @@ import { getServiceSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { generateAllAttributes, getPositionKey } from '@/lib/fm/attributeGenerator';
 
 export async function POST(request: NextRequest) {
+  return doRegenerate();
+}
+
+export async function GET(request: NextRequest) {
+  return doRegenerate();
+}
+
+async function doRegenerate() {
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });
   }
