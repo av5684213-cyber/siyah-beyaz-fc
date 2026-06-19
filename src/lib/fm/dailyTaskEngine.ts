@@ -14,6 +14,10 @@ import type { Profile } from './types';
 
 export type DailyTaskType =
   | 'WIN_BIG'          // 3-0 veya daha iyi galip gel
+  | 'WIN_MATCH'        // Bir maç kazan
+  | 'DRAW_MATCH'       // Berabere kal
+  | 'SCORE_GOALS'      // 2+ gol at
+  | 'CLEAN_SHEET'      // Kaleyi gole kapat
   | 'LIST_PLAYERS'     // Transfer pazarına 2 oyuncu listele
   | 'FULL_TRAINING'    // Sabah antrenmanına 11 oyuncuyla katıl
   | 'PROMOTE_YOUTH'    // Bir genci birinci takıma terfi ettir
@@ -85,6 +89,38 @@ export const DAILY_TASK_DEFINITIONS: Record<DailyTaskType, DailyTaskDefinition> 
     reward_type: 'money',
     reward_amount: 5000,
     icon: '🏥',
+    target_value: 1,
+  },
+  WIN_MATCH: {
+    type: 'WIN_MATCH',
+    description: 'Bir maç kazan',
+    reward_type: 'money',
+    reward_amount: 30000,
+    icon: '🏆',
+    target_value: 1,
+  },
+  DRAW_MATCH: {
+    type: 'DRAW_MATCH',
+    description: 'Berabere kal',
+    reward_type: 'money',
+    reward_amount: 15000,
+    icon: '🤝',
+    target_value: 1,
+  },
+  SCORE_GOALS: {
+    type: 'SCORE_GOALS',
+    description: '2+ gol at',
+    reward_type: 'credit',
+    reward_amount: 1,
+    icon: '⚽',
+    target_value: 2,
+  },
+  CLEAN_SHEET: {
+    type: 'CLEAN_SHEET',
+    description: 'Kalenizi gole kapatın',
+    reward_type: 'money',
+    reward_amount: 25000,
+    icon: '🧤',
     target_value: 1,
   },
 };

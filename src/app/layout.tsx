@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
+import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -61,6 +62,7 @@ export default function RootLayout({
           CSR'da useEffect mount=true set eder → tüm Provider'lar + children render olur.
         */}
         <ClientOnly>
+          <GlobalErrorBoundary>
           <AuthProvider>
           <LanguageProvider>
           <FMProvider>
@@ -74,6 +76,7 @@ export default function RootLayout({
           </FMProvider>
           </LanguageProvider>
           </AuthProvider>
+          </GlobalErrorBoundary>
           <LayoutMobileNav />
         </ClientOnly>
         <Toaster />

@@ -698,32 +698,33 @@ export default function Home() {
       dailyTrainingCount: todayCount + 1,
     }));
 
-    // [BUG-14] Günlük görev: antrenman tamamlama
+    // [BUG-21] Günlük görev: antrenman tamamlama
     // FULL_TRAINING görev tipi — 2 antrenman tamamlanınca biter
+    // date + target_value kullanır (expires_at + target değil)
     try {
       const sb = getSupabase();
       if (sb && userId) {
-        const newCount = todayCount + 1;
+        const today = new Date().toISOString().split('T')[0];
         const { data: tasks } = await sb
           .from('daily_tasks')
-          .select('id, target, progress, is_completed')
+          .select('id, target_value, progress, is_completed')
           .eq('user_id', userId)
           .eq('task_type', 'FULL_TRAINING')
+          .eq('date', today)
           .eq('is_completed', false)
-          .gt('expires_at', new Date().toISOString())
           .limit(1);
         if (tasks && tasks.length > 0) {
           const task = tasks[0];
-          const newProgress = Math.min(task.target || 2, (task.progress || 0) + 1);
-          const isNowCompleted = newProgress >= (task.target || 2);
+          const targetVal = task.target_value || 2;
+          const newProgress = Math.min(targetVal, (task.progress || 0) + 1);
+          const isNowCompleted = newProgress >= targetVal;
           await sb.from('daily_tasks')
             .update({
               progress: newProgress,
               is_completed: isNowCompleted,
-              completed_at: isNowCompleted ? new Date().toISOString() : null,
             })
             .eq('id', task.id);
-          console.log(`[runTraining] FULL_TRAINING görevi ilerledi: ${newProgress}/${task.target}`);
+          console.log(`[runTraining] FULL_TRAINING görevi ilerledi: ${newProgress}/${targetVal}`);
         }
       }
     } catch (taskErr) {
@@ -1350,17 +1351,17 @@ export default function Home() {
 
                       // ═══ GÜNLÜK GÖREV TAMAMLAMA KONTROLÜ ═══
                       // Maç sonucuna göre günlük görevleri tamamla
-                      // [BUG-14] daily_tasks tablosu 'user_id' kullanır (profile_id değil)
+                      // [BUG-21] daily_tasks tablosu date + target_value kullanır (expires_at + target değil)
                       try {
                         const homeWon = results.score.home > results.score.away;
                         const scoreDiff = results.score.home - results.score.away;
                         const homeDraw = results.score.home === results.score.away;
                         const homeGoals = results.score.home;
                         const cleanSheet = results.score.away === 0;
+                        const today = new Date().toISOString().split('T')[0];
 
                         const sb = getSupabase();
                         if (sb && userId) {
-                          // Görev tiplerini kontrol et ve tamamla
                           const taskChecks: Array<{ type: string; condition: boolean; progress?: number }> = [
                             { type: 'WIN_BIG', condition: homeWon && scoreDiff >= 3 },
                             { type: 'WIN_MATCH', condition: homeWon },
@@ -1373,27 +1374,27 @@ export default function Home() {
                             if (!check.condition) continue;
                             const { data: tasks } = await sb
                               .from('daily_tasks')
-                              .select('id, task_type, is_completed, target, progress')
+                              .select('id, task_type, is_completed, target_value, progress')
                               .eq('user_id', userId)
                               .eq('task_type', check.type)
+                              .eq('date', today)
                               .eq('is_completed', false)
-                              .gt('expires_at', new Date().toISOString())
                               .limit(1);
 
                             if (tasks && tasks.length > 0) {
                               const task = tasks[0];
+                              const targetVal = task.target_value || 1;
                               const newProgress = check.progress !== undefined
-                                ? Math.min(task.target || 1, (task.progress || 0) + check.progress)
-                                : (task.target || 1);
-                              const isNowCompleted = newProgress >= (task.target || 1);
+                                ? Math.min(targetVal, (task.progress || 0) + check.progress)
+                                : targetVal;
+                              const isNowCompleted = newProgress >= targetVal;
                               await sb.from('daily_tasks')
                                 .update({
                                   progress: newProgress,
                                   is_completed: isNowCompleted,
-                                  completed_at: isNowCompleted ? new Date().toISOString() : null,
                                 })
                                 .eq('id', task.id);
-                              console.log(`[onMatchEnd] Görev ilerledi: ${check.type} (progress: ${newProgress}/${task.target}, completed: ${isNowCompleted})`);
+                              console.log(`[onMatchEnd] Görev ilerledi: ${check.type} (progress: ${newProgress}/${targetVal}, completed: ${isNowCompleted})`);
                             }
                           }
                         }

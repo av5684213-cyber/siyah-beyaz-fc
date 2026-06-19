@@ -21,6 +21,7 @@ import {
   Users,
   Award,
   X,
+  Zap,
 } from 'lucide-react';
 import { useHaptic } from '@/lib/hooks/useMobileGestures';
 
@@ -57,6 +58,7 @@ const BOTTOM_TABS = [
 
 // "Diğer" menüsü — kalan sekmeler
 const MORE_TABS = [
+  { id: 'operations', label: 'Operasyon', icon: Zap },
   { id: 'financial', label: 'Finansal', icon: DollarSign },
   { id: 'youth', label: 'Akademi', icon: Users },
   { id: 'inventory', label: 'Arşiv', icon: Archive },

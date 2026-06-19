@@ -596,6 +596,13 @@ CREATE TABLE IF NOT EXISTS daily_tasks (
   expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+-- [BUG-21] dailyTaskEngine.ts'in kullandığı ek kolonlar
+ALTER TABLE daily_tasks ADD COLUMN IF NOT EXISTS date TEXT;
+ALTER TABLE daily_tasks ADD COLUMN IF NOT EXISTS reward_type TEXT;
+ALTER TABLE daily_tasks ADD COLUMN IF NOT EXISTS reward_amount INTEGER DEFAULT 0;
+ALTER TABLE daily_tasks ADD COLUMN IF NOT EXISTS target_value INTEGER DEFAULT 1;
+UPDATE daily_tasks SET date = created_at::date::text WHERE date IS NULL;
+CREATE INDEX IF NOT EXISTS idx_daily_tasks_user_date ON daily_tasks(user_id, date);
 
 CREATE TABLE IF NOT EXISTS scouted_players (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
