@@ -168,14 +168,13 @@ export function getIstanbulDateTime(date: Date): {
 /**
  * Verilen günde lig maçı oynanmalı mı?
  *
- * KURAL: Pazartesi-Perşembe (1-4) arası lig maçı oynanır.
- * Cuma günü lig maçı YOK (playoff/ar günü).
+ * KURAL: Pazartesi-Cuma (1-5) arası lig maçı oynanır.
  * Cumartesi ve Pazar lig maçı yoktur.
+ * Her lig gününde 2 slot vardır: 12:00 ve 18:00 İstanbul.
  */
 export function shouldPlayLeague(dayOfWeek: number): boolean {
-  // Pazartesi(1) - Perşembe(4) arası lig maçı
-  // Cuma(5) = playoff günü, lig maçı YOK
-  return dayOfWeek >= 1 && dayOfWeek <= 4;
+  // Pazartesi(1) - Cuma(5) arası lig maçı
+  return dayOfWeek >= 1 && dayOfWeek <= 5;
 }
 
 /**

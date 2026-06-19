@@ -1058,13 +1058,13 @@ BEGIN
     v_fixed_id := v_team_ids[1];
     v_team_ids_rotating := v_team_ids[2:v_n];
 
-    -- [BUG-8] İlk maç günü = yarın, ama Pzt-Per arası bir iş günü olsun
+    -- [BUG-8] İlk maç günü = yarın, ama Pzt-Cum arası bir iş günü olsun
     -- 0=Paz, 1=Pzt, 2=Sal, 3=Çar, 4=Per, 5=Cum, 6=Cmt
+    -- Hafta içi = Pzt-Cum (1-5), hafta sonu = Cmt-Paz (0,6) lig maçı yok
     v_base_date := CURRENT_DATE + 1;
     v_target_dow := EXTRACT(DOW FROM v_base_date)::integer;
-    -- Cuma(5)/Cmt(6)/Paz(0) ise sonraki Pazartesi'ye kaydır
-    IF v_target_dow = 5 THEN v_days_to_add := 3;       -- Cuma → Pzt (+3)
-    ELSIF v_target_dow = 6 THEN v_days_to_add := 2;    -- Cmt → Pzt (+2)
+    -- Cmt(6)/Paz(0) ise sonraki Pazartesi'ye kaydır
+    IF v_target_dow = 6 THEN v_days_to_add := 2;       -- Cmt → Pzt (+2)
     ELSIF v_target_dow = 0 THEN v_days_to_add := 1;    -- Paz → Pzt (+1)
     ELSE v_days_to_add := 0;
     END IF;
@@ -1108,8 +1108,7 @@ BEGIN
                     -- İş günü ekle (v_total_rounds hafta sonra)
                     v_return_date := v_match_date + (v_return_offset * 7);
                     v_return_dow := EXTRACT(DOW FROM v_return_date)::integer;
-                    IF v_return_dow = 5 THEN v_return_days_to_add := 3;
-                    ELSIF v_return_dow = 6 THEN v_return_days_to_add := 2;
+                    IF v_return_dow = 6 THEN v_return_days_to_add := 2;
                     ELSIF v_return_dow = 0 THEN v_return_days_to_add := 1;
                     ELSE v_return_days_to_add := 0;
                     END IF;
@@ -1133,15 +1132,15 @@ BEGIN
             v_team_ids_rotating[i] := v_team_ids_rotating[i-1];
         END LOOP;
         v_team_ids_rotating[1] := v_last_id;
-        -- [BUG-8] Bir sonraki tur için 1 iş günü ekle (Pzt-Per)
-        -- Eğer perşembe ise 4 gün ekle (Pzt'ye), değilse 1 gün ekle
+        -- [BUG-8] Bir sonraki tur için 1 iş günü ekle (Pzt-Cum)
+        -- Eğer cuma ise 3 gün ekle (Pzt'ye), değilse 1 gün ekle
         DECLARE
             v_next_dow integer;
             v_next_offset integer;
         BEGIN
             v_next_dow := EXTRACT(DOW FROM v_match_date)::integer;
-            IF v_next_dow = 4 THEN v_next_offset := 4;   -- Per → Pzt
-            ELSE v_next_offset := 1;                       -- Pzt→Sal, Sal→Çar, Çar→Per
+            IF v_next_dow = 5 THEN v_next_offset := 3;   -- Cum → Pzt
+            ELSE v_next_offset := 1;                       -- Pzt→Sal, Sal→Çar, Çar→Per, Per→Cum
             END IF;
             v_match_date := v_match_date + v_next_offset;
         END;

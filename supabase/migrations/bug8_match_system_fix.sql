@@ -158,11 +158,11 @@ BEGIN
     v_fixed_id := v_team_ids[1];
     v_team_ids_rotating := v_team_ids[2:v_n];
 
-    -- İlk maç günü = yarın, Pzt-Per arası iş günü
+    -- İlk maç günü = yarın, Pzt-Cum arası iş günü
+    -- Hafta içi = Pzt-Cum (1-5), hafta sonu = Cmt-Paz (0,6) lig maçı yok
     v_base_date := CURRENT_DATE + 1;
     v_target_dow := EXTRACT(DOW FROM v_base_date)::integer;
-    IF v_target_dow = 5 THEN v_days_to_add := 3;
-    ELSIF v_target_dow = 6 THEN v_days_to_add := 2;
+    IF v_target_dow = 6 THEN v_days_to_add := 2;
     ELSIF v_target_dow = 0 THEN v_days_to_add := 1;
     ELSE v_days_to_add := 0;
     END IF;
@@ -197,8 +197,7 @@ BEGIN
                 -- Rövanş: v_total_rounds hafta sonra, ters slot
                 v_return_date := v_match_date + (v_total_rounds * 7);
                 v_return_dow := EXTRACT(DOW FROM v_return_date)::integer;
-                IF v_return_dow = 5 THEN v_return_days_to_add := 3;
-                ELSIF v_return_dow = 6 THEN v_return_days_to_add := 2;
+                IF v_return_dow = 6 THEN v_return_days_to_add := 2;
                 ELSIF v_return_dow = 0 THEN v_return_days_to_add := 1;
                 ELSE v_return_days_to_add := 0;
                 END IF;
@@ -221,9 +220,9 @@ BEGIN
         END LOOP;
         v_team_ids_rotating[1] := v_last_id;
 
-        -- Sonraki tur: 1 iş günü ileri (Per → Pzt = +4, diğerleri +1)
+        -- Sonraki tur: 1 iş günü ileri (Cum → Pzt = +3, diğerleri +1)
         v_next_dow := EXTRACT(DOW FROM v_match_date)::integer;
-        IF v_next_dow = 4 THEN v_next_offset := 4;
+        IF v_next_dow = 5 THEN v_next_offset := 3;
         ELSE v_next_offset := 1;
         END IF;
         v_match_date := v_match_date + v_next_offset;
