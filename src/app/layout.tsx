@@ -17,6 +17,9 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: "#000000",
+  // viewportFit=cover: iOS safe-area-inset-* CSS env değerlerinin
+  // çalışması için gerekli. Aksi halde env(safe-area-inset-bottom) 0 döner.
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {

@@ -292,8 +292,8 @@ export default function HallOfFameTab({ profileId, teamName }: HallOfFameTabProp
         </div>
       </div>
 
-      {/* Özet Kartları */}
-      <div className="grid grid-cols-5 gap-2">
+      {/* Özet Kartları — mobilde 5 sütun (kompakt), sm+ 5 sütun */}
+      <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
         <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-2 text-center">
           <div className="text-xl mb-0.5">💎</div>
           <div className="text-cyan-300 font-bold text-sm">{platinumCount}</div>
@@ -343,8 +343,8 @@ export default function HallOfFameTab({ profileId, teamName }: HallOfFameTabProp
           <span className="text-white/30 text-[10px]">{filteredLegends.length} üye</span>
         </div>
 
-        {/* Tier Filter */}
-        <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1">
+        {/* Tier Filter — yatay scroll, touch target 44px min */}
+        <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1 no-scrollbar">
           {(['all', 'platinum', 'gold', 'silver', 'bronze'] as const).map(tier => {
             const isActive = filterTier === tier;
             const config = tier !== 'all' ? TIER_CONFIG[tier] : null;
@@ -352,7 +352,7 @@ export default function HallOfFameTab({ profileId, teamName }: HallOfFameTabProp
               <button
                 key={tier}
                 onClick={() => setFilterTier(tier)}
-                className={`px-3 py-1 rounded-lg text-[10px] font-medium transition-all border whitespace-nowrap ${
+                className={`px-3 py-2 rounded-lg text-[10px] font-medium transition-all border whitespace-nowrap shrink-0 touch-target-44 flex items-center mobile-tap-highlight ${
                   isActive
                     ? 'bg-white/10 border-white/20 text-white/80'
                     : 'bg-white/[0.02] border-white/[0.06] text-white/30 hover:text-white/50'

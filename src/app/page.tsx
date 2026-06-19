@@ -868,15 +868,16 @@ export default function Home() {
       {/* Mobil Alt Navigasyon — sadece mobilde görünür */}
       <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} isAdmin={isAdmin} />
 
-      {/* Ses açma/kapama butonu — mobilde bottom nav üstünde */}
+      {/* Ses açma/kapama butonu — mobilde bottom nav'ın üstünde, safe area ile */}
       <button
         onClick={() => {
           const newState = !isSoundEnabled();
           setSoundEnabled(newState);
           if (newState) playSound('click');
         }}
-        className="fixed bottom-20 right-4 lg:bottom-4 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-zinc-900/90 text-sm backdrop-blur-sm transition-all hover:bg-zinc-800"
+        className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] right-3 lg:bottom-4 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-zinc-900/90 text-sm backdrop-blur-sm transition-all hover:bg-zinc-800 touch-target-44 mobile-tap-highlight"
         title={isSoundEnabled() ? 'Sesi Kapat' : 'Sesi Aç'}
+        aria-label={isSoundEnabled() ? 'Sesi Kapat' : 'Sesi Aç'}
       >
         {isSoundEnabled() ? '🔊' : '🔇'}
       </button>
@@ -923,7 +924,7 @@ export default function Home() {
            </motion.div>
         </div>
       )}
-      <main className="max-w-7xl mx-auto p-2 sm:p-4 pb-28 sm:pb-32">
+      <main className="max-w-7xl mx-auto p-2 sm:p-4 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] sm:pb-[calc(8rem+env(safe-area-inset-bottom,0px))]">
         <div className="flex flex-col lg:flex-row gap-3 sm:gap-6">
           <nav className="hidden lg:flex flex-col gap-1 bg-gradient-to-b from-zinc-900 to-black p-3 rounded-2xl border border-white/5 w-64 h-fit sticky top-[100px] z-40">
             <div className="pb-4 mb-3 border-b border-white/5">

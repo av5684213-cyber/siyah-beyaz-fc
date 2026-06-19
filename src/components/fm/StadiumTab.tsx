@@ -693,9 +693,9 @@ export default function StadiumTab() {
       </div>
 
       {/* ── Facility Cards Grid ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         {/* Ticket Price Card */}
-        <div className="bg-zinc-900 border border-white/5 rounded-[2rem] p-8 flex flex-col justify-between relative group overflow-hidden">
+        <div className="bg-zinc-900 border border-white/5 rounded-2xl sm:rounded-[2rem] p-5 sm:p-8 flex flex-col justify-between relative group overflow-hidden">
           <div className="flex justify-between items-start mb-6">
             <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20">
               <Ticket size={28} className="text-amber-500" />

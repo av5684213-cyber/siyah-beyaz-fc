@@ -274,8 +274,8 @@ export default function FinancialTab({
 
   return (
     <div className="space-y-6">
-      {/* ── Section Tabs ── */}
-      <div className="flex gap-1 bg-white/[0.02] border border-white/[0.06] rounded-xl p-1 overflow-x-auto">
+      {/* ── Section Tabs — mobilde yatay scroll + touch target 44px ── */}
+      <div className="flex gap-1 bg-white/[0.02] border border-white/[0.06] rounded-xl p-1 overflow-x-auto no-scrollbar">
         {([
           { id: 'overview' as const, label: 'Genel Bakış', icon: BarChart3 },
           { id: 'revenue' as const, label: 'Gelirler', icon: TrendingUp },
@@ -291,7 +291,7 @@ export default function FinancialTab({
               onClick={() => setActiveSection(tab.id)}
               className={`
                 flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest
-                transition-all flex-1 justify-center whitespace-nowrap min-w-fit
+                transition-all flex-1 justify-center whitespace-nowrap min-w-fit touch-target-44 mobile-tap-highlight
                 ${isActive
                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                   : 'text-white/30 hover:text-white/50 border border-transparent'

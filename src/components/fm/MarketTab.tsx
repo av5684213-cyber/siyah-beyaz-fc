@@ -1380,33 +1380,40 @@ export default React.memo(function MarketTab() {
       {/* ═══════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {negotiatingPlayer && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4">
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setNegotiatingPlayer(null)}
               className="absolute inset-0 bg-black/90 backdrop-blur-md"
             />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-xl bg-zinc-900 border border-white/10 rounded-[40px] p-8 overflow-hidden shadow-2xl max-h-[92vh] overflow-y-auto"
+            <motion.div
+              initial={{ opacity: 0, y: 40, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 40, scale: 0.98 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+              className="relative w-full sm:max-w-xl bg-zinc-900 border border-white/10 rounded-t-3xl sm:rounded-[32px] p-4 sm:p-8 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-8 shadow-2xl max-h-[94vh] sm:max-h-[92vh] overflow-y-auto no-scrollbar mobile-tap-highlight"
             >
-              {/* Player header */}
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-white border border-white/10">
-                  <Users size={28} />
+              {/* Mobil bottom sheet handle bar */}
+              <div className="sm:hidden flex justify-center pt-1 pb-3">
+                <div className="w-10 h-1 bg-white/15 rounded-full" />
+              </div>
+
+              {/* Player header — mobilde kompakt */}
+              <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/5 rounded-2xl flex items-center justify-center text-white border border-white/10 shrink-0">
+                  <Users size={24} className="sm:hidden" />
+                  <Users size={28} className="hidden sm:block" />
                 </div>
-                <div className="flex-1">
-                   <h3 className="text-2xl font-black italic tracking-tighter text-white uppercase">{toTitleCase(negotiatingPlayer.name)}</h3>
-                   <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">
+                <div className="flex-1 min-w-0">
+                   <h3 className="text-lg sm:text-2xl font-black italic tracking-tighter text-white uppercase truncate">{toTitleCase(negotiatingPlayer.name)}</h3>
+                   <p className="text-[9px] sm:text-[10px] text-white/40 font-black uppercase tracking-widest">
                      {getPlayerPos(negotiatingPlayer as Record<string, unknown>)} • {localizePosFull(getPlayerPos(negotiatingPlayer as Record<string, unknown>))} • {negotiatingPlayer.age} YAŞ • {negotiatingPlayer.nation} • ⭐ {negotiatingPlayer.rating}
                    </p>
                 </div>
-                <div className="text-right">
-                   <p className="text-sm font-black text-emerald-400 italic">{formatCurrency(getEffectiveMarketValue(negotiatingPlayer))}</p>
+                <div className="text-right shrink-0">
+                   <p className="text-xs sm:text-sm font-black text-emerald-400 italic">{formatCurrency(getEffectiveMarketValue(negotiatingPlayer))}</p>
                    <p className="text-[9px] text-white/20 font-black uppercase">Pazar Değeri</p>
                 </div>
               </div>

@@ -275,37 +275,38 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       {/* Error uyarısı */}
       {data?.source === 'error' && (
         <div className="text-center py-8 text-white/40 text-sm">
           Lig puan tablosu yüklenemedi. Lütfen sayfayı yenileyin.
         </div>
       )}
-      {/* Header */}
-      <div className="flex justify-between items-end">
-        <div>
-          <h2 className="text-4xl font-display font-black italic uppercase tracking-tighter text-white">Lig Merkezi</h2>
-          <p className="text-[10px] text-white/30 uppercase tracking-[0.3em] font-black mt-1">
+      {/* Header — mobilde dikey, sm+ yatay */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">
+        <div className="min-w-0">
+          <h2 className="text-2xl sm:text-4xl font-display font-black italic uppercase tracking-tighter text-white">Lig Merkezi</h2>
+          <p className="text-[10px] text-white/30 uppercase tracking-[0.2em] sm:tracking-[0.3em] font-black mt-1">
             {activeTierLeagues.length > 1 ? `${activeTierLeagues.length} GRUP • ` : ''} 1000+ OYUNCU • SEZON 1
           </p>
         </div>
-        <div className="flex gap-2">
+        {/* View Mode Tabs — mobilde yatay scroll, sm+ esnek */}
+        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar -mx-1 px-1 sm:mx-0 sm:px-0">
             <button 
                 onClick={() => setViewMode('table')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${viewMode === 'table' ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-white/40'}`}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all whitespace-nowrap shrink-0 touch-target-44 ${viewMode === 'table' ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-white/40'}`}
             >
                 <Trophy size={14} /> PUAN DURUMU
             </button>
             <button 
                 onClick={() => setViewMode('fixtures')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${viewMode === 'fixtures' ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-white/40'}`}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all whitespace-nowrap shrink-0 touch-target-44 ${viewMode === 'fixtures' ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-white/40'}`}
             >
                 <RefreshCw size={14} /> MAÇLAR
             </button>
             <button 
                 onClick={() => setViewMode('players')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${viewMode === 'players' ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-white/40'}`}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all whitespace-nowrap shrink-0 touch-target-44 ${viewMode === 'players' ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-white/40'}`}
             >
                 <Users size={14} /> OYUNCU SIRALAMASI
             </button>
@@ -487,113 +488,118 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
         </div>
       </div>
 
-      {/* Standings Table */}
+      {/* Standings Table — mobilde yatay scroll */}
       <div className={`rounded-2xl border ${colors.border} overflow-hidden`}>
-        {/* Table Header */}
-        <div className={`${colors.bg} px-4 py-3 border-b ${colors.border}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-lg ${colors.accent} flex items-center justify-center`}>
+        {/* Table Header — Lig adı (sabit, scroll dışında) */}
+        <div className={`${colors.bg} px-3 sm:px-4 py-3 border-b ${colors.border}`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className={`w-8 h-8 rounded-lg ${colors.accent} flex items-center justify-center shrink-0`}>
                 <Trophy size={14} className="text-white" />
               </div>
-              <div>
-                <p className={`text-sm font-black uppercase tracking-wider ${colors.text}`}>
+              <div className="min-w-0">
+                <p className={`text-xs sm:text-sm font-black uppercase tracking-wider ${colors.text} truncate`}>
                   {currentLeague?.name || '1. Lig'}
                 </p>
                 <p className="text-[8px] text-white/20 uppercase tracking-widest font-bold">Hafta 1 / 34</p>
               </div>
             </div>
             {data?.source === 'fallback' && (
-              <span className="text-[8px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase font-black tracking-widest">
+              <span className="text-[8px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase font-black tracking-widest shrink-0">
                 Offline
               </span>
             )}
           </div>
         </div>
 
-        {/* Column Headers */}
-        <div className="grid grid-cols-[2rem_1fr_repeat(8,_3.5rem)] items-center px-4 py-2.5 border-b border-white/5 bg-zinc-900/50">
-          <span className="text-[8px] font-black uppercase tracking-widest text-white/20 text-center">#</span>
-          <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Takım</span>
-          {[{ l: 'O', k: 'played' }, { l: 'G', k: 'won' }, { l: 'B', k: 'drawn' }, { l: 'M', k: 'lost' }, { l: 'AG', k: 'goals_for' }, { l: 'YG', k: 'goals_against' }, { l: 'AV', k: 'goal_diff' }, { l: 'P', k: 'points' }].map(h => (
-            <span
-              key={h.k}
-              onClick={() => handleSort(h.k)}
-              className={`text-[8px] font-black uppercase tracking-widest text-center cursor-pointer hover:text-white transition-colors ${sortKey === h.k ? 'text-white' : 'text-white/20'}`}
-            >
-              {h.l}{sortKey === h.k && (sortDir === 'desc' ? ' ↓' : ' ↑')}
-            </span>
-          ))}
-        </div>
-
-        {/* Loading State */}
-        {loading && standings.length === 0 && (
-          <div className="flex items-center justify-center py-20">
-            <RefreshCw size={20} className="text-white/20 animate-spin" />
-          </div>
-        )}
-
-        {/* Rows */}
-        {sortedStandings.map((row, idx) => {
-          const teamName = sanitizeTeamName(row.teams?.name);
-          const teamId = row.team_id;
-          const isUser = row.teams?.is_user_team || 
-                        (profile && (teamName === profile.team_name || teamId === profile.id || teamId === profile.team_id)) ||
-                        (teamId === 'TouchlineFC_001');
-          const isBot = row.teams?.is_bot || false;
-          const zoneIcon = getZoneIcon(idx, effectiveActiveLeague);
-          
-          // Safety defaults for goals/points
-          const played = row.played || 0;
-          const won = row.won || 0;
-          const drawn = row.drawn || 0;
-          const lost = row.lost || 0;
-          const gf = row.gf || row.goals_for || 0;
-          const ga = row.ga || row.goals_against || 0;
-          const gd = row.gd || (gf - ga);
-          const points = row.points || (won * 3 + drawn);
-
-          return (
-            <div
-              key={row.team_id || row.id}
-              ref={isUser ? userRowRef : undefined}
-              onClick={() => handleTeamClick({ id: row.team_id, name: teamName })}
-              className={`grid grid-cols-[2rem_1fr_repeat(8,_3.5rem)] items-center px-4 py-2.5 border-b border-white/[0.03] hover:bg-white/5 transition-colors group cursor-pointer ${getRowStyle(idx, effectiveActiveLeague)} ${isUser ? 'bg-amber-500/10 border-l-2 border-amber-500' : ''}`}
-            >
-              <div className="flex items-center justify-center gap-1">
-                {zoneIcon}
-                <span className={`text-xs font-bold font-mono ${isUser ? 'text-white' : 'text-white/40'}`}>
-                  {idx + 1}
+        {/* Scrollable Table Container — mobilde yatay scroll */}
+        <div className="overflow-x-auto no-scrollbar">
+          <div className="min-w-[520px]">
+            {/* Column Headers */}
+            <div className="grid grid-cols-[2rem_1fr_repeat(8,_3.5rem)] items-center px-3 sm:px-4 py-2.5 border-b border-white/5 bg-zinc-900/50">
+              <span className="text-[8px] font-black uppercase tracking-widest text-white/20 text-center">#</span>
+              <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Takım</span>
+              {[{ l: 'O', k: 'played' }, { l: 'G', k: 'won' }, { l: 'B', k: 'drawn' }, { l: 'M', k: 'lost' }, { l: 'AG', k: 'goals_for' }, { l: 'YG', k: 'goals_against' }, { l: 'AV', k: 'goal_diff' }, { l: 'P', k: 'points' }].map(h => (
+                <span
+                  key={h.k}
+                  onClick={() => handleSort(h.k)}
+                  className={`text-[8px] font-black uppercase tracking-widest text-center cursor-pointer hover:text-white transition-colors touch-target-44 flex items-center justify-center ${sortKey === h.k ? 'text-white' : 'text-white/20'}`}
+                >
+                  {h.l}{sortKey === h.k && (sortDir === 'desc' ? ' ↓' : ' ↑')}
                 </span>
-              </div>
-              <div className="flex items-center gap-2 min-w-0">
-                {isUser ? (
-                  <Shield size={12} className="text-white shrink-0" />
-                ) : isBot ? (
-                  <Bot size={12} className="text-cyan-400/60 shrink-0" />
-                ) : (
-                  <Bot size={12} className="text-white/20 shrink-0" />
-                )}
-                <span className={`text-xs font-bold tracking-wider truncate ${isUser ? 'text-white' : 'text-white/60 group-hover:text-white'}`}>
-                  {toTitleCase(teamName) || teamName || 'Bilinmiyor'}
-                </span>
-                {isBot && !isUser && (
-                  <span className="text-[9px] text-cyan-400/50 font-mono">BOT</span>
-                )}
-              </div>
-              <span className="text-xs font-mono text-white/30 text-center">{played}</span>
-              <span className="text-xs font-mono text-white/30 text-center">{won}</span>
-              <span className="text-xs font-mono text-white/30 text-center">{drawn}</span>
-              <span className="text-xs font-mono text-white/30 text-center">{lost}</span>
-              <span className="text-xs font-mono text-white/30 text-center">{gf}</span>
-              <span className="text-xs font-mono text-white/30 text-center">{ga}</span>
-              <span className={`text-xs font-mono text-center ${gd > 0 ? 'text-green-400' : gd < 0 ? 'text-red-400' : 'text-white/30'}`}>{gd > 0 ? '+' : ''}{gd}</span>
-              <span className={`text-xs font-black font-mono text-center ${isUser ? 'text-white' : 'text-white/70'}`}>
-                {points}
-              </span>
+              ))}
             </div>
-          );
-        })}
+
+            {/* Loading State */}
+            {loading && standings.length === 0 && (
+              <div className="flex items-center justify-center py-20">
+                <RefreshCw size={20} className="text-white/20 animate-spin" />
+              </div>
+            )}
+
+            {/* Rows */}
+            {sortedStandings.map((row, idx) => {
+              const teamName = sanitizeTeamName(row.teams?.name);
+              const teamId = row.team_id;
+              const isUser = row.teams?.is_user_team || 
+                            (profile && (teamName === profile.team_name || teamId === profile.id || teamId === profile.team_id)) ||
+                            (teamId === 'TouchlineFC_001');
+              const isBot = row.teams?.is_bot || false;
+              const zoneIcon = getZoneIcon(idx, effectiveActiveLeague);
+              
+              // Safety defaults for goals/points
+              const played = row.played || 0;
+              const won = row.won || 0;
+              const drawn = row.drawn || 0;
+              const lost = row.lost || 0;
+              const gf = row.gf || row.goals_for || 0;
+              const ga = row.ga || row.goals_against || 0;
+              const gd = row.gd || (gf - ga);
+              const points = row.points || (won * 3 + drawn);
+
+              return (
+                <div
+                  key={row.team_id || row.id}
+                  ref={isUser ? userRowRef : undefined}
+                  onClick={() => handleTeamClick({ id: row.team_id, name: teamName })}
+                  className={`grid grid-cols-[2rem_1fr_repeat(8,_3.5rem)] items-center px-3 sm:px-4 py-2.5 border-b border-white/[0.03] hover:bg-white/5 active:bg-white/10 transition-colors group cursor-pointer mobile-touch-row ${getRowStyle(idx, effectiveActiveLeague)} ${isUser ? 'bg-amber-500/10 border-l-2 border-amber-500' : ''}`}
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    {zoneIcon}
+                    <span className={`text-xs font-bold font-mono ${isUser ? 'text-white' : 'text-white/40'}`}>
+                      {idx + 1}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 min-w-0 pr-2">
+                    {isUser ? (
+                      <Shield size={12} className="text-white shrink-0" />
+                    ) : isBot ? (
+                      <Bot size={12} className="text-cyan-400/60 shrink-0" />
+                    ) : (
+                      <Bot size={12} className="text-white/20 shrink-0" />
+                    )}
+                    <span className={`text-xs font-bold tracking-wider truncate ${isUser ? 'text-white' : 'text-white/60 group-hover:text-white'}`}>
+                      {toTitleCase(teamName) || teamName || 'Bilinmiyor'}
+                    </span>
+                    {isBot && !isUser && (
+                      <span className="text-[9px] text-cyan-400/50 font-mono shrink-0">BOT</span>
+                    )}
+                  </div>
+                  <span className="text-xs font-mono text-white/30 text-center">{played}</span>
+                  <span className="text-xs font-mono text-white/30 text-center">{won}</span>
+                  <span className="text-xs font-mono text-white/30 text-center">{drawn}</span>
+                  <span className="text-xs font-mono text-white/30 text-center">{lost}</span>
+                  <span className="text-xs font-mono text-white/30 text-center">{gf}</span>
+                  <span className="text-xs font-mono text-white/30 text-center">{ga}</span>
+                  <span className={`text-xs font-mono text-center ${gd > 0 ? 'text-green-400' : gd < 0 ? 'text-red-400' : 'text-white/30'}`}>{gd > 0 ? '+' : ''}{gd}</span>
+                  <span className={`text-xs font-black font-mono text-center ${isUser ? 'text-white' : 'text-white/70'}`}>
+                    {points}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Empty State */}
         {!loading && standings.length === 0 && data?.source !== 'error' && (

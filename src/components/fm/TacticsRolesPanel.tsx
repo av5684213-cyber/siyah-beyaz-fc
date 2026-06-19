@@ -286,7 +286,7 @@ export default function TacticsRolesPanel({
   // Pozisyon koordinatları (GK y:5 yukarıda, ST y:82 aşağıda) CSS scaleY(-1)
   // ile ters çevrilir: GK y:95 (aşağı), ST y:18 (yukarı)
   const renderPitch = () => (
-    <div className="relative w-full aspect-[2/3] max-h-[520px] mx-auto rounded-xl overflow-hidden border-2 border-white/[0.08]">
+    <div className="relative w-full aspect-[2/3] max-h-[480px] sm:max-h-[520px] mx-auto rounded-xl overflow-hidden border-2 border-white/[0.08]">
       {/* Pitch background */}
       <div
         className="absolute inset-0"
@@ -316,7 +316,8 @@ export default function TacticsRolesPanel({
         <div className="absolute top-0 left-[4%] right-[4%] bottom-0 border-l border-r border-white/[0.06]" />
       </div>
 
-      {/* Player dots — y eksenini ters çevir (kale aşağıda) */}
+      {/* Player dots — y eksenini ters çevir (kale aşağıda)
+          MOBİL UX: Dokunma hedefi 44x44px (iOS standard), görünen dot 36-40px */}
       <div className="absolute inset-0" style={{ transform: 'scaleY(-1)' }}>
         {formation.positions.map((slot, idx) => {
           const player = squad[idx];
@@ -331,24 +332,28 @@ export default function TacticsRolesPanel({
           return (
             <button
               key={`${slot.pos}-${idx}`}
-              className="absolute -translate-x-1/2 -translate-y-1/2 z-10 group"
+              className="absolute -translate-x-1/2 -translate-y-1/2 z-10 group mobile-tap-highlight"
               style={{
                 left: `${slot.x}%`,
                 top: `${slot.y}%`,
+                minWidth: '44px',
+                minHeight: '44px',
               }}
               onClick={() => handleSlotClick(idx, slot.pos)}
+              aria-label={`${slot.pos} pozisyonu${player ? ': ' + player.name : ': boş'}`}
             >
-              {/* Glow ring */}
+              {/* Glow ring — touch target alanı kadar geniş */}
               <div
-                className={`absolute -inset-2 rounded-full transition-all duration-200 ${
+                className={`absolute inset-0 rounded-full transition-all duration-200 ${
                   isSelected
                     ? `bg-amber-500/30 ${CATEGORY_GLOW[posGroup] ?? ''} shadow-lg`
-                    : 'bg-transparent group-hover:bg-white/10'
+                    : 'bg-transparent group-active:bg-white/15 group-hover:bg-white/10'
                 }`}
               />
-              {/* Main dot — yazıyı tekrar düz çevir */}
+              {/* Main dot — yazıyı tekrar düz çevir
+                  Mobilde 40px, sm+ 36px — ama touch area her zaman 44px+ */}
               <div
-                className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-[11px] font-bold border-2 transition-all duration-200 ${
+                className={`relative w-10 h-10 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-[11px] font-bold border-2 transition-all duration-200 mx-auto ${
                   isSelected
                     ? 'border-amber-400 bg-zinc-900 scale-110'
                     : `border-white/30 bg-zinc-900/90 group-hover:border-white/50`
@@ -369,12 +374,13 @@ export default function TacticsRolesPanel({
                   </div>
                 )}
               </div>
-              {/* Label — yazıyı tekrar düz çevir */}
+              {/* Label — yazıyı tekrar düz çevir
+                  Mobilde de göster (8px) — yine okunabilir */}
               <div
                 className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap"
                 style={{ transform: 'translateX(-50%) scaleY(-1)' }}
               >
-                <span className="text-[8px] sm:text-[9px] font-bold text-white/40 uppercase tracking-wider">
+                <span className="text-[9px] sm:text-[9px] font-bold text-white/50 uppercase tracking-wider">
                   {slot.pos}
                 </span>
               </div>
@@ -383,22 +389,27 @@ export default function TacticsRolesPanel({
         })}
       </div>
 
-      {/* Role Selector Popup */}
+      {/* Role Selector Popup — Mobilde full-screen gibi, sm+ normal modal */}
       {selectedSlot && selectedPlayer && (
         <div
           ref={rolePopupRef}
-          className="absolute z-50 inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          className="absolute z-50 inset-0 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm"
           onClick={() => setSelectedSlot(null)}
         >
           <div
-            className="relative w-[92%] max-w-md max-h-[80%] bg-[#0d1117] border border-white/[0.08] rounded-2xl shadow-2xl overflow-hidden"
+            className="relative w-full sm:w-[92%] sm:max-w-md max-h-[90%] sm:max-h-[80%] bg-[#0d1117] border border-white/[0.08] rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Mobil bottom sheet handle bar */}
+            <div className="sm:hidden flex justify-center pt-2 pb-1 shrink-0">
+              <div className="w-10 h-1 bg-white/15 rounded-full" />
+            </div>
+
             {/* Popup header */}
-            <div className="flex items-center justify-between p-4 border-b border-white/[0.06]">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between p-3 sm:p-4 border-b border-white/[0.06] shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
                     CATEGORY_DOT_COLORS[
                       getPositionGroup(
                         formation.positions[selectedSlot.index].pos,
@@ -408,8 +419,8 @@ export default function TacticsRolesPanel({
                 >
                   {selectedPlayer.name.charAt(0)}
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-white">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-white truncate">
                     {selectedPlayer.name}
                   </p>
                   <p className="text-[10px] text-white/40 uppercase tracking-wider">
@@ -419,14 +430,15 @@ export default function TacticsRolesPanel({
               </div>
               <button
                 onClick={() => setSelectedSlot(null)}
-                className="w-8 h-8 rounded-lg bg-white/[0.05] hover:bg-white/10 flex items-center justify-center transition-colors"
+                className="touch-target-44 w-9 h-9 rounded-lg bg-white/[0.05] hover:bg-white/10 flex items-center justify-center transition-colors shrink-0"
+                aria-label="Kapat"
               >
                 <X className="w-4 h-4 text-white/60" />
               </button>
             </div>
 
-            {/* Compatible roles list */}
-            <div className="p-3 overflow-y-auto max-h-60">
+            {/* Compatible roles list — scrollable */}
+            <div className="p-3 overflow-y-auto no-scrollbar flex-1">
               <p className="text-[10px] text-white/30 uppercase tracking-widest mb-2 px-1">
                 Uyumlu Roller
               </p>
@@ -444,14 +456,14 @@ export default function TacticsRolesPanel({
                       onClick={() =>
                         handleRoleSelect(selectedPlayer.id, role.id)
                       }
-                      className={`w-full text-left p-3 rounded-xl border transition-all ${
+                      className={`w-full text-left p-3 rounded-xl border transition-all mobile-tap-highlight ${
                         isCurrentRole
                           ? 'bg-amber-500/10 border-amber-500/30'
-                          : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05] hover:border-white/[0.12]'
+                          : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05] hover:border-white/[0.12] active:bg-white/[0.08]'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-start gap-2.5">
+                        <div className="flex items-start gap-2.5 min-w-0">
                           <div
                             className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 ${
                               CATEGORY_COLORS[role.category] ?? ''
@@ -459,13 +471,13 @@ export default function TacticsRolesPanel({
                           >
                             {role.icon}
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-bold text-white">
                                 {role.name}
                               </span>
                               {isCurrentRole && (
-                                <Check className="w-3 h-3 text-amber-400" />
+                                <Check className="w-3 h-3 text-amber-400 shrink-0" />
                               )}
                             </div>
                             <p className="text-[9px] text-white/30 mt-0.5 leading-relaxed line-clamp-2">
@@ -494,11 +506,11 @@ export default function TacticsRolesPanel({
               </div>
             </div>
 
-            {/* Confirm */}
-            <div className="p-3 border-t border-white/[0.06]">
+            {/* Confirm — sticky bottom */}
+            <div className="p-3 border-t border-white/[0.06] shrink-0 safe-area-bottom">
               <button
                 onClick={() => setSelectedSlot(null)}
-                className="w-full py-2 rounded-lg bg-amber-500/10 text-amber-300 text-xs font-bold uppercase tracking-widest hover:bg-amber-500/20 transition-colors"
+                className="w-full py-3 rounded-lg bg-amber-500/10 text-amber-300 text-xs font-bold uppercase tracking-widest hover:bg-amber-500/20 transition-colors touch-target-44"
               >
                 Onayla
               </button>

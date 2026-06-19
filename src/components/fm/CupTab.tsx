@@ -210,8 +210,8 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* ── Cup Selector Tabs ── */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+      {/* ── Cup Selector Tabs — yatay scroll, touch target 44px ── */}
+      <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-1 px-1">
         {cupSeasons.map((cs, idx) => {
           const isActive = idx === activeCupIdx;
           const def = CUP_DEFINITIONS.find((d) => d.id === cs.cupId);
@@ -227,7 +227,7 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
               onClick={() => { setActiveCupIdx(idx); setActiveSection('bracket'); }}
               className={`
                 flex items-center gap-2 px-4 py-3 rounded-xl border text-xs font-black uppercase tracking-widest
-                whitespace-nowrap transition-all shrink-0
+                whitespace-nowrap transition-all shrink-0 touch-target-44 mobile-tap-highlight
                 ${isActive
                   ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.08)]'
                   : 'bg-white/[0.02] border-white/[0.06] text-white/40 hover:text-white/60 hover:border-white/10'

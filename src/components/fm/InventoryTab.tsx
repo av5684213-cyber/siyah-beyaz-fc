@@ -442,13 +442,13 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
         </motion.div>
       </div>
 
-      {/* Category Tabs - slightly dimmed */}
-      <div className="opacity-50 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      {/* Category Tabs - yatay scroll, touch target 44px */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar -mx-1 px-1">
         {categoryTabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveCategory(tab.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all shrink-0 ${
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all shrink-0 touch-target-44 mobile-tap-highlight ${
               activeCategory === tab.id
                 ? 'bg-white/10 border-white/20 text-white'
                 : 'bg-white/[0.02] border-white/5 text-white/30 hover:bg-white/5 hover:text-white/50'
@@ -459,15 +459,13 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
           </button>
         ))}
 
-        <div className="ml-auto">
-          <button
-            onClick={onMarketRedirect}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border border-amber-500/20 bg-amber-500/5 text-amber-400 hover:bg-amber-500/10 transition-all"
-          >
-            <ChevronRight size={10} />
-            Market
-          </button>
-        </div>
+        <button
+          onClick={onMarketRedirect}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border border-amber-500/20 bg-amber-500/5 text-amber-400 hover:bg-amber-500/10 transition-all shrink-0 touch-target-44 mobile-tap-highlight"
+        >
+          <ChevronRight size={10} />
+          Market
+        </button>
       </div>
 
       {/* Items Grid */}
