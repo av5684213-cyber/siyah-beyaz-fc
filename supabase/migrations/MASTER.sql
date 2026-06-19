@@ -892,8 +892,27 @@ CREATE TABLE IF NOT EXISTS league_standings (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(season_id, team_id)
 );
+-- [BUG-18] ALTER ile tüm kolonları garantile (CREATE TABLE IF NOT EXISTS varolanı güncellemez)
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS played INTEGER DEFAULT 0;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS won INTEGER DEFAULT 0;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS drawn INTEGER DEFAULT 0;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS lost INTEGER DEFAULT 0;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS gf INTEGER DEFAULT 0;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS ga INTEGER DEFAULT 0;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS gd INTEGER DEFAULT 0;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS goals_for INTEGER DEFAULT 0;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS goals_against INTEGER DEFAULT 0;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS goal_difference INTEGER DEFAULT 0;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 0;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS form TEXT;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS position INTEGER;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS rank INTEGER;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS clean_sheets INTEGER DEFAULT 0;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS failed_to_score INTEGER DEFAULT 0;
+ALTER TABLE league_standings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 CREATE INDEX IF NOT EXISTS idx_league_standings_season ON league_standings(season_id);
 CREATE INDEX IF NOT EXISTS idx_league_standings_league ON league_standings(league_id);
+CREATE INDEX IF NOT EXISTS idx_league_standings_team ON league_standings(team_id);
 
 -- [27] training_attendances — antrenman katılımı
 CREATE TABLE IF NOT EXISTS training_attendances (
