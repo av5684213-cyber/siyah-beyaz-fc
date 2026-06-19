@@ -159,6 +159,7 @@ import MobileBottomNav from '@/components/fm/MobileBottomNav';
 import { useToast } from '@/hooks/use-toast';
 import { useConfirm } from '@/hooks/use-confirm'; // DÜZELTME 8: confirm() → AlertDialog
 import { useAuth } from '@/contexts/AuthContext';
+import { useSwipe, useHaptic } from '@/lib/hooks/useMobileGestures';
 
 export default function Home() {
   const { confirm, ConfirmDialog } = useConfirm(); // DÜZELTME 8
@@ -177,6 +178,31 @@ export default function Home() {
   } = useFM();
   const { signOut: authSignOut, user: authUser, loading: authLoading } = useAuth();
   const { matchState, setMatchState } = useMatchContext();
+
+  // ═══ Mobil swipe ile sekmeler arası geçiş ═══
+  const haptic = useHaptic();
+  const MOBILE_TAB_ORDER = ['dashboard', 'tactics', 'matchday', 'multiplayer', 'league'];
+  
+  const handleSwipeLeft = () => {
+    const idx = MOBILE_TAB_ORDER.indexOf(activeTab);
+    if (idx >= 0 && idx < MOBILE_TAB_ORDER.length - 1) {
+      setActiveTab(MOBILE_TAB_ORDER[idx + 1]);
+      haptic(10);
+    }
+  };
+  const handleSwipeRight = () => {
+    const idx = MOBILE_TAB_ORDER.indexOf(activeTab);
+    if (idx > 0) {
+      setActiveTab(MOBILE_TAB_ORDER[idx - 1]);
+      haptic(10);
+    }
+  };
+  
+  const swipeHandlers = useSwipe({
+    onSwipeLeft: handleSwipeLeft,
+    onSwipeRight: handleSwipeRight,
+    threshold: 80, // daha büyük threshold → yanlışlıkla swipe önle
+  });
 
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: string }>({ key: 'rating', direction: 'desc' });
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
@@ -977,7 +1003,7 @@ export default function Home() {
               <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest text-white/30 hover:text-white hover:bg-white/5 transition-all"><LogOut size={14} /> ÇIKIŞ YAP</button>
             </div>
           </nav>
-          <section className="flex-1 min-h-[600px]">
+          <section className="flex-1 min-h-[600px] lg:touch-pan-y" {...swipeHandlers}>
             <AnimatePresence mode="wait">
               {activeTab === 'dashboard' && (
                 <motion.div key="dashboard" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>

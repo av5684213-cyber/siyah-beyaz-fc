@@ -589,3 +589,118 @@ html, body {
 .animate-confetti-fall {
   animation: confetti-fall linear forwards;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBİL UX İYİLEŞTİRMELERİ — Gerçek mobil deneyim
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Shimmer animasyonu — skeleton loader'lar için */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Mobilde scroll momentum'i iyileştir */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobilde text selection'ı kapat (daha app-like deneyim) */
+@media (max-width: 1023px) {
+  body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  /* Input ve contenteditable alanlarda selection açık kalsın */
+  input, textarea, [contenteditable], select {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+}
+
+/* Mobilde pull-to-refresh göstergesi için alan */
+.pull-to-refresh-indicator {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+/* Mobilde sticky header için offset */
+@media (max-width: 1023px) {
+  /* Header 48px (compact) — content üstten 48px boşluk */
+  .mobile-header-offset {
+    padding-top: 0;
+  }
+}
+
+/* Mobilde active state feedback — butona basınca görsel tepki */
+@media (max-width: 1023px) {
+  button:active, a:active, [role="button"]:active {
+    transform: scale(0.97);
+    transition: transform 0.05s;
+  }
+}
+
+/* Mobilde overscroll bounce'u engelle (sayfa seviyesinde) */
+html {
+  overscroll-behavior-y: none;
+}
+
+/* Mobilde input focus'da zoom yapma (iOS Safari) */
+@media (max-width: 639px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Mobilde image dragging'i engelle */
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+/* Tab transition animasyonu — daha akıcı */
+.tab-enter {
+  animation: tabSlideIn 0.25s ease-out;
+}
+
+@keyframes tabSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Mobilde scroll bar her zaman gizli (daha temiz görünüm) */
+@media (max-width: 1023px) {
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+  body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+}

@@ -22,6 +22,7 @@ import {
   Award,
   X,
 } from 'lucide-react';
+import { useHaptic } from '@/lib/hooks/useMobileGestures';
 
 interface MobileBottomNavProps {
   activeTab: string;
@@ -76,6 +77,12 @@ const MORE_TABS = [
 
 export default function MobileBottomNav({ activeTab, onTabChange, isAdmin }: MobileBottomNavProps) {
   const [showMore, setShowMore] = useState(false);
+  const haptic = useHaptic();
+
+  const handleTabChange = (tabId: string) => {
+    haptic(15); // hafif titreşim
+    onTabChange(tabId);
+  };
 
   const allMoreTabs = isAdmin
     ? [...MORE_TABS, { id: 'admin', label: 'Admin', icon: Shield }]
@@ -133,7 +140,7 @@ export default function MobileBottomNav({ activeTab, onTabChange, isAdmin }: Mob
                     <button
                       key={tab.id}
                       onClick={() => {
-                        onTabChange(tab.id);
+                        handleTabChange(tab.id);
                         setShowMore(false);
                       }}
                       className={`touch-target-44 flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-all mobile-tap-highlight ${
@@ -176,7 +183,7 @@ export default function MobileBottomNav({ activeTab, onTabChange, isAdmin }: Mob
             return (
               <button
                 key={tab.id}
-                onClick={() => onTabChange(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all relative mobile-tap-highlight ${
                   isActive ? 'text-amber-400' : 'text-white/40 hover:text-white/60 active:text-white/80'
                 }`}
