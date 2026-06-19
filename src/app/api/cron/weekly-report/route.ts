@@ -138,12 +138,13 @@ export async function GET(request: Request) {
         if (!error) {
           reportsCreated++;
           // Send notification
-          // [BUG-14] notifications tablosu profile_id ve message kullanır (user_id ve body değil)
+          // [BUG-14 DÜZELTME] notifications tablosu 'body' kullanır (message değil)
+          // NotificationCenter.tsx ve tüm cron'lar 'body' yazıyor/okuyor
           await supabase.from('notifications').insert({
             profile_id: profile.id,
             type: 'weekly_report',
             title: '📊 Haftalık Rapor Hazır',
-            message: `${wins}G ${draws}B ${losses}M — Raporunuzu inceleyin!`,
+            body: `${wins}G ${draws}B ${losses}M — Raporunuzu inceleyin!`,
             category: 'reports',
           });
         }

@@ -556,6 +556,19 @@ CREATE TABLE IF NOT EXISTS notifications (
   category TEXT DEFAULT 'general',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+-- [BUG-15] ALTER ile tüm kolonları garantile (CREATE TABLE IF NOT EXISTS varolanı güncellemez)
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS profile_id TEXT;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type TEXT;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS body TEXT;        -- kodun çoğu 'body' kullanıyor
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS message TEXT;     -- bazı yerler 'message' kullanıyor
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS data JSONB DEFAULT '{}';
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT false;
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'general';
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}';  -- season-end kullanıyor
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS url TEXT;
+CREATE INDEX IF NOT EXISTS idx_notifications_profile ON notifications(profile_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(profile_id, is_read);
 ALTER TABLE notifications ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'general';
 
 CREATE TABLE IF NOT EXISTS notification_preferences (
