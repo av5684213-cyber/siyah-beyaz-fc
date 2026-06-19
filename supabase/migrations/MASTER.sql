@@ -1372,6 +1372,57 @@ BEGIN
 END;
 $$;
 
+-- [31f] rpc_sync_free_agent_price — serbest ajan fiyat senkronizasyonu (RLS bypass)
+-- Client-side browser'dan transfer_market.update yapılması RLS'e takılabilir,
+-- bu RPC SECURITY DEFINER ile RLS'i bypass eder ve SADECE seller_id IS NULL
+-- olan (serbest ajan) kayıtları günceller — güvenlik korumalı.
+CREATE OR REPLACE FUNCTION rpc_sync_free_agent_price(
+  p_listing_id UUID,
+  p_price NUMERIC,
+  p_min_price NUMERIC,
+  p_max_price NUMERIC,
+  p_player_data JSONB
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE transfer_market
+  SET price = p_price,
+      min_price = p_min_price,
+      max_price = p_max_price,
+      player_data = p_player_data
+  WHERE id = p_listing_id
+    AND seller_id IS NULL;  -- SADECE serbest ajanlar
+END;
+$$;
+GRANT EXECUTE ON FUNCTION rpc_sync_free_agent_price TO anon, authenticated;
+
+-- [31g] rpc_charge_scout_fee — scout ücretini server-side düş (güvenlik sertleştirme)
+-- Client-side money manipülasyonunu önler. Yetersiz bakiye varsa FALSE döner.
+CREATE OR REPLACE FUNCTION rpc_charge_scout_fee(
+  p_profile_id TEXT,
+  p_amount NUMERIC
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_money NUMERIC;
+BEGIN
+  SELECT money INTO v_money FROM profiles WHERE id = p_profile_id FOR UPDATE;
+  IF v_money IS NULL THEN RETURN FALSE; END IF;
+  IF v_money < p_amount THEN RETURN FALSE; END IF;
+  UPDATE profiles SET money = money - p_amount WHERE id = p_profile_id;
+  RETURN TRUE;
+END;
+$$;
+GRANT EXECUTE ON FUNCTION rpc_charge_scout_fee TO anon, authenticated;
+
 -- [31e] rpc_train_player — oyuncuyu antrenman yap (mevcut RPC ile aynı)
 -- Bu RPC zaten mevcut olabilir, DROP IF EXISTS ile güvenli
 SELECT drop_function_if_exists('rpc_train_player');

@@ -946,7 +946,64 @@ DO $$ BEGIN
     AND match_date < CURRENT_DATE - INTERVAL '2 days';
 EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
--- ═══ PART 28: ÖZET ═══
+-- ═══ PART 28: rpc_sync_free_agent_price — serbest ajan fiyat senk. (RLS bypass) ═══
+DO $_$ BEGIN
+  CREATE OR REPLACE FUNCTION rpc_sync_free_agent_price(
+    p_listing_id UUID,
+    p_price NUMERIC,
+    p_min_price NUMERIC,
+    p_max_price NUMERIC,
+    p_player_data JSONB
+  )
+  RETURNS VOID
+  LANGUAGE plpgsql
+  SECURITY DEFINER
+  SET search_path = public
+  AS $$
+  BEGIN
+    UPDATE transfer_market
+    SET price = p_price,
+        min_price = p_min_price,
+        max_price = p_max_price,
+        player_data = p_player_data
+    WHERE id = p_listing_id
+      AND seller_id IS NULL;
+  END;
+  $$;
+EXCEPTION WHEN OTHERS THEN NULL; END $_$;
+
+DO $_$ BEGIN
+  GRANT EXECUTE ON FUNCTION rpc_sync_free_agent_price TO anon, authenticated;
+EXCEPTION WHEN OTHERS THEN NULL; END $_$;
+
+-- ═══ PART 29: rpc_charge_scout_fee — scout ücretini server-side düş ═══
+DO $_$ BEGIN
+  CREATE OR REPLACE FUNCTION rpc_charge_scout_fee(
+    p_profile_id TEXT,
+    p_amount NUMERIC
+  )
+  RETURNS BOOLEAN
+  LANGUAGE plpgsql
+  SECURITY DEFINER
+  SET search_path = public
+  AS $$
+  DECLARE
+    v_money NUMERIC;
+  BEGIN
+    SELECT money INTO v_money FROM profiles WHERE id = p_profile_id FOR UPDATE;
+    IF v_money IS NULL THEN RETURN FALSE; END IF;
+    IF v_money < p_amount THEN RETURN FALSE; END IF;
+    UPDATE profiles SET money = money - p_amount WHERE id = p_profile_id;
+    RETURN TRUE;
+  END;
+  $$;
+EXCEPTION WHEN OTHERS THEN NULL; END $_$;
+
+DO $_$ BEGIN
+  GRANT EXECUTE ON FUNCTION rpc_charge_scout_fee TO anon, authenticated;
+EXCEPTION WHEN OTHERS THEN NULL; END $_$;
+
+-- ═══ PART 30: ÖZET ═══
 DO $$
 DECLARE
   v_count integer;

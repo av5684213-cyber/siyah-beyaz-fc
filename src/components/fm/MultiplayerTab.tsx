@@ -236,14 +236,33 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
         if (needsDbUpdate && isSupabaseConfigured()) {
           const supabase = getSupabase();
           if (supabase) {
-            // TODO: Migrate to RPC (BUG-1) — transfer_market.update will fail once RLS is enforced;
-            // need a rpc_update_listing_price or similar for free-agent price corrections
-            await supabase.from('transfer_market').update({
-              price: price,
-              min_price: minPrice,
-              max_price: maxPrice,
-              player_data: syncedPlayer
-            }).eq('id', listing.id);
+            // [BUG-12] RPC kullanarak RLS bypass — serbest ajan fiyat senkronizasyonu
+            // Eski kod: supabase.from('transfer_market').update({...}).eq('id', listing.id)
+            // Bu client-side update RLS politikalarına takılabilir (satır sahipsiz olduğu için).
+            // Yeni RPC (rpc_sync_free_agent_price) SECURITY DEFINER ile RLS'i bypass eder ve
+            // SADECE seller_id IS NULL olan (serbest ajan) kayıtları günceller — güvenli.
+            try {
+              await supabase.rpc('rpc_sync_free_agent_price', {
+                p_listing_id: listing.id,
+                p_price: price,
+                p_min_price: minPrice,
+                p_max_price: maxPrice,
+                p_player_data: syncedPlayer,
+              });
+            } catch (rpcErr) {
+              console.warn('[MultiplayerTab] rpc_sync_free_agent_price failed, fallback to direct update:', rpcErr);
+              // Fallback: RPC yoksa eski yöntem (RLS açıkken çalışmayabilir ama en azından dene)
+              try {
+                await supabase.from('transfer_market').update({
+                  price: price,
+                  min_price: minPrice,
+                  max_price: maxPrice,
+                  player_data: syncedPlayer
+                }).eq('id', listing.id);
+              } catch (fallbackErr) {
+                console.error('[MultiplayerTab] Fallback update also failed:', fallbackErr);
+              }
+            }
           }
         }
 
