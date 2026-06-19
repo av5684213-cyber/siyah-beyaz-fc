@@ -1177,6 +1177,48 @@ async function processLeagueSeasonEnd(
               body: `${age} yaş · ${mps} maç · ${goals} gol. Güle güle.`,
             });
           } catch { /* push bildirim başarısız olursa sessizce geç */ }
+
+          // [BUG-14] Hall of Fame — efsane oyuncu kaydı oluştur
+          // Kriter: 100+ maç VE (50+ gol VEYA 7.0+ rating)
+          // Tier: 150+ gol → gold, 80+ gol → silver, diğer → bronze
+          const isLegend = mps >= 100 && (goals >= 50 || (champ > 0));
+          if (isLegend) {
+            try {
+              // Aynı oyuncu zaten HOF'ta mı kontrol et (duplicate önle)
+              const { data: existingLegend } = await supabase
+                .from('hall_of_fame')
+                .select('id')
+                .eq('player_id', (rp as any).id)
+                .maybeSingle();
+              if (!existingLegend) {
+                const legendTier = goals >= 150 ? 'gold' : goals >= 80 ? 'silver' : 'bronze';
+                await supabase.from('hall_of_fame').insert({
+                  profile_id: pid,
+                  player_id: (rp as any).id as string,
+                  player_name: name,
+                  position: (rp as any).position as string || '',
+                  nationality: (rp as any).nation as string || (rp as any).nationality as string || 'TR',
+                  seasons_played: Math.max(1, Math.floor(mps / 30)), // ~30 maç/sezon
+                  total_goals: goals,
+                  total_assists: asts,
+                  total_matches: mps,
+                  total_clean_sheets: 0, // TODO: career_stats'tan çek
+                  total_motm: 0, // TODO: career_stats'tan çek
+                  avg_rating: (rp as any).form_rating as number || 0,
+                  peak_rating: (rp as any).peak_rating as number || (rp as any).form_rating as number || 0,
+                  legend_tier: legendTier,
+                  is_club_legend: champ > 0,
+                  awards_won: champ > 0 ? [`Şampiyonluk x${champ}`] : [],
+                  retired_season: String((currentSeason as any)?.season_number || new Date().getFullYear()),
+                  inducted_at: new Date().toISOString(),
+                  achievement: legendTier === 'gold' ? 'Altın Efsane' : legendTier === 'silver' ? 'Gümüş Efsane' : 'Bronz Efsane',
+                });
+                console.log(`[season-end] HOF legend: ${name} (${legendTier}) — ${mps} maç, ${goals} gol`);
+              }
+            } catch (hofErr) {
+              console.warn('[season-end] HOF legend insert hatası:', hofErr);
+            }
+          }
         } catch { /* sessizce geç */ }
       }
 

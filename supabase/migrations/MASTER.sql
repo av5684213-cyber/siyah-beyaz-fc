@@ -816,6 +816,35 @@ CREATE TABLE IF NOT EXISTS hall_of_fame (
   data JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+-- [BUG-14] hall-of-fame frontend'in beklediği oyuncu-bazlı efsane sütunları
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS position TEXT;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS nationality TEXT DEFAULT 'TR';
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS seasons_played INTEGER DEFAULT 0;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS total_goals INTEGER DEFAULT 0;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS total_assists INTEGER DEFAULT 0;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS total_matches INTEGER DEFAULT 0;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS total_clean_sheets INTEGER DEFAULT 0;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS total_motm INTEGER DEFAULT 0;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS avg_rating NUMERIC DEFAULT 0;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS peak_rating NUMERIC DEFAULT 0;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS legend_tier TEXT DEFAULT 'bronze';
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS is_club_legend BOOLEAN DEFAULT false;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS awards_won TEXT[] DEFAULT '{}';
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS retired_season TEXT;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS inducted_at TIMESTAMPTZ DEFAULT NOW();
+-- Sezon-bazlı şampiyon özet alanları (eski kullanım için korundu)
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS league_name TEXT;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS champion_team TEXT;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS champion_profile_id TEXT;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS golden_boot_player TEXT;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS golden_boot_goals INTEGER DEFAULT 0;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS top_assists_player TEXT;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS top_assists_value INTEGER DEFAULT 0;
+ALTER TABLE hall_of_fame ADD COLUMN IF NOT EXISTS mvp_player TEXT;
+CREATE INDEX IF NOT EXISTS idx_hof_profile ON hall_of_fame(profile_id);
+CREATE INDEX IF NOT EXISTS idx_hof_player ON hall_of_fame(player_id);
+CREATE INDEX IF NOT EXISTS idx_hof_season ON hall_of_fame(season_id);
+CREATE INDEX IF NOT EXISTS idx_hof_legend_tier ON hall_of_fame(legend_tier);
 
 CREATE TABLE IF NOT EXISTS cron_locks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1934,12 +1963,15 @@ CREATE TABLE IF NOT EXISTS weekly_reports (
   profile_id TEXT NOT NULL,
   week_number INTEGER,
   season_year INTEGER,
+  season_id UUID,
   data JSONB DEFAULT '{}',
   summary TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(profile_id, week_number, season_year)
 );
 CREATE INDEX IF NOT EXISTS idx_weekly_reports_profile ON weekly_reports(profile_id);
 CREATE INDEX IF NOT EXISTS idx_weekly_reports_week ON weekly_reports(profile_id, week_number);
+ALTER TABLE weekly_reports ADD COLUMN IF NOT EXISTS season_id UUID;
 
 CREATE TABLE IF NOT EXISTS achievement_badges (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -671,6 +671,38 @@ export default function Home() {
       lastTrainingDate: today,
       dailyTrainingCount: todayCount + 1,
     }));
+
+    // [BUG-14] Günlük görev: antrenman tamamlama
+    // FULL_TRAINING görev tipi — 2 antrenman tamamlanınca biter
+    try {
+      const sb = getSupabase();
+      if (sb && userId) {
+        const newCount = todayCount + 1;
+        const { data: tasks } = await sb
+          .from('daily_tasks')
+          .select('id, target, progress, is_completed')
+          .eq('user_id', userId)
+          .eq('task_type', 'FULL_TRAINING')
+          .eq('is_completed', false)
+          .gt('expires_at', new Date().toISOString())
+          .limit(1);
+        if (tasks && tasks.length > 0) {
+          const task = tasks[0];
+          const newProgress = Math.min(task.target || 2, (task.progress || 0) + 1);
+          const isNowCompleted = newProgress >= (task.target || 2);
+          await sb.from('daily_tasks')
+            .update({
+              progress: newProgress,
+              is_completed: isNowCompleted,
+              completed_at: isNowCompleted ? new Date().toISOString() : null,
+            })
+            .eq('id', task.id);
+          console.log(`[runTraining] FULL_TRAINING görevi ilerledi: ${newProgress}/${task.target}`);
+        }
+      }
+    } catch (taskErr) {
+      console.warn('[runTraining] Görev tamamlama hatası:', taskErr);
+    }
     
     setShowTrainingToast(true);
     setTimeout(() => setShowTrainingToast(false), 5000);
@@ -1291,37 +1323,50 @@ export default function Home() {
 
                       // ═══ GÜNLÜK GÖREV TAMAMLAMA KONTROLÜ ═══
                       // Maç sonucuna göre günlük görevleri tamamla
+                      // [BUG-14] daily_tasks tablosu 'user_id' kullanır (profile_id değil)
                       try {
                         const homeWon = results.score.home > results.score.away;
                         const scoreDiff = results.score.home - results.score.away;
+                        const homeDraw = results.score.home === results.score.away;
+                        const homeGoals = results.score.home;
+                        const cleanSheet = results.score.away === 0;
 
                         const sb = getSupabase();
                         if (sb && userId) {
                           // Görev tiplerini kontrol et ve tamamla
-                          const taskChecks: Array<{ type: string; condition: boolean }> = [
+                          const taskChecks: Array<{ type: string; condition: boolean; progress?: number }> = [
                             { type: 'WIN_BIG', condition: homeWon && scoreDiff >= 3 },
-                            { type: 'FULL_TRAINING', condition: false }, // antrenman'da tetiklenir
+                            { type: 'WIN_MATCH', condition: homeWon },
+                            { type: 'DRAW_MATCH', condition: homeDraw },
+                            { type: 'SCORE_GOALS', condition: homeGoals >= 2, progress: homeGoals },
+                            { type: 'CLEAN_SHEET', condition: cleanSheet },
                           ];
 
                           for (const check of taskChecks) {
                             if (!check.condition) continue;
                             const { data: tasks } = await sb
                               .from('daily_tasks')
-                              .select('id, task_type, is_completed')
-                              .eq('profile_id', userId)
+                              .select('id, task_type, is_completed, target, progress')
+                              .eq('user_id', userId)
                               .eq('task_type', check.type)
                               .eq('is_completed', false)
                               .gt('expires_at', new Date().toISOString())
                               .limit(1);
 
                             if (tasks && tasks.length > 0) {
+                              const task = tasks[0];
+                              const newProgress = check.progress !== undefined
+                                ? Math.min(task.target || 1, (task.progress || 0) + check.progress)
+                                : (task.target || 1);
+                              const isNowCompleted = newProgress >= (task.target || 1);
                               await sb.from('daily_tasks')
                                 .update({
-                                  is_completed: true,
-                                  completed_at: new Date().toISOString()
+                                  progress: newProgress,
+                                  is_completed: isNowCompleted,
+                                  completed_at: isNowCompleted ? new Date().toISOString() : null,
                                 })
-                                .eq('id', tasks[0].id);
-                              console.log(`[onMatchEnd] Günlük görev tamamlandı: ${check.type}`);
+                                .eq('id', task.id);
+                              console.log(`[onMatchEnd] Görev ilerledi: ${check.type} (progress: ${newProgress}/${task.target}, completed: ${isNowCompleted})`);
                             }
                           }
                         }

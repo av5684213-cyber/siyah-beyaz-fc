@@ -117,28 +117,34 @@ export async function GET(request: Request) {
           .maybeSingle();
 
         // Save report
+        // [BUG-14] weekly_reports tablosu profile_id kullanır (user_id değil)
+        // Ayrıca wins/draws/losses/best_player/weekly_income alanları yok — bunları data JSONB'ye koy
         const { error } = await supabase.from('weekly_reports').upsert({
-          user_id: profile.id,
-          season_id: seasonData?.id || 'unknown',
+          profile_id: profile.id,
+          season_id: seasonData?.id || null,
           week_number: Math.ceil((new Date().getDate()) / 7),
-          wins,
-          draws,
-          losses,
-          best_player_id: bestPlayer?.id,
-          best_player_name: bestPlayer?.name,
-          weekly_income: weeklyIncome,
-          league_position: leaguePosition,
-          next_opponent: nextOpponent,
-        }, { onConflict: 'user_id,season_id,week_number' });
+          season_year: new Date().getFullYear(),
+          data: {
+            wins, draws, losses,
+            best_player_id: bestPlayer?.id,
+            best_player_name: bestPlayer?.name,
+            weekly_income: weeklyIncome,
+            league_position: leaguePosition,
+            next_opponent: nextOpponent,
+          },
+          summary: `${wins}G ${draws}B ${losses}M`,
+        }, { onConflict: 'profile_id,week_number,season_year' });
 
         if (!error) {
           reportsCreated++;
           // Send notification
+          // [BUG-14] notifications tablosu profile_id ve message kullanır (user_id ve body değil)
           await supabase.from('notifications').insert({
-            user_id: profile.id,
+            profile_id: profile.id,
             type: 'weekly_report',
             title: '📊 Haftalık Rapor Hazır',
-            body: `${wins}G ${draws}B ${losses}M — Raporunuzu inceleyin!`,
+            message: `${wins}G ${draws}B ${losses}M — Raporunuzu inceleyin!`,
+            category: 'reports',
           });
         }
       } catch (err) {
