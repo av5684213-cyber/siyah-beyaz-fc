@@ -519,6 +519,28 @@ export default function TacticsCommandCenter({
     return POS_TO_GROUP[(p.specificPosition || p.position) as keyof typeof POS_TO_GROUP] || 'MID';
   };
 
+
+  // ── Get position group from FORMATION SLOT (not player) ──
+  // [BUG-24] Forvet slot'una tıklayınca forvetler listelenmeli, defanslar değil
+  const getSlotPosGroup = (formation: string, slotIdx: number): string => {
+    const parts = formation.split('-');
+    const defCount = parseInt(parts[0]) || 4;
+    const midCount = parseInt(parts[1]) || 4;
+    // fwdCount = parts[2] || (parts.length > 3 ? parts[3] : parts[2]) — bazı dizilişler 4 parçalı (4-2-3-1)
+    let fwdCount = 1;
+    if (parts.length === 3) fwdCount = parseInt(parts[2]) || 1;
+    else if (parts.length === 4) fwdCount = parseInt(parts[3]) || 1;
+
+    // GK: index 0
+    // DEF: index 1..defCount
+    // MID: index defCount+1..defCount+midCount
+    // FWD: index defCount+midCount+1..defCount+midCount+fwdCount
+    if (slotIdx === 0) return 'GK';
+    if (slotIdx <= defCount) return 'DEF';
+    if (slotIdx <= defCount + midCount) return 'MID';
+    return 'FWD';
+  };
+
   // ── Get players of same position group (for swap) ──
   const getPlayersForPositionGroup = (group: string): Player[] => {
     if (group === 'ALL') return [...squad];
@@ -1055,7 +1077,7 @@ export default function TacticsCommandCenter({
                     handleTapPlayer('pitch', idx);
                   } else {
                     // Open position-based player picker
-                    const posGroup = getPlayerPosGroup(player);
+                    const posGroup = getSlotPosGroup(activeTactic.formation || '4-4-2', idx);
                     setPositionPicker({ targetIdx: idx, positionGroup: posGroup, targetSlot: 'pitch' });
                   }
                 },
@@ -1105,7 +1127,7 @@ export default function TacticsCommandCenter({
                           handleTapPlayer('bench', actualIdx);
                         } else {
                           // Open position-based player picker for bench swap
-                          const posGroup = getPlayerPosGroup(player);
+                          const posGroup = 'ALL';
                           setPositionPicker({ targetIdx: actualIdx, positionGroup: posGroup, targetSlot: 'bench' });
                         }
                       }}
@@ -1587,7 +1609,7 @@ export default function TacticsCommandCenter({
                     onClick={() => {
                       if (positionPicker.positionGroup === 'ALL') {
                         // Go back to position group filter - get the original group from the current player
-                        const posGroup = currentPlayer ? getPlayerPosGroup(currentPlayer) : 'MID';
+                        const posGroup = getSlotPosGroup(activeTactic.formation || '4-4-2', idx);
                         setPositionPicker(prev => prev ? { ...prev, positionGroup: posGroup } : null);
                       } else {
                         setPositionPicker(prev => prev ? { ...prev, positionGroup: 'ALL' } : null);

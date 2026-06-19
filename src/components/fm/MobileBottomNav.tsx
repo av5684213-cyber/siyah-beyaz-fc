@@ -49,11 +49,11 @@ const TOP_TABS = [
 
 // Alt bar — 5 ikincil sekme + Diğer
 const BOTTOM_TABS = [
-  { id: 'stadium', label: 'Yerleşke', icon: Building2 },
-  { id: 'scouting', label: 'Gözlem', icon: Binoculars },
-  { id: 'training', label: 'Antrenman', icon: Dumbbell },
-  { id: 'fixtures', label: 'Fikstür', icon: Calendar },
-  { id: 'friendly', label: 'Hazırlık', icon: Activity },
+  { id: 'stadium', label: 'Yer', icon: Building2 },
+  { id: 'scouting', label: 'Göz', icon: Binoculars },
+  { id: 'training', label: 'Ant', icon: Dumbbell },
+  { id: 'fixtures', label: 'Fik', icon: Calendar },
+  { id: 'friendly', label: 'Haz', icon: Activity },
 ];
 
 // "Diğer" menüsü — kalan sekmeler
@@ -101,7 +101,7 @@ export default function MobileBottomNav({ activeTab, onTabChange, isAdmin }: Mob
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
-                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-w-[44px] transition-all relative mobile-tap-highlight ${
+                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-w-0 transition-all relative mobile-tap-highlight ${
                   isActive ? 'text-amber-400' : 'text-white/40'
                 }`}
                 aria-label={tab.label}
@@ -207,7 +207,7 @@ export default function MobileBottomNav({ activeTab, onTabChange, isAdmin }: Mob
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
-                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-w-[44px] transition-all relative mobile-tap-highlight ${
+                className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-w-0 transition-all relative mobile-tap-highlight ${
                   isActive ? 'text-amber-400' : 'text-white/40'
                 }`}
                 aria-label={tab.label}
@@ -236,7 +236,7 @@ export default function MobileBottomNav({ activeTab, onTabChange, isAdmin }: Mob
               haptic(15);
               setShowMore(!showMore);
             }}
-            className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-w-[44px] transition-all relative mobile-tap-highlight ${
+            className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-w-0 transition-all relative mobile-tap-highlight ${
               isActiveInMore || showMore ? 'text-amber-400' : 'text-white/40'
             }`}
             aria-label="Diğer sekmeler"
