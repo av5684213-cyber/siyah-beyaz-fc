@@ -318,6 +318,12 @@ ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW
 ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS session_id UUID;
 ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS referee_id TEXT;
 ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS home_atmosphere JSONB DEFAULT '{}';
+-- [BUG-19] Duplicate fixture önleme: aynı sezon+takım çifti+tarih+saat
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fixtures_unique_match') THEN
+    ALTER TABLE fixtures ADD CONSTRAINT fixtures_unique_match UNIQUE (season_id, home_team_id, away_team_id, match_date, match_time);
+  END IF;
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 CREATE INDEX IF NOT EXISTS idx_fixtures_season ON fixtures(season_id);
 CREATE INDEX IF NOT EXISTS idx_fixtures_status ON fixtures(status);

@@ -1099,3 +1099,12 @@ BEGIN
   RAISE NOTICE ' TOPLAM TABLO: %', v_count;
   RAISE NOTICE '═══════════════════════════════════════════════';
 END $$;
+
+-- ═══ PART 35: FIXTURES — duplicate önleme UNIQUE constraint ═══
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fixtures_unique_match') THEN
+    ALTER TABLE fixtures ADD CONSTRAINT fixtures_unique_match UNIQUE (season_id, home_team_id, away_team_id, match_date, match_time);
+  END IF;
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_fixtures_date_time ON fixtures(match_date, match_time); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_fixtures_competition ON fixtures(competition_type, status); EXCEPTION WHEN OTHERS THEN NULL; END $$;
