@@ -101,6 +101,10 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS financial_health JSONB DEFAULT '{}
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_regen BOOLEAN DEFAULT false;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS team_id TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS prev_tactic JSONB;
+-- [BUG-13] Inventory item etkileri için ek sütunlar
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS next_match_goal_mod NUMERIC DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bonus_training_multiplier NUMERIC DEFAULT 1.0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bonus_training_expires TIMESTAMPTZ;
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 2. LEAGUES + SEASONS + LEAGUE_TEAMS

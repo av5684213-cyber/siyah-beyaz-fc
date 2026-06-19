@@ -689,6 +689,76 @@ if (!isSupabaseConfigured()) {
         const finalHomeGoalMod = (Number(session.home_goal_mod) || 0) + botGoalModHome + opGoalModHome;
         const finalAwayGoalMod = (Number(session.away_goal_mod) || 0) + botGoalModAway + opGoalModAway;
 
+        // [BUG-13] Envanter speed_boost/shield_boost/power_boost item'ları
+        // profiles.next_match_goal_mod sütununa yazılıyor — bu modifier'ı ekle.
+        // Sadece 0. dakikada (maç başında) uygula, sonra sıfırla.
+        let invHomeBoost = 0;
+        let invAwayBoost = 0;
+        if (session.current_minute === 0 || !session.current_minute) {
+          try {
+            // Home team profile_id → next_match_goal_mod
+            if (session.home_team_id) {
+              const { data: homeTeamRow } = await supabase
+                .from('league_teams')
+                .select('profile_id')
+                .eq('id', session.home_team_id)
+                .maybeSingle();
+              if (homeTeamRow?.profile_id) {
+                const { data: homeProfile } = await supabase
+                  .from('profiles')
+                  .select('next_match_goal_mod')
+                  .eq('id', homeTeamRow.profile_id)
+                  .maybeSingle();
+                invHomeBoost = Number(homeProfile?.next_match_goal_mod) || 0;
+              }
+            }
+            // Away team
+            if (session.away_team_id) {
+              const { data: awayTeamRow } = await supabase
+                .from('league_teams')
+                .select('profile_id')
+                .eq('id', session.away_team_id)
+                .maybeSingle();
+              if (awayTeamRow?.profile_id) {
+                const { data: awayProfile } = await supabase
+                  .from('profiles')
+                  .select('next_match_goal_mod')
+                  .eq('id', awayTeamRow.profile_id)
+                  .maybeSingle();
+                invAwayBoost = Number(awayProfile?.next_match_goal_mod) || 0;
+              }
+            }
+            // Boost'u session'a kalıcı yaz ki tekrar okunmasın
+            if (invHomeBoost > 0 || invAwayBoost > 0) {
+              await supabase.from('match_sessions').update({
+                home_goal_mod: (Number(session.home_goal_mod) || 0) + invHomeBoost,
+                away_goal_mod: (Number(session.away_goal_mod) || 0) + invAwayBoost,
+              } as any).eq('id', session.id);
+              // Profil'den boost'u temizle (bir sonraki maçta tekrar uygulanmasın)
+              if (invHomeBoost > 0 && session.home_team_id) {
+                const { data: homeTeamRow2 } = await supabase
+                  .from('league_teams').select('profile_id').eq('id', session.home_team_id).maybeSingle();
+                if (homeTeamRow2?.profile_id) {
+                  await supabase.from('profiles').update({ next_match_goal_mod: 0 }).eq('id', homeTeamRow2.profile_id);
+                }
+              }
+              if (invAwayBoost > 0 && session.away_team_id) {
+                const { data: awayTeamRow2 } = await supabase
+                  .from('league_teams').select('profile_id').eq('id', session.away_team_id).maybeSingle();
+                if (awayTeamRow2?.profile_id) {
+                  await supabase.from('profiles').update({ next_match_goal_mod: 0 }).eq('id', awayTeamRow2.profile_id);
+                }
+              }
+            }
+          } catch (boostErr) {
+            console.warn('[cron/match-tick] next_match_goal_mod fetch failed:', boostErr);
+          }
+        }
+
+        // [BUG-13] Envanter boost'larını ekle (ilk tick'te uygulandı, sonraki tick'lerde 0)
+        const finalHomeGoalModWithBoost = finalHomeGoalMod + invHomeBoost;
+        const finalAwayGoalModWithBoost = finalAwayGoalMod + invAwayBoost;
+
         // ── S3-5 FIX: Atmosphere score from session ──
         const homeAtmoData = safeJsonParse<Record<string, unknown>>(session.home_atmosphere, {});
         const sessionAtmosphereScore = typeof homeAtmoData?.score === 'number' ? homeAtmoData.score : 50;
@@ -708,8 +778,8 @@ if (!isSupabaseConfigured()) {
             refereePersonality: refereeData.personality,
             refereeName: refereeData.name,
             weather: matchWeather,
-            homeGoalMod: finalHomeGoalMod,
-            awayGoalMod: finalAwayGoalMod,
+            homeGoalMod: finalHomeGoalModWithBoost,
+            awayGoalMod: finalAwayGoalModWithBoost,
             homeConceedMod: (Number(session.home_conceed_mod) || 0) + botConceedModHome,
             awayConceedMod: (Number(session.away_conceed_mod) || 0) + botConceedModAway,
             initialHomeScore: session.home_score || 0,   // Önceki golleri taşı

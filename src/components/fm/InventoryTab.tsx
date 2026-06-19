@@ -23,6 +23,7 @@ import {
   Construction,
 } from 'lucide-react';
 import { useFM } from '@/lib/fm/GameContext';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 
 type ItemCategory = 'boost' | 'cosmetic' | 'consumable';
 
@@ -213,84 +214,147 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
     setTimeout(() => setToast(null), 2500);
   }, []);
 
-  const handleUseItem = useCallback((item: InventoryItem) => {
+  const handleUseItem = useCallback(async (item: InventoryItem) => {
     if (item.quantity <= 0) {
       showToast('Bu eşyadan kalmadı!', 'error');
       return;
     }
 
     setUsedItem(item.id);
+    const sb = isSupabaseConfigured() ? getSupabase() : null;
+    const useSquad = squad.slice(0, 11); // ilk 11 oyuncuya uygula
 
     switch (item.id) {
-      case 'morale_potion':
-        if (squad.length > 0) {
-          setSquad(prev => prev.map(p => ({ ...p, morale: Math.min(100, (p.morale || 50) + 10) })));
-          showToast('Tüm oyunculara Moral +10 uygulandı!');
+      case 'morale_potion': {
+        if (useSquad.length === 0) { showToast('Kadronuz boş!', 'error'); break; }
+        const updated = useSquad.map(p => ({ ...p, morale: Math.min(100, (p.morale || 50) + 10) }));
+        setSquad(prev => prev.map(p => {
+          const u = updated.find(x => x.id === p.id);
+          return u ? { ...p, morale: u.morale } : p;
+        }));
+        showToast('Tüm oyunculara Moral +10 uygulandı!');
+        if (sb && userId) {
+          try {
+            await Promise.all(updated.map(p =>
+              sb.from('players').update({ morale: p.morale }).eq('id', p.id).eq('profile_id', userId || '')
+            ));
+          } catch (e) { console.warn('[InventoryTab] morale_potion DB write failed:', e); }
         }
         break;
+      }
 
       case 'energy_drink':
-        if (squad.length > 0) {
-          setSquad(prev => prev.map(p => ({ ...p, cond: Math.min(100, (p.cond || 70) + 15) })));
-          showToast('Tüm oyunculara Kondisyon +15 uygulandı!');
+      case 'fitness_boost': {
+        if (useSquad.length === 0) { showToast('Kadronuz boş!', 'error'); break; }
+        const updated = useSquad.map(p => ({ ...p, cond: Math.min(100, (p.cond || 70) + 15) }));
+        setSquad(prev => prev.map(p => {
+          const u = updated.find(x => x.id === p.id);
+          return u ? { ...p, cond: u.cond } : p;
+        }));
+        showToast(`${item.name} kullanıldı! Kondisyon +15`);
+        if (sb && userId) {
+          try {
+            await Promise.all(updated.map(p =>
+              sb.from('players').update({ cond: p.cond }).eq('id', p.id).eq('profile_id', userId || '')
+            ));
+          } catch (e) { console.warn('[InventoryTab] cond DB write failed:', e); }
         }
         break;
+      }
 
-      case 'fitness_boost':
-        if (squad.length > 0) {
-          setSquad(prev => prev.map(p => ({ ...p, cond: Math.min(100, (p.cond || 70) + 15) })));
-          showToast('Fitness Paketi kullanıldı! Kondisyon +15');
+      case 'training_boost': {
+        if (sb && userId) {
+          try {
+            await sb.from('profiles').update({
+              bonus_training_multiplier: 2.0,
+              bonus_training_expires: new Date(Date.now() + 7 * 86400000).toISOString(),
+            } as any).eq('id', userId);
+            showToast('Antrenman Takviyesi aktif! 1 hafta 2x verimli antrenman.');
+          } catch (e) {
+            console.warn('[InventoryTab] training_boost DB write failed:', e);
+            showToast('Antrenman Takviyesi aktif! (sunucu senk. bekleniyor)');
+          }
+        } else {
+          showToast('Antrenman Takviyesi aktif! (yerel mod)');
         }
         break;
-
-      case 'training_boost':
-        showToast('Antrenman Takviyesi aktif! Bir sonraki antrenman 2x verimli.');
-        break;
+      }
 
       case 'speed_boost':
-        showToast('Hız İksiri aktif! Bir sonraki maçta Hız +5');
-        break;
-
       case 'shield_boost':
-        showToast('Savunma Kalkanı aktif! Bir sonraki maçta Savunma +8');
+      case 'power_boost': {
+        const mod = item.id === 'speed_boost' ? 0.08 : item.id === 'shield_boost' ? 0.06 : 0.05;
+        if (sb && userId) {
+          try {
+            await sb.from('profiles').update({ next_match_goal_mod: mod } as any).eq('id', userId);
+            showToast(`${item.name} aktif! Bir sonraki maça etki edecek.`);
+          } catch (e) {
+            console.warn('[InventoryTab] match_boost DB write failed:', e);
+            showToast(`${item.name} aktif! (sunucu senk. bekleniyor)`);
+          }
+        } else {
+          showToast(`${item.name} aktif! (yerel mod)`);
+        }
         break;
+      }
 
-      case 'power_boost':
-        showToast('Güç İksiri aktif! 3 maç boyunca Güç +3');
-        break;
-
-      case 'badge_gold':
+      case 'badge_gold': {
         if (profile) {
-          setProfile((prev: any) => ({ ...prev, reputation: Math.min(100, (prev.reputation || 30) + 5) }));
+          const newRep = Math.min(100, (profile.reputation || 30) + 5);
+          setProfile((prev: any) => prev ? { ...prev, reputation: newRep } : prev);
           showToast('Altın Rozet takıldı! Prestij +5');
+          if (sb && userId) {
+            try {
+              await sb.from('profiles').update({ reputation: newRep }).eq('id', userId);
+            } catch (e) { console.warn('[InventoryTab] badge_gold DB write failed:', e); }
+          }
         }
         break;
+      }
 
-      case 'legendary_aura':
-        if (squad.length > 0) {
-          setSquad(prev => prev.map(p => ({ ...p, morale: Math.min(100, (p.morale || 50) + 3) })));
-          showToast('Efsanevi Aura aktif! Moral +3');
+      case 'legendary_aura': {
+        if (useSquad.length === 0) { showToast('Kadronuz boş!', 'error'); break; }
+        const updated = useSquad.map(p => ({ ...p, morale: Math.min(100, (p.morale || 50) + 3) }));
+        setSquad(prev => prev.map(p => {
+          const u = updated.find(x => x.id === p.id);
+          return u ? { ...p, morale: u.morale } : p;
+        }));
+        showToast('Efsanevi Aura aktif! Moral +3');
+        if (sb && userId) {
+          try {
+            await Promise.all(updated.map(p =>
+              sb.from('players').update({ morale: p.morale }).eq('id', p.id).eq('profile_id', userId || '')
+            ));
+          } catch (e) { console.warn('[InventoryTab] legendary_aura DB write failed:', e); }
         }
         break;
+      }
 
       case 'scout_refresh':
         showToast('Keşif havuzu tazelendi!');
         break;
 
-      case 'star_dust':
-        if (squad.length > 0) {
-          const randomIdx = Math.floor(Math.random() * squad.length);
-          setSquad(prev => prev.map((p, i) => i === randomIdx ? { ...p, potential: Math.min(99, (p.potential || 70) + 2) } : p));
-          showToast(`Yıldız Tozu kullanıldı! ${squad[randomIdx]?.name || 'Oyuncu'} Potansiyel +2`);
+      case 'star_dust': {
+        if (squad.length === 0) { showToast('Kadronuz boş!', 'error'); break; }
+        const randomIdx = Math.floor(Math.random() * squad.length);
+        const target = squad[randomIdx];
+        const newPot = Math.min(99, (target.potential || 70) + 2);
+        setSquad(prev => prev.map((p, i) => i === randomIdx ? { ...p, potential: newPot } : p));
+        showToast(`Yıldız Tozu kullanıldı! ${target.name || 'Oyuncu'} Potansiyel +2`);
+        if (sb && userId) {
+          try {
+            await sb.from('players').update({ potential: newPot }).eq('id', target.id).eq('profile_id', userId || '');
+          } catch (e) { console.warn('[InventoryTab] star_dust DB write failed:', e); }
         }
         break;
+      }
 
       default:
         showToast(`${item.name} kullanıldı!`);
     }
 
     setTimeout(() => setUsedItem(null), 600);
-  }, [squad, profile, setSquad, setProfile, showToast]);
+  }, [squad, profile, userId, setSquad, setProfile, showToast]);
 
   if (!profile) {
     return (

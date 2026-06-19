@@ -910,8 +910,8 @@ export default function Home() {
             <NavButton icon={<Settings size={18} />} label="TAKTİK&TAKIMIM" active={activeTab === 'tactics'} onClick={() => setActiveTab('tactics')} />
             <NavButton icon={<Dumbbell size={18} />} label="ANTRENMAN" active={activeTab === 'training'} onClick={() => setActiveTab('training')} />
 
-            <NavButton icon={<Zap size={18} />} label="OPERASYON ODASI" active={false} onClick={() => setShowComingSoon(true)} disabled /> {/* SORUN-6: Disabled - coming soon */}
-            <NavButton icon={<Archive size={18} />} label="ARŞİV & ENVANTER" active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} dimmed /> {/* SORUN-6: Marked as limited */}
+            <NavButton icon={<Zap size={18} />} label="OPERASYON ODASI" active={activeTab === 'operations'} onClick={() => setActiveTab('operations')} /> {/* [BUG-13] Operasyon Odası açıldı — kodu tam mevcut */}
+            <NavButton icon={<Archive size={18} />} label="ARŞİV & ENVANTER" active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} /> {/* [BUG-13] dimmed kaldırıldı — envanter artık tam işlevsel */}
             <NavButton icon={<Newspaper size={18} />} label="HABERLER" active={activeTab === 'newspaper'} onClick={() => setActiveTab('newspaper')} />
 
             <NavButton icon={<Swords size={18} />} label="MAÇ GÜNÜ" active={activeTab === 'matchday'} onClick={() => setActiveTab('matchday')} />

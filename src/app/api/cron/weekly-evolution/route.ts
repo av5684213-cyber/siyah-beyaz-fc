@@ -232,6 +232,31 @@ export async function GET(request: NextRequest) {
     // 4) profile_id → player_id eşlemesi için (player'ların profile_id'sine ihtiyacımız var)
     // Bu bilgi zaten allPlayers sorgusunda geliyor
 
+    // [BUG-13] Bonus training multiplier — envanterden kullanılan training_boost item'ı
+    // bonus_training_multiplier sütununa 2.0 yazar, 7 gün sonra expires.
+    // farmingMult'a çarpan olarak eklenir (sadece aktif ise).
+    const bonusTrainingMultByProfile: Record<string, number> = {};
+    try {
+      const { data: profileBoosts } = await supabase
+        .from('profiles')
+        .select('id, bonus_training_multiplier, bonus_training_expires')
+        .not('bonus_training_multiplier', 'is', null);
+      if (profileBoosts) {
+        const now = new Date();
+        for (const pr of profileBoosts) {
+          const mult = Number(pr.bonus_training_multiplier) || 1.0;
+          const expires = pr.bonus_training_expires ? new Date(pr.bonus_training_expires) : null;
+          // Sadece aktif boost'lar (mult > 1 ve expires yok veya gelecekte)
+          if (mult > 1.0 && (!expires || expires > now)) {
+            bonusTrainingMultByProfile[pr.id] = mult;
+          }
+        }
+        console.log(`[weekly-evolution] Bonus training multiplier active for ${Object.keys(bonusTrainingMultByProfile).length} profiles`);
+      }
+    } catch (boostErr) {
+      console.warn('[weekly-evolution] bonus_training_multiplier fetch failed:', boostErr);
+    }
+
     // ═══════════════════════════════════════════════════════════
     // 1. Tüm oyuncuları çek (batch halinde)
     // ═══════════════════════════════════════════════════════════
@@ -320,8 +345,11 @@ export async function GET(request: NextRequest) {
 
         const analystBonus = (analystStarsByProfile[profileId || ''] || 0) * 0.04; // 5 yıldız → +%20
         const mentorBonus = mentorBonusByMentee[player.id] || 0;
-        const farmingMult = 1.0 + trainingBonus + coachBonus + facilityBonus + analystBonus + mentorBonus;
+        // [BUG-13] Envanter training_boost item'ı — çarpan olarak uygula
+        const bonusTrainingMult = bonusTrainingMultByProfile[profileId || ''] || 1.0;
+        const farmingMult = (1.0 + trainingBonus + coachBonus + facilityBonus + analystBonus + mentorBonus) * bonusTrainingMult;
         // Örnek: 5 yıldız koç + mentor = +25% + 20-30% ek gelişim
+        // + training_boost item = 2x çarpan → toplam 2.5x-2.6x gelişim
 
         // Evrim uygula (farmingMult dahil → UpdatePlayerStats içinde personality traits de hesaplanır)
         let evolved = UpdatePlayerStats(player, performance, farmingMult);
