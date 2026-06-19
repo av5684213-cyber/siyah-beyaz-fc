@@ -348,8 +348,10 @@ CREATE TABLE IF NOT EXISTS match_sessions (
   events JSONB DEFAULT '[]',
   home_players JSONB DEFAULT '[]',
   away_players JSONB DEFAULT '[]',
-  home_tactic JSONB DEFAULT '{}',
-  away_tactic JSONB DEFAULT '{}',
+  -- [BUG-8] home_tactic / away_tactic = playStyle string ('tiki-taka' vb.)
+  -- Obje için home_tactic_obj / away_tactic_obj kullanılır
+  home_tactic TEXT,
+  away_tactic TEXT,
   weather TEXT DEFAULT 'sunny',
   referee_id TEXT,
   started_at TIMESTAMPTZ,
@@ -364,8 +366,31 @@ ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS match_date TIMESTAMPTZ;
 ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
 ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS season_id UUID REFERENCES seasons(id) ON DELETE SET NULL;
 ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS retention_expires_at TIMESTAMPTZ;
+-- [BUG-8] match-scheduler playStyle string'i JSONB'ye insert edemiyor — TEXT yap
+ALTER TABLE match_sessions ALTER COLUMN home_tactic TYPE TEXT USING home_tactic::text;
+ALTER TABLE match_sessions ALTER COLUMN away_tactic TYPE TEXT USING away_tactic::text;
+-- [BUG-8] match-scheduler'ın insert ettiği ek sütunlar
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS home_formation TEXT;
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS away_formation TEXT;
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS home_goal_mod FLOAT DEFAULT 1.0;
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS away_goal_mod FLOAT DEFAULT 1.0;
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS home_conceed_mod FLOAT DEFAULT 1.0;
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS away_conceed_mod FLOAT DEFAULT 1.0;
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS home_tactic_obj JSONB DEFAULT '{}';
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS away_tactic_obj JSONB DEFAULT '{}';
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS referee_data JSONB DEFAULT '{}';
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS home_team_name TEXT;
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS away_team_name TEXT;
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS home_team_id UUID;
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS away_team_id UUID;
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS simulation_speed FLOAT DEFAULT 1.0;
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS last_updated TIMESTAMPTZ;
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS home_atmosphere JSONB DEFAULT '{}';
 
 CREATE INDEX IF NOT EXISTS idx_match_sessions_fixture ON match_sessions(fixture_id);
+CREATE INDEX IF NOT EXISTS idx_match_sessions_home_team ON match_sessions(home_team_id);
+CREATE INDEX IF NOT EXISTS idx_match_sessions_away_team ON match_sessions(away_team_id);
+CREATE INDEX IF NOT EXISTS idx_match_sessions_status ON match_sessions(status);
 
 -- retention trigger
 CREATE OR REPLACE FUNCTION set_match_session_retention()
@@ -847,7 +872,46 @@ CREATE TABLE IF NOT EXISTS live_matches (
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+-- [BUG-8] match-scheduler'ın live_matches insert ettiği ek sütunlar
+ALTER TABLE live_matches ADD COLUMN IF NOT EXISTS home_team_id UUID;
+ALTER TABLE live_matches ADD COLUMN IF NOT EXISTS away_team_id UUID;
+ALTER TABLE live_matches ADD COLUMN IF NOT EXISTS home_team_name TEXT;
+ALTER TABLE live_matches ADD COLUMN IF NOT EXISTS away_team_name TEXT;
+ALTER TABLE live_matches ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ;
+ALTER TABLE live_matches ADD COLUMN IF NOT EXISTS weather TEXT;
+ALTER TABLE live_matches ADD COLUMN IF NOT EXISTS referee_id TEXT;
+ALTER TABLE live_matches ADD COLUMN IF NOT EXISTS referee_name TEXT;
+ALTER TABLE live_matches ADD COLUMN IF NOT EXISTS referee_personality TEXT;
+ALTER TABLE live_matches ADD COLUMN IF NOT EXISTS referee_strictness FLOAT;
+ALTER TABLE live_matches ADD COLUMN IF NOT EXISTS total_events INTEGER DEFAULT 0;
+ALTER TABLE live_matches ADD COLUMN IF NOT EXISTS revealed_events INTEGER DEFAULT 0;
+ALTER TABLE live_matches ADD COLUMN IF NOT EXISTS session_id UUID;
 CREATE INDEX IF NOT EXISTS idx_live_matches_fixture ON live_matches(fixture_id);
+CREATE INDEX IF NOT EXISTS idx_live_matches_session ON live_matches(session_id);
+CREATE INDEX IF NOT EXISTS idx_live_matches_status ON live_matches(status);
+CREATE INDEX IF NOT EXISTS idx_live_matches_home_team ON live_matches(home_team_id);
+CREATE INDEX IF NOT EXISTS idx_live_matches_away_team ON live_matches(away_team_id);
+
+-- [28b] match_participants — RLS ve match_chat erişimi için (BUG-8)
+CREATE TABLE IF NOT EXISTS match_participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  fixture_id UUID REFERENCES fixtures(id) ON DELETE CASCADE,
+  team_id UUID NOT NULL,
+  profile_id UUID,
+  side TEXT NOT NULL CHECK (side IN ('home', 'away')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(fixture_id, team_id)
+);
+CREATE INDEX IF NOT EXISTS idx_match_participants_fixture ON match_participants(fixture_id);
+CREATE INDEX IF NOT EXISTS idx_match_participants_team ON match_participants(team_id);
+CREATE INDEX IF NOT EXISTS idx_match_participants_profile ON match_participants(profile_id);
+ALTER TABLE match_participants ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "match_participants_select_all" ON match_participants;
+DROP POLICY IF EXISTS "match_participants_insert_all" ON match_participants;
+DROP POLICY IF EXISTS "match_participants_update_all" ON match_participants;
+CREATE POLICY "match_participants_select_all" ON match_participants FOR SELECT USING (true);
+CREATE POLICY "match_participants_insert_all" ON match_participants FOR INSERT WITH CHECK (true);
+CREATE POLICY "match_participants_update_all" ON match_participants FOR UPDATE USING (true);
 
 -- [29] match_player_stats — maç sonrası oyuncu istatistikleri
 CREATE TABLE IF NOT EXISTS match_player_stats (
@@ -943,7 +1007,7 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 -- 8. RPC FUNCTIONS
 -- ═══════════════════════════════════════════════════════════════════════════
 
--- generate_league_fixtures: 10'ar dk arayla 9 maç (12:00 slot)
+-- generate_league_fixtures: [BUG-8 DÜZELTME] 12:00 ve 18:00 slot, Pzt-Per iş günleri, idempotent
 SELECT drop_function_if_exists('generate_league_fixtures');
 CREATE OR REPLACE FUNCTION generate_league_fixtures(p_season_id uuid)
 RETURNS void LANGUAGE plpgsql AS $$
@@ -963,11 +1027,20 @@ DECLARE
     v_last_id uuid;
     v_match_time text;
     v_match_count integer;
-    v_match_hour integer;
-    v_match_minute integer;
+    v_existing_count integer;
+    v_base_date date;
+    v_target_dow integer;
+    v_days_to_add integer;
 BEGIN
     SELECT league_id INTO v_league_id FROM seasons WHERE id = p_season_id;
     IF v_league_id IS NULL THEN RETURN; END IF;
+
+    -- [BUG-8] İdempotency: Bu sezon için zaten fikstür varsa tekrar üretme
+    SELECT count(*) INTO v_existing_count FROM fixtures WHERE season_id = p_season_id;
+    IF v_existing_count > 0 THEN
+        RAISE NOTICE 'Sezon % için zaten % fikstür mevcut, üretim atlanıyor.', p_season_id, v_existing_count;
+        RETURN;
+    END IF;
 
     SELECT array_agg(id ORDER BY id) INTO v_team_ids
     FROM league_teams WHERE league_id = v_league_id;
@@ -984,7 +1057,18 @@ BEGIN
     v_half := v_n / 2;
     v_fixed_id := v_team_ids[1];
     v_team_ids_rotating := v_team_ids[2:v_n];
-    v_match_date := CURRENT_DATE + 1;
+
+    -- [BUG-8] İlk maç günü = yarın, ama Pzt-Per arası bir iş günü olsun
+    -- 0=Paz, 1=Pzt, 2=Sal, 3=Çar, 4=Per, 5=Cum, 6=Cmt
+    v_base_date := CURRENT_DATE + 1;
+    v_target_dow := EXTRACT(DOW FROM v_base_date)::integer;
+    -- Cuma(5)/Cmt(6)/Paz(0) ise sonraki Pazartesi'ye kaydır
+    IF v_target_dow = 5 THEN v_days_to_add := 3;       -- Cuma → Pzt (+3)
+    ELSIF v_target_dow = 6 THEN v_days_to_add := 2;    -- Cmt → Pzt (+2)
+    ELSIF v_target_dow = 0 THEN v_days_to_add := 1;    -- Paz → Pzt (+1)
+    ELSE v_days_to_add := 0;
+    END IF;
+    v_match_date := v_base_date + v_days_to_add;
 
     FOR v_round IN 1..v_total_rounds LOOP
         v_team_ids := ARRAY[v_fixed_id];
@@ -1001,16 +1085,44 @@ BEGIN
             IF v_home_id != '00000000-0000-0000-0000-000000000000'::uuid AND
                v_away_id != '00000000-0000-0000-0000-000000000000'::uuid THEN
 
-                v_match_hour := 12 + FLOOR(v_match_count * 10 / 60);
-                v_match_minute := (v_match_count * 10) % 60;
-                v_match_time := LPAD(v_match_hour::text, 2, '0') || ':' || LPAD(v_match_minute::text, 2, '0');
+                -- [BUG-8] 12:00 ve 18:00 slotları arasında sırayla değiştir
+                -- Çift index → 12:00, Tek index → 18:00
+                IF v_match_count % 2 = 0 THEN
+                    v_match_time := '12:00';
+                ELSE
+                    v_match_time := '18:00';
+                END IF;
 
                 INSERT INTO fixtures (home_team_id, away_team_id, season_id, tur, match_date, match_time, status, competition_type)
-                VALUES (v_home_id, v_away_id, p_season_id, v_round, v_match_date, v_match_time, 'scheduled', 'league');
+                VALUES (v_home_id, v_away_id, p_season_id, v_round, v_match_date, v_match_time, 'scheduled', 'league')
+                ON CONFLICT DO NOTHING;
 
-                INSERT INTO fixtures (home_team_id, away_team_id, season_id, tur, match_date, match_time, status, competition_type)
-                VALUES (v_away_id, v_home_id, p_season_id, v_round + v_total_rounds,
-                        v_match_date + (v_total_rounds / 2), v_match_time, 'scheduled', 'league');
+                -- Rövanş: v_total_rounds hafta sonra, ters slot
+                DECLARE
+                    v_return_date date;
+                    v_return_dow integer;
+                    v_return_offset integer := v_total_rounds;
+                    v_return_target_dow integer;
+                    v_return_days_to_add integer;
+                BEGIN
+                    -- İş günü ekle (v_total_rounds hafta sonra)
+                    v_return_date := v_match_date + (v_return_offset * 7);
+                    v_return_dow := EXTRACT(DOW FROM v_return_date)::integer;
+                    IF v_return_dow = 5 THEN v_return_days_to_add := 3;
+                    ELSIF v_return_dow = 6 THEN v_return_days_to_add := 2;
+                    ELSIF v_return_dow = 0 THEN v_return_days_to_add := 1;
+                    ELSE v_return_days_to_add := 0;
+                    END IF;
+                    v_return_date := v_return_date + v_return_days_to_add;
+
+                    -- Ters slot
+                    INSERT INTO fixtures (home_team_id, away_team_id, season_id, tur, match_date, match_time, status, competition_type)
+                    VALUES (v_away_id, v_home_id, p_season_id, v_round + v_total_rounds,
+                            v_return_date,
+                            CASE WHEN v_match_time = '12:00' THEN '18:00' ELSE '12:00' END,
+                            'scheduled', 'league')
+                    ON CONFLICT DO NOTHING;
+                END;
 
                 v_match_count := v_match_count + 1;
             END IF;
@@ -1021,7 +1133,18 @@ BEGIN
             v_team_ids_rotating[i] := v_team_ids_rotating[i-1];
         END LOOP;
         v_team_ids_rotating[1] := v_last_id;
-        v_match_date := v_match_date + 7;
+        -- [BUG-8] Bir sonraki tur için 1 iş günü ekle (Pzt-Per)
+        -- Eğer perşembe ise 4 gün ekle (Pzt'ye), değilse 1 gün ekle
+        DECLARE
+            v_next_dow integer;
+            v_next_offset integer;
+        BEGIN
+            v_next_dow := EXTRACT(DOW FROM v_match_date)::integer;
+            IF v_next_dow = 4 THEN v_next_offset := 4;   -- Per → Pzt
+            ELSE v_next_offset := 1;                       -- Pzt→Sal, Sal→Çar, Çar→Per
+            END IF;
+            v_match_date := v_match_date + v_next_offset;
+        END;
     END LOOP;
 END;
 $$;

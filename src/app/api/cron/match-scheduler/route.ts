@@ -108,8 +108,8 @@ export async function GET(request: NextRequest) {
       .in('competition_type', ['league', null]);
 
     if (!fixtureCount || fixtureCount === 0) {
-      // Fikstür yok — sezon bul ve generate_league_fixtures çağır
-      console.log('[cron/match-scheduler] Bugün için fikstür yok, generate_league_fixtures çağrılıyor...');
+      // [BUG-8] Bugün fikstür yok — ama sezon zaten fikstür üretildi mi kontrol et
+      // Eğer sezonun herhangi bir fikstürü varsa, tekrar üretme (idempotency)
       const { data: activeSeasons } = await supabase
         .from('seasons')
         .select('id, league_id')
@@ -119,11 +119,24 @@ export async function GET(request: NextRequest) {
 
       if (activeSeasons && activeSeasons.length > 0) {
         for (const season of activeSeasons) {
-          try {
-            await supabase.rpc('generate_league_fixtures', { p_season_id: season.id });
-            console.log(`[cron/match-scheduler] Fikstür üretildi: sezon ${season.id}`);
-          } catch (fixErr) {
-            console.warn(`[cron/match-scheduler] generate_league_fixtures hatası: ${fixErr}`);
+          // Sezonun herhangi bir fikstürü var mı?
+          const { count: seasonFixtureCount } = await supabase
+            .from('fixtures')
+            .select('id', { count: 'exact', head: true })
+            .eq('season_id', season.id)
+            .in('competition_type', ['league', null]);
+
+          if (!seasonFixtureCount || seasonFixtureCount === 0) {
+            // Sadece sezonun HİÇ fikstürü yoksa üret
+            console.log(`[cron/match-scheduler] Sezon ${season.id} için fikstür üretiliyor (sezon boş)...`);
+            try {
+              await supabase.rpc('generate_league_fixtures', { p_season_id: season.id });
+              console.log(`[cron/match-scheduler] Fikstür üretildi: sezon ${season.id}`);
+            } catch (fixErr) {
+              console.warn(`[cron/match-scheduler] generate_league_fixtures hatası: ${fixErr}`);
+            }
+          } else {
+            console.log(`[cron/match-scheduler] Sezon ${season.id} zaten ${seasonFixtureCount} fikstüre sahip, üretim atlanıyor.`);
           }
         }
       }
