@@ -48,13 +48,40 @@ export default function FriendlyMatchHistoryPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const profileStr = localStorage.getItem('fm_profile');
-        if (!profileStr) {
+        // [BUG-17] Önce localStorage, sonra Supabase Auth
+        let profile: any = null;
+        const profileStr = typeof window !== 'undefined' ? localStorage.getItem('fm_profile') : null;
+        if (profileStr) {
+          try { profile = JSON.parse(profileStr); } catch {}
+        }
+
+        if (!profile?.id && isSupabaseConfigured()) {
+          const supabase = getSupabase();
+          if (supabase) {
+            try {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user?.id) {
+                const { data: profileRow } = await supabase
+                  .from('profiles')
+                  .select('id, team_name')
+                  .eq('id', user.id)
+                  .maybeSingle();
+                if (profileRow) {
+                  profile = profileRow;
+                  try { localStorage.setItem('fm_profile', JSON.stringify(profileRow)); } catch {}
+                }
+              }
+            } catch (authErr) {
+              console.warn('[friendly-history] Supabase auth failed:', authErr);
+            }
+          }
+        }
+
+        if (!profile?.id) {
           setError('Profil bulunamadı.');
           setLoading(false);
           return;
         }
-        const profile = JSON.parse(profileStr);
         setProfileId(profile.id);
         setTeamName(profile.team_name || '');
 

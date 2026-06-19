@@ -257,23 +257,54 @@ function MatchPageInner() {
 
   // Kullanıcı profil bilgilerini yükle
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('fm_auth_email');
-      if (stored) {
-        setProfileId(stored);
-      }
-      const profileStr = localStorage.getItem('fm_profile');
-      if (profileStr) {
-        const parsed = JSON.parse(profileStr);
-        setTeamName(parsed.team_name || '');
-        if (parsed.id) setProfileId(parsed.id);
-        if (parsed.stadium_name) {
-          setStadiumDisplayName(parsed.stadium_name);
+    const loadProfile = async () => {
+      try {
+        // [BUG-17] Önce localStorage'dan dene
+        const stored = localStorage.getItem('fm_auth_email');
+        if (stored) {
+          setProfileId(stored);
         }
+        const profileStr = localStorage.getItem('fm_profile');
+        let profile: any = null;
+        if (profileStr) {
+          try { profile = JSON.parse(profileStr); } catch {}
+        }
+
+        // [BUG-17] localStorage'da yoksa Supabase Auth'tan al
+        if (!profile?.id && isSupabaseConfigured()) {
+          const supabase = getSupabase();
+          if (supabase) {
+            try {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user?.id) {
+                const { data: profileRow } = await supabase
+                  .from('profiles')
+                  .select('id, team_name, stadium_name')
+                  .eq('id', user.id)
+                  .maybeSingle();
+                if (profileRow) {
+                  profile = profileRow;
+                  try { localStorage.setItem('fm_profile', JSON.stringify(profileRow)); } catch {}
+                }
+              }
+            } catch (authErr) {
+              console.warn('[MatchPage] Supabase auth failed:', authErr);
+            }
+          }
+        }
+
+        if (profile) {
+          setTeamName(profile.team_name || '');
+          if (profile.id) setProfileId(profile.id);
+          if (profile.stadium_name) {
+            setStadiumDisplayName(profile.stadium_name);
+          }
+        }
+      } catch (err) {
+        console.error('[MatchPage] Profil yükleme hatası:', err);
       }
-    } catch (err) {
-      console.error('[MatchPage] Profil yükleme hatası:', err);
-    }
+    };
+    loadProfile();
   }, []);
 
   // Fikstür verisini yükle

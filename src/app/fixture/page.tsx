@@ -1035,13 +1035,44 @@ export default function FixturePage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const profileStr = localStorage.getItem('fm_profile');
-        if (!profileStr) {
+        // [BUG-17] Önce localStorage'dan profile'ı dene
+        let profile: any = null;
+        const profileStr = typeof window !== 'undefined' ? localStorage.getItem('fm_profile') : null;
+        if (profileStr) {
+          try { profile = JSON.parse(profileStr); } catch {}
+        }
+
+        // [BUG-17] localStorage'da yoksa Supabase Auth'tan al
+        if (!profile?.id && isSupabaseConfigured()) {
+          const supabase = getSupabase();
+          if (supabase) {
+            try {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user?.id) {
+                // profiles tablosundan profile bilgilerini çek
+                const { data: profileRow } = await supabase
+                  .from('profiles')
+                  .select('id, team_name, manager_name')
+                  .eq('id', user.id)
+                  .maybeSingle();
+                if (profileRow) {
+                  profile = profileRow;
+                  // localStorage'a da kaydet ki sonraki ziyaretlerde hızlı olsun
+                  try { localStorage.setItem('fm_profile', JSON.stringify(profileRow)); } catch {}
+                }
+              }
+            } catch (authErr) {
+              console.warn('[fixture] Supabase auth failed:', authErr);
+            }
+          }
+        }
+
+        if (!profile?.id) {
           setError('Profil bulunamadı. Lütfen giriş yapın.');
           setLoading(false);
           return;
         }
-        const profile = JSON.parse(profileStr);
+
         const pId = profile.id;
         setTeamName(profile.team_name || '');
         setProfileId(pId);
