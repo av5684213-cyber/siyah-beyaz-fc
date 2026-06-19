@@ -207,7 +207,7 @@ if (!isSupabaseConfigured()) {
         message: `Sezon sonu: ${completedLeagues.length} lig işlendi`,
         context: { completedLeagues, results: results.length },
       });
-    } catch {}
+    } catch (e) { console.warn("[silent-catch]", e); }
 
     return NextResponse.json({
       action: 'season_end_processed',
@@ -236,7 +236,7 @@ async function processLeagueSeasonEnd(
     .from('leagues')
     .select('id, name, tier')
     .eq('id', leagueId)
-    .single();
+    .maybeSingle();
 
   const leagueName = leagueInfo?.name || leagueId;
   const leagueTier = leagueInfo?.tier || 4;
@@ -634,7 +634,7 @@ async function processLeagueSeasonEnd(
         .from('profiles')
         .select('money, team_name')
         .eq('id', championProfileId)
-        .single();
+        .maybeSingle();
 
       if (champProfile) {
         await supabase.from('profiles')
@@ -651,7 +651,7 @@ async function processLeagueSeasonEnd(
             type: 'season_award',
             is_read: false,
           });
-        } catch {}
+        } catch (e) { console.warn("[silent-catch]", e); }
       }
     } catch (prizeErr) {
       console.warn('[season-end] Champion prize payment failed:', prizeErr);
@@ -673,7 +673,7 @@ async function processLeagueSeasonEnd(
       };
       const prize = positionPrizes[leagueTier]?.[rank] || 0;
       if (prize > 0) {
-        const { data: pp } = await supabase.from('profiles').select('money').eq('id', teamProfileId).single();
+        const { data: pp } = await supabase.from('profiles').select('money').eq('id', teamProfileId).maybeSingle();
         if (pp) {
           await supabase.from('profiles').update({ money: (pp.money || 0) + prize }).eq('id', teamProfileId);
           console.log(`[season-end] Position ${rank} prize: ${prize.toLocaleString('tr-TR')} € → ${teamProfileId}`);
@@ -692,7 +692,7 @@ async function processLeagueSeasonEnd(
     const teamProfileId = (team as any).league_teams?.profile_id || null;
     if (!teamProfileId) continue;
     try {
-      const { data: pp } = await supabase.from('profiles').select('money').eq('id', teamProfileId).single();
+      const { data: pp } = await supabase.from('profiles').select('money').eq('id', teamProfileId).maybeSingle();
       if (pp) {
         await supabase.from('profiles').update({ money: (pp.money || 0) + basePrize }).eq('id', teamProfileId);
         console.log(`[season-end] Position ${rank} base prize: ${basePrize.toLocaleString('tr-TR')} € → ${teamProfileId}`);
@@ -751,7 +751,7 @@ async function processLeagueSeasonEnd(
         .from('profiles')
         .select('badges')
         .eq('id', championProfileId)
-        .single();
+        .maybeSingle();
 
       const existingBadges = Array.isArray(champProfData?.badges) ? champProfData.badges : [];
       const seasonLabel = `champion_${leagueName.replace(/\s+/g, '_')}`;
@@ -916,7 +916,7 @@ async function processLeagueSeasonEnd(
             .eq('id', promoted.teamId || promoted)
             .maybeSingle();
           if (proTeam?.profile_id) {
-            const { data: pp } = await supabase.from('profiles').select('money').eq('id', proTeam.profile_id).single();
+            const { data: pp } = await supabase.from('profiles').select('money').eq('id', proTeam.profile_id).maybeSingle();
             if (pp) {
               await supabase.from('profiles').update({ money: (pp.money || 0) + promotionBonus }).eq('id', proTeam.profile_id);
               console.log(`[season-end] Promotion bonus: ${promotionBonus.toLocaleString('tr-TR')} € → ${proTeam.profile_id}`);
@@ -945,7 +945,7 @@ async function processLeagueSeasonEnd(
             body: `${championName} şampiyon oldu! Yeni sezon başlıyor.`,
             icon: '/icon-192x192.png',
           });
-        } catch {}
+        } catch (e) { console.warn("[silent-catch]", e); }
       }
     }
   } catch (notifErr) {
@@ -1435,7 +1435,7 @@ async function processLeagueSeasonEnd(
         status: 'active',
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (newSeason) {
       // Fikstür oluştur
@@ -1466,7 +1466,7 @@ async function processLeagueSeasonEnd(
       try {
         const { assignRefereesToSeason } = await import('@/lib/fm/referee');
         await assignRefereesToSeason(supabase, leagueId, newSeason.id);
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     }
   } catch (newSeasonErr) {
     console.error(`[season-end] Yeni sezon oluşturma hatası:`, newSeasonErr);

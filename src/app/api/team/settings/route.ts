@@ -44,7 +44,7 @@ export async function PUT(request: NextRequest) {
       .update(updateData)
       .eq('id', managerId)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('[team/settings] Supabase güncelleme hatası:', error.message);

@@ -314,7 +314,7 @@ const FMProviderInner = ({ children }: { children: React.ReactNode }) => {
       let pError: any = null;
 
       if (isConfigured && supabase) {
-        const result = await supabase.from('profiles').select('id,manager_name,team_name,league_name,level,xp,money,fans,reputation,credits,current_day,team_id,defense_powers,ticket_price,academy_level,academy_extra_slots,stadium_capacity,region,active_upgrade_type,active_upgrade_id,active_upgrade_finish_day,active_upgrade_speedup,active_upgrade_started_at,active_upgrade_end_at,stadium_upgrades,sponsors,philosophy,primary_color,secondary_color,stadium_name,is_bot,bot_difficulty,academy_weekly_budget,last_youth_intake_season,total_trophies,total_awards,season_badges,hof_count,created_at,scout_slots,staff_coaches,staff_physios,staff_monthly_fees,role,league_tier,league_position,last_weekly_income,last_weekly_expense,last_weekly_net,financial_health,tv_revenue_weekly').eq('id', targetId).single();
+        const result = await supabase.from('profiles').select('id,manager_name,team_name,league_name,level,xp,money,fans,reputation,credits,current_day,team_id,defense_powers,ticket_price,academy_level,academy_extra_slots,stadium_capacity,region,active_upgrade_type,active_upgrade_id,active_upgrade_finish_day,active_upgrade_speedup,active_upgrade_started_at,active_upgrade_end_at,stadium_upgrades,sponsors,philosophy,primary_color,secondary_color,stadium_name,is_bot,bot_difficulty,academy_weekly_budget,last_youth_intake_season,total_trophies,total_awards,season_badges,hof_count,created_at,scout_slots,staff_coaches,staff_physios,staff_monthly_fees,role,league_tier,league_position,last_weekly_income,last_weekly_expense,last_weekly_net,financial_health,tv_revenue_weekly').eq('id', targetId).maybeSingle();
         savedProfile = result.data;
         pError = result.error;
         // Admin rolünü aynı sorgudan kontrol et (ayrı sorguya gerek yok)
@@ -770,7 +770,7 @@ const FMProviderInner = ({ children }: { children: React.ReactNode }) => {
             await supabase.from('watchlist').delete().eq('user_id', currentProfile.id).eq('player_id', playerId);
           } else {
             // KRİTİK: FK kısıtlaması nedeniyle önce oyuncunun 'players' tablosunda olduğundan emin ol
-            const { data: existingPlayer } = await supabase.from('players').select('id').eq('id', playerId).single();
+            const { data: existingPlayer } = await supabase.from('players').select('id').eq('id', playerId).maybeSingle();
 
             if (!existingPlayer) {
               await supabase.from('players').insert({

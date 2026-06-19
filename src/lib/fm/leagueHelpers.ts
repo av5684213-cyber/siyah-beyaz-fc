@@ -162,7 +162,7 @@ export async function createNewLeagueGroup(
     .from('leagues')
     .insert({ name: leagueName, tier })
     .select()
-    .single();
+    .maybeSingle();
 
   if (leagueErr || !newLeague) {
     console.error('[createNewLeagueGroup] Lig oluşturma hatası:', leagueErr?.message);
@@ -202,7 +202,7 @@ export async function createNewLeagueGroup(
       color: color1,
     })
     .select()
-    .single();
+    .maybeSingle();
 
   if (userTeamErr || !userTeam) {
     console.error('[createNewLeagueGroup] Kullanıcı takım ekleme hatası:', userTeamErr?.message);
@@ -221,7 +221,7 @@ export async function createNewLeagueGroup(
       is_finished: false,
     })
     .select()
-    .single();
+    .maybeSingle();
 
   if (newSeason) {
     // Fikstür oluştur (RPC)
@@ -292,7 +292,7 @@ export async function processPromotionRelegation(
     .from('leagues')
     .select('id, name, tier')
     .eq('id', leagueId)
-    .single();
+    .maybeSingle();
 
   if (!leagueInfo) {
     console.error('[processPromotionRelegation] Lig bulunamadı:', leagueId);
@@ -438,7 +438,7 @@ export async function moveTeamToLeague(
       .from('leagues')
       .select('name, tier')
       .eq('id', targetLeagueId)
-      .single();
+      .maybeSingle();
 
     if (targetLeague) {
       const profileUpdate: Record<string, unknown> = {
@@ -535,7 +535,7 @@ async function findOrCreateLeagueGroup(
     .from('leagues')
     .insert({ name: leagueName, tier })
     .select()
-    .single();
+    .maybeSingle();
 
   if (error || !newLeague) {
     console.error('[findOrCreateLeagueGroup] Lig oluşturma hatası:', error?.message);
@@ -663,7 +663,7 @@ async function findOrCreateLeagueGroup(
       is_finished: false,
     })
     .select()
-    .single();
+    .maybeSingle();
 
   if (newSeason) {
     try {
@@ -693,7 +693,7 @@ async function findOrCreateLeagueGroup(
     try {
       const { assignRefereesToSeason } = await import('./referee');
       await assignRefereesToSeason(supabase, newLeague.id, newSeason.id);
-    } catch {}
+    } catch (e) { console.warn("[silent-catch]", e); }
   }
 
   return newLeague;
@@ -794,7 +794,7 @@ export async function getUserLeagueInfo(
     .from('leagues')
     .select('id, name, tier')
     .eq('id', userTeam.league_id)
-    .single();
+    .maybeSingle();
 
   if (!leagueInfo) return null;
 

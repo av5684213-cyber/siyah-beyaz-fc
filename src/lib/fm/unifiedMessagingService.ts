@@ -278,7 +278,7 @@ export async function getOrCreateConversation(
         last_message_at: new Date().toISOString(),
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (insertErr) {
       console.error('getOrCreateConversation insert error:', insertErr);
@@ -385,7 +385,7 @@ export async function sendDirectMessage(
         *,
         profiles:sender_id(manager_name, team_name)
       `)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('sendDirectMessage error:', error);

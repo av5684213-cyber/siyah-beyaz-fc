@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       .from('rental_listings')
       .insert(listingPayload)
       .select()
-      .single();
+      .maybeSingle();
 
     if (insertError) {
       console.error('[POST /api/rental/create-listing] rental_listings insert error:', insertError.message);
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
             status: 'active',
           })
           .select()
-          .single();
+          .maybeSingle();
 
         if (fallbackError) {
           return NextResponse.json({ error: 'Kiralama ilanı oluşturulamadı: ' + fallbackError.message }, { status: 500 });

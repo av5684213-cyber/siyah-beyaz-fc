@@ -185,7 +185,7 @@ async function getTeamTier(supabase: any, teamName: string): Promise<number> {
     .select('league_id')
     .eq('name', teamName)
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (!lt) return 4;
 
@@ -193,7 +193,7 @@ async function getTeamTier(supabase: any, teamName: string): Promise<number> {
     .from('leagues')
     .select('tier')
     .eq('id', lt.league_id)
-    .single();
+    .maybeSingle();
 
   return league?.tier ?? 4;
 }

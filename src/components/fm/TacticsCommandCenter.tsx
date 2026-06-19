@@ -563,9 +563,9 @@ export default function TacticsCommandCenter({
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('savedTactics');
+      const stored = (typeof window !== "undefined" && localStorage).getItem('savedTactics');
       if (stored) setSavedTactics(JSON.parse(stored));
-    } catch {}
+    } catch (e) { console.warn("[silent-catch]", e); }
   }, []);
 
   const handleSaveTactic = (name: string) => {
@@ -579,7 +579,7 @@ export default function TacticsCommandCenter({
     const updated = [...savedTactics.filter(t => t.name !== name), newTactic].slice(-5);
     setSavedTactics(updated);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('savedTactics', JSON.stringify(updated));
+      (typeof window !== "undefined" && localStorage).setItem('savedTactics', JSON.stringify(updated));
     }
   };
 

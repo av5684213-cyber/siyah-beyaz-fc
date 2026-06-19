@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       .from('user_academy')
       .select('*')
       .eq('profile_id', profileId)
-      .single();
+      .maybeSingle();
 
     // Kayıt yoksa profiles'tan oluştur
     if (academyError && academyError.code === 'PGRST116') {
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         .from('profiles')
         .select('academy_level')
         .eq('id', profileId)
-        .single();
+        .maybeSingle();
 
       const level = profile?.academy_level || 1;
 
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
           current_level: level,
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (insertError) {
         console.error('[academy/status] Insert error:', insertError);
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
         .from('academy_upgrade_costs')
         .select('*')
         .eq('level', targetLevel)
-        .single();
+        .maybeSingle();
       nextLevelCost = costData;
     }
 

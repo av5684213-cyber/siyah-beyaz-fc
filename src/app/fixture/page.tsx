@@ -1039,7 +1039,7 @@ export default function FixturePage() {
         let profile: any = null;
         const profileStr = typeof window !== 'undefined' ? localStorage.getItem('fm_profile') : null;
         if (profileStr) {
-          try { profile = JSON.parse(profileStr); } catch {}
+          try { profile = JSON.parse(profileStr); } catch (e) { console.warn("[silent-catch]", e); }
         }
 
         // [BUG-17] localStorage'da yoksa Supabase Auth'tan al
@@ -1058,7 +1058,7 @@ export default function FixturePage() {
                 if (profileRow) {
                   profile = profileRow;
                   // localStorage'a da kaydet ki sonraki ziyaretlerde hızlı olsun
-                  try { localStorage.setItem('fm_profile', JSON.stringify(profileRow)); } catch {}
+                  try { localStorage.setItem('fm_profile', JSON.stringify(profileRow)); } catch (e) { console.warn("[silent-catch]", e); }
                 }
               }
             } catch (authErr) {

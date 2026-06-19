@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
         status: 'listed',
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (loanInsertError) {
       console.warn('[POST /api/loans/list] Loan insert error (non-critical):', loanInsertError.message);

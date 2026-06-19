@@ -82,7 +82,7 @@ export function showToast(msg: string, type: 'success' | 'error' | 'info' = 'suc
 
     // Play sound for error toasts
     if (type === 'error') {
-      try { playSound('error'); } catch {}
+      try { playSound('error'); } catch (e) { console.warn("[silent-catch]", e); }
     }
   } catch (err) {
     console.error('[ToastNotifications] showToast error:', err);

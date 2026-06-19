@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .select('academy_level')
       .eq('id', profileId)
-      .single();
+      .maybeSingle();
 
     const academyLevel = profileExtra?.academy_level || 1;
 
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       .from('user_academy')
       .select('*')
       .eq('profile_id', profileId)
-      .single();
+      .maybeSingle();
 
     if (academyError && academyError.code === 'PGRST116') {
       // Kayıt yoksa oluştur
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
           current_level: academyLevel,
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (insertError) {
         console.error('[academy/upgrade] Insert error:', insertError);
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       .from('academy_upgrade_costs')
       .select('*')
       .eq('level', targetLevel)
-      .single();
+      .maybeSingle();
 
     if (costError || !costData) {
       console.error('[academy/upgrade] Cost fetch error:', costError);

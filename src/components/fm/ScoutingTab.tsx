@@ -183,7 +183,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
 
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(() => {
     try {
-      const saved = localStorage.getItem('sbfc_scout_searches');
+      const saved = (typeof window !== "undefined" && localStorage).getItem('sbfc_scout_searches');
       return saved ? JSON.parse(saved) : [];
     } catch { return []; }
   });
@@ -191,7 +191,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
   // savedSearches değişince localStorage'a yaz
   React.useEffect(() => {
     try {
-      localStorage.setItem('sbfc_scout_searches', JSON.stringify(savedSearches.slice(0, 20)));
+      (typeof window !== "undefined" && localStorage).setItem('sbfc_scout_searches', JSON.stringify(savedSearches.slice(0, 20)));
     } catch { /* ignore */ }
   }, [savedSearches]);
 
@@ -213,7 +213,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
   const [localWatchlist, setLocalWatchlist] = useState<string[]>(() => {
     if (watchlist && watchlist.length > 0) return watchlist;
     try {
-      const saved = localStorage.getItem('sbfc_watchlist');
+      const saved = (typeof window !== "undefined" && localStorage).getItem('sbfc_watchlist');
       return saved ? JSON.parse(saved) : [];
     } catch { return []; }
   });
@@ -228,7 +228,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
   // localWatchlist değişince localStorage'a yaz
   React.useEffect(() => {
     try {
-      localStorage.setItem('sbfc_watchlist', JSON.stringify(localWatchlist));
+      (typeof window !== "undefined" && localStorage).setItem('sbfc_watchlist', JSON.stringify(localWatchlist));
     } catch { /* ignore */ }
   }, [localWatchlist]);
 
@@ -367,14 +367,14 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
           .from('league_teams')
           .select('league_id')
           .eq('profile_id', profile.id)
-          .single();
+          .maybeSingle();
         
         if (teamData) {
           const { data: leagueData } = await supabase
             .from('leagues')
             .select('tier')
             .eq('id', teamData.league_id)
-            .single();
+            .maybeSingle();
           
           if (leagueData) setUserTier(leagueData.tier);
         }
@@ -1206,7 +1206,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                <span className="text-[8px] sm:text-[9px] font-black text-white/20 uppercase tracking-widest">{savedSearches.length} KAYIT</span>
                {savedSearches.length > 0 && (
                  <button
-                   onClick={() => { setSavedSearches([]); try { localStorage.removeItem('sbfc_scout_searches'); } catch {} }}
+                   onClick={() => { setSavedSearches([]); try { (typeof window !== "undefined" && localStorage).removeItem('sbfc_scout_searches'); } catch (e) { console.warn("[silent-catch]", e); } }}
                    className="text-[8px] font-bold text-red-400/50 hover:text-red-400 uppercase tracking-widest min-h-[36px] px-1"
                  >
                    Temizle

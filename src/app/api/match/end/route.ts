@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .select('money, stadium_capacity, ticket_price, stadium_upgrades, reputation, current_day')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     if (!profile) return NextResponse.json({ error: 'Profil bulunamadı' }, { status: 404 });
 

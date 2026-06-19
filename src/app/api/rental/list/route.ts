@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       .from('rental_listings')
       .insert(listingPayload)
       .select()
-      .single();
+      .maybeSingle();
 
     if (insertError) {
       console.error('[POST /api/rental/list] rental_listings insert failed:', insertError.message, insertError);
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
           .from('rental_listings')
           .insert(fallbackPayload)
           .select()
-          .single();
+          .maybeSingle();
 
         if (fallbackError) {
           console.error('[POST /api/rental/list] Fallback insert also failed:', fallbackError.message);

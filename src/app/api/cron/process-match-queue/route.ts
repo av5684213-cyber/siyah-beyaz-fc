@@ -97,7 +97,7 @@ if (!isSupabaseConfigured()) {
       .from('fixtures')
       .select('id, home_team_id, away_team_id, tur, season_id, match_date, status')
       .eq('id', queueItem.fixture_id)
-      .single();
+      .maybeSingle();
 
     if (fixtureError || !fixture) {
       await markQueueItem(supabase, queueItem.id, 'failed', 'Fixture not found: ' + (fixtureError?.message || 'unknown'));
@@ -186,13 +186,13 @@ async function simulateSingleMatch(
     .from('league_teams')
     .select('id, name, profile_id')
     .eq('id', fixture.home_team_id)
-    .single();
+    .maybeSingle();
 
   const { data: awayTeamData } = await supabase
     .from('league_teams')
     .select('id, name, profile_id')
     .eq('id', fixture.away_team_id)
-    .single();
+    .maybeSingle();
 
   if (!homeTeamData || !awayTeamData) {
     throw new Error(`Team data not found for fixture ${fixture.id}`);
@@ -222,7 +222,7 @@ async function simulateSingleMatch(
       try {
         const inj = typeof p.injury === 'string' ? JSON.parse(p.injury) : p.injury;
         if (inj.remaining_days > 0) return false;
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     }
     // Çok yorgun oyuncu (cond < 20) oynayamaz
     if ((p.cond ?? 100) < 20) return false;
@@ -272,7 +272,7 @@ async function simulateSingleMatch(
         .maybeSingle();
       if (tHome) homeTacticsData = tHome;
     }
-  } catch {}
+  } catch (e) { console.warn("[silent-catch]", e); }
 
   try {
     if (awayTeamData.profile_id) {
@@ -283,7 +283,7 @@ async function simulateSingleMatch(
         .maybeSingle();
       if (tAway) awayTacticsData = tAway;
     }
-  } catch {}
+  } catch (e) { console.warn("[silent-catch]", e); }
 
   // Hakem ata
   let refereeForMatch: Referee | null = null;
@@ -470,7 +470,7 @@ async function simulateSingleMatch(
               .update({ matches_played: (curP.matches_played || 0) + 1 })
               .eq('id', pid);
           }
-        } catch {}
+        } catch (e) { console.warn("[silent-catch]", e); }
       }
     }
 
@@ -485,7 +485,7 @@ async function simulateSingleMatch(
         await supabase.rpc('increment_player_stat', {
           p_player_id: pid, p_stat: 'goals', p_amount: 1,
         });
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     }
 
     // B8: Asist yapanlar
@@ -499,7 +499,7 @@ async function simulateSingleMatch(
         await supabase.rpc('increment_player_stat', {
           p_player_id: apid, p_stat: 'assists', p_amount: 1,
         });
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     }
   }
 
@@ -619,7 +619,7 @@ async function updateLeagueStandings(
       .select('*')
       .eq('team_id', homeTeamId)
       .eq('season_id', seasonId)
-      .single();
+      .maybeSingle();
 
     if (homeStanding) {
       const updated = {
@@ -647,7 +647,7 @@ async function updateLeagueStandings(
       .select('*')
       .eq('team_id', awayTeamId)
       .eq('season_id', seasonId)
-      .single();
+      .maybeSingle();
 
     if (awayStanding) {
       const updated = {

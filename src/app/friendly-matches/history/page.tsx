@@ -52,7 +52,7 @@ export default function FriendlyMatchHistoryPage() {
         let profile: any = null;
         const profileStr = typeof window !== 'undefined' ? localStorage.getItem('fm_profile') : null;
         if (profileStr) {
-          try { profile = JSON.parse(profileStr); } catch {}
+          try { profile = JSON.parse(profileStr); } catch (e) { console.warn("[silent-catch]", e); }
         }
 
         if (!profile?.id && isSupabaseConfigured()) {
@@ -68,7 +68,7 @@ export default function FriendlyMatchHistoryPage() {
                   .maybeSingle();
                 if (profileRow) {
                   profile = profileRow;
-                  try { localStorage.setItem('fm_profile', JSON.stringify(profileRow)); } catch {}
+                  try { localStorage.setItem('fm_profile', JSON.stringify(profileRow)); } catch (e) { console.warn("[silent-catch]", e); }
                 }
               }
             } catch (authErr) {

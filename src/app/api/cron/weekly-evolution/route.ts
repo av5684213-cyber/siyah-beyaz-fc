@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
           }
           console.log(`[weekly-evolution] Coach stars fallback (staff_coaches) for ${Object.keys(coachStarsByProfile).length} profiles`);
         }
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     }
 
     // B2: Analist yıldızı → farmingMult bonusu
@@ -226,7 +226,7 @@ export async function GET(request: NextRequest) {
           }
           console.log(`[weekly-evolution] Training ground fallback (stadium_upgrades) for ${Object.keys(facilityByProfile).length} profiles`);
         }
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     }
 
     // 4) profile_id → player_id eşlemesi için (player'ların profile_id'sine ihtiyacımız var)

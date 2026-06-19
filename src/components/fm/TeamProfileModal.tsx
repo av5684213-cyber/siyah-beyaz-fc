@@ -164,7 +164,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
               .from('profiles')
               .select('id, manager_name, stadium_name, reputation, team_logo')
               .eq('team_name', teamName)
-              .single();
+              .maybeSingle();
           
             if (prof) {
               setTeamData({

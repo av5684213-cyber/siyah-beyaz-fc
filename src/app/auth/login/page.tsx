@@ -116,7 +116,7 @@ function LoginPageInner() {
         // Sadece ?logged_out=1 varken değil, her zaman.
         try {
           google.accounts.id.disableAutoSelect();
-        } catch {}
+        } catch (e) { console.warn("[silent-catch]", e); }
 
         // One Tap prompt'u ASLA çağırma — sadece resmi Google butonu ile giriş yapılabilir.
         // Eski sürümde google.accounts.id.prompt() çağrılıyordu, bu One Tap popup'ı

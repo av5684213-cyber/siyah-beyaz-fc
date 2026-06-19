@@ -94,7 +94,7 @@ async function completeTransfer(
     .from('profiles')
     .select('money')
     .eq('id', listing.seller_id)
-    .single();
+    .maybeSingle();
 
   if (sellerProfile) {
     await supabase!
@@ -233,7 +233,7 @@ export const buyPlayerFromMarket = async (listingId: string, buyerId: string, bu
     .from('transfer_market')
     .select('*')
     .eq('id', listingId)
-    .single();
+    .maybeSingle();
 
   if (fetchError || !listing) return { success: false, error: 'Listing not found' };
 
@@ -248,7 +248,7 @@ export const buyPlayerFromMarket = async (listingId: string, buyerId: string, bu
     .from('profiles')
     .select('money')
     .eq('id', listing.seller_id)
-    .single();
+    .maybeSingle();
 
   if (sellerProfile) {
     await supabase
@@ -295,7 +295,7 @@ export const placeBid = async (
     .from('transfer_market')
     .select('*')
     .eq('id', listingId)
-    .single();
+    .maybeSingle();
 
   if (fetchError || !listing) return { success: false, error: 'Listing not found' };
   if (!listing.is_active) return { success: false, error: 'Listing is no longer active' };
@@ -362,7 +362,7 @@ export const placeBid = async (
     .from('profiles')
     .select('money')
     .eq('id', bidderId)
-    .single();
+    .maybeSingle();
 
   const prevHeldAmount = listing.held_amount || 0;
   const prevBidderId = listing.highest_bidder_id;
@@ -482,7 +482,7 @@ export const cancelAuction = async (listingId: string, sellerId: string) => {
     .from('transfer_market')
     .select('*')
     .eq('id', listingId)
-    .single();
+    .maybeSingle();
 
   if (fetchError || !listing) return { success: false, error: 'Listing not found' };
   if (listing.seller_id !== sellerId) return { success: false, error: 'Only the seller can cancel this auction' };

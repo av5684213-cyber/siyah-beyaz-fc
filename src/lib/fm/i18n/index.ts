@@ -49,7 +49,7 @@ export function getCurrentLocale(): Locale {
       if (stored && stored in dictionaries) {
         currentLocale = stored as Locale;
       }
-    } catch {}
+    } catch (e) { console.warn("[silent-catch]", e); }
   }
   return currentLocale;
 }
@@ -62,7 +62,7 @@ export function setCurrentLocale(locale: Locale): void {
       // Set document direction for RTL languages
       document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
       document.documentElement.lang = locale;
-    } catch {}
+    } catch (e) { console.warn("[silent-catch]", e); }
   }
 }
 

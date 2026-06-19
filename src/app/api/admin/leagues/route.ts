@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       status: 'active',
       is_finished: false,
       current_tur: 1,
-    }).select().single();
+    }).select().maybeSingle();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true, season: data });

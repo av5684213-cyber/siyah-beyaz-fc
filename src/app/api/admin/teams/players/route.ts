@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     .from('profiles')
     .select('team_name')
     .eq('id', targetTeamId)
-    .single();
+    .maybeSingle();
 
   // Update player's team
   const { data, error } = await supabase
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     })
     .eq('id', playerId)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -122,7 +122,7 @@ export async function PATCH(request: NextRequest) {
     .update(filteredUpdates)
     .eq('id', playerId)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

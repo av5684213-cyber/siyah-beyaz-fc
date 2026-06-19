@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
       .from('trainings')
       .insert(row)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('[POST /api/trainings] Supabase error:', error.message);

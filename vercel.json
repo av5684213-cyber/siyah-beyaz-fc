@@ -16,7 +16,7 @@
     { "path": "/api/cron/youth-training",             "schedule": "0 4 * * *" },
     { "path": "/api/cron/check-academy-upgrades",     "schedule": "0 5 * * *" },
     { "path": "/api/cron/season-end",                 "schedule": "0 21 * * *" },
-    { "path": "/api/cron/apply-training",             "schedule": "0 8 * * *" },
+    { "path": "/api/cron/apply-training",             "schedule": "30 11,17 * * 1-5" },
     { "path": "/api/cron/match-reminder",             "schedule": "0 8 * * 1-5" },
     { "path": "/api/cron/match-reminder-cup",         "schedule": "0 14 * * 0,6" },
     { "path": "/api/cron/weekly-evolution",           "schedule": "0 22 * * 0" },

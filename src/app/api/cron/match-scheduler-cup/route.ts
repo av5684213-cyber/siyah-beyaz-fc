@@ -139,9 +139,9 @@ export async function GET(request: NextRequest) {
 
         // Takım bilgilerini çek
         const { data: homeTeamData } = await supabase
-          .from('league_teams').select('id, name, profile_id').eq('id', fixture.home_team_id).single();
+          .from('league_teams').select('id, name, profile_id').eq('id', fixture.home_team_id).maybeSingle();
         const { data: awayTeamData } = await supabase
-          .from('league_teams').select('id, name, profile_id').eq('id', fixture.away_team_id).single();
+          .from('league_teams').select('id, name, profile_id').eq('id', fixture.away_team_id).maybeSingle();
 
         if (!homeTeamData || !awayTeamData) {
           errors.push(`Fikstür ${fixture.id}: Takım bulunamadı`);
@@ -182,13 +182,13 @@ export async function GET(request: NextRequest) {
             const { data: tHome } = await supabase.from('active_tactics').select('*').eq('profile_id', homeTeamData.profile_id).maybeSingle();
             if (tHome) homeTacticsData = tHome;
           }
-        } catch {}
+        } catch (e) { console.warn("[silent-catch]", e); }
         try {
           if (awayTeamData.profile_id) {
             const { data: tAway } = await supabase.from('active_tactics').select('*').eq('profile_id', awayTeamData.profile_id).maybeSingle();
             if (tAway) awayTacticsData = tAway;
           }
-        } catch {}
+        } catch (e) { console.warn("[silent-catch]", e); }
 
         const homeTacticObj = buildActiveTactic(homeTacticsData);
         const awayTacticObj = buildActiveTactic(awayTacticsData);
@@ -255,7 +255,7 @@ export async function GET(request: NextRequest) {
             last_updated: new Date().toISOString(),
           })
           .select('id')
-          .single();
+          .maybeSingle();
 
         if (sessionError || !sessionData) {
           errors.push(`Fikstür ${fixture.id}: Session oluşturma hatası: ${sessionError?.message}`);
@@ -294,7 +294,7 @@ export async function GET(request: NextRequest) {
             { fixture_id: fixture.id, team_id: fixture.away_team_id, profile_id: awayTeamData.profile_id || null, side: 'away' as const },
           ];
           await supabase.from('match_participants').upsert(participants, { onConflict: 'fixture_id,team_id' });
-        } catch {}
+        } catch (e) { console.warn("[silent-catch]", e); }
 
         // Fikstürü live yap
         await supabase.from('fixtures').update({
@@ -310,7 +310,7 @@ export async function GET(request: NextRequest) {
           if (!profileId) continue;
           try {
             await sendPushToProfile(profileId, { title: pushTitle, body: pushBody, icon: '/favicon.ico', url: `/match/${fixture.id}` });
-          } catch {}
+          } catch (e) { console.warn("[silent-catch]", e); }
           await insertInAppNotification(supabase, profileId, pushTitle, pushBody, 'match_started', fixture.id);
         }
 

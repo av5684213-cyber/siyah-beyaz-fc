@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       .from('transfer_market')
       .select('*')
       .eq('id', listingId)
-      .single();
+      .maybeSingle();
 
     if (fetchError || !listing) {
       return NextResponse.json({ accepted: false, reason: 'Ilan bulunamadi.' }, { status: 404 });
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .select('*')
       .eq('id', buyerId)
-      .single();
+      .maybeSingle();
 
     if (profileError || !buyerProfile) {
       return NextResponse.json({ accepted: false, reason: 'Profil bulunamadi.' }, { status: 404 });
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
           .from('profiles')
           .select('money')
           .eq('id', listing.seller_id)
-          .single();
+          .maybeSingle();
         if (sellerProfile) {
           await supabase
             .from('profiles')
@@ -248,7 +248,7 @@ export async function PUT(request: NextRequest) {
         .from('transfer_market')
         .select('*')
         .eq('id', listingId)
-        .single();
+        .maybeSingle();
 
       if (listing && listing.seller_id !== 'free-agent-system') {
         const penalty = Math.round((auctionBidAmount || listing.current_bid || listing.price) * 0.05);
@@ -256,7 +256,7 @@ export async function PUT(request: NextRequest) {
           .from('profiles')
           .select('money')
           .eq('id', buyerId)
-          .single();
+          .maybeSingle();
         
         if (buyerProfile && Number(buyerProfile.money) >= penalty) {
           // Deduct penalty from buyer
@@ -270,7 +270,7 @@ export async function PUT(request: NextRequest) {
             .from('profiles')
             .select('money')
             .eq('id', listing.seller_id)
-            .single();
+            .maybeSingle();
           
           if (sellerProfile) {
             await supabase

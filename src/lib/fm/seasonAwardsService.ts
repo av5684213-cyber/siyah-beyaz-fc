@@ -527,7 +527,7 @@ export async function saveSeasonAwardsAndSummary(
         .from('profiles')
         .select('season_badges')
         .eq('id', profileId)
-        .single();
+        .maybeSingle();
 
       const existingBadges = safeJsonParse<SeasonBadge[]>(profileData.season_badges, []);
 
@@ -546,7 +546,7 @@ export async function saveSeasonAwardsAndSummary(
         .from('profiles')
         .select('total_trophies, total_awards')
         .eq('id', profileId)
-        .single();
+        .maybeSingle();
 
       if (currentProfile) {
         if (summary.is_champion) {
@@ -639,7 +639,7 @@ export async function loadAwardCeremony(profileId: string, seasonId: string): Pr
         .from('profiles')
         .select('season_badges')
         .eq('id', profileId)
-        .single();
+        .maybeSingle();
 
       if (data?.season_badges) {
         const badges = safeJsonParse<SeasonBadge[]>(data.season_badges, []);

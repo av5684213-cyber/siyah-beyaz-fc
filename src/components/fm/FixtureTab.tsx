@@ -196,7 +196,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
         .from('league_teams')
         .select('id')
         .eq('profile_id', teamId)
-        .single();
+        .maybeSingle();
       const targetTeamId = teamData?.id;
       setUserTeamId(targetTeamId);
 

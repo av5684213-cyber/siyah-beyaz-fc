@@ -305,7 +305,7 @@ export async function GET(request: NextRequest) {
           errors: result.errors.length,
         },
       });
-    } catch {}
+    } catch (e) { console.warn("[silent-catch]", e); }
 
     return NextResponse.json({
       action: 'regens_generated',

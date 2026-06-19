@@ -239,7 +239,7 @@ export async function claimTaskReward(
     .from('profiles')
     .select('money, credits')
     .eq('id', profileId)
-    .single();
+    .maybeSingle();
 
   if (!profile) {
     return { success: false, error: 'Profil bulunamadı' };

@@ -151,7 +151,7 @@ export default function LiveMatchPage() {
         const p = JSON.parse(stored);
         setProfileId(p?.id || null);
       }
-    } catch {}
+    } catch (e) { console.warn("[silent-catch]", e); }
   }, []);
 
   // ─── Team side tespiti ──

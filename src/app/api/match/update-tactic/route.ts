@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
         existingTactic.pressing = tactic === 'pres' || tactic === 'press';
 
         updateData.home_tactic_obj = JSON.stringify(existingTactic);
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     } else {
       updateData.away_tactic = tactic;
       updateData.away_goal_mod = tacticMods.goalMod;
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
         existingTactic.pressing = tactic === 'pres' || tactic === 'press';
 
         updateData.away_tactic_obj = JSON.stringify(existingTactic);
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     }
 
     const { error: updateError } = await supabase

@@ -212,7 +212,7 @@ if (!isSupabaseConfigured()) {
         const { getStoreDailyRevenue } = await import('@/lib/fm/stadiumMatrix');
         const storeLevel = profileFull.stadium_upgrades?.store || 0;
         storeRevenue = getStoreDailyRevenue(storeLevel) * 7; // weekly
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
 
       // Profile.sponsors JSONB kolonundan sponsor geliri ekle
       // weeklyPayment ve weeklyPayout her iki alan adını da destekle (geçiş dönemi)
@@ -336,7 +336,7 @@ if (!isSupabaseConfigured()) {
                 type: 'financial_warning',
                 is_read: false,
               });
-            } catch {}
+            } catch (e) { console.warn("[silent-catch]", e); }
           }
 
           // Gelir breakdown'ı kaydet

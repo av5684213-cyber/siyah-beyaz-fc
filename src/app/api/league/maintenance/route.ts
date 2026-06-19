@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
             is_finished: false
           })
           .select()
-          .single();
+          .maybeSingle();
 
         if (createSeasonError) {
           console.error(`Error creating season for league ${league.name}:`, createSeasonError);

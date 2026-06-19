@@ -297,7 +297,7 @@ export async function saveTrainingResults(
         .from('players')
         .select('id, shooting, passing, defending, speed, power, heading, goalkeeping, control, vision, rating, cond, morale, form_rating')
         .eq('id', player.id)
-        .single();
+        .maybeSingle();
 
       if (!currentData) {
         errors.push(`Player ${player.id} not found in DB`);

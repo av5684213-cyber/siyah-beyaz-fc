@@ -59,7 +59,7 @@ export default function NewSeasonBriefing({
           const data = await res.json();
           setAwards(data.awards || []);
         }
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
 
       try {
         // Fetch first 3 fixtures for the new season
@@ -79,7 +79,7 @@ export default function NewSeasonBriefing({
             setNextFixtures(upcoming);
           }
         }
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
 
       setLoading(false);
     };

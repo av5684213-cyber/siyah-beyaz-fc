@@ -247,7 +247,7 @@ export async function inductRetiredPlayers(
         .from('profiles')
         .select('hof_count')
         .eq('id', profileId)
-        .single();
+        .maybeSingle();
 
       if (currentProfile) {
         await supabase

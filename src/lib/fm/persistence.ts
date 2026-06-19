@@ -540,7 +540,7 @@ export const getMatchPreparations = async (id: string) => {
       .from('training_state')
       .select('state')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
     if (tsError || !tsData?.state) return [];
 
@@ -657,7 +657,7 @@ export const loadYouthFacilities = async (userId: string): Promise<Record<string
         .from('youth_facilities')
         .select('facility_levels')
         .eq('profile_id', userId)
-        .single();
+        .maybeSingle();
 
       if (!error && data?.facility_levels) {
         return safeJsonParse<Record<string, number>>(data.facility_levels, {});

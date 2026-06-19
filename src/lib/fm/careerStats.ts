@@ -68,7 +68,7 @@ export async function updateMatchCareerStats(
     .select('*')
     .eq('player_id', playerId)
     .eq('season_id', seasonId)
-    .single();
+    .maybeSingle();
 
   if (fetchError && fetchError.code !== 'PGRST116') {
      console.error('Error checking career stats:', fetchError);

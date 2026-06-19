@@ -149,7 +149,7 @@ export function useLiveMatchSync(
       if (subscriptionRef.current) {
         try {
           supabase.removeChannel(subscriptionRef.current);
-        } catch {}
+        } catch (e) { console.warn("[silent-catch]", e); }
         subscriptionRef.current = null;
       }
     };

@@ -19,7 +19,7 @@ function getStoredTheme(): ThemeMode {
   try {
     const stored = localStorage.getItem('sb-fc-theme');
     if (stored && THEME_ORDER.includes(stored as ThemeMode)) return stored as ThemeMode;
-  } catch {}
+  } catch (e) { console.warn("[silent-catch]", e); }
   return 'dark';
 }
 
@@ -33,7 +33,7 @@ function applyTheme(mode: ThemeMode) {
   // Also set as data attribute for CSS selectors
   html.setAttribute('data-theme', mode);
   // Persist
-  try { localStorage.setItem('sb-fc-theme', mode); } catch {}
+  try { localStorage.setItem('sb-fc-theme', mode); } catch (e) { console.warn("[silent-catch]", e); }
 }
 
 export default function ThemeToggle() {

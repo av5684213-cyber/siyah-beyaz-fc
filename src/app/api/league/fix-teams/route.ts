@@ -192,7 +192,7 @@ export async function GET(request: NextRequest) {
             is_finished: false
           })
           .select()
-          .single();
+          .maybeSingle();
 
         if (!seasonError && newSeason) {
           newSeasons++;

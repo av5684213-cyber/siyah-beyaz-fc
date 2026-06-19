@@ -267,7 +267,7 @@ function MatchPageInner() {
         const profileStr = localStorage.getItem('fm_profile');
         let profile: any = null;
         if (profileStr) {
-          try { profile = JSON.parse(profileStr); } catch {}
+          try { profile = JSON.parse(profileStr); } catch (e) { console.warn("[silent-catch]", e); }
         }
 
         // [BUG-17] localStorage'da yoksa Supabase Auth'tan al
@@ -284,7 +284,7 @@ function MatchPageInner() {
                   .maybeSingle();
                 if (profileRow) {
                   profile = profileRow;
-                  try { localStorage.setItem('fm_profile', JSON.stringify(profileRow)); } catch {}
+                  try { localStorage.setItem('fm_profile', JSON.stringify(profileRow)); } catch (e) { console.warn("[silent-catch]", e); }
                 }
               }
             } catch (authErr) {
@@ -343,7 +343,7 @@ function MatchPageInner() {
           away:league_teams!away_team_id (name, id, is_bot, profile_id)
         `)
         .eq('id', fixtureId)
-        .single();
+        .maybeSingle();
 
       if (fixtureError || !fixtureData) {
         // SORUN-4 FIX: More descriptive error messages
@@ -370,7 +370,7 @@ function MatchPageInner() {
       // Try filtering by is_revealed if the column exists
       try {
         eventsQuery = eventsQuery.eq('is_revealed', true);
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
 
       const { data: eventsData } = await eventsQuery;
 
@@ -386,7 +386,7 @@ function MatchPageInner() {
           if (fallbackData && fallbackData.length > 0) {
             finalEventsData = fallbackData;
           }
-        } catch {}
+        } catch (e) { console.warn("[silent-catch]", e); }
       }
 
       if (finalEventsData && finalEventsData.length > 0) {
@@ -902,7 +902,7 @@ function MatchPageInner() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ fixtureId, choice: option.id, profileId }),
                       });
-                    } catch {}
+                    } catch (e) { console.warn("[silent-catch]", e); }
                   }}
                 >
                   <p className="text-sm font-black text-white">{option.label}</p>

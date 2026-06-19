@@ -68,7 +68,7 @@ function clearPersistedAuth(): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.removeItem(GOOGLE_AUTH_STORAGE_KEY);
-  } catch {}
+  } catch (e) { console.warn("[silent-catch]", e); }
 }
 
 /**
@@ -297,7 +297,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (google?.accounts?.id) {
           google.accounts.id.disableAutoSelect();
         }
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     }
 
     // 2. Persisted Google auth'u temizle
@@ -314,7 +314,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         }
         keysToRemove.forEach(k => localStorage.removeItem(k));
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     }
 
     // 4. Supabase Auth oturumunu kapat
@@ -322,7 +322,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const supabase = getSupabase()!;
         await supabase.auth.signOut();
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     }
 
     // 5. State'i temizle

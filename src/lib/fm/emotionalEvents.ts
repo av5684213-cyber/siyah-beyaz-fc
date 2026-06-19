@@ -429,7 +429,7 @@ export function emitEmotionalEvent(event: EmotionalEvent): void {
       else if (event.type === 'PROMOTION') playSound('applause');
       else if (event.type === 'BIG_TRANSFER') playSound('transfer');
       else if (event.type.startsWith('RECORD_')) playSound('record');
-    } catch {}
+    } catch (e) { console.warn("[silent-catch]", e); }
   } catch (err) {
     console.error('[emotionalEvents] emitEmotionalEvent error:', err);
   }

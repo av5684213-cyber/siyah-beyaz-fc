@@ -925,7 +925,7 @@ export function DashboardTab({
                  const keysToKeep = ['sb-auth-token'];
                  Object.keys(localStorage).forEach(key => {
                    if (!keysToKeep.some(k => key.includes(k)) && !key.includes('fm_')) {
-                     if (typeof localStorage !== 'undefined') localStorage.removeItem(key);
+                     if (typeof localStorage !== 'undefined') (typeof window !== "undefined" && localStorage).removeItem(key);
                    }
                  });
                  toast.success('Ön bellek temizlendi.');
@@ -938,7 +938,7 @@ export function DashboardTab({
              <button
                onClick={() => {
                  if (confirm('TÜM VERİLER SİLİNECEK. ONAYLIYOR MUSUN?')) {
-                   if (typeof localStorage !== 'undefined') localStorage.clear();
+                   if (typeof localStorage !== 'undefined') (typeof window !== "undefined" && localStorage).clear();
                    router.refresh();
                  }
                }}

@@ -233,7 +233,7 @@ export async function applyMatchInjuries(
         .from('players')
         .select('injury_history, injury')
         .eq('id', event.playerId)
-        .single();
+        .maybeSingle();
 
       let currentHistory: InjuryRecord[] = [];
       if (playerData?.injury_history) {

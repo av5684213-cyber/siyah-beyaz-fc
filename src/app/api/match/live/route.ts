@@ -77,7 +77,7 @@ async function handleStart(supabase: any, matchId: string) {
     .from('fixtures')
     .select('id, home_team_id, away_team_id, status')
     .eq('id', matchId)
-    .single();
+    .maybeSingle();
 
   if (fixtureError || !fixture) {
     return NextResponse.json({ error: 'Fixture not found' }, { status: 404 });

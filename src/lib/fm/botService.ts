@@ -200,7 +200,7 @@ export async function processBotTransfers(
       .from('profiles')
       .select('id, manager_name, team_name, money, credits, reputation, is_bot, bot_difficulty, region, last_weekly_income')
       .eq('id', botUserId)
-      .single();
+      .maybeSingle();
 
     if (profError || !profile || !profile.is_bot) {
       return { bought: false, sold: false, details: ['Not a bot or profile not found'] };
@@ -479,7 +479,7 @@ export async function processBotTransfers(
                 .from('profiles')
                 .select('money')
                 .eq('id', target.seller_id)
-                .single();
+                .maybeSingle();
               if (sellerProfile) {
                 const taxRate = TAX_RATE_STANDARD; // %2.5 (eski 0.08 hatası düzeltildi)
                 const sellerRevenue = Math.round(buyPrice * (1 - taxRate));
@@ -659,7 +659,7 @@ export async function makeTacticalDecision(
       .from('profiles')
       .select('id, team_name, is_bot')
       .eq('id', botUserId)
-      .single();
+      .maybeSingle();
 
     if (!profile?.is_bot) return null;
 

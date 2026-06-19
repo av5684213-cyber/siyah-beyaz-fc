@@ -115,7 +115,7 @@ export async function awardMatchXpAndFans(
       .from('profiles')
       .select('id, xp, level, fans, stadium_upgrades')
       .eq('id', profileId)
-      .single();
+      .maybeSingle();
 
     if (profileError || !profile) {
       console.error('[xpLevelFans] Profile not found:', profileId, profileError);
@@ -158,7 +158,7 @@ export async function awardMatchXpAndFans(
         const bonusFans = Math.round(fansGained * (fanMultiplier - 1.0));
         fansGained += bonusFans;
       }
-    } catch {}
+    } catch (e) { console.warn("[silent-catch]", e); }
 
     const newXp = (profile.xp || 0) + xpGained;
     const newFans = Math.max(0, (profile.fans || 0) + fansGained);
@@ -189,7 +189,7 @@ export async function awardMatchXpAndFans(
           body: `Tebrikler! Seviye ${newLevel}'e ulaştınız!`,
           icon: '/icon-192x192.png',
         });
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     }
 
     return {

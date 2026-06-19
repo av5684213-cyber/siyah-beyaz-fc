@@ -283,7 +283,7 @@ export async function POST(request: NextRequest) {
         status: 'pending',
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (agreementError) {
       console.error('[POST /api/rental/offer] Agreement insert failed. playerId:', playerId, 'renterTeamId:', renterTeamId, 'listingId:', listingId, 'error:', agreementError.message, 'The rental_agreements table may not exist or have schema mismatch. Attempting financial rollback.');

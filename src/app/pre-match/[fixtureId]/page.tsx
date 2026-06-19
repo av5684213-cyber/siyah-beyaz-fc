@@ -44,7 +44,7 @@ export default function PreMatchPage() {
           .from('fixtures')
           .select('*')
           .eq('id', fixtureId)
-          .single();
+          .maybeSingle();
 
         if (fixData) {
           setFixture(fixData);

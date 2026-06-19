@@ -129,7 +129,7 @@ export async function acquireCronLock(
         expires_at: expiresAt.toISOString(),
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       // Unique constraint violation → başka instance kilit aldı

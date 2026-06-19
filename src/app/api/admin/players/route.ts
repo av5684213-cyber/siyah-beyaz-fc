@@ -85,7 +85,7 @@ export async function PATCH(request: NextRequest) {
 
   if (Object.keys(filteredUpdates).length === 0) return NextResponse.json({ error: 'Güncellenecek alan yok' }, { status: 400 });
 
-  const { data, error } = await supabase.from('players').update(filteredUpdates).eq('id', playerId).select().single();
+  const { data, error } = await supabase.from('players').update(filteredUpdates).eq('id', playerId).select().maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ success: true, player: data });

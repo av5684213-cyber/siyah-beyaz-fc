@@ -103,7 +103,7 @@ if (!isSupabaseConfigured()) {
         message: `Tesis yükseltme kontrolü: ${results.length} tamamlandı, ${errors.length} hata`,
         context: { processed: results.length, errors: errors.length },
       });
-    } catch {}
+    } catch (e) { console.warn("[silent-catch]", e); }
 
     return NextResponse.json({
       success: true,

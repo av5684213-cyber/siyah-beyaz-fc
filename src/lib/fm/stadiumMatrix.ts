@@ -587,7 +587,7 @@ export async function fetchStadiumLevels(profileId: string): Promise<Record<stri
       .from('profiles')
       .select('stadium_upgrades')
       .eq('id', profileId)
-      .single();
+      .maybeSingle();
 
     if (profile?.stadium_upgrades) {
       if (typeof profile.stadium_upgrades === 'string') {

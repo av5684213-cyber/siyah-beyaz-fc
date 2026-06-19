@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
         if (existingProf?.email) {
           userEmail = existingProf.email;
         }
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     }
 
     const isFounder = userEmail?.toLowerCase() === FOUNDER_EMAIL;

@@ -82,7 +82,7 @@ export async function PATCH(request: NextRequest) {
     .update(filteredUpdates)
     .eq('id', userId)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

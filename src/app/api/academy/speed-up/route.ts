@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       .from('user_academy')
       .select('*')
       .eq('profile_id', profileId)
-      .single();
+      .maybeSingle();
 
     if (academyError || !academy) {
       return NextResponse.json({ error: 'Akademi kaydı bulunamadı' }, { status: 404 });
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       .from('academy_upgrade_costs')
       .select('instant_half_credits_cost')
       .eq('level', targetLevel)
-      .single();
+      .maybeSingle();
 
     if (costError || !costData) {
       return NextResponse.json({ error: 'Hızlandırma maliyeti bulunamadı' }, { status: 500 });

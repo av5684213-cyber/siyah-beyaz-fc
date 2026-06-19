@@ -56,7 +56,7 @@ export async function GET(
         away:league_teams!away_team_id (name, id, is_bot, profile_id)
       `)
       .eq('id', fixtureId)
-      .single();
+      .maybeSingle();
 
     if (fixtureError || !fixture) {
       return NextResponse.json({ error: 'Fixture not found' }, { status: 404 });

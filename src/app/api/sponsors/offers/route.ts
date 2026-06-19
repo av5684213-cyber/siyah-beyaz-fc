@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
         status: 'active',
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('[POST /api/sponsors/offers] Insert error:', error.message);

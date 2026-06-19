@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 let webpush: any = null;
-try { webpush = require('web-push'); } catch {}
+try { webpush = require('web-push'); } catch (e) { console.warn("[silent-catch]", e); }
 import { createErrorResponse } from '@/lib/api-error-handler';
 
 export const maxDuration = 60;

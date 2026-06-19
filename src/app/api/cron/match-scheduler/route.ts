@@ -205,13 +205,13 @@ export async function GET(request: NextRequest) {
           .from('league_teams')
           .select('id, name, profile_id')
           .eq('id', fixture.home_team_id)
-          .single();
+          .maybeSingle();
 
         const { data: awayTeamData } = await supabase
           .from('league_teams')
           .select('id, name, profile_id')
           .eq('id', fixture.away_team_id)
-          .single();
+          .maybeSingle();
 
         if (!homeTeamData || !awayTeamData) {
           errors.push(`Fixture ${fixture.id}: Team data not found`);
@@ -386,7 +386,7 @@ export async function GET(request: NextRequest) {
             last_updated: new Date().toISOString(),
           })
           .select('id')
-          .single();
+          .maybeSingle();
 
         if (sessionError || !sessionData) {
           errors.push(`Fixture ${fixture.id}: Failed to create session: ${sessionError?.message}`);
@@ -447,7 +447,7 @@ export async function GET(request: NextRequest) {
               const homeCity = rivalryKeywords.find(k => (homeTeam?.name || '').toLowerCase().includes(k));
               const awayCity = rivalryKeywords.find(k => (awayTeam?.name || '').toLowerCase().includes(k));
               isRivalry = !!(homeCity && awayCity && homeCity === awayCity);
-            } catch {}
+            } catch (e) { console.warn("[silent-catch]", e); }
 
             const stadiumUpgrades = typeof homeProfile?.stadium_upgrades === 'string'
               ? JSON.parse(homeProfile?.stadium_upgrades || '{}')

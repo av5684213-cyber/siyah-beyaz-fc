@@ -92,7 +92,7 @@ export default function SettingsPage() {
           parsed.credits = newCredits;
           localStorage.setItem('fm_profile', JSON.stringify(parsed));
         }
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
 
       // Update Supabase
       if (isSupabaseConfigured()) {
@@ -146,7 +146,7 @@ export default function SettingsPage() {
           parsed.credits = newCredits;
           localStorage.setItem('fm_profile', JSON.stringify(parsed));
         }
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
 
       // Update Supabase
       if (isSupabaseConfigured()) {
@@ -428,7 +428,7 @@ export default function SettingsPage() {
                     html.classList.remove('dark', 'light', 'high-contrast');
                     html.classList.add(theme.id);
                     html.setAttribute('data-theme', theme.id);
-                    try { localStorage.setItem('sb-fc-theme', theme.id); } catch {}
+                    try { localStorage.setItem('sb-fc-theme', theme.id); } catch (e) { console.warn("[silent-catch]", e); }
                     setCurrentTheme(theme.id);
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors ${

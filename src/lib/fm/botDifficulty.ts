@@ -30,7 +30,7 @@ export async function getTierConfig(tier: number): Promise<TierConfig> {
       .maybeSingle();
 
     if (data) return data as TierConfig;
-  } catch {}
+  } catch (e) { console.warn("[silent-catch]", e); }
 
   return DEFAULT_TIERS.find(t => t.tier === tier) || DEFAULT_TIERS[0];
 }

@@ -683,7 +683,7 @@ export default function Home() {
         const coaches = (staffData.staff || []).filter((s: any) => s.type === 'coach' || s.type === 'assistant_coach');
         topCoachStars = coaches.reduce((max: number, c: any) => Math.max(max, c.stars || 0), 0);
       }
-    } catch {}
+    } catch (e) { console.warn("[silent-catch]", e); }
 
     const { updatedSquad: newSquad } = runTrainingSession(updatedSquad, trainingState, 1.0, {
       trainingFacilityLevel: (profile as any)?.stadium_upgrades?.training || 0,
@@ -762,22 +762,22 @@ export default function Home() {
         'sb_demo_user_id',
       ];
       for (const key of keysToRemove) {
-        try { localStorage.removeItem(key); } catch {}
+        try { localStorage.removeItem(key); } catch (e) { console.warn("[silent-catch]", e); }
       }
       // fm_ ön ekli diğer anahtarları da yakala
       try {
         const allKeys = Object.keys(localStorage);
         for (const k of allKeys) {
           if (k.startsWith('fm_')) {
-            try { localStorage.removeItem(k); } catch {}
+            try { localStorage.removeItem(k); } catch (e) { console.warn("[silent-catch]", e); }
           }
         }
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
 
       // sessionStorage'ı da temizle
       try {
         sessionStorage.clear();
-      } catch {}
+      } catch (e) { console.warn("[silent-catch]", e); }
     }
 
     // Supabase auth oturumunu kapat

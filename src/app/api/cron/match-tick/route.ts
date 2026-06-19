@@ -102,7 +102,7 @@ async function updateLeagueStandings(
       .select('*')
       .eq('team_id', homeTeamId)
       .eq('season_id', seasonId)
-      .single();
+      .maybeSingle();
 
     if (homeStanding) {
       const updated = {
@@ -131,7 +131,7 @@ async function updateLeagueStandings(
       .select('*')
       .eq('team_id', awayTeamId)
       .eq('season_id', seasonId)
-      .single();
+      .maybeSingle();
 
     if (awayStanding) {
       const updated = {
@@ -427,7 +427,7 @@ if (!isSupabaseConfigured()) {
             await supabase.from('match_sessions')
               .update({ prev_tactic: currentTactic })
               .eq('id', session.id);
-          } catch {}
+          } catch (e) { console.warn("[silent-catch]", e); }
         }
 
         // ── Bot AI: Check if any team is a bot and make tactical decisions ──
@@ -586,9 +586,9 @@ if (!isSupabaseConfigured()) {
                 .eq('profile_id', physioHomeProfileId)
                 .eq('type', 'physio');
               homePhysioStars = Math.max(0, ...(homeStaff || []).map(s => s.stars || 0));
-            } catch {}
+            } catch (e) { console.warn("[silent-catch]", e); }
           }
-        } catch {}
+        } catch (e) { console.warn("[silent-catch]", e); }
         try {
           const { data: awayTeamForPhysio } = await supabase
             .from('league_teams')
@@ -604,9 +604,9 @@ if (!isSupabaseConfigured()) {
                 .eq('profile_id', physioAwayProfileId)
                 .eq('type', 'physio');
               awayPhysioStars = Math.max(0, ...(awayStaff || []).map(s => s.stars || 0));
-            } catch {}
+            } catch (e) { console.warn("[silent-catch]", e); }
           }
-        } catch {}
+        } catch (e) { console.warn("[silent-catch]", e); }
 
         // Fizyoterapist etkisi: her yıldız %4 azaltma (eski %8 — 5 yıldız = %20 azaltma, daha gerçekçi)
         const homePhysioMod = 1.0 - (homePhysioStars * 0.04);
@@ -882,7 +882,7 @@ if (!isSupabaseConfigured()) {
               detail: 'İlk yarı sona erdi. Hakem düdüğü çaldı.',
               is_revealed: true,
             });
-          } catch {}
+          } catch (e) { console.warn("[silent-catch]", e); }
         }
 
         if (toMinute >= 90) {
@@ -898,7 +898,7 @@ if (!isSupabaseConfigured()) {
               detail: 'Maç sona erdi! Hakem son düdüğü çaldı.',
               is_revealed: true,
             });
-          } catch {}
+          } catch (e) { console.warn("[silent-catch]", e); }
         }
 
         // ── Session'ı güncelle ──
@@ -984,7 +984,7 @@ if (!isSupabaseConfigured()) {
                       .eq('id', event.playerId)
                       .maybeSingle();
                     goalPlayerName = goalPlayer?.name || null;
-                  } catch {}
+                  } catch (e) { console.warn("[silent-catch]", e); }
                 }
                 if (!goalPlayerName) {
                   notifBody = `${event.minute}' ${teamLabel}: Muhteşem bir gol!`;
@@ -1006,7 +1006,7 @@ if (!isSupabaseConfigured()) {
                       .eq('id', event.playerId)
                       .maybeSingle();
                     redCardPlayerName = redCardPlayer?.name || null;
-                  } catch {}
+                  } catch (e) { console.warn("[silent-catch]", e); }
                 }
                 notifBody = `${event.minute}' ${teamLabel}: ${redCardPlayerName || 'Takım arkadaşı'} kırmızı kart gördü!`;
               }
@@ -1024,7 +1024,7 @@ if (!isSupabaseConfigured()) {
                       .eq('id', event.playerId)
                       .maybeSingle();
                     injuryPlayerName = injuryPlayer?.name || null;
-                  } catch {}
+                  } catch (e) { console.warn("[silent-catch]", e); }
                 }
                 notifBody = `${event.minute}' ${teamLabel}: ${injuryPlayerName || 'Takım arkadaşı'} sakatlandı!`;
               }
@@ -1042,7 +1042,7 @@ if (!isSupabaseConfigured()) {
                       .eq('id', event.playerId)
                       .maybeSingle();
                     ownGoalPlayerName = ownGoalPlayer?.name || null;
-                  } catch {}
+                  } catch (e) { console.warn("[silent-catch]", e); }
                 }
                 notifBody = `${event.minute}' ${teamLabel}: ${ownGoalPlayerName || 'Takım arkadaşı'} kendi kalesine gol attı!`;
               }
@@ -1107,7 +1107,7 @@ if (!isSupabaseConfigured()) {
               .update({ is_revealed: true })
               .eq('fixture_id', fixtureId)
               .eq('is_revealed', false);
-          } catch {}
+          } catch (e) { console.warn("[silent-catch]", e); }
 
           // ── KALICI KAYIT: Tüm olayları match_sessions.events JSONB'ye de yaz ──
           // Bu sayede sezon boyunca "tekrar izle" her zaman çalışır.
@@ -1594,7 +1594,7 @@ if (!isSupabaseConfigured()) {
                     try {
                       const { data: p2 } = await supabase.from('players').select('season_yellow_cards').eq('id', e.player_id).maybeSingle();
                       if (p2) await supabase.from('players').update({ season_yellow_cards: (p2.season_yellow_cards || 0) + 1 }).eq('id', e.player_id);
-                    } catch {}
+                    } catch (e) { console.warn("[silent-catch]", e); }
                   }
                 }
               }
@@ -1896,7 +1896,7 @@ if (!isSupabaseConfigured()) {
                             .maybeSingle();
                           if (winnerTeam?.profile_id) {
                             const championReward = advanced.championReward || 10_000_000;
-                            const { data: wp } = await supabase.from('profiles').select('money').eq('id', winnerTeam.profile_id).single();
+                            const { data: wp } = await supabase.from('profiles').select('money').eq('id', winnerTeam.profile_id).maybeSingle();
                             if (wp) {
                               await supabase.from('profiles').update({ money: (wp.money || 0) + championReward }).eq('id', winnerTeam.profile_id);
                               console.log(`[m[cron/match-tick] Kupa şampiyonu ${advanced.winner}: ${championReward.toLocaleString('tr-TR')} € ödül`);
@@ -2135,7 +2135,7 @@ async function tickLegacyMatch(
         else currentAwayScore++;
       }
     }
-  } catch {}
+  } catch (e) { console.warn("[silent-catch]", e); }
 
   let newStatus = liveMatch.status;
   if (currentGameMinute >= 45 && currentGameMinute < 46 && liveMatch.status !== 'halftime') newStatus = 'halftime';
@@ -2150,7 +2150,7 @@ async function tickLegacyMatch(
       status: newStatus,
       updated_at: new Date().toISOString(),
     }).eq('fixture_id', fixtureId);
-  } catch {}
+  } catch (e) { console.warn("[silent-catch]", e); }
 
   if (currentGameMinute >= 90) {
     await supabase.from('fixtures').update({

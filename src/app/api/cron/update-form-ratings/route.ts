@@ -199,7 +199,7 @@ export async function GET(request: NextRequest) {
                       type: 'loan_return',
                       is_read: false,
                     });
-                  } catch {}
+                  } catch (e) { console.warn("[silent-catch]", e); }
                 }
 
                 loansReturned++;

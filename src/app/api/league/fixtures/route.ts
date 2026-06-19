@@ -29,7 +29,7 @@ export async function GET(request: Request) {
         .from('leagues')
         .select('id')
         .eq('tier', parseInt(leagueId))
-        .single();
+        .maybeSingle();
       if (leagueData) targetLeagueId = leagueData.id;
     }
 
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       .eq('league_id', targetLeagueId)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (!seasonData) {
       return NextResponse.json({ source: 'no_season', fixtures: [] });

@@ -82,7 +82,7 @@ export async function GET(request: Request) {
       }
     } else if (!leagueId || leagueId === 'undefined' || leagueId === '') {
       // No leagueId provided, default to Tier 1
-      const { data: firstLeague } = await supabase.from('leagues').select('id').eq('tier', 1).order('id', { ascending: true }).limit(1).single();
+      const { data: firstLeague } = await supabase.from('leagues').select('id').eq('tier', 1).order('id', { ascending: true }).limit(1).maybeSingle();
       finalLeagueId = firstLeague?.id;
     }
 
@@ -132,7 +132,7 @@ async function getStandingsForLeague(supabase: any, leagueId: string) {
     .eq('league_id', resolvedLeagueId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (seasonError || !seasonData) {
     return NextResponse.json({
@@ -186,7 +186,7 @@ async function getStandingsForLeague(supabase: any, leagueId: string) {
     .from('leagues')
     .select('name, tier')
     .eq('id', resolvedLeagueId)
-    .single();
+    .maybeSingle();
 
   const leagueName = leagueInfo?.name || '';
   const leagueTier = leagueInfo?.tier || 4;

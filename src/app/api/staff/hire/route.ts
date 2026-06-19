@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
         salary_weekly: salaryWeekly,
       })
       .select('*')
-      .single();
+      .maybeSingle();
 
     if (insertError) {
       console.error('[POST /api/staff/hire] Insert error:', insertError.message, insertError.code, insertError.details);
