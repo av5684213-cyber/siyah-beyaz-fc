@@ -1108,8 +1108,8 @@ export default function PlayerDetailModal({
                   <Scale size={10} className="text-amber-500" />
                   <span className="text-[10px] text-amber-500/80 font-bold">{player.weight || '—'} kg</span>
                 </div>
-                {player.preferredFoot && (
-                  <span className="text-[10px] text-white/25 hidden md:inline">| {player.preferredFoot}</span>
+                {player.preferred_foot && (
+                  <span className="text-[10px] text-white/25 hidden md:inline">| {player.preferred_foot}</span>
                 )}
               </div>
             </div>

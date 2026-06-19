@@ -37,7 +37,7 @@ const MATCHES_PER_SEASON = 34; // 18 takım × double round-robin = her takım 3
 export async function GET(request: NextRequest) {
   // CRON_SECRET protection
   const cronSecret = process.env.CRON_SECRET;
-  if (false) // CRON_SECRET disabled //.get('authorization') !== `Bearer ${cronSecret}`) {
+  if (false) { // CRON_SECRET disabled
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 // SORUN-11: Additional Vercel cron signature verification (defense-in-depth)
@@ -531,7 +531,7 @@ async function processLeagueSeasonEnd(
 
     for (const [slot, positions] of Object.entries(POSITION_SLOTS)) {
       const candidates = mvpPlayer.filter((p: Record<string, unknown>) =>
-        positions.includes((p.position as string) || (p.specific_position as string) || '') && !usedPlayerIds.has(p.id as string)
+        positions.includes((p.position as string) || (p.specificPosition as string) || '') && !usedPlayerIds.has(p.id as string)
       );
       if (candidates.length > 0) {
         const best = [...candidates].sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
@@ -547,7 +547,7 @@ async function processLeagueSeasonEnd(
         obj[slot] = {
           id: player.id,
           name: player.name,
-          position: player.position || player.specific_position,
+          position: player.position || player.specificPosition,
           rating: player.form_rating,
         };
         return obj;
@@ -1241,7 +1241,7 @@ async function processLeagueSeasonEnd(
               id: `talent-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
               name: talent.name,
               position: talent.position,
-              specific_position: talent.specific_position,
+              specific_position: talent.specificPosition,
               rating: talent.rating,
               potential: talent.potential,
               hidden_potential: talent.hidden_potential,
@@ -1420,11 +1420,12 @@ async function processLeagueSeasonEnd(
   }
 
   // ─── 15. Yeni sezon oluştur ───
+  let newSeason: any = null;
   try {
     const { getTomorrowNoon } = await import('@/lib/fm/league');
     const seasonStart = getTomorrowNoon();
 
-    const { data: newSeason } = await supabase
+    const { data: newSeasonData } = await supabase
       .from('seasons')
       .insert({
         league_id: leagueId,
@@ -1436,6 +1437,7 @@ async function processLeagueSeasonEnd(
       })
       .select()
       .maybeSingle();
+    newSeason = newSeasonData;
 
     if (newSeason) {
       // Fikstür oluştur
@@ -1520,7 +1522,7 @@ async function processLeagueSeasonEnd(
               end_date: cupSeason.rounds[cupSeason.rounds.length - 1]?.endDate || null,
               status: 'active',
               league_id: leagueId,
-              season_id: newSeason?.id || null,   // B2: season_id ekle
+              season_id: newSeason?.id || null,   // B2: season_id ekle (newSeason try bloğu dışında olabilir)
               is_completed: false,
               winner: null,
               runner_up: null,

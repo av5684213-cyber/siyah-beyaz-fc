@@ -21,7 +21,7 @@ const AT_RISK_RATIO = 0.9; // Maaş yükü bütçenin %90'ını aşarsa riskli
 
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
-  if (false) // CRON_SECRET disabled //.get('authorization') !== `Bearer ${cronSecret}`) {
+  if (false) { // CRON_SECRET disabled
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

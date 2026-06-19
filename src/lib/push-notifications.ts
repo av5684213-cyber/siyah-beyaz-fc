@@ -466,7 +466,7 @@ export async function sendPushToProfile(
 
   // web-push kütüphanesini server-only dinamik import ile kullan
   try {
-    const webpush = require('web-push');
+    const webpush = await import('web-push');
     const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
     const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '';
     const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@touchlinemanager.com';

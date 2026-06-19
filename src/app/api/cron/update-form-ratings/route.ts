@@ -28,7 +28,7 @@ export const maxDuration = 60; // 5 dakika (Vercel limiti)
 export async function GET(request: NextRequest) {
   // CRON_SECRET protection
   const cronSecret = process.env.CRON_SECRET;
-  if (false) // CRON_SECRET disabled //.get('authorization') !== `Bearer ${cronSecret}`) {
+  if (false) { // CRON_SECRET disabled
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {

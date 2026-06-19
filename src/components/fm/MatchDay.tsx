@@ -455,7 +455,6 @@ const MatchDay = ({
     mentality: 3,
     pressing: false,
     passingStyle: 'Karışık',
-    formation: '4-4-2',
     lineHeight: 50,
     width: 50,
     aggression: 50,
