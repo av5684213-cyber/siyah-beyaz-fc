@@ -1062,7 +1062,8 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 -- 8. RPC FUNCTIONS
 -- ═══════════════════════════════════════════════════════════════════════════
 
--- generate_league_fixtures: [BUG-8 DÜZELTME] 12:00 ve 18:00 slot, Pzt-Per iş günleri, idempotent
+-- generate_league_fixtures: [BUG-16 DÜZELTME v2] 18 maç/gün = 2 tur, her tur 9 maç
+-- 18 takım = 34 tur (çift devreli) = 17 gün (2 tur/gün), Pzt-Cum, bugün başlar
 SELECT drop_function_if_exists('generate_league_fixtures');
 CREATE OR REPLACE FUNCTION generate_league_fixtures(p_season_id uuid)
 RETURNS void LANGUAGE plpgsql AS $$
@@ -1071,11 +1072,14 @@ DECLARE
     v_team_ids uuid[];
     v_n integer;
     v_total_rounds integer;
+    v_double_rounds integer;  -- çift devreli: 2x
     v_round integer;
     v_match integer;
     v_half integer;
     v_home_id uuid;
     v_away_id uuid;
+    v_actual_home uuid;
+    v_actual_away uuid;
     v_match_date date;
     v_team_ids_rotating uuid[];
     v_fixed_id uuid;
@@ -1086,14 +1090,17 @@ DECLARE
     v_base_date date;
     v_target_dow integer;
     v_days_to_add integer;
+    v_next_dow integer;
+    v_next_offset integer;
+    v_tur_in_day integer;
+    v_slots_per_day integer := 2;
 BEGIN
     SELECT league_id INTO v_league_id FROM seasons WHERE id = p_season_id;
     IF v_league_id IS NULL THEN RETURN; END IF;
 
-    -- [BUG-8] İdempotency: Bu sezon için zaten fikstür varsa tekrar üretme
     SELECT count(*) INTO v_existing_count FROM fixtures WHERE season_id = p_season_id;
     IF v_existing_count > 0 THEN
-        RAISE NOTICE 'Sezon % için zaten % fikstür mevcut, üretim atlanıyor.', p_season_id, v_existing_count;
+        RAISE NOTICE 'Sezon % için zaten % fikstür mevcut.', p_season_id, v_existing_count;
         RETURN;
     END IF;
 
@@ -1109,29 +1116,37 @@ BEGIN
     END IF;
 
     v_total_rounds := v_n - 1;
+    v_double_rounds := v_total_rounds * 2;  -- 18 takım → 34 tur (çift devreli)
     v_half := v_n / 2;
     v_fixed_id := v_team_ids[1];
     v_team_ids_rotating := v_team_ids[2:v_n];
 
-    -- [BUG-8] İlk maç günü = yarın, ama Pzt-Cum arası bir iş günü olsun
-    -- 0=Paz, 1=Pzt, 2=Sal, 3=Çar, 4=Per, 5=Cum, 6=Cmt
-    -- Hafta içi = Pzt-Cum (1-5), hafta sonu = Cmt-Paz (0,6) lig maçı yok
-    v_base_date := CURRENT_DATE + 1;
+    -- [BUG-16] Bugün ile başla (CURRENT_DATE+1 değil)
+    v_base_date := CURRENT_DATE;
     v_target_dow := EXTRACT(DOW FROM v_base_date)::integer;
-    -- Cmt(6)/Paz(0) ise sonraki Pazartesi'ye kaydır
-    IF v_target_dow = 6 THEN v_days_to_add := 2;       -- Cmt → Pzt (+2)
-    ELSIF v_target_dow = 0 THEN v_days_to_add := 1;    -- Paz → Pzt (+1)
+    IF v_target_dow = 6 THEN v_days_to_add := 2;       -- Cmt → Pzt
+    ELSIF v_target_dow = 0 THEN v_days_to_add := 1;    -- Paz → Pzt
     ELSE v_days_to_add := 0;
     END IF;
     v_match_date := v_base_date + v_days_to_add;
 
-    FOR v_round IN 1..v_total_rounds LOOP
+    v_tur_in_day := 0;
+
+    FOR v_round IN 1..v_double_rounds LOOP
         v_team_ids := ARRAY[v_fixed_id];
         FOR i IN 1..array_length(v_team_ids_rotating, 1) LOOP
             v_team_ids := v_team_ids || v_team_ids_rotating[i];
         END LOOP;
 
         v_match_count := 0;
+        v_tur_in_day := v_tur_in_day + 1;
+
+        -- Tur gün içindeki sıraya göre 12:00 veya 18:00 slotu
+        IF v_tur_in_day = 1 THEN
+            v_match_time := '12:00';
+        ELSE
+            v_match_time := '18:00';
+        END IF;
 
         FOR v_match IN 0..(v_half - 1) LOOP
             v_home_id := v_team_ids[v_match + 1];
@@ -1140,43 +1155,18 @@ BEGIN
             IF v_home_id != '00000000-0000-0000-0000-000000000000'::uuid AND
                v_away_id != '00000000-0000-0000-0000-000000000000'::uuid THEN
 
-                -- [BUG-8] 12:00 ve 18:00 slotları arasında sırayla değiştir
-                -- Çift index → 12:00, Tek index → 18:00
-                IF v_match_count % 2 = 0 THEN
-                    v_match_time := '12:00';
+                -- Çift devreli: 2. yarıda home/away değiştir (rövanş)
+                IF v_round <= v_total_rounds THEN
+                    v_actual_home := v_home_id;
+                    v_actual_away := v_away_id;
                 ELSE
-                    v_match_time := '18:00';
+                    v_actual_home := v_away_id;
+                    v_actual_away := v_home_id;
                 END IF;
 
                 INSERT INTO fixtures (home_team_id, away_team_id, season_id, tur, match_date, match_time, status, competition_type)
-                VALUES (v_home_id, v_away_id, p_season_id, v_round, v_match_date, v_match_time, 'scheduled', 'league')
+                VALUES (v_actual_home, v_actual_away, p_season_id, v_round, v_match_date, v_match_time, 'scheduled', 'league')
                 ON CONFLICT DO NOTHING;
-
-                -- Rövanş: v_total_rounds hafta sonra, ters slot
-                DECLARE
-                    v_return_date date;
-                    v_return_dow integer;
-                    v_return_offset integer := v_total_rounds;
-                    v_return_target_dow integer;
-                    v_return_days_to_add integer;
-                BEGIN
-                    -- İş günü ekle (v_total_rounds hafta sonra)
-                    v_return_date := v_match_date + (v_return_offset * 7);
-                    v_return_dow := EXTRACT(DOW FROM v_return_date)::integer;
-                    IF v_return_dow = 6 THEN v_return_days_to_add := 2;
-                    ELSIF v_return_dow = 0 THEN v_return_days_to_add := 1;
-                    ELSE v_return_days_to_add := 0;
-                    END IF;
-                    v_return_date := v_return_date + v_return_days_to_add;
-
-                    -- Ters slot
-                    INSERT INTO fixtures (home_team_id, away_team_id, season_id, tur, match_date, match_time, status, competition_type)
-                    VALUES (v_away_id, v_home_id, p_season_id, v_round + v_total_rounds,
-                            v_return_date,
-                            CASE WHEN v_match_time = '12:00' THEN '18:00' ELSE '12:00' END,
-                            'scheduled', 'league')
-                    ON CONFLICT DO NOTHING;
-                END;
 
                 v_match_count := v_match_count + 1;
             END IF;
@@ -1187,18 +1177,16 @@ BEGIN
             v_team_ids_rotating[i] := v_team_ids_rotating[i-1];
         END LOOP;
         v_team_ids_rotating[1] := v_last_id;
-        -- [BUG-8] Bir sonraki tur için 1 iş günü ekle (Pzt-Cum)
-        -- Eğer cuma ise 3 gün ekle (Pzt'ye), değilse 1 gün ekle
-        DECLARE
-            v_next_dow integer;
-            v_next_offset integer;
-        BEGIN
+
+        -- Eğer gün içinde 2 tur oynadıysak, bir sonraki iş gününe geç
+        IF v_tur_in_day >= v_slots_per_day THEN
+            v_tur_in_day := 0;
             v_next_dow := EXTRACT(DOW FROM v_match_date)::integer;
             IF v_next_dow = 5 THEN v_next_offset := 3;   -- Cum → Pzt
-            ELSE v_next_offset := 1;                       -- Pzt→Sal, Sal→Çar, Çar→Per, Per→Cum
+            ELSE v_next_offset := 1;
             END IF;
             v_match_date := v_match_date + v_next_offset;
-        END;
+        END IF;
     END LOOP;
 END;
 $$;
