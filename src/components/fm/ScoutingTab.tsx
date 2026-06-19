@@ -94,19 +94,19 @@ function ArchetypeMultiSelect({ selected, onChange, scoutLevel }: {
   };
 
   return (
-    <div className="space-y-1.5 relative">
-      <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Arketip</label>
+    <div className="space-y-1 relative">
+      <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Arketip</label>
       <button
         type="button"
         onClick={() => { if (scoutLevel >= 3) setIsOpen(!isOpen); }}
-        className={`w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white focus:border-amber-500 outline-none transition-all flex items-center justify-between ${
+        className={`w-full bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] sm:text-xs font-mono text-white focus:border-amber-500 outline-none transition-all flex items-center justify-between ${
           scoutLevel < 3 ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:bg-white/[0.07]'
         }`}
       >
-        <span className={selected.length > 0 ? 'text-white' : 'text-white/30'}>
+        <span className={`truncate ${selected.length > 0 ? 'text-white' : 'text-white/30'}`}>
           {selected.length > 0 ? `${selected.length} arketip seçili` : 'Arketip Seç'}
         </span>
-        <ChevronDown size={14} className={`text-white/30 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={12} className={`text-white/30 transition-transform shrink-0 ml-1 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       <AnimatePresence>
         {isOpen && scoutLevel >= 3 && (
@@ -644,89 +644,89 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
     <motion.div 
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
-      className="space-y-6 pb-20"
+      className="space-y-3 sm:space-y-4 pb-16"
     >
-      {/* ── Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/5 p-6 rounded-[2rem] border border-white/5 backdrop-blur-md">
-        <div>
-          <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white">Gözlemcilik Ağı</h2>
-          <p className="text-xs font-bold text-white/30 uppercase tracking-[0.4em] mt-1">Yetenek Avı ve Keşif</p>
+      {/* ── Header (kompakt) ── */}
+      <div className="flex items-center justify-between gap-2 bg-white/5 p-3 sm:p-4 rounded-2xl border border-white/5">
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-xl font-black italic uppercase tracking-tighter text-white truncate">Gözlemcilik Ağı</h2>
+          <p className="text-[8px] sm:text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] sm:tracking-[0.4em] mt-0.5">Yetenek Avı</p>
         </div>
-        <div className="flex gap-2">
-           <div className="px-4 py-2 bg-black/40 border border-white/10 rounded-xl">
-             <span className="text-[10px] font-black text-white/20 uppercase block leading-none mb-1">Bütçe</span>
-             <span className="text-sm font-mono font-bold text-emerald-400 leading-none">
-               €{(profile?.money || 0).toLocaleString()}
+        <div className="flex gap-1.5 sm:gap-2 shrink-0">
+           <div className="px-2 py-1 sm:px-3 sm:py-1.5 bg-black/40 border border-white/10 rounded-lg">
+             <span className="text-[8px] font-black text-white/20 uppercase block leading-none mb-0.5">Bütçe</span>
+             <span className="text-[10px] sm:text-xs font-mono font-bold text-emerald-400 leading-none">
+               €{((profile?.money || 0) / 1000000).toFixed(1)}M
              </span>
            </div>
-           <div className="px-4 py-2 bg-black/40 border border-white/10 rounded-xl">
-             <span className="text-[10px] font-black text-white/20 uppercase block leading-none mb-1">Gözlemci</span>
-             <span className={`text-sm font-mono font-bold leading-none ${activeScoutSlots > 0 ? 'text-amber-400' : 'text-red-400'}`}>
+           <div className="px-2 py-1 sm:px-3 sm:py-1.5 bg-black/40 border border-white/10 rounded-lg">
+             <span className="text-[8px] font-black text-white/20 uppercase block leading-none mb-0.5">Gözlemci</span>
+             <span className={`text-[10px] sm:text-xs font-mono font-bold leading-none ${activeScoutSlots > 0 ? 'text-amber-400' : 'text-red-400'}`}>
                {activeScoutSlots}/3
              </span>
            </div>
         </div>
       </div>
 
-      {/* ── WARNING: No Scout Slots ── */}
+      {/* ── WARNING: No Scout Slots (kompakt) ── */}
       {activeScoutSlots < 1 && (
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-red-500/10 border border-red-500/20 p-6 rounded-[2rem] flex items-center gap-4"
+          className="bg-red-500/10 border border-red-500/20 p-3 sm:p-4 rounded-xl flex items-center gap-2 sm:gap-3"
         >
-          <div className="w-14 h-14 bg-red-500/20 rounded-2xl flex items-center justify-center shrink-0">
-            <Ban size={28} className="text-red-400" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-500/20 rounded-lg flex items-center justify-center shrink-0">
+            <Ban size={16} className="text-red-400" />
           </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-wider text-red-400 mb-1">Gözlemci Yok</h3>
-            <p className="text-xs text-red-300/70 leading-relaxed">
-              Gözlemciniz bulunmuyor. Yerleşke {'>'} Personel sekmesinden gözlemci satın alabilirsiniz.
+          <div className="min-w-0 flex-1">
+            <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-red-400">Gözlemci Yok</h3>
+            <p className="text-[9px] sm:text-[10px] text-red-300/70 leading-tight mt-0.5">
+              Yerleşke {'>'} Personel'den gözlemci satın al.
             </p>
             <button 
               onClick={() => setActiveTab('stadium')}
-              className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-500/30 transition-all"
+              className="inline-flex items-center gap-1 mt-1.5 px-2 py-1 bg-red-500/20 text-red-400 text-[9px] font-black uppercase tracking-widest rounded-md hover:bg-red-500/30 transition-all"
             >
-              <Users size={12} />
-              Yerleşke Sekmesine Git
+              <Users size={10} />
+              Yerleşke'ye Git
             </button>
           </div>
         </motion.div>
       )}
 
-      {/* ── Scout Level Indicator ── */}
+      {/* ── Scout Level Indicator (kompakt) ── */}
       {activeScoutSlots > 0 && (
-        <div className="bg-white/5 border border-white/5 rounded-[2rem] p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <Shield size={16} className="text-white/40" />
-            <h3 className="text-sm font-black uppercase tracking-wider text-white/70">Arama Yetkinliği</h3>
+        <div className="bg-white/5 border border-white/5 rounded-xl p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Shield size={14} className="text-white/40 shrink-0" />
+            <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-white/70 truncate">Arama Yetkinliği</h3>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2">
             {[1, 2, 3].map((level) => {
               const info = SCOUT_LEVEL_INFO[level];
               const isActive = scoutLevel >= level;
               return (
                 <div 
                   key={level}
-                  className={`p-4 rounded-2xl border transition-all ${
+                  className={`p-2 sm:p-3 rounded-lg border transition-all ${
                     isActive 
                       ? 'bg-amber-500/10 border-amber-500/20' 
                       : 'bg-white/[0.02] border-white/5 opacity-40'
                   }`}
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`text-lg font-black ${isActive ? 'text-amber-400' : 'text-white/20'}`}>{level}</span>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className={`text-sm sm:text-base font-black ${isActive ? 'text-amber-400' : 'text-white/20'}`}>{level}</span>
                     <div className="flex gap-0.5">
                       {[...Array(level)].map((_, i) => (
-                        <Star key={i} size={8} className={isActive ? 'text-amber-400 fill-amber-400' : 'text-white/10'} />
+                        <Star key={i} size={6} className={isActive ? 'text-amber-400 fill-amber-400' : 'text-white/10'} />
                       ))}
                     </div>
-                    {!isActive && <Lock size={10} className="text-white/20 ml-auto" />}
+                    {!isActive && <Lock size={9} className="text-white/20 ml-auto" />}
                   </div>
-                  <p className={`text-[10px] font-black uppercase tracking-widest ${isActive ? info.color : 'text-white/20'}`}>
+                  <p className={`text-[8px] sm:text-[10px] font-black uppercase tracking-widest ${isActive ? info.color : 'text-white/20'} truncate`}>
                     {info.label}
                   </p>
-                  <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-0.5">
+                  <p className="hidden sm:block text-[8px] font-bold text-white/20 uppercase tracking-widest mt-0.5">
                     {info.desc}
                   </p>
                 </div>
@@ -736,35 +736,35 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
         </div>
       )}
 
-      {/* Scouts Overview */}
+      {/* Scouts Overview (kompakt) */}
       <details className="group" open={activeScoutSlots > 0}>
-        <summary className="cursor-pointer flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl px-6 py-4 hover:bg-white/[0.07] transition-all list-none">
-          <div className="flex items-center gap-3 flex-1">
-            <Users className="text-white/40" size={18} />
-            <div>
-              <h3 className="text-sm font-black uppercase tracking-wider text-white/70">Gözlemci Slotları</h3>
-              <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest">
+        <summary className="cursor-pointer flex items-center gap-2 sm:gap-3 bg-white/5 border border-white/5 rounded-xl px-3 py-2 sm:py-3 hover:bg-white/[0.07] transition-all list-none">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <Users className="text-white/40 shrink-0" size={14} />
+            <div className="min-w-0">
+              <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-white/70 truncate">Gözlemci Slotları</h3>
+              <p className="text-[8px] sm:text-[9px] font-bold text-white/20 uppercase tracking-widest truncate">
                 {activeScoutSlots > 0 
                   ? `${activeScoutSlots}/3 aktif — Seviye ${scoutLevel} arama` 
                   : 'Gözlemci yok — Arama devre dışı'}
               </p>
             </div>
           </div>
-          <ChevronRight size={14} className="text-white/20 group-open:rotate-90 transition-transform" />
+          <ChevronRight size={12} className="text-white/20 group-open:rotate-90 transition-transform shrink-0" />
         </summary>
-        <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-3">
           {scouting.scouts.length > 0 ? scouting.scouts.map((scout: Scout) => (
-              <div key={scout.id} className="bg-white/5 border border-white/5 rounded-2xl p-5 relative overflow-hidden flex flex-col min-h-[160px]">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="text-base font-black italic uppercase tracking-tighter text-white">{scout.name}</h3>
-                    <div className="flex gap-1 mt-1">
+              <div key={scout.id} className="bg-white/5 border border-white/5 rounded-xl p-3 relative overflow-hidden flex flex-col min-h-[100px]">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="min-w-0">
+                    <h3 className="text-xs sm:text-sm font-black italic uppercase tracking-tighter text-white truncate">{scout.name}</h3>
+                    <div className="flex gap-0.5 mt-1">
                       {[...Array(scout.stars)].map((_, i) => (
-                        <Star key={i} size={10} className="text-amber-400 fill-amber-400" />
+                        <Star key={i} size={8} className="text-amber-400 fill-amber-400" />
                       ))}
                     </div>
                   </div>
-                  <div className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest ${
+                  <div className={`px-1.5 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest shrink-0 ${
                     scout.status === 'IDLE' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-amber-500/20 text-amber-500 animate-pulse'
                   }`}>
                     {scout.status === 'IDLE' ? 'BOŞTA' : 'GÖREVDE'}
@@ -773,37 +773,37 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                 <div className="flex-1 flex flex-col justify-center">
                   {scout.status === 'IDLE' ? (
                     <div className="text-center space-y-1 opacity-40">
-                      <Activity className="mx-auto" size={18} />
+                      <Activity className="mx-auto" size={14} />
                       <p className="text-[8px] font-black uppercase tracking-widest">Görev bekliyor</p>
                     </div>
                   ) : (
-                    <div className="text-center space-y-2">
-                      <MapIcon className="mx-auto text-amber-500/40" size={24} />
+                    <div className="text-center space-y-1.5">
+                      <MapIcon className="mx-auto text-amber-500/40" size={18} />
                       <div>
-                        <p className="text-[8px] font-black uppercase tracking-widest text-white/40">{scout.location}</p>
-                        <p className="text-base font-mono font-bold text-white tracking-widest">{scout.remainingDays} GÜN</p>
+                        <p className="text-[8px] font-black uppercase tracking-widest text-white/40 truncate">{scout.location}</p>
+                        <p className="text-xs sm:text-sm font-mono font-bold text-white tracking-widest">{scout.remainingDays} GÜN</p>
                       </div>
                     </div>
                   )}
                 </div>
               </div>
           )) : (
-            <div className="col-span-full text-center py-8 text-white/30">
-              <Users size={24} className="mx-auto mb-2 opacity-40" />
+            <div className="col-span-full text-center py-6 text-white/30">
+              <Users size={20} className="mx-auto mb-2 opacity-40" />
               <p className="text-[9px] font-black uppercase tracking-widest">Henüz gözlemci yok — Personel sekmesinden işe alabilirsiniz</p>
             </div>
           )}
         </div>
       </details>
 
-      {/* ── Advanced Attribute Search ── */}
-      <div className="bg-zinc-900 border border-white/5 rounded-[2.5rem] p-8 overflow-hidden relative shadow-2xl">
-         <div className="mb-8 flex items-center justify-between">
-            <div>
-               <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white">Advanced Search & Keşif Merkezi</h3>
-               <p className="text-[9px] font-bold text-white/30 uppercase tracking-[0.4em] mt-1">Oyuncu Özelliklerine Göre Detaylı Arama</p>
+      {/* ── Advanced Attribute Search (kompakt) ── */}
+      <div className="bg-zinc-900 border border-white/5 rounded-2xl p-3 sm:p-4 overflow-hidden relative shadow-2xl">
+         <div className="mb-3 sm:mb-4 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+               <h3 className="text-sm sm:text-base font-black italic uppercase tracking-tighter text-white truncate">Advanced Search & Keşif Merkezi</h3>
+               <p className="hidden sm:block text-[9px] font-bold text-white/30 uppercase tracking-[0.4em] mt-1">Oyuncu Özelliklerine Göre Detaylı Arama</p>
             </div>
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${
+            <div className={`flex items-center gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shrink-0 ${
               activeScoutSlots < 1 
                 ? 'bg-red-500/10 border border-red-500/20' 
                 : scoutLevel === 3 
@@ -814,14 +814,14 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
             }`}>
                {activeScoutSlots < 1 ? (
                  <>
-                   <Ban size={12} className="text-red-500" />
-                   <span className="text-[10px] font-black text-red-500">GÖZLEMCİ GEREKLİ</span>
+                   <Ban size={10} className="text-red-500" />
+                   <span className="text-[8px] sm:text-[10px] font-black text-red-500">GÖZLEMCİ GEREKLİ</span>
                  </>
                ) : (
                  <>
-                   <Database size={12} className={scoutLevel === 3 ? 'text-emerald-500' : 'text-amber-500'} />
-                   <span className={`text-[10px] font-black ${scoutLevel === 3 ? 'text-emerald-500' : 'text-amber-500'}`}>
-                     SEVİYE {scoutLevel} ARAMA
+                   <Database size={10} className={scoutLevel === 3 ? 'text-emerald-500' : 'text-amber-500'} />
+                   <span className={`text-[8px] sm:text-[10px] font-black ${scoutLevel === 3 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                     SEVİYE {scoutLevel}
                    </span>
                  </>
                )}
@@ -829,32 +829,32 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
          </div>
 
          {/* ── LEVEL 1: Basic Filters (always visible when scout >= 1) ── */}
-         <div className="space-y-4 mb-6">
-            <div className="flex items-center gap-2 mb-3">
-               <div className="w-6 h-6 bg-white/10 rounded-lg flex items-center justify-center">
-                  <span className="text-[9px] font-black text-white">1</span>
+         <div className="space-y-2 mb-3 sm:mb-4">
+            <div className="flex items-center gap-2 mb-2">
+               <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white/10 rounded-md flex items-center justify-center shrink-0">
+                  <span className="text-[8px] sm:text-[9px] font-black text-white">1</span>
                </div>
-               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Temel Arama — İsim, Pozisyon, Yaş</span>
+               <span className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest truncate">Temel Arama — İsim, Pozisyon, Yaş</span>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-               <div className="col-span-2 space-y-1.5">
-                   <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Oyuncu İsmi</label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+               <div className="col-span-2 space-y-1">
+                   <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Oyuncu İsmi</label>
                    <input 
                      type="text"
                      value={advancedFilters.name || ''}
                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, name: e.target.value })}
                      placeholder="İsim ile ara..."
                      disabled={activeScoutSlots < 1}
-                     className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white focus:border-amber-500 outline-none transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                     className="w-full bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] sm:text-xs font-mono text-white focus:border-amber-500 outline-none transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                    />
                </div>
-               <div className="space-y-1.5">
-                   <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Pozisyon</label>
+               <div className="space-y-1">
+                   <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Pozisyon</label>
                    <select
                      value={advancedFilters.position}
                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, position: e.target.value })}
                      disabled={activeScoutSlots < 1}
-                     className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-gray-200 focus:border-amber-500 outline-none transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                     className="w-full bg-zinc-800 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] sm:text-xs font-mono text-gray-200 focus:border-amber-500 outline-none transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                    >
                      <option value="" className="bg-zinc-800 text-gray-200">Tümü</option>
                      <option value="GK" className="bg-zinc-800 text-gray-200">Kaleci (GK)</option>
@@ -864,26 +864,26 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                    </select>
                </div>
                <div className="grid grid-cols-2 gap-2">
-                 <div className="space-y-1.5">
-                     <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Min Yaş</label>
+                 <div className="space-y-1">
+                     <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Min Yaş</label>
                      <input 
                        type="number"
                        value={advancedFilters.ageMin || ''}
                        onChange={(e) => setAdvancedFilters({ ...advancedFilters, ageMin: parseInt(e.target.value) || 0 })}
                        placeholder="16"
                        disabled={activeScoutSlots < 1}
-                       className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white focus:border-amber-500 outline-none transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                       className="w-full bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] sm:text-xs font-mono text-white focus:border-amber-500 outline-none transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                      />
                  </div>
-                 <div className="space-y-1.5">
-                     <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Max Yaş</label>
+                 <div className="space-y-1">
+                     <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Max Yaş</label>
                      <input 
                        type="number"
                        value={advancedFilters.ageMax || ''}
                        onChange={(e) => setAdvancedFilters({ ...advancedFilters, ageMax: parseInt(e.target.value) || 0 })}
                        placeholder="40"
                        disabled={activeScoutSlots < 1}
-                       className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white focus:border-amber-500 outline-none transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                       className="w-full bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] sm:text-xs font-mono text-white focus:border-amber-500 outline-none transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                      />
                  </div>
                </div>
@@ -891,43 +891,43 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
          </div>
 
          {/* ── LEVEL 2: OVR Range + Rarity + Stats (requires 2+ scouts) ── */}
-         <div className={`space-y-4 mb-6 ${scoutLevel < 2 ? 'opacity-30 pointer-events-none' : ''}`}>
-            <div className="flex items-center gap-2 mb-3">
-               <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${scoutLevel >= 2 ? 'bg-amber-500/20' : 'bg-white/5'}`}>
-                  <span className={`text-[9px] font-black ${scoutLevel >= 2 ? 'text-amber-400' : 'text-white/30'}`}>2</span>
+         <div className={`space-y-2 mb-3 sm:mb-4 ${scoutLevel < 2 ? 'opacity-30 pointer-events-none' : ''}`}>
+            <div className="flex items-center gap-2 mb-2">
+               <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center shrink-0 ${scoutLevel >= 2 ? 'bg-amber-500/20' : 'bg-white/5'}`}>
+                  <span className={`text-[8px] sm:text-[9px] font-black ${scoutLevel >= 2 ? 'text-amber-400' : 'text-white/30'}`}>2</span>
                </div>
-               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Genişletilmiş — OVR, Nadirlik, İstatikler</span>
-               {scoutLevel < 2 && <Lock size={10} className="text-white/20 ml-1" />}
+               <span className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest truncate">Genişletilmiş — OVR, Nadirlik, İstatikler</span>
+               {scoutLevel < 2 && <Lock size={9} className="text-white/20 ml-1 shrink-0" />}
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
                <div className="grid grid-cols-2 gap-2">
-                 <div className="space-y-1.5">
-                     <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Min OVR</label>
+                 <div className="space-y-1">
+                     <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Min OVR</label>
                      <input 
                        type="number"
                        value={advancedFilters.ovrMin || ''}
                        onChange={(e) => setAdvancedFilters({ ...advancedFilters, ovrMin: parseInt(e.target.value) || 0 })}
                        placeholder="0"
-                       className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white focus:border-amber-500 outline-none transition-all"
+                       className="w-full bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] sm:text-xs font-mono text-white focus:border-amber-500 outline-none transition-all"
                      />
                  </div>
-                 <div className="space-y-1.5">
-                     <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Max OVR</label>
+                 <div className="space-y-1">
+                     <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Max OVR</label>
                      <input 
                        type="number"
                        value={advancedFilters.ovrMax || ''}
                        onChange={(e) => setAdvancedFilters({ ...advancedFilters, ovrMax: parseInt(e.target.value) || 0 })}
                        placeholder="99"
-                       className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white focus:border-amber-500 outline-none transition-all"
+                       className="w-full bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] sm:text-xs font-mono text-white focus:border-amber-500 outline-none transition-all"
                      />
                  </div>
                </div>
-               <div className="space-y-1.5">
-                   <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Nadirlik</label>
+               <div className="space-y-1">
+                   <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Nadirlik</label>
                    <select
                      value={advancedFilters.rarity}
                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, rarity: e.target.value })}
-                     className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-gray-200 focus:border-amber-500 outline-none transition-all"
+                     className="w-full bg-zinc-800 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] sm:text-xs font-mono text-gray-200 focus:border-amber-500 outline-none transition-all"
                    >
                      <option value="all" className="bg-zinc-800 text-gray-200">Tümü</option>
                      <option value="common" className="bg-zinc-800 text-gray-200">Yaygın (0-64)</option>
@@ -950,14 +950,14 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                  { id: 'Top' as const, label: 'Top' },
                  { id: 'Tplm' as const, label: 'Tplm' },
                ].map((attr) => (
-                 <div key={attr.id} className="space-y-1.5">
-                   <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">{attr.label}</label>
+                 <div key={attr.id} className="space-y-1">
+                   <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">{attr.label}</label>
                    <input 
                      type="number"
                      value={advancedFilters[attr.id] || ''}
                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, [attr.id]: parseInt(e.target.value) || 0 })}
                      placeholder="Min"
-                     className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-white focus:border-amber-500 outline-none transition-all"
+                     className="w-full bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 text-[10px] sm:text-xs font-mono text-white focus:border-amber-500 outline-none transition-all"
                    />
                  </div>
                ))}
@@ -965,15 +965,15 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
          </div>
 
          {/* ── LEVEL 3: Archetype, Skills, Potential (requires 3+ scouts) ── */}
-         <div className={`space-y-4 mb-8 ${scoutLevel < 3 ? 'opacity-30 pointer-events-none' : ''}`}>
-            <div className="flex items-center gap-2 mb-3">
-               <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${scoutLevel >= 3 ? 'bg-emerald-500/20' : 'bg-white/5'}`}>
-                  <span className={`text-[9px] font-black ${scoutLevel >= 3 ? 'text-emerald-400' : 'text-white/30'}`}>3</span>
+         <div className={`space-y-2 mb-4 sm:mb-6 ${scoutLevel < 3 ? 'opacity-30 pointer-events-none' : ''}`}>
+            <div className="flex items-center gap-2 mb-2">
+               <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center shrink-0 ${scoutLevel >= 3 ? 'bg-emerald-500/20' : 'bg-white/5'}`}>
+                  <span className={`text-[8px] sm:text-[9px] font-black ${scoutLevel >= 3 ? 'text-emerald-400' : 'text-white/30'}`}>3</span>
                </div>
-               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Detaylı — Arketip, Yetenekler</span>
-               {scoutLevel < 3 && <Lock size={10} className="text-white/20 ml-1" />}
+               <span className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest truncate">Detaylı — Arketip, Yetenekler</span>
+               {scoutLevel < 3 && <Lock size={9} className="text-white/20 ml-1 shrink-0" />}
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                <ArchetypeMultiSelect
                  selected={advancedFilters.archetypes}
                  onChange={(val) => setAdvancedFilters({ ...advancedFilters, archetypes: val })}
@@ -982,51 +982,51 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
             </div>
          </div>
 
-         {/* ── Search Button ── */}
-         <div className="flex items-end gap-4 mb-6">
+         {/* ── Search Button (kompakt) ── */}
+         <div className="flex items-end gap-2 sm:gap-3 mb-4 sm:mb-6">
             <button 
               onClick={handleAdvancedSearch}
               disabled={isSearching || activeScoutSlots < 1}
-              className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${
+              className={`min-h-[40px] px-4 sm:px-6 py-2 sm:py-2.5 rounded-md text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center gap-1.5 transition-all shrink-0 ${
                 activeScoutSlots < 1 
                   ? 'bg-red-500/10 text-red-400 border border-red-500/20 cursor-not-allowed' 
                   : 'bg-emerald-500 text-black hover:bg-emerald-400 disabled:opacity-50'
               }`}
             >
-              {isSearching ? <Activity size={14} className="animate-spin" /> : <Search size={14} />}
+              {isSearching ? <Activity size={12} className="animate-spin" /> : <Search size={12} />}
               {activeScoutSlots < 1 ? 'GÖZLEMCİ GEREKLİ' : 'ARA'}
             </button>
             <button 
               onClick={() => { setAdvancedFilters(getDefaultFilters()); setAdvancedResults([]); setSearchError(''); }}
-              className="px-4 py-3 bg-white/5 text-white/30 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+              className="min-h-[40px] px-3 sm:px-4 py-2 sm:py-2.5 bg-white/5 text-white/30 rounded-md text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all shrink-0"
             >
               SIFIRLA
             </button>
          </div>
 
-         {/* ── Arama Hata Mesajı ── */}
+         {/* ── Arama Hata Mesajı (kompakt) ── */}
          {searchError && (
-           <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center gap-3 mb-4">
-             <AlertCircle className="text-red-400 shrink-0" size={16} />
-             <p className="text-[10px] font-bold text-red-300 uppercase tracking-widest">{searchError}</p>
-             <button onClick={() => setSearchError('')} className="ml-auto text-white/30 hover:text-white">
-               <X size={14} />
+           <div className="bg-red-500/10 border border-red-500/20 p-2.5 sm:p-3 rounded-lg flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+             <AlertCircle className="text-red-400 shrink-0" size={14} />
+             <p className="text-[9px] sm:text-[10px] font-bold text-red-300 uppercase tracking-widest min-w-0 flex-1">{searchError}</p>
+             <button onClick={() => setSearchError('')} className="ml-auto text-white/30 hover:text-white shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center">
+               <X size={12} />
              </button>
            </div>
          )}
 
          {advancedResults.length > 0 && (
-           <div className="animate-in fade-in slide-in-from-top-4 space-y-4">
-             <div className="flex items-center gap-2 border-b border-white/5 pb-4">
-                <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">BULUNAN SONUÇLAR ({advancedResults.length})</span>
+           <div className="animate-in fade-in slide-in-from-top-4 space-y-2 sm:space-y-3">
+             <div className="flex items-center gap-2 border-b border-white/5 pb-2 sm:pb-3">
+                <span className="text-[9px] sm:text-[10px] font-black text-white/20 uppercase tracking-widest truncate">BULUNAN SONUÇLAR ({advancedResults.length})</span>
                 <button 
                   onClick={() => { setAdvancedResults([]); setSearchError(''); }}
-                  className="ml-auto text-[8px] font-black text-white/20 hover:text-white uppercase"
+                  className="ml-auto text-[8px] font-black text-white/20 hover:text-white uppercase shrink-0"
                 >
                   TEMİZLE
                 </button>
              </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                {advancedResults.map((p) => {
                  const rarity = getRarityFromRating(p.klt || p.rating);
                  const playerTraits = (Array.isArray(p.traits) ? p.traits : []) as string[];
@@ -1035,24 +1035,24 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                  return (
                    <div 
                      key={p.id}
-                     className="bg-white/5 border border-white/5 p-4 rounded-2xl group hover:bg-white/10 transition-all cursor-pointer"
+                     className="bg-white/5 border border-white/5 p-2.5 sm:p-3 rounded-xl group hover:bg-white/10 transition-all cursor-pointer"
                      onClick={() => onPlayerClick?.(p)}
                    >
-                     <div className="flex items-center justify-between mb-2">
-                       <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-sm font-black italic">
+                     <div className="flex items-center justify-between mb-1.5 sm:mb-2 gap-2">
+                       <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black italic shrink-0">
                             {p.klt || p.rating}
                           </div>
-                          <div>
-                            <p className="text-xs font-black uppercase italic leading-none mb-1 group-hover:text-amber-400 transition-colors">{(p && p.name) || 'Bilinmeyen'}</p>
-                            <p className="text-[8px] font-black text-white/30 uppercase tracking-widest">{getPlayerPos(p as Record<string, unknown>)} • {p.age} YAŞ</p>
+                          <div className="min-w-0">
+                            <p className="text-[10px] sm:text-xs font-black uppercase italic leading-none mb-1 group-hover:text-amber-400 transition-colors truncate">{(p && p.name) || 'Bilinmeyen'}</p>
+                            <p className="text-[7px] sm:text-[8px] font-black text-white/30 uppercase tracking-widest truncate">{getPlayerPos(p as Record<string, unknown>)} • {p.age} YAŞ</p>
                           </div>
                        </div>
-                       <div className="flex items-center gap-2">
+                       <div className="flex items-center gap-1 shrink-0 flex-col items-end">
                          {scoutLevel >= 2 && (
                            <span className={`text-[7px] font-black uppercase ${rarity.color}`}>{rarity.label}</span>
                          )}
-                         <p className="text-[7px] font-bold text-emerald-400/60 uppercase tracking-widest">{p.team_name || 'SERBEST'}</p>
+                         <p className="text-[7px] font-bold text-emerald-400/60 uppercase tracking-widest truncate max-w-[80px]">{p.team_name || 'SERBEST'}</p>
                        </div>
                      </div>
                      {/* Arketip ve Özellikler */}
@@ -1082,8 +1082,8 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                          ))}
                        </div>
                      )}
-                     <div className="flex items-center justify-between">
-                       <div className="grid grid-cols-3 gap-2">
+                     <div className="flex items-center justify-between gap-2">
+                       <div className="grid grid-cols-3 gap-1.5">
                           <div className="text-center">
                             <p className="text-[6px] text-white/40 uppercase">PAS</p>
                             <p className="text-[10px] font-mono font-bold">{p.pas || 0}</p>
@@ -1117,7 +1117,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                              console.warn('Keşfet kaydı başarısız:', err);
                            }
                          }}
-                         className="px-2 py-1 bg-amber-500/20 text-amber-400 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-amber-500/30 transition-all"
+                         className="min-h-[36px] px-2 py-1 bg-amber-500/20 text-amber-400 text-[9px] font-black uppercase tracking-widest rounded-md hover:bg-amber-500/30 transition-all shrink-0"
                        >
                          Keşfet
                        </button>
@@ -1129,12 +1129,12 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
            </div>
          )}
 
-         {/* ── Sonuç yok + hata yok = İlk kullanım ipucu ── */}
+         {/* ── Sonuç yok + hata yok = İlk kullanım ipucu (kompakt) ── */}
          {advancedResults.length === 0 && !searchError && !isSearching && (
-           <div className="py-12 text-center">
-             <Search className="mx-auto text-white/10 mb-3" size={32} />
-             <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Filtreleri ayarlayın ve ARA butonuna tıklayın</p>
-             <p className="text-[9px] text-white/10 mt-1 uppercase">
+           <div className="py-6 sm:py-12 text-center">
+             <Search className="mx-auto text-white/10 mb-2 sm:mb-3" size={24} />
+             <p className="text-[9px] sm:text-[10px] font-bold text-white/20 uppercase tracking-widest">Filtreleri ayarlayın ve ARA butonuna tıklayın</p>
+             <p className="text-[8px] sm:text-[9px] text-white/10 mt-1 uppercase">
                {activeScoutSlots < 1 
                  ? 'Arama için en az 1 gözlemci gereklidir' 
                  : `Seviye ${scoutLevel} arama aktif — ${SCOUT_LEVEL_INFO[scoutLevel].desc}`}
@@ -1143,46 +1143,46 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
          )}
       </div>
 
-      {/* Discovered Players Pool */}
+      {/* Discovered Players Pool (kompakt) */}
       {scouting.foundPlayersPool.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Target className="text-red-500" />
-            <h3 className="text-xl font-black italic uppercase tracking-tighter text-white">BULUNAN OYUNCULAR</h3>
+        <div className="space-y-2 sm:space-y-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Target className="text-red-500 shrink-0" size={16} />
+            <h3 className="text-sm sm:text-base font-black italic uppercase tracking-tighter text-white truncate">BULUNAN OYUNCULAR</h3>
             <div className="flex-1 border-b border-white/10" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
             {scouting.foundPlayersPool.map((p: Player) => (
               <motion.div 
                 layout
                 key={p.id}
-                className="bg-white/5 border border-white/5 rounded-3xl p-5 group hover:border-white/20 transition-all relative overflow-hidden"
+                className="bg-white/5 border border-white/5 rounded-xl p-3 group hover:border-white/20 transition-all relative overflow-hidden"
               >
-                <div className="flex items-center justify-between mb-4">
-                   <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                     <span className="text-black font-black italic">{p.rating}</span>
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shrink-0">
+                     <span className="text-black text-[10px] sm:text-xs font-black italic">{p.rating}</span>
                    </div>
-                   <span className="px-2 py-0.5 bg-white/10 rounded text-[8px] font-black text-white/40">{p.position}</span>
+                   <span className="px-1.5 py-0.5 bg-white/10 rounded text-[8px] font-black text-white/40 shrink-0">{p.position}</span>
                 </div>
-                <h4 className="text-sm font-black uppercase italic text-white mb-4 line-clamp-1">{p.name || 'Bilinmeyen'}</h4>
-                <div className="flex gap-2">
+                <h4 className="text-[10px] sm:text-xs font-black uppercase italic text-white mb-2 sm:mb-3 line-clamp-1">{p.name || 'Bilinmeyen'}</h4>
+                <div className="flex gap-1.5 sm:gap-2">
                    <button 
                      onClick={() => handleToggleWatchlist(p as unknown as Player)}
-                     className={`p-2 border rounded-xl transition-all ${localWatchlist?.includes(p.id as string) ? 'bg-amber-500 text-black border-amber-500' : 'bg-white/5 border-white/5 text-white/40 hover:bg-white hover:text-black'}`}
+                     className={`min-w-[36px] min-h-[36px] p-2 border rounded-lg sm:rounded-xl transition-all shrink-0 flex items-center justify-center ${localWatchlist?.includes(p.id as string) ? 'bg-amber-500 text-black border-amber-500' : 'bg-white/5 border-white/5 text-white/40 hover:bg-white hover:text-black'}`}
                      title="İzleme Listesine Ekle"
                    >
-                     <Eye size={14} />
+                     <Eye size={12} />
                    </button>
                    <button 
                      onClick={() => handleDismissPlayer(p.id as string)}
-                     className="flex-1 py-2 bg-white/5 border border-white/5 rounded-xl text-[8px] font-black uppercase text-white/40 hover:bg-red-500/20 hover:text-red-500 transition-all"
+                     className="min-h-[36px] flex-1 py-1.5 sm:py-2 bg-white/5 border border-white/5 rounded-lg sm:rounded-xl text-[8px] font-black uppercase text-white/40 hover:bg-red-500/20 hover:text-red-500 transition-all"
                    >
                      REDDET
                    </button>
                    <button 
                      onClick={() => onPlayerClick?.(p as unknown as Player)}
-                     className="flex-1 py-2 bg-emerald-500 text-black text-[8px] font-black uppercase rounded-xl hover:scale-105 transition-all"
+                     className="min-h-[36px] flex-1 py-1.5 sm:py-2 bg-emerald-500 text-black text-[8px] font-black uppercase rounded-lg sm:rounded-xl hover:scale-105 transition-all"
                    >
                      TEKLİF YAP
                    </button>
@@ -1193,21 +1193,21 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
         </div>
       )}
 
-      {/* History & Watchlist Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* History & Watchlist Section (kompakt) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Saved Search History */}
-        <div className="bg-white/5 border border-white/5 rounded-[2rem] p-6">
-           <div className="flex items-center justify-between mb-6">
-             <div className="flex items-center gap-3">
-                <History className="text-white/40" size={20} />
-                <h3 className="text-xl font-black italic uppercase tracking-tighter text-white">Kayıtlı Aramalar</h3>
+        <div className="bg-white/5 border border-white/5 rounded-xl p-3 sm:p-4">
+           <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+             <div className="flex items-center gap-2 min-w-0">
+                <History className="text-white/40 shrink-0" size={16} />
+                <h3 className="text-sm sm:text-base font-black italic uppercase tracking-tighter text-white truncate">Kayıtlı Aramalar</h3>
              </div>
-             <div className="flex items-center gap-2">
-               <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">{savedSearches.length} KAYIT</span>
+             <div className="flex items-center gap-2 shrink-0">
+               <span className="text-[8px] sm:text-[9px] font-black text-white/20 uppercase tracking-widest">{savedSearches.length} KAYIT</span>
                {savedSearches.length > 0 && (
                  <button
                    onClick={() => { setSavedSearches([]); try { localStorage.removeItem('sbfc_scout_searches'); } catch {} }}
-                   className="text-[8px] font-bold text-red-400/50 hover:text-red-400 uppercase tracking-widest"
+                   className="text-[8px] font-bold text-red-400/50 hover:text-red-400 uppercase tracking-widest min-h-[36px] px-1"
                  >
                    Temizle
                  </button>
@@ -1215,9 +1215,9 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
              </div>
            </div>
            
-           <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+           <div className="space-y-1.5 sm:space-y-2 max-h-[300px] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
              {savedSearches.map((search) => (
-               <div key={search.id} className="p-3 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/5 transition-all cursor-pointer group"
+               <div key={search.id} className="p-2 sm:p-3 bg-white/[0.02] border border-white/5 rounded-lg sm:rounded-xl hover:bg-white/5 transition-all cursor-pointer group"
                  onClick={() => {
                    setAdvancedFilters(search.filters);
                    if (search.results && search.results.length > 0) {
@@ -1225,30 +1225,30 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                    }
                  }}
                >
-                 <div className="flex items-center justify-between">
+                 <div className="flex items-center justify-between gap-2">
                    <div className="flex-1 min-w-0">
-                     <p className="text-[11px] font-black uppercase italic text-white/60 group-hover:text-amber-400 transition-colors truncate">{search.label}</p>
-                     <div className="flex items-center gap-2 mt-1">
+                     <p className="text-[10px] font-black uppercase italic text-white/60 group-hover:text-amber-400 transition-colors truncate">{search.label}</p>
+                     <div className="flex items-center gap-2 mt-0.5">
                        <span className="text-[8px] font-bold text-emerald-400/60 uppercase tracking-widest">{search.resultCount} oyuncu</span>
-                       <span className="text-[8px] font-bold text-white/15 uppercase tracking-widest">
+                       <span className="text-[8px] font-bold text-white/15 uppercase tracking-widest truncate">
                          {new Date(search.timestamp).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                        </span>
                      </div>
                    </div>
-                   <div className="flex items-center gap-2">
+                   <div className="flex items-center gap-1 shrink-0">
                      <button
                        onClick={(e) => { e.stopPropagation(); setSavedSearches(prev => prev.filter(s => s.id !== search.id)); }}
-                       className="p-1 text-white/10 hover:text-red-400 transition-colors"
+                       className="min-w-[36px] min-h-[36px] p-1 text-white/10 hover:text-red-400 transition-colors flex items-center justify-center"
                      >
                        <X size={12} />
                      </button>
-                     <ChevronRight size={14} className="text-white/10 group-hover:text-white/40 transition-colors" />
+                     <ChevronRight size={12} className="text-white/10 group-hover:text-white/40 transition-colors" />
                    </div>
                  </div>
                </div>
              ))}
              {savedSearches.length === 0 && (
-               <div className="py-12 text-center text-white/10 italic text-[10px] uppercase tracking-widest">
+               <div className="py-8 text-center text-white/10 italic text-[9px] sm:text-[10px] uppercase tracking-widest">
                  Henüz kayıtlı arama bulunmuyor. Arama yapınca otomatik kaydedilir.
                </div>
              )}
@@ -1256,45 +1256,45 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
         </div>
 
         {/* Watchlist */}
-        <div className="bg-white/5 border border-white/5 rounded-[2rem] p-6">
-           <div className="flex items-center justify-between mb-6">
-             <div className="flex items-center gap-3">
-                <Eye className="text-amber-500" size={20} />
-                <h3 className="text-xl font-black italic uppercase tracking-tighter text-white">İzleme Listesi</h3>
+        <div className="bg-white/5 border border-white/5 rounded-xl p-3 sm:p-4">
+           <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+             <div className="flex items-center gap-2 min-w-0">
+                <Eye className="text-amber-500 shrink-0" size={16} />
+                <h3 className="text-sm sm:text-base font-black italic uppercase tracking-tighter text-white truncate">İzleme Listesi</h3>
              </div>
-             <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">{watchlistPlayers.length} OYUNCU</span>
+             <span className="text-[8px] sm:text-[9px] font-black text-white/20 uppercase tracking-widest shrink-0">{watchlistPlayers.length} OYUNCU</span>
            </div>
 
-           <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+           <div className="space-y-1.5 sm:space-y-2 max-h-[300px] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
              {(watchlistPlayers || []).map((p: Player) => (
-               <div key={p.id} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-2xl group hover:border-amber-500/20 transition-all">
-                 <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 rounded bg-amber-500/10 flex items-center justify-center text-[10px] font-black italic text-amber-500">
+               <div key={p.id} className="flex items-center justify-between p-2 sm:p-3 bg-white/[0.02] border border-white/5 rounded-lg sm:rounded-xl group hover:border-amber-500/20 transition-all gap-2">
+                 <div className="flex items-center gap-2 min-w-0 flex-1">
+                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded bg-amber-500/10 flex items-center justify-center text-[9px] sm:text-[10px] font-black italic text-amber-500 shrink-0">
                      {p.rating}
                    </div>
-                   <div>
-                     <p className="text-[11px] font-black uppercase italic text-white">{p.name || 'Bilinmeyen'}</p>
-                     <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest">{getPlayerPos(p as Record<string, unknown>)} • {p.age} Yaş</p>
+                   <div className="min-w-0">
+                     <p className="text-[10px] font-black uppercase italic text-white truncate">{p.name || 'Bilinmeyen'}</p>
+                     <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest truncate">{getPlayerPos(p as Record<string, unknown>)} • {p.age} Yaş</p>
                    </div>
                  </div>
-                 <div className="flex items-center gap-2">
+                 <div className="flex items-center gap-1 shrink-0">
                     <button 
                       onClick={() => onPlayerClick?.(p)}
-                      className="p-2 text-white/20 hover:text-white transition-colors"
+                      className="min-w-[36px] min-h-[36px] p-2 text-white/20 hover:text-white transition-colors flex items-center justify-center"
                     >
-                      <Zap size={14} />
+                      <Zap size={12} />
                     </button>
                     <button 
                       onClick={() => handleToggleWatchlist(p)}
-                      className="p-2 text-white/10 hover:text-red-500 transition-colors"
+                      className="min-w-[36px] min-h-[36px] p-2 text-white/10 hover:text-red-500 transition-colors flex items-center justify-center"
                     >
-                      <X size={14} />
+                      <X size={12} />
                     </button>
                  </div>
                </div>
              ))}
              {watchlistPlayers.length === 0 && (
-               <div className="py-12 text-center text-white/10 italic text-[10px] uppercase tracking-widest">
+               <div className="py-8 text-center text-white/10 italic text-[9px] sm:text-[10px] uppercase tracking-widest">
                  İzleme listesi boş.
                </div>
              )}
@@ -1302,57 +1302,57 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
         </div>
       </div>
 
-      {/* Recycle Modal (HIRING) */}
+      {/* Recycle Modal (HIRING) — kompakt */}
       <AnimatePresence>
         {showRecruitModal && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-xl bg-black/80"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 backdrop-blur-xl bg-black/80"
           >
             <motion.div 
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              className="bg-[#111] border border-white/10 rounded-[3rem] p-8 max-w-lg w-full shadow-2xl relative overflow-hidden"
+              className="bg-[#111] border border-white/10 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 max-w-md w-full shadow-2xl relative overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar"
             >
-              <div className="absolute top-0 right-0 p-8 opacity-5">
-                <Users size={120} />
+              <div className="absolute top-0 right-0 p-4 sm:p-6 opacity-5 pointer-events-none">
+                <Users size={80} />
               </div>
 
-              <div className="mb-8">
-                <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white">GÖZLEMCİ İŞE AL</h3>
-                <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.4em] mt-2">Ağına Yeni Bir Uzman Kat</p>
+              <div className="mb-4 sm:mb-6 relative">
+                <h3 className="text-lg sm:text-2xl font-black italic uppercase tracking-tighter text-white truncate">GÖZLEMCİ İŞE AL</h3>
+                <p className="text-[8px] sm:text-[10px] font-bold text-white/30 uppercase tracking-[0.3em] sm:tracking-[0.4em] mt-1 sm:mt-2">Ağına Yeni Bir Uzman Kat</p>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3 relative">
                 {scoutPrices.map(s => (
                   <button 
                     key={s.stars}
                     onClick={() => handleHireScout(s.stars, s.price, s.minTier)}
                     disabled={userTier > s.minTier}
-                    className={`w-full flex items-center justify-between p-4 border rounded-2xl transition-all group ${userTier > s.minTier ? 'opacity-40 cursor-not-allowed bg-black/40 border-white/5' : 'bg-white/5 border-white/5 hover:bg-white hover:text-black'}`}
+                    className={`w-full flex items-center justify-between p-2.5 sm:p-3 border rounded-lg sm:rounded-xl transition-all group ${userTier > s.minTier ? 'opacity-40 cursor-not-allowed bg-black/40 border-white/5' : 'bg-white/5 border-white/5 hover:bg-white hover:text-black'}`}
                   >
-                    <div className="flex items-center gap-4">
-                       <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-black/10">
-                         <span className="text-lg">{s.stars}★</span>
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                       <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-black/10 shrink-0">
+                         <span className="text-sm sm:text-base">{s.stars}★</span>
                        </div>
-                       <div className="text-left">
-                         <p className="text-xs font-black uppercase">{s.name}</p>
+                       <div className="text-left min-w-0">
+                         <p className="text-[10px] sm:text-xs font-black uppercase truncate">{s.name}</p>
                          <div className="flex gap-0.5">
                            {[...Array(5)].map((_, i) => (
-                             <Star key={i} size={8} className={i < s.stars ? 'text-amber-400 fill-amber-400' : 'text-white/10'} />
+                             <Star key={i} size={7} className={i < s.stars ? 'text-amber-400 fill-amber-400' : 'text-white/10'} />
                            ))}
                          </div>
                        </div>
                     </div>
-                    <div className="text-right">
-                       <div className="mb-1">
+                    <div className="text-right shrink-0">
+                       <div className="mb-0.5 sm:mb-1">
                          <p className="text-[7px] font-black uppercase text-white/40 group-hover:text-black/40">GEREKLİ LİG</p>
                          <p className={`text-[9px] font-black ${userTier <= s.minTier ? 'text-emerald-500' : 'text-red-500'}`}>{s.minTier}. LİG</p>
                        </div>
                        <p className="text-[8px] font-black uppercase text-white/40 group-hover:text-black/40">MALİYET</p>
-                       <p className="font-mono font-bold text-xs">${s.price.toLocaleString()}</p>
+                       <p className="font-mono font-bold text-[10px] sm:text-xs">${s.price.toLocaleString()}</p>
                     </div>
                   </button>
                 ))}
@@ -1360,7 +1360,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
 
               <button 
                 onClick={() => setShowRecruitModal(false)}
-                className="w-full mt-6 py-3 text-[10px] font-black uppercase text-white/20 hover:text-white transition-colors"
+                className="w-full mt-4 sm:mt-6 min-h-[40px] py-2 sm:py-3 text-[9px] sm:text-[10px] font-black uppercase text-white/20 hover:text-white transition-colors"
               >
                 İPTAL ET
               </button>
