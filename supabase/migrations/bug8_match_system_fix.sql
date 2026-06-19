@@ -4,7 +4,20 @@
 BEGIN;
 
 -- ═════════════════════════════════════════════════════════════════
--- 1. MATCH_SESSIONS — home_tactic/away_tactic sütunlarını TEXT yap + eksik sütunları ekle
+-- 0. FIXTURES — match-scheduler'ın update ettiği eksik sütunlar
+-- ═════════════════════════════════════════════════════════════════
+ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS session_id UUID;
+ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS referee_id TEXT;
+ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS home_atmosphere JSONB DEFAULT '{}';
+
+-- ═════════════════════════════════════════════════════════════════
+-- 1. MATCH_EVENTS — match-tick'in insert ettiği asist sütunları
+-- ═════════════════════════════════════════════════════════════════
+ALTER TABLE match_events ADD COLUMN IF NOT EXISTS assist_player_id TEXT;
+ALTER TABLE match_events ADD COLUMN IF NOT EXISTS assist_player_name TEXT;
+
+-- ═════════════════════════════════════════════════════════════════
+-- 2. MATCH_SESSIONS — home_tactic/away_tactic JSONB → TEXT + eksik sütunlar
 -- ═════════════════════════════════════════════════════════════════
 -- [BUG-8 KÖK NEDEN] match-scheduler 'home_tactic' alanına 'tiki-taka' gibi düz string insert ediyor.
 -- JSONB sütuna düz string insert edilemiyor → insert başarısız → 0 match_session!
@@ -27,6 +40,8 @@ ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS away_team_id UUID;
 ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS simulation_speed FLOAT DEFAULT 1.0;
 ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS last_updated TIMESTAMPTZ;
 ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS home_atmosphere JSONB DEFAULT '{}';
+-- [BUG-8] match-tick'in update ettiği prev_tactic sütunu
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS prev_tactic TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_match_sessions_fixture ON match_sessions(fixture_id);
 CREATE INDEX IF NOT EXISTS idx_match_sessions_home_team ON match_sessions(home_team_id);

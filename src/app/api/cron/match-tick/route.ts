@@ -41,9 +41,9 @@ import { acquireCronLock, releaseCronLock } from '@/lib/fm/cronLockService';
 
 export const maxDuration = 60; // 5 dakika
 
-/** Match tick için kilit adı ve TTL (2 dk aralıkta çalışır, 50 sn TTL yeterli) */
+/** Match tick için kilit adı ve TTL (10 dk aralıkta çalışır, 55 sn TTL yeterli) */
 const LOCK_NAME = 'match-tick';
-const LOCK_TTL_SECONDS = 50;
+const LOCK_TTL_SECONDS = 55;
 
 // ═══════════════════════════════════════════════════════════════
 // Simülasyon hızı: 1 gerçek dakika = kaç maç dakikası?
@@ -55,7 +55,10 @@ const DEFAULT_SIMULATION_SPEED = 3;
 const HALFTIME_REAL_DURATION_MINUTES = 1;
 
 // Her tick'te simüle edilecek maksimum dakika sayısı
-const MAX_MINUTES_PER_TICK = 6;
+// [BUG-8] Cron 10 dakikada bir çalışıyor, sim_speed=3 → tick başına 30 dk potansiyel
+// Eski değer 6 dk idi → 3 tick * 6 dk = 18 dk, maç 90 dk → HİÇ BİTMİYORDU!
+// Yeni değer 30 → tek tick'te 30 dk, 3 tick'te 90 dk = maç biter
+const MAX_MINUTES_PER_TICK = 30;
 
 // ═══════════════════════════════════════════════════════════════
 // In-app notification helper (graceful)

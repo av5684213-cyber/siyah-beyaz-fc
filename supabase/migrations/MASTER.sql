@@ -310,6 +310,10 @@ ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS referee_name TEXT;
 ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS referee_personality TEXT;
 ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS referee_strictness INTEGER;
 ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+-- [BUG-8] match-scheduler'ın update ettiği ek sütunlar
+ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS session_id UUID;
+ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS referee_id TEXT;
+ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS home_atmosphere JSONB DEFAULT '{}';
 
 CREATE INDEX IF NOT EXISTS idx_fixtures_season ON fixtures(season_id);
 CREATE INDEX IF NOT EXISTS idx_fixtures_status ON fixtures(status);
@@ -334,6 +338,9 @@ CREATE TABLE IF NOT EXISTS match_events (
 ALTER TABLE match_events ADD COLUMN IF NOT EXISTS is_revealed BOOLEAN DEFAULT true;
 ALTER TABLE match_events ADD COLUMN IF NOT EXISTS detail TEXT;
 ALTER TABLE match_events ADD COLUMN IF NOT EXISTS season_id UUID REFERENCES seasons(id) ON DELETE SET NULL;
+-- [BUG-8] match-tick'in insert ettiği asist sütunları
+ALTER TABLE match_events ADD COLUMN IF NOT EXISTS assist_player_id TEXT;
+ALTER TABLE match_events ADD COLUMN IF NOT EXISTS assist_player_name TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_match_events_fixture_minute ON match_events(fixture_id, minute);
 CREATE INDEX IF NOT EXISTS idx_match_events_fixture_type ON match_events(fixture_id, event_type);
@@ -386,6 +393,8 @@ ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS away_team_id UUID;
 ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS simulation_speed FLOAT DEFAULT 1.0;
 ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS last_updated TIMESTAMPTZ;
 ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS home_atmosphere JSONB DEFAULT '{}';
+-- [BUG-8] match-tick'in update ettiği prev_tactic sütunu
+ALTER TABLE match_sessions ADD COLUMN IF NOT EXISTS prev_tactic TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_match_sessions_fixture ON match_sessions(fixture_id);
 CREATE INDEX IF NOT EXISTS idx_match_sessions_home_team ON match_sessions(home_team_id);
