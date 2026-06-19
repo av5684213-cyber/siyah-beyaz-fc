@@ -272,11 +272,13 @@ interface NextMatchData {
 function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigate: (tab: string) => void }) {
   const [nextMatch, setNextMatch] = useState<NextMatchData | null>(null);
   const [countdown, setCountdown] = useState<string>('');
+  const [fetchError, setFetchError] = useState(false);
   const { profile: ctxProfile } = useFM();
 
   useEffect(() => {
     if (!profileId) return;
     let cancelled = false;
+    setFetchError(false);
     (async () => {
       try {
         const res = await fetch(`/api/fixture/${profileId}`);
@@ -285,9 +287,12 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
           if (data.nextMatch) {
             setNextMatch(data.nextMatch);
           }
+        } else if (!res.ok && !cancelled) {
+          setFetchError(true);
         }
       } catch (err) {
         console.error('[NextMatchCard] Error:', err);
+        if (!cancelled) setFetchError(true);
       }
     })();
     return () => { cancelled = true; };
@@ -328,7 +333,24 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
     }
   }, [nextMatch?.is_home, ctxProfile]);
 
-  if (!nextMatch) return null;
+  if (!nextMatch) {
+    if (fetchError) {
+      return (
+        <div className="bg-red-500/[0.04] border border-red-500/20 rounded-2xl p-5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-lg border bg-red-500/10 border-red-500/20">
+              <Swords size={14} className="text-red-400" />
+            </div>
+            <h3 className="text-[10px] uppercase font-bold tracking-widest text-red-400/70">
+              SONRAKİ MAÇ
+            </h3>
+          </div>
+          <p className="text-[11px] text-red-300/60 mt-1">Maç bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
+        </div>
+      );
+    }
+    return null;
+  }
 
   const formattedDate = (() => {
     try {
@@ -995,20 +1017,27 @@ export function DashboardTab({
               label: `Yeni Sezon (${34 - matchesPlayed} maç kaldı)`,
               icon: CalendarDays,
               color: 'hover:bg-zinc-800 opacity-40',
-              action: () => {}, // disabled — henüz 34 maç oynanmadı
+              action: () => { toast('Sezon bitince (34 maç) açılacak', { icon: '⏳' }); },
+              disabled: true,
+              disabledReason: 'Bu özellik sezon bitince (34. maç) açılacak',
             }] : []),
-           ].map((btn) => (
+           ].map((btn) => {
+             const isDisabled = (btn as any).disabled;
+             return (
              <button 
                key={btn.id}
-               onClick={btn.action}
-               className={`fm-card p-3 sm:p-6 flex flex-col items-center gap-2 sm:gap-4 transition-all group active:scale-95 border-b-2 border-b-transparent ${btn.color} hover:border-b-white hover:-translate-y-1`}
+               onClick={isDisabled ? undefined : btn.action}
+               disabled={isDisabled}
+               title={isDisabled ? (btn as any).disabledReason : ''}
+               className={`fm-card p-3 sm:p-6 flex flex-col items-center gap-2 sm:gap-4 transition-all group border-b-2 border-b-transparent ${btn.color} ${isDisabled ? 'opacity-40 cursor-not-allowed hover:border-b-transparent hover:translate-y-0' : 'active:scale-95 hover:border-b-white hover:-translate-y-1'}`}
              >
                <div className="p-2 sm:p-4 bg-white/5 rounded-2xl group-hover:bg-white group-hover:text-black transition-all shadow-xl">
                  <btn.icon size={24} />
                </div>
                <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-white/40 group-hover:text-white transition-colors">{btn.label}</span>
              </button>
-           ))}
+             );
+           })}
          </div>
        </div>
     </motion.div>
