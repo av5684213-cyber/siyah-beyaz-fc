@@ -923,8 +923,8 @@ export default function Home() {
            </motion.div>
         </div>
       )}
-      <main className="max-w-7xl mx-auto p-4 pb-32">
-        <div className="flex flex-col lg:flex-row gap-6">
+      <main className="max-w-7xl mx-auto p-2 sm:p-4 pb-28 sm:pb-32">
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-6">
           <nav className="hidden lg:flex flex-col gap-1 bg-gradient-to-b from-zinc-900 to-black p-3 rounded-2xl border border-white/5 w-64 h-fit sticky top-[100px] z-40">
             <div className="pb-4 mb-3 border-b border-white/5">
               <div className="flex items-center gap-3 px-2">
@@ -980,7 +980,7 @@ export default function Home() {
             <AnimatePresence mode="wait">
               {activeTab === 'dashboard' && (
                 <motion.div key="dashboard" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                  <div className="space-y-4">
+                  <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                     <QuickDecisionCard
                       userId={userId || ''}
                       onNavigate={(tab) => setActiveTab(tab)}
@@ -1024,7 +1024,7 @@ export default function Home() {
                 <motion.div key="matchday" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <div className="flex gap-3">
                     {/* Match Simulation */}
-                    <div className="flex-1 h-[750px] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
+                    <div className="flex-1 h-[600px] sm:h-[700px] lg:h-[750px] rounded-2xl sm:rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
                       <MatchDay 
                     profile={profile}
                     activeOperations={activeOperations}
@@ -1499,7 +1499,7 @@ export default function Home() {
               {/* MarketTab removed - transfer market is now in MultiplayerTab */}
               {activeTab === 'multiplayer' && userId && profile && (
                 <motion.div key="multiplayer" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                  <div className="space-y-4">
+                  <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                     <WatchlistAlertPanel userId={userId} />
                     <TransferNegotiationPanel userId={userId} />
                     <AgentInboxPanel userId={userId} />

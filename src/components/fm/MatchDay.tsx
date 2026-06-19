@@ -1419,24 +1419,24 @@ const MatchDay = ({
       </AnimatePresence>
 
       {/* Score and Time Panel */}
-      <div className="p-3 sm:p-6 md:p-12 bg-black/60 backdrop-blur-md border-b border-white/10 flex flex-col items-center">
-        <div className="flex items-center gap-4 sm:gap-8 md:gap-12">
+      <div className="p-2 sm:p-6 md:p-12 bg-black/60 backdrop-blur-md border-b border-white/10 flex flex-col items-center">
+        <div className="flex items-center gap-2 sm:gap-8 md:gap-12">
           <div className="text-center">
-            <div className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em] mb-2">HOME</div>
-            <div className="text-5xl sm:text-7xl md:text-9xl font-black tracking-tighter leading-none italic">
+            <div className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-[0.3em] sm:tracking-[0.4em] mb-1 sm:mb-2">HOME</div>
+            <div className="text-4xl sm:text-7xl md:text-9xl font-black tracking-tighter leading-none italic">
               {score.home}
             </div>
           </div>
-          <div className="text-3xl sm:text-4xl md:text-5xl font-black text-white/10 mb-[-20px] tracking-widest italic">VS</div>
+          <div className="text-xl sm:text-4xl md:text-5xl font-black text-white/10 mb-[-10px] sm:mb-[-20px] tracking-widest italic">VS</div>
           <div className="text-center">
-            <div className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em] mb-2">AWAY</div>
-            <div className="text-5xl sm:text-7xl md:text-9xl font-black tracking-tighter leading-none italic">
+            <div className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-[0.3em] sm:tracking-[0.4em] mb-1 sm:mb-2">AWAY</div>
+            <div className="text-4xl sm:text-7xl md:text-9xl font-black tracking-tighter leading-none italic">
               {score.away}
             </div>
           </div>
         </div>
         
-        <div className="mt-8 w-full max-w-2xl grid grid-cols-2 gap-12 text-[12px] font-black italic">
+        <div className="mt-4 sm:mt-8 w-full max-w-2xl grid grid-cols-2 gap-4 sm:gap-12 text-[10px] sm:text-[12px] font-black italic">
             <div className="flex flex-col items-end space-y-1.5 ">
                 {matchState.matchSummaryEvents.home.map((item, i) => (
                     <motion.div 
@@ -1472,8 +1472,8 @@ const MatchDay = ({
             </div>
         </div>
 
-        <div className="mt-10 flex items-center gap-6">
-          <div className="h-px w-20 bg-white/20"></div>
+        <div className="mt-4 sm:mt-10 flex items-center gap-2 sm:gap-6 flex-wrap justify-center">
+          <div className="hidden sm:block h-px w-20 bg-white/20"></div>
           {/* Referee Info Badge */}
           {(effectiveRefereeName || matchResult?.refereeName) && (() => {
             const refName = effectiveRefereeName || matchResult?.refereeName;
@@ -1522,8 +1522,8 @@ const MatchDay = ({
               </div>
             );
           })()}
-          <div className="h-px w-20 bg-white/20"></div>
-          <div className="px-8 py-2 bg-white text-black text-xs font-black uppercase tracking-[0.3em] skew-x-[-12deg]">
+          <div className="h-px w-10 sm:w-20 bg-white/20"></div>
+          <div className="px-4 sm:px-8 py-1.5 sm:py-2 bg-white text-black text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] skew-x-[-12deg]">
             <span className="block skew-x-[12deg]">
               {(() => {
                 const currentEvent = matchResult?.events.find(e => e.minute === gameMinute);
@@ -1535,11 +1535,11 @@ const MatchDay = ({
             </span>
           </div>
           {matchState.isFriendly && (
-            <span className="px-3 py-1 bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[8px] font-black uppercase tracking-widest rounded-full">
+            <span className="px-2 sm:px-3 py-1 bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[7px] sm:text-[8px] font-black uppercase tracking-widest rounded-full">
               Hızlandırılmış Mod
             </span>
           )}
-          <div className="h-px w-20 bg-white/20"></div>
+          <div className="hidden sm:block h-px w-20 bg-white/20"></div>
         </div>
       </div>
 
@@ -1549,10 +1549,9 @@ const MatchDay = ({
           <button 
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-6 text-[10px] font-black uppercase tracking-[0.4em] transition-all duration-300 relative ${
+            className={`flex-1 py-4 sm:py-6 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.4em] transition-all duration-300 relative ${
               activeTab === tab ? 'text-white' : 'text-white/20 hover:text-white/40'
-            }`}
-          >
+            }`}>
             {tab === 'commentary' ? 'Canlı Anlatım' : tab === 'statistics' ? 'Savaş Verileri' : 'STRATEJİ ÜSSÜ'}
             {activeTab === tab && (
               <motion.div 
@@ -1565,7 +1564,7 @@ const MatchDay = ({
       </div>
 
       {/* Content Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-2 sm:p-4 custom-scrollbar">
         {activeTab === 'commentary' && (
           <div className="max-w-2xl mx-auto space-y-0.5 pb-20">
             <AnimatePresence initial={false}>
@@ -1785,8 +1784,8 @@ const MatchDay = ({
       </div>
 
       {/* Bottom Bar */}
-      <div className="p-6 bg-black/60 backdrop-blur-md border-t border-white/10 flex justify-center">
-        <div className="flex items-center gap-6">
+      <div className="p-3 sm:p-6 bg-black/60 backdrop-blur-md border-t border-white/10 flex justify-center">
+        <div className="flex items-center gap-3 sm:gap-6">
             <div className={`w-1.5 h-1.5 rounded-full ${gameMinute < 90 ? 'bg-white animate-pulse' : 'bg-white/10'}`}></div>
             <span className="text-[9px] font-black uppercase tracking-[0.6em] text-white/30">
                 {gameMinute < 90 ? 'CANLI ANALİZ SİSTEMİ AKTİF' : 'ANALİZ TAMAMLANDI'}

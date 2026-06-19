@@ -229,6 +229,54 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.3s ease, color 0.3s ease;
+  /* Mobilde yatay scroll'u engelle — tüm taşmalar gizlenir */
+  overflow-x: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBİL UYUMLULUK: fm-card utility + touch target helper
+   ═══════════════════════════════════════════════════════════════ */
+
+/* fm-card: DashboardTab ve MarketTab'ta kullanılan kompakt kart görünümü.
+   Tailwind utility'si olmadığı için manuel tanımlıyoruz. */
+.fm-card {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.75rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.fm-card:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Light mode fm-card override */
+.light .fm-card {
+  background-color: hsl(0 0% 100%);
+  border-color: hsl(0 0% 88%);
+}
+.light .fm-card:hover {
+  background-color: hsl(0 0% 97%);
+  border-color: hsl(0 0% 80%);
+}
+
+/* Mobil touch target helper: tüm interaktif elementler en az 44x44px olmalı.
+   iOS Human Interface Guidelines & Material Design önerisi. */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Mobilde yatay scroll tablolar için ince scrollbar */
+.mobile-x-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Mobil tablo için min-width garantisi */
+.mobile-x-scroll table {
+  min-width: 600px;
 }
 
 /* Custom scrollbar — theme aware */

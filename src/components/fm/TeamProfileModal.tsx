@@ -247,7 +247,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
   const { modalRef, handleRef, position, isDragging } = useDraggableModal();
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -261,7 +261,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
-        className="w-full max-w-5xl bg-zinc-950 border border-white/10 rounded-[2rem] overflow-hidden relative z-10 flex flex-col max-h-[90vh]"
+        className="w-full max-w-5xl bg-zinc-950 border border-white/10 rounded-none sm:rounded-[2rem] overflow-hidden relative z-10 flex flex-col max-h-[100vh] sm:max-h-[90vh]"
         style={{ transform: `translate(${position.x}px, ${position.y}px)`, userSelect: isDragging ? 'none' : 'auto' }}
       >
         {/* ═══ DRAG HANDLE ═══ */}
