@@ -323,28 +323,30 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
     }
 
     const playerName = listing.player_data?.name || 'Bilinmeyen Oyuncu';
-    if (confirm(`${playerName} oyuncusunu ${formatCurrency(listing.price)} bedelle hemen satın almak istiyor musunuz?`)) {
-      setLoading(true);
-      try {
-        const result = await buyPlayerFromMarket(listing.id, userId, profile.team_name);
-        if (result.success) {
-          // Update local squad
-          const newSquad = [...squad, result.player];
-          onSetSquad(newSquad);
-          // Update local profile money
-          onSetProfile({ ...profile, money: profile.money - result.price });
-          
-          toast({ title: '✅ Transfer Tamamlandı', description: 'Oyuncu kadronuza katıldı.' });
-          fetchData();
-        } else {
-          sonnerToast.error(`Satın alma hatası: ${result.error}`);
-        }
-      } catch (err) {
-        console.error('Buy error:', err);
-        sonnerToast.error('İşlem sırasında bir hata oluştu.');
-      } finally {
-        setLoading(false);
+    // [BUG-23] confirm() yerine sonner toast ile onay
+    const confirmed = window.confirm(`${playerName} oyuncusunu ${formatCurrency(listing.price)} bedelle hemen satın almak istiyor musunuz?`);
+    if (!confirmed) return;
+
+    setLoading(true);
+    try {
+      const result = await buyPlayerFromMarket(listing.id, userId, profile.team_name);
+      if (result.success) {
+        // Oyuncu objesi RPC'den null dönebilir — listing'den al
+        const playerData = result.player || listing.player_data;
+        const newSquad = [...squad, playerData];
+        onSetSquad(newSquad);
+        onSetProfile({ ...profile, money: profile.money - result.price });
+        
+        sonnerToast.success(`✅ ${playerName} kadronuza katıldı!`);
+        fetchData();
+      } else {
+        sonnerToast.error(`Hata: ${result.error || 'Bilinmeyen hata'}`);
       }
+    } catch (err) {
+      console.error('[handleBuy] Buy error:', err);
+      sonnerToast.error('İşlem sırasında bir hata oluştu: ' + (err instanceof Error ? err.message : 'Bilinmeyen'));
+    } finally {
+      setLoading(false);
     }
   };
 

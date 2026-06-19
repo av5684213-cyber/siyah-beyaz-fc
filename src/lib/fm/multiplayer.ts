@@ -229,48 +229,83 @@ export const buyPlayerFromMarket = async (listingId: string, buyerId: string, bu
   }
 
   // ── Geriye uyumluluk: Eski sıralı yöntem ──
+  // [BUG-23] Hem id hem de status/is_active kontrol et
   const { data: listing, error: fetchError } = await supabase
     .from('transfer_market')
     .select('*')
     .eq('id', listingId)
     .maybeSingle();
 
-  if (fetchError || !listing) return { success: false, error: 'Listing not found' };
+  if (fetchError || !listing) return { success: false, error: 'İlan bulunamadı' };
+
+  // Listing aktif mi kontrol et (status veya is_active)
+  const isActive = listing.status === 'active' || listing.is_active === true;
+  if (!isActive) {
+    return { success: false, error: 'Bu ilan artık aktif değil' };
+  }
 
   if (listing.is_auction) {
-    return { success: false, error: 'This is an auction listing. Use placeBid instead.' };
+    return { success: false, error: 'Bu bir açık artırma ilanı. Teklif vermelisiniz.' };
   }
 
-  const taxAmount = (listing.asking_price || listing.price) * TAX_RATE;
-  const sellerRevenue = (listing.asking_price || listing.price) - taxAmount;
+  const price = listing.asking_price || listing.price || 0;
+  if (price <= 0) return { success: false, error: 'Geçersiz fiyat' };
 
-  const { data: sellerProfile } = await supabase
+  const taxAmount = Math.round(price * TAX_RATE);
+  const sellerRevenue = price - taxAmount;
+
+  // Satıcıya ödeme yap (satıcı varsa)
+  if (listing.seller_id && listing.seller_id !== 'free-agent-system') {
+    const { data: sellerProfile } = await supabase
+      .from('profiles')
+      .select('money')
+      .eq('id', listing.seller_id)
+      .maybeSingle();
+
+    if (sellerProfile) {
+      await supabase
+        .from('profiles')
+        .update({ money: Number(sellerProfile.money) + sellerRevenue })
+        .eq('id', listing.seller_id);
+    }
+  }
+
+  // Alıcı bakiyesini düş
+  const { data: buyerProfile } = await supabase
     .from('profiles')
     .select('money')
-    .eq('id', listing.seller_id)
+    .eq('id', buyerId)
     .maybeSingle();
 
-  if (sellerProfile) {
+  if (buyerProfile) {
+    if (Number(buyerProfile.money) < price) {
+      return { success: false, error: 'Yetersiz bakiye' };
+    }
     await supabase
       .from('profiles')
-      .update({ money: Number(sellerProfile.money) + sellerRevenue })
-      .eq('id', listing.seller_id);
+      .update({ money: Number(buyerProfile.money) - price })
+      .eq('id', buyerId);
   }
 
+  // Oyuncuyu transfer et
   await supabase
     .from('players')
     .update({
       profile_id: buyerId,
       team_name: buyerTeam,
+      is_for_sale: false,
     })
     .eq('id', listing.player_id);
 
-  await supabase.from('transfer_market').update({ is_active: false }).eq('id', listingId);
+  // Listing'i kapat — hem status hem is_active güncelle
+  await supabase.from('transfer_market')
+    .update({ is_active: false, status: 'sold' })
+    .eq('id', listingId);
 
   return {
     success: true,
     player: listing.player_data,
-    price: listing.asking_price || listing.price,
+    price,
     taxAmount,
     sellerRevenue,
   };
