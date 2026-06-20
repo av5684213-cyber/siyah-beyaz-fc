@@ -607,11 +607,11 @@ export default function TrainingAcademy({
     <div className="space-y-3 pb-6 animate-in fade-in duration-500">
       
       {/* ═══ HEADER — Green/Teal accent ═══ */}
-      <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-emerald-950/60 to-teal-950/40 border border-emerald-500/15 rounded">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 px-3 py-2 bg-gradient-to-r from-emerald-950/60 to-teal-950/40 border border-emerald-500/15 rounded">
         <div className="flex items-center gap-3">
-          <GraduationCap size={18} className="text-emerald-400" />
-          <div>
-            <h2 className="text-sm font-black italic uppercase tracking-tighter text-emerald-100">Training & Academy</h2>
+          <GraduationCap size={18} className="text-emerald-400 shrink-0" />
+          <div className="min-w-0">
+            <h2 className="text-sm font-black italic uppercase tracking-tighter text-emerald-100 truncate">Training & Academy</h2>
             <span className="text-[10px] text-emerald-400/40 uppercase tracking-[0.3em] font-black">OYUNCU GELİŞİM MERKEZİ</span>
           </div>
         </div>
@@ -619,32 +619,32 @@ export default function TrainingAcademy({
         <button 
           onClick={() => { if (assistantCoachCount >= 1) setShowTacticLab(true); }}
           disabled={assistantCoachCount < 1}
-          className={`group relative flex items-center gap-3 px-6 py-2 rounded-lg transition-all transform ${
+          className={`group relative flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 rounded-lg transition-all transform ${
             assistantCoachCount >= 1 
               ? 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] active:scale-95' 
               : 'bg-gradient-to-r from-gray-700 to-gray-800 cursor-not-allowed opacity-50'
           }`}
         >
            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
-           <div className="relative flex items-center gap-2">
+           <div className="relative flex items-center gap-2 min-w-0">
               {assistantCoachCount < 1 ? (
-                <Lock size={16} className="text-white/40" />
+                <Lock size={16} className="text-white/40 shrink-0" />
               ) : (
-                <FlaskConical size={16} className="text-white animate-pulse" />
+                <FlaskConical size={16} className="text-white animate-pulse shrink-0" />
               )}
-              <div className="flex flex-col items-start leading-none">
-                 <span className="text-[10px] font-black text-white uppercase tracking-wider">9v9 LABORATUVARI</span>
-                 <span className="text-[10px] text-blue-200 uppercase font-bold tracking-widest">TAKTIK TEST MERKEZİ</span>
+              <div className="flex flex-col items-start leading-none min-w-0">
+                 <span className="text-[10px] font-black text-white uppercase tracking-wider truncate">9v9 LABORATUVARI</span>
+                 <span className="text-[10px] text-blue-200 uppercase font-bold tracking-widest hidden sm:block">TAKTIK TEST MERKEZİ</span>
               </div>
            </div>
            {assistantCoachCount < 1 && (
-             <span className="ml-2 text-[10px] text-amber-400/80 font-bold uppercase tracking-wider whitespace-nowrap">
+             <span className="ml-2 text-[10px] text-amber-400/80 font-bold uppercase tracking-wider whitespace-nowrap hidden lg:inline">
                En az 1 Yardımcı Antrenör gerekir
              </span>
            )}
         </button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Daily Training Counter */}
           <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded">
             <div className="flex gap-0.5">
@@ -684,7 +684,7 @@ export default function TrainingAcademy({
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-2">
         
         {/* Program Cards */}
-        <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-5 gap-2">
+        <div className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 overflow-x-auto lg:overflow-visible">
           {TRAINING_PROGRAMS.map(prog => {
             const colors = programColorMap[prog.color] || programColorMap.red;
             const assignedCount = (trainingState?.assignments || []).filter(a => a.programId === prog.id).length;

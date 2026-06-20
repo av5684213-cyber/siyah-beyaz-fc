@@ -406,9 +406,9 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
         <>
 
       {/* League Tabs */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
         {/* Tier Tabs */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {[1, 2, 3, 4].map((tier) => {
                 const tierLeagues = tierMap[tier] || [];
                 const isActiveTier = tierLeagues.some(l => String(l.id) === String(effectiveActiveLeague));
@@ -473,7 +473,7 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
       </div>
 
       {/* Zone Legend */}
-      <div className="flex flex-wrap gap-4 px-2">
+      <div className="flex flex-wrap gap-2 sm:gap-4 px-2">
         <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-white/30">
           <div className="w-3 h-0.5 bg-emerald-500 rounded" />
           {currentLeague?.tier === 1 ? 'Şampiyonluk' : 'Doğrudan Çıkma'}
@@ -656,9 +656,9 @@ function FixturesList({ leagueId }: { leagueId: number }) {
       {fixtures.length === 0 ? (
         <div className="py-20 text-center text-white/20">Henüz maç kaydı bulunamadı.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {fixtures.map((f: FixtureData) => (
-            <div key={f.id} className="bg-zinc-900/40 border border-white/5 rounded-2xl p-4 flex items-center justify-between group hover:border-white/10 transition-all">
+            <div key={f.id} className="bg-zinc-900/40 border border-white/5 rounded-2xl p-3 sm:p-4 flex items-center justify-between group hover:border-white/10 transition-all">
               <div className="flex-1 text-right pr-4">
                 <p className="text-xs font-black uppercase italic text-white truncate">{f.home?.name || 'Bilinmiyor'}</p>
               </div>

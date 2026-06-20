@@ -464,10 +464,10 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
     <motion.div 
       initial={{ opacity: 0, y: 10 }} 
       animate={{ opacity: 1, y: 0 }} 
-      className="space-y-6 pb-20"
+      className="space-y-4 sm:space-y-6 pb-20"
     >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex bg-zinc-900/50 backdrop-blur-md p-1 rounded-2xl border border-white/5 w-full sm:max-w-sm flex-1 overflow-x-auto">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex bg-zinc-900/50 backdrop-blur-md p-1 rounded-2xl border border-white/5 w-full sm:max-w-sm flex-1 overflow-x-auto scrollbar-none">
           <button 
             onClick={() => setActiveSubTab('market')}
             className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeSubTab === 'market' ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}
@@ -505,9 +505,9 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
-            className="space-y-8 bg-zinc-900/40 border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-md"
+            className="space-y-6 sm:space-y-8 bg-zinc-900/40 border border-white/5 rounded-2xl sm:rounded-[2rem] overflow-hidden backdrop-blur-md"
           >
-              <div className="p-6 border-b border-white/5 flex flex-col gap-4">
+              <div className="p-3 sm:p-6 border-b border-white/5 flex flex-col gap-3 sm:gap-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Globe className="text-emerald-500" size={20} />
@@ -527,7 +527,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 bg-white/5 p-3 sm:p-4 rounded-2xl border border-white/5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3 bg-white/5 p-3 sm:p-4 rounded-2xl border border-white/5">
                   {/* Position Filter — Detaylı Pozisyon Sistemi */}
                   <div className="space-y-1">
                     <label className="text-[10px] font-black text-white/20 uppercase">MEVKİİ</label>
@@ -876,16 +876,17 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
           </motion.div>
         ) : activeSubTab === 'auctions' ? (
           <motion.div key="auctions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-            className="bg-zinc-900/40 border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-md">
-            <div className="p-6 border-b border-white/5">
+            className="bg-zinc-900/40 border border-white/5 rounded-2xl sm:rounded-[2rem] overflow-hidden backdrop-blur-md">
+            <div className="p-3 sm:p-6 border-b border-white/5">
               <div className="flex items-center gap-3">
                 <Gavel className="text-amber-500" size={20} />
                 <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Açık Artırmalarım</h3>
               </div>
             </div>
             {myAuctions.length === 0 ? (
-              <div className="py-20 text-center space-y-4 opacity-50">
-                <Gavel size={48} className="mx-auto" />
+              <div className="py-12 sm:py-20 text-center space-y-3 sm:space-y-4 opacity-50">
+                <Gavel size={36} className="mx-auto sm:hidden" />
+                <Gavel size={48} className="mx-auto hidden sm:block" />
                 <p className="text-xs font-black uppercase tracking-[.2em]">Aktif artırmanız yok.</p>
               </div>
             ) : (
@@ -893,28 +894,32 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                 {myAuctions.map(listing => {
                   const p = listing.player_data;
                   return (
-                    <div key={listing.id} className="p-4 flex items-center gap-4">
-                      <div className="w-10 h-10 bg-zinc-800 rounded-xl flex items-center justify-center text-[10px] font-black border border-white/10">
-                        {p?.specific_position || p?.position || '??'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p?.name)}</div>
-                        <div className="text-[10px] text-white/30">
-                          Başlangıç: {formatCurrency(listing.starting_price || listing.price)}
-                          {listing.current_bid && ` | En Yüksek: ${formatCurrency(listing.current_bid)}`}
-                          {listing.bid_count && ` | ${listing.bid_count} teklif`}
+                    <div key={listing.id} className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 bg-zinc-800 rounded-xl flex items-center justify-center text-[10px] font-black border border-white/10 shrink-0">
+                          {p?.specific_position || p?.position || '??'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[12px] sm:text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p?.name)}</div>
+                          <div className="text-[10px] text-white/30 truncate">
+                            Başlangıç: {formatCurrency(listing.starting_price || listing.price)}
+                            {listing.current_bid && ` | En Yüksek: ${formatCurrency(listing.current_bid)}`}
+                            {listing.bid_count && ` | ${listing.bid_count} teklif`}
+                          </div>
                         </div>
                       </div>
-                      <AuctionTimer expiresAt={listing.expires_at} />
-                      {!listing.bid_count && (
-                        <button
-                          onClick={() => handleCancelAuction(listing.id)}
-                          className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all"
-                        >
-                          <XCircle size={10} className="inline mr-1" />
-                          İptal
-                        </button>
-                      )}
+                      <div className="flex items-center justify-end gap-2 sm:gap-3">
+                        <AuctionTimer expiresAt={listing.expires_at} />
+                        {!listing.bid_count && (
+                          <button
+                            onClick={() => handleCancelAuction(listing.id)}
+                            className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all"
+                          >
+                            <XCircle size={10} className="inline mr-1" />
+                            İptal
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -924,7 +929,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
             {/* Won Auctions - Contract Signing Section */}
             {wonAuctions.length > 0 && (
               <div className="mt-6 border-t border-white/5">
-                <div className="p-6 border-b border-white/5">
+                <div className="p-3 sm:p-6 border-b border-white/5">
                   <div className="flex items-center gap-3">
                     <Handshake className="text-emerald-500" size={20} />
                     <div>
@@ -939,14 +944,16 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                     const bidAmount = listing.current_bid || listing.price;
                     const penaltyAmount = Math.round(bidAmount * 0.05);
                     return (
-                      <div key={listing.id} className="p-4 flex items-center gap-4">
-                        <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-[10px] font-black border border-emerald-500/20 text-emerald-400">
-                          {p?.specific_position || p?.position || '??'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p?.name)}</div>
-                          <div className="text-[10px] text-white/30">
-                            Kazandiginiz Teklif: {formatCurrency(bidAmount)}
+                      <div key={listing.id} className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-[10px] font-black border border-emerald-500/20 text-emerald-400 shrink-0">
+                            {p?.specific_position || p?.position || '??'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[12px] sm:text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p?.name)}</div>
+                            <div className="text-[10px] text-white/30">
+                              Kazandiginiz Teklif: {formatCurrency(bidAmount)}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -998,19 +1005,19 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
             )}
           </motion.div>
         ) : activeSubTab === 'rankings' ? (
-          <motion.div key="rankings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-zinc-900 border border-white/5 rounded-[2.5rem] overflow-hidden">
-             <div className="p-6 border-b border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20">
-                      <Trophy className="text-amber-500" size={24} />
+          <motion.div key="rankings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-zinc-900 border border-white/5 rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
+             <div className="p-3 sm:p-6 border-b border-white/5 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3 min-w-0">
+                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20 shrink-0">
+                      <Trophy className="text-amber-500" size={18} />
                    </div>
-                   <div>
-                      <h3 className="text-xl font-black italic uppercase tracking-tighter">Dünya Sıralaması</h3>
-                      <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest text-emerald-400">En Hazır Kulüpler</p>
+                   <div className="min-w-0">
+                      <h3 className="text-base sm:text-xl font-black italic uppercase tracking-tighter truncate">Dünya Sıralaması</h3>
+                      <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest text-emerald-400 truncate">En Hazır Kulüpler</p>
                    </div>
                 </div>
-                <div className="text-right">
-                   <span className="text-[10px] font-black uppercase tracking-widest bg-white/5 px-2 py-1 rounded-lg">{leaderboard.length} AKTİF MENAJER</span>
+                <div className="text-right shrink-0">
+                   <span className="text-[10px] font-black uppercase tracking-widest bg-white/5 px-2 py-1 rounded-lg whitespace-nowrap">{leaderboard.length} AKTİF</span>
                 </div>
              </div>
 
@@ -1019,17 +1026,17 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                    <div 
                     key={user.id} 
                     onClick={() => setSelectedTeamProfile(user.team_name)}
-                    className={`flex items-center gap-4 p-5 hover:bg-white/5 transition-all cursor-pointer group ${user.id === userId ? 'bg-white/5' : ''}`}
+                    className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-5 hover:bg-white/5 transition-all cursor-pointer group ${user.id === userId ? 'bg-white/5' : ''}`}
                   >
-                      <div className="w-8 text-center text-xs font-black text-white/20 group-hover:text-amber-400 transition-colors">#{idx + 1}</div>
-                      <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
-                         <ShieldCheck className={idx < 3 ? 'text-amber-400' : 'text-white/40'} size={18} />
+                      <div className="w-6 text-center text-xs font-black text-white/20 group-hover:text-amber-400 transition-colors shrink-0">#{idx + 1}</div>
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10 shrink-0">
+                         <ShieldCheck className={idx < 3 ? 'text-amber-400' : 'text-white/40'} size={16} />
                       </div>
-                      <div className="flex-1">
-                         <div className="text-sm font-black italic tracking-tighter">{toTitleCase(user.team_name)}</div>
+                      <div className="flex-1 min-w-0">
+                         <div className="text-sm font-black italic tracking-tighter truncate">{toTitleCase(user.team_name)}</div>
                          <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">{user.id === userId ? 'SENİN TAKIMIN' : 'RAKİP'}</div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                          <div className="text-sm font-black font-mono text-emerald-400">{formatCurrency(user.money)}</div>
                          <div className="flex items-center justify-end gap-2 mt-0.5">
                            {(user.championship_count || 0) > 0 && (
@@ -1051,19 +1058,20 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
           <motion.div key="loans" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="space-y-4">
             {/* Kiralık Oyuncular Listesi */}
-            <div className="bg-zinc-900/40 border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-md">
-              <div className="p-6 border-b border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+            <div className="bg-zinc-900/40 border border-white/5 rounded-2xl sm:rounded-[2rem] overflow-hidden backdrop-blur-md">
+              <div className="p-3 sm:p-6 border-b border-white/5 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3 min-w-0">
                   <Globe className="text-cyan-500" size={20} />
-                  <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Kiralık Oyuncular</h3>
+                  <h3 className="text-sm font-black uppercase tracking-widest text-white/80 truncate">Kiralık Oyuncular</h3>
                 </div>
-                <div className="text-[10px] font-black text-white/40 uppercase tracking-widest">
-                  {loanPlayers.length} OYUNCU MEVCUT
+                <div className="text-[10px] font-black text-white/40 uppercase tracking-widest shrink-0">
+                  {loanPlayers.length} OYUNCU
                 </div>
               </div>
               {loanPlayers.length === 0 ? (
-                <div className="py-20 text-center space-y-4 opacity-50">
-                  <Globe size={48} className="mx-auto" />
+                <div className="py-12 sm:py-20 text-center space-y-3 sm:space-y-4 opacity-50">
+                  <Globe size={36} className="mx-auto sm:hidden" />
+                  <Globe size={48} className="mx-auto hidden sm:block" />
                   <p className="text-xs font-black uppercase tracking-[.2em]">Kiralık oyuncu bulunmuyor.</p>
                   <p className="text-[10px] text-white/30">Diğer takımlar oyuncularını kiralık pazara çıkardığında burada görünecek.</p>
                 </div>
@@ -1074,44 +1082,48 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                     const loanFee = calculateLoanFeeEuro(p.market_value || (p.rating || 50) * 50000, profile?.current_day || 1);
                     const feeStr = loanFee >= 1_000_000 ? `${(loanFee / 1_000_000).toFixed(1)}M €` : loanFee >= 1_000 ? `${(loanFee / 1_000).toFixed(0)}K €` : `${loanFee} €`;
                     return (
-                      <div key={lp.id} className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors">
-                        <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center text-[10px] font-black border border-cyan-500/20 text-cyan-400">
-                          {p.specific_position || p.position || '??'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p.name)}</div>
-                          <div className="text-[10px] text-white/30">
-                            {toTitleCase(p.team_name || 'Bilinmeyen')} • {p.age} YAŞ • Klt {p.klt || p.rating || 0}
+                      <div key={lp.id} className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 hover:bg-white/5 transition-colors">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center text-[10px] font-black border border-cyan-500/20 text-cyan-400 shrink-0">
+                            {p.specific_position || p.position || '??'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[12px] sm:text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p.name)}</div>
+                            <div className="text-[10px] text-white/30 truncate">
+                              {toTitleCase(p.team_name || 'Bilinmeyen')} • {p.age} YAŞ • Klt {p.klt || p.rating || 0}
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-[11px] font-black text-cyan-400">{feeStr}</div>
-                          <div className="text-[10px] text-white/20 uppercase">Kiralık Ücret (Euro)</div>
-                        </div>
-                        <button
-                          onClick={async () => {
-                            if (!window.confirm(`${toTitleCase(p.name)} oyuncusunu ${feeStr} + 10 Kredi karşılığında kiralamak istiyor musunuz?\n\n• ${feeStr} oyuncu sahibine ödenecek\n• 10 Kredi sistem komisyonu olarak düşülecek`)) return;
-                            try {
-                              const res = await fetch('/api/loans/request', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ playerId: lp.id, profileId: userId }),
-                              });
-                              const data = await res.json();
-                              if (data.success) {
-                                sonnerToast.success('Oyuncu başarıyla kiralandı!', { description: `• ${data.loanFeeEuroFormatted || ''} oyuncu sahibine ödendi\n• 10 Kredi sistem komisyonu düşüldü\nSezon sonunda oyuncu geri dönecek.` });
-                                fetchData();
-                              } else {
-                                sonnerToast.error(data.error || 'Kiralama başarısız.');
+                        <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+                          <div className="text-right">
+                            <div className="text-[11px] font-black text-cyan-400">{feeStr}</div>
+                            <div className="text-[10px] text-white/20 uppercase">Kiralık Ücret</div>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              if (!window.confirm(`${toTitleCase(p.name)} oyuncusunu ${feeStr} + 10 Kredi karşılığında kiralamak istiyor musunuz?\n\n• ${feeStr} oyuncu sahibine ödenecek\n• 10 Kredi sistem komisyonu olarak düşülecek`)) return;
+                              try {
+                                const res = await fetch('/api/loans/request', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ playerId: lp.id, profileId: userId }),
+                                });
+                                const data = await res.json();
+                                if (data.success) {
+                                  sonnerToast.success('Oyuncu başarıyla kiralandı!', { description: `• ${data.loanFeeEuroFormatted || ''} oyuncu sahibine ödendi\n• 10 Kredi sistem komisyonu düşüldü\nSezon sonunda oyuncu geri dönecek.` });
+                                  fetchData();
+                                } else {
+                                  sonnerToast.error(data.error || 'Kiralama başarısız.');
+                                }
+                              } catch (err) {
+                                sonnerToast.error('Bir hata oluştu.');
                               }
-                            } catch (err) {
-                              sonnerToast.error('Bir hata oluştu.');
-                            }
-                          }}
-                          className="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 hover:text-cyan-300 transition-all"
-                        >
-                          Kirala (10 KR + Euro)
-                        </button>
+                            }}
+                            className="px-3 sm:px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 hover:text-cyan-300 transition-all"
+                          >
+                            Kirala
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -1120,8 +1132,8 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
             </div>
 
             {/* Kendi kadromdan kiralığa gönderme (Kiralık sekmesinde de göster) */}
-            <div className="bg-zinc-900/40 border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-md">
-              <div className="p-4 border-b border-white/5 flex items-center justify-between">
+            <div className="bg-zinc-900/40 border border-white/5 rounded-2xl sm:rounded-[2rem] overflow-hidden backdrop-blur-md">
+              <div className="p-3 sm:p-4 border-b border-white/5 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
                   <Globe className="text-cyan-400" size={16} />
                   <h4 className="text-[11px] font-black uppercase tracking-widest text-white/60">Kiralık Listesine Gönder</h4>
@@ -1130,7 +1142,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                   {squad.filter(p => !p.is_injured && !(p as any).is_on_loan_market && !(p as any).loan_status).length} UYGUN OYUNCU
                 </div>
               </div>
-              <div className="p-4">
+              <div className="p-3 sm:p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
                   {squad
                     .filter(p => !p.is_injured && !(p as any).is_on_loan_market && !(p as any).loan_status)

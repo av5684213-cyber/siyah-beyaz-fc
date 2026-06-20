@@ -402,14 +402,14 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl border border-amber-500/25 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/10 p-4"
+        className="relative overflow-hidden rounded-2xl border border-amber-500/25 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/10 p-3 sm:p-4"
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center shrink-0">
             <Construction size={20} className="text-amber-400" />
           </div>
-          <div>
-            <p className="text-sm text-white/50 leading-relaxed">
+          <div className="min-w-0">
+            <p className="text-xs sm:text-sm text-white/50 leading-relaxed">
               Envanter sistemi alt yapısı hazır. Oyun dengelemesi tamamlanınca aktif edilecek. Bu sekmeyi keşfedebilirsiniz.
             </p>
           </div>
@@ -422,22 +422,22 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-4 border-b border-white/10 pb-4"
+          className="flex items-center gap-3 sm:gap-4 border-b border-white/10 pb-3 sm:pb-4"
         >
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-            <Archive className="text-amber-500" size={24} />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+            <Archive className="text-amber-500" size={20} />
           </div>
-          <div>
-            <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base sm:text-xl font-black italic uppercase tracking-tighter text-white truncate">
               Envanter
             </h2>
             <p className="text-[10px] text-white/40 uppercase font-bold tracking-[0.3em]">
               {totalItems} eşya • {usedItemsCount} tür aktif
             </p>
           </div>
-          <div className="ml-auto text-right">
+          <div className="text-right shrink-0">
             <div className="text-[10px] text-white/20 font-black uppercase mb-1">💰 Kredi</div>
-            <div className="text-lg font-mono font-bold text-amber-400">{profile.credits || 0}</div>
+            <div className="text-base sm:text-lg font-mono font-bold text-amber-400">{profile.credits || 0}</div>
           </div>
         </motion.div>
       </div>
@@ -469,7 +469,7 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
       </div>
 
       {/* Items Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
         {filteredItems.map((item, i) => {
           const rarity = RARITY_STYLES[item.rarity];
           const isUsed = usedItem === item.id;
@@ -480,7 +480,7 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
               key={item.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0, transition: { delay: i * 0.04 } }}
-              className={`bg-zinc-950 border rounded-2xl p-4 transition-all group ${rarity.border} ${rarity.glow} ${
+              className={`bg-zinc-950 border rounded-2xl p-3 sm:p-4 transition-all group ${rarity.border} ${rarity.glow} ${
                 !hasQuantity ? 'opacity-40' : 'hover:border-white/20'
               }`}
             >

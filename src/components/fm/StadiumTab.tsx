@@ -541,24 +541,24 @@ export default function StadiumTab() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }} 
-      className="space-y-8 pb-24 relative"
+      className="space-y-4 sm:space-y-8 pb-24 relative"
     >
       {/* ── Active Upgrade Banner ── */}
       {isUpgrading && (
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 text-white p-5 rounded-[2rem] flex items-center justify-between shadow-lg border border-amber-500/20 backdrop-blur-sm"
+          className="bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 text-white p-3 sm:p-5 rounded-2xl sm:rounded-[2rem] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg border border-amber-500/20 backdrop-blur-sm"
         >
-          <div className="flex items-center gap-5">
-             <div className="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center border border-amber-500/30">
-               <RefreshCw size={22} className="text-amber-400 animate-spin" />
+          <div className="flex items-center gap-3 sm:gap-5">
+             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-500/20 rounded-xl flex items-center justify-center border border-amber-500/30 shrink-0">
+               <RefreshCw size={20} className="text-amber-400 animate-spin" />
              </div>
-             <div>
+             <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">aktif yükseltme</p>
-                <h4 className="text-lg font-black italic uppercase">
+                <h4 className="text-base sm:text-lg font-black italic uppercase truncate">
                   {profile.active_upgrade_type === 'academy' ? 'Yetiştirme Merkezi' : STADIUM_MATRIX.find(m => m.id === profile.active_upgrade_id)?.originalName} 
-                  <span className="ml-3 text-amber-400 text-sm tracking-widest font-bold">LV. {(stadiumUpgrades[profile.active_upgrade_id!] || 0) + 1}</span>
+                  <span className="ml-2 sm:ml-3 text-amber-400 text-xs sm:text-sm tracking-widest font-bold">LV. {(stadiumUpgrades[profile.active_upgrade_id!] || 0) + 1}</span>
                 </h4>
                 {/* Show the effect of the upgrade in progress */}
                 {(() => {
@@ -586,24 +586,24 @@ export default function StadiumTab() {
                 })()}
              </div>
           </div>
-          <div className="flex items-center gap-6">
-             <div className="text-right">
+          <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
+             <div className="text-right shrink-0">
                 <p className="text-[10px] font-black uppercase tracking-widest text-white/30">tamamlanmasına</p>
                 {countdown && countdown.totalMs > 0 ? (
                   <div className="flex items-center gap-1 justify-end">
                     {countdown.days > 0 && (
-                      <span className="text-3xl font-black italic tracking-tighter text-white tabular-nums">
-                        {countdown.days}<span className="text-sm opacity-40 not-italic uppercase font-bold ml-0.5">g</span>
+                      <span className="text-2xl sm:text-3xl font-black italic tracking-tighter text-white tabular-nums">
+                        {countdown.days}<span className="text-xs sm:text-sm opacity-40 not-italic uppercase font-bold ml-0.5">g</span>
                       </span>
                     )}
-                    <span className="text-2xl font-black italic tracking-tighter text-white tabular-nums">
-                      {String(countdown.hours).padStart(2, '0')}<span className="text-sm opacity-40 not-italic">:</span>
-                      {String(countdown.minutes).padStart(2, '0')}<span className="text-sm opacity-40 not-italic">:</span>
+                    <span className="text-xl sm:text-2xl font-black italic tracking-tighter text-white tabular-nums">
+                      {String(countdown.hours).padStart(2, '0')}<span className="text-xs sm:text-sm opacity-40 not-italic">:</span>
+                      {String(countdown.minutes).padStart(2, '0')}<span className="text-xs sm:text-sm opacity-40 not-italic">:</span>
                       {String(countdown.seconds).padStart(2, '0')}
                     </span>
                   </div>
                 ) : (
-                  <p className="text-3xl font-black italic tracking-tighter text-white">{remainingDays} <span className="text-sm opacity-40 not-italic uppercase font-bold">gün</span></p>
+                  <p className="text-2xl sm:text-3xl font-black italic tracking-tighter text-white">{remainingDays} <span className="text-xs sm:text-sm opacity-40 not-italic uppercase font-bold">gün</span></p>
                 )}
                 {/* Progress bar based on real-time countdown */}
                 {profile.active_upgrade_started_at && profile.active_upgrade_end_at && countdown && (
@@ -622,7 +622,7 @@ export default function StadiumTab() {
              {canSpeedUp && (
                <button 
                  onClick={handleSpeedUpUpgrade}
-                 className="flex items-center gap-2 px-5 py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(251,191,36,0.3)]"
+                 className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(251,191,36,0.3)]"
                >
                  <Zap size={16} className="fill-black" />
                  <div className="flex flex-col leading-none">
@@ -632,23 +632,23 @@ export default function StadiumTab() {
                </button>
              )}
              {isUpgrading && !speedUpUsed && remainingDays > 0 && !canSpeedUp && (profile?.credits || 0) < 5 && (
-               <div className="flex items-center gap-2 px-4 py-3 bg-white/5 text-white/20 border border-white/10 rounded-2xl">
+               <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-white/5 text-white/20 border border-white/10 rounded-2xl">
                  <Zap size={16} />
                  <div className="flex flex-col leading-none">
                    <span className="text-[10px] font-black uppercase tracking-wider">Hızlandır</span>
-                   <span className="text-[10px] font-bold opacity-50">Yetersiz Kredi (5 Kredi)</span>
+                   <span className="text-[10px] font-bold opacity-50">Yetersiz Kredi</span>
                  </div>
                </div>
              )}
              {speedUpUsed && (
-               <div className="flex items-center gap-2 px-4 py-3 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl">
+               <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl">
                  <Zap size={16} />
                  <span className="text-[10px] font-black uppercase tracking-wider">Hızlandırıldı</span>
                </div>
              )}
              <button 
                onClick={handleCancelUpgrade}
-               className="bg-white/5 hover:bg-white/10 p-3 rounded-2xl transition-all"
+               className="bg-white/5 hover:bg-white/10 p-2 sm:p-3 rounded-2xl transition-all shrink-0"
                title="İptal Et"
              >
                <XIcon size={18} className="text-white/30" />
@@ -658,11 +658,11 @@ export default function StadiumTab() {
       )}
 
       {/* ── Header ── */}
-      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/5 p-10 rounded-[3rem] relative overflow-hidden">
+      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/5 p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] relative overflow-hidden">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-amber-500/[0.04] to-transparent pointer-events-none" />
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-8 relative z-10">
           <div className="text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
+            <div className="flex items-center justify-center md:justify-start gap-2 mb-3 sm:mb-4">
               <div className="flex gap-1">
                  {[...Array(calculateTotalStars())].map((_, i) => (
                    <Star key={i} size={14} className="text-amber-500 fill-amber-500" />
@@ -673,19 +673,19 @@ export default function StadiumTab() {
               </div>
               <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 ml-2">{calculateTotalStars()} YILDIZ</span>
             </div>
-            <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white mb-2">OPERASYONEL YERLEŞKE</h2>
-            <p className="text-sm text-white/40 max-w-lg mb-8 leading-relaxed">
+            <h2 className="text-2xl sm:text-4xl font-black italic uppercase tracking-tighter text-white mb-2">OPERASYONEL YERLEŞKE</h2>
+            <p className="text-xs sm:text-sm text-white/40 max-w-lg mb-4 sm:mb-8 leading-relaxed">
               Tesislerinizi geliştirerek hem pasif gelirlerinizi artırın hem de takımınıza sahada stratejik avantajlar kazandırın. Her seviye atlamada oyun içi etkileriniz artar.
             </p>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-6">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 sm:gap-6">
                <div className="flex flex-col">
                   <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Mevcut Kapasite</span>
-                  <span className="text-xl font-black text-white italic">{5000 + ((stadiumUpgrades['capacity'] || 0) * 10000)} <span className="text-xs text-white/40 not-italic uppercase font-bold">KİŞİ</span></span>
+                  <span className="text-base sm:text-xl font-black text-white italic">{5000 + ((stadiumUpgrades['capacity'] || 0) * 10000)} <span className="text-xs text-white/40 not-italic uppercase font-bold">KİŞİ</span></span>
                </div>
                <div className="w-px h-8 bg-white/5 hidden md:block" />
                <div className="flex flex-col">
                   <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Toplam Gelişim</span>
-                  <span className="text-xl font-black text-amber-400 italic">{Object.values(stadiumUpgrades).reduce<number>((a, b) => a + (b as number), 0)} <span className="text-xs text-white/40 not-italic uppercase font-bold">PUAN</span></span>
+                  <span className="text-base sm:text-xl font-black text-amber-400 italic">{Object.values(stadiumUpgrades).reduce<number>((a, b) => a + (b as number), 0)} <span className="text-xs text-white/40 not-italic uppercase font-bold">PUAN</span></span>
                </div>
             </div>
           </div>
@@ -693,25 +693,25 @@ export default function StadiumTab() {
       </div>
 
       {/* ── Facility Cards Grid ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         {/* Ticket Price Card */}
-        <div className="bg-zinc-900 border border-white/5 rounded-2xl sm:rounded-[2rem] p-5 sm:p-8 flex flex-col justify-between relative group overflow-hidden">
-          <div className="flex justify-between items-start mb-6">
-            <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20">
-              <Ticket size={28} className="text-amber-500" />
+        <div className="bg-zinc-900 border border-white/5 rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 flex flex-col justify-between relative group overflow-hidden">
+          <div className="flex justify-between items-start mb-4 sm:mb-6">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20">
+              <Ticket size={24} className="text-amber-500" />
             </div>
             <div className="text-[10px] font-black text-white/20 uppercase tracking-widest">Pricing</div>
           </div>
           <div>
-            <h3 className="text-lg font-black italic uppercase tracking-tighter text-white mb-2">Bilet Fiyatı (max {maxPrice}€)</h3>
-            <div className="flex items-end gap-2 mb-6">
+            <h3 className="text-base sm:text-lg font-black italic uppercase tracking-tighter text-white mb-2">Bilet Fiyatı (max {maxPrice}€)</h3>
+            <div className="flex items-end gap-2 mb-4 sm:mb-6">
                <input 
                  type="number"
                  value={ticketPrice}
                  onChange={(e) => handleUpdateTicketPrice(parseInt(e.target.value) || 0)}
-                 className="bg-transparent text-4xl font-black text-white w-20 focus:outline-none"
+                 className="bg-transparent text-3xl sm:text-4xl font-black text-white w-20 focus:outline-none"
                />
-               <span className="text-xl font-bold text-white/20 mb-1">€</span>
+               <span className="text-lg sm:text-xl font-bold text-white/20 mb-1">€</span>
             </div>
             <div className="flex flex-col gap-1">
                <div className="flex justify-between text-[10px] font-bold text-white/20 uppercase">
@@ -745,7 +745,7 @@ export default function StadiumTab() {
           return (
             <div 
               key={item.id} 
-              className={`bg-zinc-900 border rounded-2xl p-5 transition-all group flex flex-col justify-between relative overflow-hidden ${
+              className={`bg-zinc-900 border rounded-2xl p-4 sm:p-5 transition-all group flex flex-col justify-between relative overflow-hidden ${
                 isBeingUpgraded 
                   ? 'border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.1)]' 
                   : isExpanded
@@ -995,25 +995,25 @@ export default function StadiumTab() {
       </div>
 
       {/* ── Stadium Name Change ── */}
-      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/5 p-6 rounded-[2rem] relative overflow-hidden">
+      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 border border-white/5 p-3 sm:p-6 rounded-2xl sm:rounded-[2rem] relative overflow-hidden">
         <div className="absolute top-0 right-0 w-1/4 h-full bg-gradient-to-l from-amber-500/[0.03] to-transparent pointer-events-none" />
-        <div className="flex flex-col md:flex-row items-center gap-4 relative z-10">
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="w-11 h-11 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/20">
-              <Building2 size={20} className="text-amber-400" />
+        <div className="flex flex-col md:flex-row items-center gap-3 sm:gap-4 relative z-10">
+          <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/20 shrink-0">
+              <Building2 size={18} className="text-amber-400" />
             </div>
-            <div>
-              <h3 className="text-sm font-black italic uppercase tracking-tighter text-white">Stadyum İsmi</h3>
+            <div className="min-w-0">
+              <h3 className="text-sm font-black italic uppercase tracking-tighter text-white truncate">Stadyum İsmi</h3>
               <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">5 Kredi karşılığında değiştir</p>
             </div>
           </div>
-          <div className="flex-1 flex items-center gap-3 w-full md:w-auto">
+          <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
             <input 
               type="text"
               value={stadiumNameInput}
               onChange={(e) => setStadiumNameInput(e.target.value)}
               placeholder="Stadyum ismi girin..."
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-mono text-white focus:border-amber-500 outline-none transition-all placeholder:text-white/20"
+              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 text-sm font-mono text-white focus:border-amber-500 outline-none transition-all placeholder:text-white/20"
             />
             <button
               onClick={() => {
@@ -1029,10 +1029,11 @@ export default function StadiumTab() {
                 setProfile({ ...profile, credits: (profile.credits || 0) - 5, stadium_name: stadiumNameInput.trim() });
                 success(`Stadyum ismi "${stadiumNameInput.trim()}" olarak değiştirildi! 5 kredi harcandı.`);
               }}
-              className="shrink-0 flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(251,191,36,0.2)]"
+              className="shrink-0 flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(251,191,36,0.2)] whitespace-nowrap"
             >
               <Coins size={14} className="fill-black" />
-              Stadyum İsmini Değiştir (5 KR)
+              <span className="hidden sm:inline">Stadyum İsmini Değiştir (5 KR)</span>
+              <span className="sm:hidden">Değiştir (5 KR)</span>
             </button>
           </div>
         </div>

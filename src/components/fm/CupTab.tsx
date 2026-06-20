@@ -209,7 +209,7 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* ── Cup Selector Tabs — yatay scroll, touch target 44px ── */}
       <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-1 px-1">
         {cupSeasons.map((cs, idx) => {
@@ -226,7 +226,7 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
               key={cs.id}
               onClick={() => { setActiveCupIdx(idx); setActiveSection('bracket'); }}
               className={`
-                flex items-center gap-2 px-4 py-3 rounded-xl border text-xs font-black uppercase tracking-widest
+                flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border text-[10px] sm:text-xs font-black uppercase tracking-widest
                 whitespace-nowrap transition-all shrink-0 touch-target-44 mobile-tap-highlight
                 ${isActive
                   ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.08)]'
@@ -250,7 +250,7 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
           key={`round-info-${cupSeason.id}`}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-2xl border p-5"
+          className="relative overflow-hidden rounded-2xl border p-3 sm:p-5"
           style={{
             borderColor: isChampion
               ? 'rgba(245,158,11,0.4)'
@@ -266,10 +266,10 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
             <Trophy size={100} />
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
               <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center border
+                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border shrink-0
                   ${isChampion
                     ? 'bg-amber-500/20 border-amber-500/30'
                     : isOurTeamActive
@@ -333,7 +333,7 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
 
           {/* Winner / Runner-up display */}
           {(isChampion || isRunnerUp || cupSeason.isCompleted) && (
-            <div className="mt-4 pt-4 border-t border-white/[0.06] flex items-center gap-4">
+            <div className="mt-4 pt-4 border-t border-white/[0.06] flex items-center gap-2 sm:gap-4 flex-wrap">
               {cupSeason.winner && (
                 <div className="flex items-center gap-2">
                   <Trophy size={12} className="text-amber-400" />

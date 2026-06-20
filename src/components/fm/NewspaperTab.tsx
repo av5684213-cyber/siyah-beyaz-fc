@@ -650,38 +650,38 @@ export default function NewspaperTab() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="flex items-center gap-4 border-b border-white/10 pb-4"
+        className="flex items-center gap-3 sm:gap-4 border-b border-white/10 pb-3 sm:pb-4"
       >
-        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-          <Newspaper className="text-amber-500" size={24} />
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+          <Newspaper className="text-amber-500" size={20} />
         </div>
-        <div>
-          <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-base sm:text-xl font-black italic uppercase tracking-tighter text-white truncate">
             Spor Gazetesi
           </h2>
-          <p className="text-[10px] text-white/40 uppercase font-bold tracking-[0.3em]">
+          <p className="text-[10px] text-white/40 uppercase font-bold tracking-[0.3em] truncate">
             Gün {profile.current_day || 1} • {profile.team_name} Bülteni
           </p>
         </div>
-        <div className="ml-auto flex items-center gap-2 text-[10px] text-white/20 font-bold uppercase">
+        <div className="ml-auto flex items-center gap-2 text-[10px] text-white/20 font-bold uppercase shrink-0">
           <Flame size={12} className="text-amber-500" />
-          <span>Son Dakika</span>
+          <span className="hidden sm:inline">Son Dakika</span>
         </div>
       </motion.div>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
         <button onClick={() => setNewsTab('news')}
-          className={`px-4 py-2 rounded-lg text-[10px] font-black ${newsTab==='news' ? 'bg-white/10 text-white' : 'text-white/30'}`}>
+          className={`px-4 py-2 rounded-lg text-[10px] font-black whitespace-nowrap ${newsTab==='news' ? 'bg-white/10 text-white' : 'text-white/30'}`}>
           HABERLER
         </button>
         <button onClick={() => setNewsTab('forum')}
-          className={`px-4 py-2 rounded-lg text-[10px] font-black ${newsTab==='forum' ? 'bg-white/10 text-white' : 'text-white/30'}`}>
+          className={`px-4 py-2 rounded-lg text-[10px] font-black whitespace-nowrap ${newsTab==='forum' ? 'bg-white/10 text-white' : 'text-white/30'}`}>
           LİG FORUMU
         </button>
       </div>
@@ -749,7 +749,7 @@ export default function NewspaperTab() {
       </div>
 
       {/* Two-Column Layout: Transfer Rumors + League Table */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4">
 
         {/* Transfer Rumors */}
         <div className="lg:col-span-3 space-y-3">

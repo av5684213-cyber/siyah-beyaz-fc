@@ -319,25 +319,25 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
   return (
     <div className="flex flex-col h-full bg-zinc-950 rounded-2xl overflow-hidden border border-white/10">
       {/* ── ÜST BAR: Takım + Lig + Gün (Mackolik tarzı) ─────────── */}
-      <div className="px-5 py-4 bg-gradient-to-r from-zinc-900 via-zinc-800/80 to-zinc-900 border-b border-white/10">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="px-3 sm:px-5 py-3 sm:py-4 bg-gradient-to-r from-zinc-900 via-zinc-800/80 to-zinc-900 border-b border-white/10">
+        <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-3">
           {/* Sol: Takım adı + Lig + Gün */}
-          <div className="flex items-center gap-4">
-            <div className="w-1 h-12 bg-amber-500 rounded-full" />
-            <div>
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+            <div className="w-1 h-10 sm:h-12 bg-amber-500 rounded-full shrink-0" />
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black text-white uppercase tracking-tight">{teamName}</h2>
-                <span className="px-2 py-0.5 bg-amber-500 text-black text-[10px] font-black rounded">PRO</span>
+                <h2 className="text-base sm:text-lg font-black text-white uppercase tracking-tight truncate">{teamName}</h2>
+                <span className="px-2 py-0.5 bg-amber-500 text-black text-[10px] font-black rounded shrink-0">PRO</span>
               </div>
-              <div className="flex items-center gap-2 mt-1">
-                <Trophy size={11} className="text-amber-500" />
+              <div className="flex items-center gap-1.5 sm:gap-2 mt-1 flex-wrap">
+                <Trophy size={11} className="text-amber-500 shrink-0" />
                 <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">4. LİG</span>
                 <span className="text-white/10">·</span>
                 <span className="text-[10px] font-black text-amber-500/90 uppercase tracking-[0.2em]">
                   {currentGameweek > 0 ? `${currentGameweek}. GÜN` : '1. GÜN'}
                 </span>
-                <span className="text-white/10">·</span>
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
+                <span className="text-white/10 hidden sm:inline">·</span>
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider hidden sm:inline">
                   KALAN: {remainingWeeks} GÜN
                 </span>
               </div>
@@ -345,7 +345,7 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
           </div>
 
           {/* Sağ: Form + Canlı + Filtre */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {userForm.length > 0 && (
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-black/30 border border-white/5 rounded-lg">
                 <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">FORM</span>
@@ -358,12 +358,12 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
                 <span className="text-[10px] font-black text-red-400 uppercase tracking-widest">CANLI</span>
               </div>
             )}
-            <div className="flex items-center gap-0.5 bg-black/40 p-1 rounded-lg border border-white/5">
+            <div className="flex items-center gap-0.5 bg-black/40 p-1 rounded-lg border border-white/5 overflow-x-auto no-scrollbar">
               {(['all', 'upcoming', 'played'] as const).map((f) => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-wider transition-all min-h-[36px] ${
+                  className={`px-2 sm:px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-wider transition-all min-h-[36px] whitespace-nowrap ${
                     filter === f ? 'bg-amber-500 text-black' : 'text-white/40 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -390,12 +390,13 @@ export default function FixtureTab({ teamName, teamId, currentWeek, onNavigateTo
             <FootballLoader size={56} label="Fikstür Yükleniyor" />
           </div>
         ) : filteredFixtures.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-3 p-8">
-            <Calendar size={40} className="text-white/10" />
+          <div className="flex flex-col items-center justify-center h-full gap-3 p-4 sm:p-8">
+            <Calendar size={32} className="text-white/10 sm:hidden" />
+            <Calendar size={40} className="text-white/10 hidden sm:block" />
             <p className="text-xs text-white/30 text-center">Bu filtrede maç bulunmuyor.</p>
           </div>
         ) : (
-          <div className="p-3 md:p-4 space-y-5">
+          <div className="p-2 sm:p-3 md:p-4 space-y-4 sm:space-y-5">
             {/* ════════════════════════════════════════════
                 NEXT MATCH SPOTLIGHT (üstte)
                 ════════════════════════════════════════════ */}

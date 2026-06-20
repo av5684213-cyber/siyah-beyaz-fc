@@ -280,7 +280,7 @@ export default function HallOfFameTab({ profileId, teamName }: HallOfFameTabProp
   }
 
   return (
-    <div className="p-4 pb-24 space-y-6 max-w-4xl mx-auto">
+    <div className="p-3 sm:p-4 pb-24 space-y-4 sm:space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
@@ -323,7 +323,7 @@ export default function HallOfFameTab({ profileId, teamName }: HallOfFameTabProp
 
       {/* Tüm Zamanların Rekorları */}
       {records.length > 0 && (
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4">
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3 sm:p-4">
           <div className="flex items-center gap-2 mb-3">
             <Flame size={14} className="text-amber-400" />
             <h3 className="text-white/60 text-xs uppercase tracking-wider">Tüm Zamanların Rekorları</h3>
@@ -337,7 +337,7 @@ export default function HallOfFameTab({ profileId, teamName }: HallOfFameTabProp
       )}
 
       {/* Efsane Galerisi */}
-      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-4">
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3 sm:p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-white/60 text-xs uppercase tracking-wider">Efsane Galerisi</h3>
           <span className="text-white/30 text-[10px]">{filteredLegends.length} üye</span>

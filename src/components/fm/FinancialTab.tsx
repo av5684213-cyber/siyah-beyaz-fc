@@ -325,18 +325,18 @@ export default function FinancialTab({
             className="space-y-4"
           >
             {/* Financial Health Card */}
-            <div className={`relative overflow-hidden rounded-2xl border p-6 ${hc.glow}`} style={{ borderColor: 'var(--border-color, rgba(255,255,255,0.06))' }}>
+            <div className={`relative overflow-hidden rounded-2xl border p-3 sm:p-6 ${hc.glow}`} style={{ borderColor: 'var(--border-color, rgba(255,255,255,0.06))' }}>
               <div className={`absolute inset-0 border-2 rounded-2xl pointer-events-none ${hc.border} opacity-20`} />
               <div className="absolute -right-6 -top-6 opacity-[0.03]">
                 <Wallet size={120} />
               </div>
 
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border ${hc.bg} ${hc.border}`}>
-                    <DollarSign size={32} className={hc.color} />
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center border ${hc.bg} ${hc.border} shrink-0`}>
+                    <DollarSign size={24} className={hc.color} />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className={`px-2 py-0.5 text-[10px] font-black uppercase tracking-widest border rounded-full ${hc.color} ${hc.bg} ${hc.border}`}>
                         {hc.label}
@@ -345,7 +345,7 @@ export default function FinancialTab({
                         <AlertTriangle size={14} className="text-red-500 animate-pulse" />
                       )}
                     </div>
-                    <h2 className="text-3xl font-black font-mono tracking-tighter text-white">
+                    <h2 className="text-2xl sm:text-3xl font-black font-mono tracking-tighter text-white truncate">
                       {fmtMoney(money)}
                     </h2>
                     <div className="flex items-center gap-2 mt-1">
@@ -354,9 +354,9 @@ export default function FinancialTab({
                   </div>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-3 sm:gap-4">
                   {/* Weekly P/L */}
-                  <div className="text-center px-6 py-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                  <div className="flex-1 text-center px-3 py-3 sm:px-6 sm:py-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
                     <div className="flex items-center justify-center gap-1 mb-1">
                       {weeklyProfit >= 0 ? (
                         <TrendingUp size={12} className="text-emerald-400" />
@@ -367,20 +367,20 @@ export default function FinancialTab({
                         Haftalık
                       </span>
                     </div>
-                    <div className={`text-xl font-black font-mono ${weeklyProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <div className={`text-base sm:text-xl font-black font-mono ${weeklyProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                       {weeklyProfit >= 0 ? '+' : ''}{fmtMoney(weeklyProfit)}
                     </div>
                   </div>
 
                   {/* Monthly P/L */}
-                  <div className="text-center px-6 py-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                  <div className="flex-1 text-center px-3 py-3 sm:px-6 sm:py-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <Repeat size={12} className="text-white/20" />
                       <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">
                         Aylık
                       </span>
                     </div>
-                    <div className={`text-xl font-black font-mono ${monthlyProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <div className={`text-base sm:text-xl font-black font-mono ${monthlyProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                       {monthlyProfit >= 0 ? '+' : ''}{fmtMoney(monthlyProfit)}
                     </div>
                   </div>
@@ -426,19 +426,19 @@ export default function FinancialTab({
             </div>
 
             {/* Quick Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
               {[
                 { label: 'Haftalık Gelir', value: fmtMoney(weeklyRevenue), icon: TrendingUp, color: 'text-emerald-400' },
                 { label: 'Haftalık Gider', value: fmtMoney(weeklyExpenses), icon: TrendingDown, color: 'text-red-400' },
                 { label: 'Aktif Sponsor', value: sponsors.length.toString(), icon: Handshake, color: 'text-amber-400' },
                 { label: 'Kadro', value: squad.length.toString(), icon: Users, color: 'text-blue-400' },
               ].map((stat, i) => (
-                <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-4 group hover:bg-white/[0.02] transition-colors">
+                <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-3 sm:p-4 group hover:bg-white/[0.02] transition-colors">
                   <div className="flex items-center gap-2 mb-2">
                     <stat.icon size={12} className={`${stat.color} opacity-60`} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/25">{stat.label}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/25 truncate">{stat.label}</span>
                   </div>
-                  <div className={`text-lg font-black font-mono ${stat.color}`}>{stat.value}</div>
+                  <div className={`text-base sm:text-lg font-black font-mono ${stat.color} truncate`}>{stat.value}</div>
                 </div>
               ))}
             </div>
@@ -617,7 +617,7 @@ export default function FinancialTab({
             className="space-y-4"
           >
             {/* Active Sponsors */}
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.01] p-5">
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.01] p-4 sm:p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Handshake size={14} className="text-amber-400" />
@@ -626,10 +626,11 @@ export default function FinancialTab({
                 <button
                   onClick={handleGenerateOffer}
                   disabled={sponsors.length >= FINANCIAL_DEFAULTS.maxSponsors}
-                  className="px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg hover:bg-amber-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
+                  className="px-3 sm:px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg hover:bg-amber-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5 whitespace-nowrap"
                 >
                   <Zap size={10} />
-                  Yeni Sponsor Teklifleri
+                  <span className="hidden sm:inline">Yeni Sponsor Teklifleri</span>
+                  <span className="sm:hidden">Yeni Teklif</span>
                 </button>
               </div>
 
@@ -644,10 +645,10 @@ export default function FinancialTab({
                     const SpIcon = sponsorTypeIcon(sp.type);
                     const weeksLeft = Math.ceil(sp.weeksRemaining / 7);
                     return (
-                      <div key={sp.id} className="flex items-center justify-between gap-4 p-4 rounded-xl border border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.02] transition-colors">
+                      <div key={sp.id} className="flex items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.02] transition-colors">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center shrink-0 border border-white/[0.08]">
-                            <SpIcon size={18} className="text-white/50" />
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.04] flex items-center justify-center shrink-0 border border-white/[0.08]">
+                            <SpIcon size={16} className="text-white/50" />
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
@@ -912,13 +913,13 @@ export default function FinancialTab({
             </div>
 
             {/* ── Haftalık Maaş Dağılımı ── */}
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.01] p-5">
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.01] p-4 sm:p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <BarChart3 size={14} className="text-white/30" />
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-white/30">Haftalık Maaş Dağılımı</h3>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap justify-end">
                   <span className="text-[10px] text-white/20">
                     Toplam: <span className="text-white/50 font-black font-mono">{fmtMoney(fin.totalWages)}</span>
                   </span>
@@ -984,7 +985,7 @@ export default function FinancialTab({
               </div>
 
               {/* Position Summary Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2 mt-4">
                 {salaryByPosition.map((pos) => (
                   <div key={pos.position} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-2.5 text-center">
                     <div
@@ -1052,9 +1053,9 @@ export default function FinancialTab({
             </div>
 
             {/* Sezon P&L Tahmini */}
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.01] p-5">
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.01] p-4 sm:p-5">
               <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4">Sezon Tahmini (42 Hafta)</div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                 {[
                   { label: 'Toplam Gelir', value: fin.seasonRevenue, color: 'text-emerald-400' },
                   { label: 'Toplam Gider', value: fin.seasonExpenses, color: 'text-red-400' },
@@ -1069,10 +1070,10 @@ export default function FinancialTab({
             </div>
 
             {/* Bütçe Pisti */}
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.01] p-5">
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.01] p-4 sm:p-5">
               <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4">Kasadaki Para</div>
-              <div className="flex items-end gap-4">
-                <div className="text-3xl font-black font-mono text-white">{fmtMoney(money)}</div>
+              <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-4">
+                <div className="text-2xl sm:text-3xl font-black font-mono text-white">{fmtMoney(money)}</div>
                 {weeklyBurn > 0 && (
                   <div className="pb-1">
                     <div className="text-[10px] text-white/25">
@@ -1098,8 +1099,8 @@ export default function FinancialTab({
             exit={{ opacity: 0, y: -10 }}
             className="space-y-4"
           >
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.01] p-5">
-              <div className="flex items-center gap-2 mb-6">
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.01] p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-4 sm:mb-6">
                 <PieChart size={14} className="text-white/30" />
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-white/30">Haftalık Gelir vs Gider</h3>
               </div>
@@ -1184,7 +1185,7 @@ export default function FinancialTab({
               </div>
 
               {/* Summary Stats */}
-              <div className="mt-6 pt-4 border-t border-white/[0.06] grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="mt-6 pt-4 border-t border-white/[0.06] grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {[
                   { label: 'Haftalık Kâr', value: weeklyProfit, format: (v: number) => `${v >= 0 ? '+' : ''}${fmtMoney(v)}`, color: weeklyProfit >= 0 ? 'text-emerald-400' : 'text-red-400' },
                   { label: 'Aylık Kâr', value: monthlyProfit, format: (v: number) => `${v >= 0 ? '+' : ''}${fmtMoney(v)}`, color: monthlyProfit >= 0 ? 'text-emerald-400' : 'text-red-400' },

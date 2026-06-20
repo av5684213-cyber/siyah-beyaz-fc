@@ -769,8 +769,8 @@ export default function TacticsCommandCenter({
     <div className="space-y-4">
 
       {/* ── View Switcher + Tactical Score ──────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4 px-1">
-        <div className="flex bg-black/40 border border-white/8 rounded-xl p-1 gap-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-1">
+        <div className="flex bg-black/40 border border-white/8 rounded-xl p-1 gap-1 overflow-x-auto no-scrollbar">
           {([
             { id: 'squad', label: 'Kadro & Taktik', icon: <Users size={13} /> },
             { id: 'roles', label: 'Roller & Talimatlar', icon: <Star size={13} /> },
@@ -778,7 +778,7 @@ export default function TacticsCommandCenter({
             <button
               key={tab.id}
               onClick={() => setActiveView(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${
                 activeView === tab.id
                   ? 'bg-white text-black shadow-sm'
                   : 'text-white/40 hover:text-white/70'
@@ -792,7 +792,7 @@ export default function TacticsCommandCenter({
 
         {/* Tactical Score Card — detaylı (TacticsRolesPanel'den taşındı) */}
         {tacticalScore && (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 sm:p-4 shrink-0">
             <div className="flex items-center gap-2 mb-3">
               <Star className="w-4 h-4 text-amber-400" />
               <h3 className="text-xs font-bold uppercase tracking-widest text-white/70">
@@ -916,19 +916,19 @@ export default function TacticsCommandCenter({
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 md:gap-6">
         
         {/* Left: Toggles & Stats (4 cols) */}
-        <div className="md:col-span-4 lg:col-span-4 xl:col-span-4 p-4 md:p-6 bg-zinc-900/80 backdrop-blur-xl border border-white/5 rounded-3xl space-y-6 md:space-y-8 h-full">
-           <div className="border-b border-white/5 pb-4">
-              <h3 className="text-xl font-black italic text-white uppercase tracking-tighter flex items-center gap-2">
-                <Swords className="text-emerald-500" /> Taktik Lab
+        <div className="md:col-span-4 lg:col-span-4 xl:col-span-4 p-3 sm:p-4 md:p-6 bg-zinc-900/80 backdrop-blur-xl border border-white/5 rounded-2xl sm:rounded-3xl space-y-4 sm:space-y-6 md:space-y-8 h-full">
+           <div className="border-b border-white/5 pb-3 sm:pb-4">
+              <h3 className="text-base sm:text-xl font-black italic text-white uppercase tracking-tighter flex items-center gap-2">
+                <Swords className="text-emerald-500" size={18} /> Taktik Lab
               </h3>
               <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.3em]">Operasyonel Parametreler</p>
            </div>
 
-           <div className="space-y-6">
-             <div className="grid grid-cols-2 gap-4">
+           <div className="space-y-4 sm:space-y-6">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {[
                   { label: 'Diziliş', val: activeTactic.formation || '4-4-2', key: 'formation', options: ['4-4-2', '4-3-3', '4-2-3-1', '4-1-4-1', '4-5-1', '4-3-2-1', '4-4-1-1', '4-3-1-2', '3-5-2', '3-4-3', '3-1-4-2', '3-3-3-1', '5-4-1', '5-3-2'] },
                   { label: 'Tarz', val: activeTactic.playStyle, key: 'playStyle', options: ['dengeli', 'hucum', 'savunma', 'kontra', 'tikitaka', 'Gegenpressing', 'Catenaccio', 'Direct Play', 'Wing Play', 'Total Football', 'Route One', 'Possession Football', 'High Press', 'Parking the Bus'] },
@@ -1094,8 +1094,8 @@ export default function TacticsCommandCenter({
         </div>
 
         {/* Right: Squad Management (3 cols) */}
-        <div className="md:col-span-12 lg:col-span-3 xl:col-span-3 p-4 md:p-6 bg-zinc-900/60 border border-white/5 rounded-3xl flex flex-col h-full max-h-[700px]">
-            <h4 className="text-[10px] text-white/30 uppercase font-black tracking-[0.4em] mb-6 flex items-center gap-2">
+        <div className="md:col-span-12 lg:col-span-3 xl:col-span-3 p-3 sm:p-4 md:p-6 bg-zinc-900/60 border border-white/5 rounded-2xl sm:rounded-3xl flex flex-col h-full max-h-[700px]">
+            <h4 className="text-[10px] text-white/30 uppercase font-black tracking-[0.4em] mb-4 sm:mb-6 flex items-center gap-2">
                <Users size={14} /> KADRO LİSTESİ
             </h4>
             <div className="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
@@ -1152,9 +1152,9 @@ export default function TacticsCommandCenter({
       </div>
 
       {/* Roles Section */}
-      <div className="p-6 bg-zinc-900/30 border border-white/5 rounded-3xl">
-        <h3 className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-4">OYUNCU ROLLERİ</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
+      <div className="p-3 sm:p-6 bg-zinc-900/30 border border-white/5 rounded-2xl sm:rounded-3xl">
+        <h3 className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-3 sm:mb-4">OYUNCU ROLLERİ</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-2 sm:gap-3">
           {players.map(p => (
             <div key={p.id} className="p-3 bg-black/40 rounded-xl border border-white/5">
               <div className="flex items-center justify-between mb-2">
@@ -1181,8 +1181,8 @@ export default function TacticsCommandCenter({
       </div>
 
       {/* Transfer Offers in Tactics */}
-      <div className="p-6 bg-zinc-900/30 border border-emerald-500/10 rounded-3xl">
-        <div className="flex items-center gap-3 mb-4">
+      <div className="p-3 sm:p-6 bg-zinc-900/30 border border-emerald-500/10 rounded-2xl sm:rounded-3xl">
+        <div className="flex items-center gap-3 mb-3 sm:mb-4">
           <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
             <ArrowRightLeft size={14} className="text-emerald-400" />
           </div>
@@ -1237,18 +1237,18 @@ export default function TacticsCommandCenter({
       </div>
 
       {/* Team Ranking Table */}
-      <div className="p-6 bg-zinc-900/30 border border-emerald-500/10 rounded-3xl">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+      <div className="p-3 sm:p-6 bg-zinc-900/30 border border-emerald-500/10 rounded-2xl sm:rounded-3xl">
+        <div className="flex items-center gap-3 mb-3 sm:mb-4">
+          <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20 shrink-0">
             <Shield size={14} className="text-emerald-400" />
           </div>
-          <h3 className="text-[10px] uppercase font-bold tracking-widest text-white/30">TAKIM SIRALAMASI</h3>
+          <h3 className="text-[10px] uppercase font-bold tracking-widest text-white/30 shrink-0">TAKIM SIRALAMASI</h3>
           <div className="flex-1" />
-          <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest">
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#7AB4E8]/10 border-2 border-[#7AB4E8]" /> Kaleci</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#7EDBC8]/10 border-2 border-[#7EDBC8]" /> Defans</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#F0C87A]/10 border-2 border-[#F0C87A]" /> Orta Saha</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#E87878]/10 border-2 border-[#E87878]" /> Forvet</span>
+          <div className="flex items-center gap-2 sm:gap-3 text-[10px] font-black uppercase tracking-widest overflow-x-auto no-scrollbar">
+            <span className="flex items-center gap-1 whitespace-nowrap shrink-0"><span className="w-3 h-3 rounded-sm bg-[#7AB4E8]/10 border-2 border-[#7AB4E8]" /> Kaleci</span>
+            <span className="flex items-center gap-1 whitespace-nowrap shrink-0 hidden sm:flex"><span className="w-3 h-3 rounded-sm bg-[#7EDBC8]/10 border-2 border-[#7EDBC8]" /> Defans</span>
+            <span className="flex items-center gap-1 whitespace-nowrap shrink-0 hidden md:flex"><span className="w-3 h-3 rounded-sm bg-[#F0C87A]/10 border-2 border-[#F0C87A]" /> Orta Saha</span>
+            <span className="flex items-center gap-1 whitespace-nowrap shrink-0 hidden md:flex"><span className="w-3 h-3 rounded-sm bg-[#E87878]/10 border-2 border-[#E87878]" /> Forvet</span>
           </div>
         </div>
         <div className="overflow-x-auto">
