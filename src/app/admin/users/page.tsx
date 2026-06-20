@@ -43,7 +43,7 @@ export default function AdminUsersPage() {
 
   const headers = {
     'x-admin-user-id': user?.id || '',
-    'x-admin-email': user?.email || '',
+    ,
   };
 
   const fetchUsers = useCallback(async () => {

@@ -88,7 +88,7 @@ export default function AdminPanel() {
   const [transferSearch, setTransferSearch] = useState('');
   const [transferTeams, setTransferTeams] = useState<TeamInfo[]>([]);
 
-  const headers = { 'x-admin-user-id': userId || '', 'x-admin-email': authEmail || '' };
+  const headers = { 'x-admin-user-id': userId || '' };
 
   if (!isAdmin) {
     return (

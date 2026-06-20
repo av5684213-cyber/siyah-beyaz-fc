@@ -19,7 +19,7 @@ export default function AdminLeaguesPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const headers = { 'x-admin-user-id': user?.id || '', 'x-admin-email': user?.email || '' };
+  const headers = { 'x-admin-user-id': user?.id || '' };
 
   const fetchLeagues = useCallback(async () => {
     setLoading(true);

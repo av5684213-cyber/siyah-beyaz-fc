@@ -6,31 +6,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 
-const ADMIN_EMAIL = 'selimporsuk@gmail.com';
 
 export const dynamic = 'force-dynamic';
 
-async function verifyAdmin(request: NextRequest): Promise<boolean> {
-  const adminUserId = request.headers.get('x-admin-user-id');
-  const adminEmail = request.headers.get('x-admin-email');
-
-  if (adminEmail?.toLowerCase() === ADMIN_EMAIL) return true;
-
-  if (adminUserId && isSupabaseConfigured()) {
-    const supabase = getServiceSupabase();
-    if (supabase) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role, email')
-        .eq('id', adminUserId)
-        .maybeSingle();
-      if (profile?.role === 'admin' || profile?.email?.toLowerCase() === ADMIN_EMAIL) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
 
 export async function GET(request: NextRequest) {
   const authorized = await verifyAdmin(request);

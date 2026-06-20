@@ -44,7 +44,7 @@ export default function AdminSystemPage() {
   const [triggering, setTriggering] = useState<string | null>(null);
   const [triggerResult, setTriggerResult] = useState<string | null>(null);
 
-  const headers = { 'x-admin-user-id': user?.id || '', 'x-admin-email': user?.email || '' };
+  const headers = { 'x-admin-user-id': user?.id || '' };
 
   const fetchOverview = useCallback(async () => {
     setLoading(true);

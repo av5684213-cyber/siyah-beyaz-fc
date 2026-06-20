@@ -9,8 +9,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 import { generateAllAttributes, getPositionKey } from '@/lib/fm/attributeGenerator';
+import { verifyAdminRequest } from '@/lib/admin-auth';
 
 export async function POST(request: NextRequest) {
+  // [BUG-25 GÜVENLİK] Admin doğrulaması eklendi — önceki kodda HİÇBİR auth yoktu
+  const { isAdmin } = await verifyAdminRequest(request);
+  if (!isAdmin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
+
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: 'Supabase yapılandırılmamış' }, { status: 500 });
   }

@@ -103,7 +103,7 @@ export default function AdminTeamsPage() {
   const [transferSearch, setTransferSearch] = useState('');
   const [transferTeams, setTransferTeams] = useState<TeamProfile[]>([]);
 
-  const headers = { 'x-admin-user-id': user?.id || '', 'x-admin-email': user?.email || '' };
+  const headers = { 'x-admin-user-id': user?.id || '' };
 
   const fetchTeams = useCallback(async () => {
     setLoading(true);

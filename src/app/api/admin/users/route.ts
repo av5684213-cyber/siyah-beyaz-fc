@@ -6,27 +6,13 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceSupabase, getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import { verifyAdminRequest } from '@/lib/admin-auth';
 
-const ADMIN_EMAIL = 'selimporsuk@gmail.com';
 export const dynamic = 'force-dynamic';
 
-async function verifyAdmin(request: NextRequest): Promise<boolean> {
-  const adminEmail = request.headers.get('x-admin-email');
-  if (adminEmail?.toLowerCase() === ADMIN_EMAIL) return true;
-  const adminUserId = request.headers.get('x-admin-user-id');
-  if (adminUserId && isSupabaseConfigured()) {
-    let supabase = getServiceSupabase();
-    if (!supabase) supabase = getSupabase();
-    if (supabase) {
-      const { data: profile } = await supabase.from('profiles').select('role, email').eq('id', adminUserId).maybeSingle();
-      if (profile?.role === 'admin' || profile?.email?.toLowerCase() === ADMIN_EMAIL) return true;
-    }
-  }
-  return false;
-}
 
 export async function GET(request: NextRequest) {
-  if (!await verifyAdmin(request)) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
+  if (!(await verifyAdminRequest(request)).isAdmin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
   if (!isSupabaseConfigured()) return NextResponse.json({ error: 'Supabase yok' }, { status: 500 });
 
   const supabase = getServiceSupabase()!;
@@ -57,7 +43,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  if (!await verifyAdmin(request)) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
+  if (!(await verifyAdminRequest(request)).isAdmin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
   if (!isSupabaseConfigured()) return NextResponse.json({ error: 'Supabase yok' }, { status: 500 });
 
   const supabase = getServiceSupabase()!;
@@ -67,7 +53,7 @@ export async function PATCH(request: NextRequest) {
   if (!userId || !updates) return NextResponse.json({ error: 'userId ve updates zorunlu' }, { status: 400 });
 
   // Allowed fields for admin update
-  const allowedFields = ['money', 'credits', 'level', 'xp', 'fans', 'reputation', 'role', 'league_name', 'league_tier', 'league_position', 'current_day', 'scout_slots', 'staff_coaches', 'staff_physios', 'stadium_capacity', 'ticket_price', 'academy_level', 'primary_color', 'secondary_color', 'stadium_name', 'philosophy', 'is_bot', 'bot_difficulty'];
+  const allowedFields = ['money', 'credits', 'level', 'xp', 'fans', 'reputation', 'league_name', 'league_tier', 'league_position', 'current_day', 'scout_slots', 'staff_coaches', 'staff_physios', 'stadium_capacity', 'ticket_price', 'academy_level', 'primary_color', 'secondary_color', 'stadium_name', 'philosophy', 'is_bot', 'bot_difficulty']; // [BUG-25] 'role' çıkarıldı — role değişikliği set-role endpoint'inden yapılmalı
   const filteredUpdates: Record<string, unknown> = {};
   for (const key of allowedFields) {
     if (updates[key] !== undefined) filteredUpdates[key] = updates[key];
@@ -90,7 +76,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  if (!await verifyAdmin(request)) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
+  if (!(await verifyAdminRequest(request)).isAdmin) return NextResponse.json({ error: 'Yetkisiz' }, { status: 403 });
   if (!isSupabaseConfigured()) return NextResponse.json({ error: 'Supabase yok' }, { status: 500 });
 
   const supabase = getServiceSupabase()!;

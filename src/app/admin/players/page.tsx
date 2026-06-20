@@ -57,7 +57,7 @@ export default function AdminPlayersPage() {
   const [editValues, setEditValues] = useState<Record<string, any>>({});
   const [showFilters, setShowFilters] = useState(false);
 
-  const headers = { 'x-admin-user-id': user?.id || '', 'x-admin-email': user?.email || '' };
+  const headers = { 'x-admin-user-id': user?.id || '' };
 
   const fetchPlayers = useCallback(async () => {
     setLoading(true);

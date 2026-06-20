@@ -30,7 +30,7 @@ export default function AdminMatchesPage() {
   const [editingFixture, setEditingFixture] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Record<string, any>>({});
 
-  const headers = { 'x-admin-user-id': user?.id || '', 'x-admin-email': user?.email || '' };
+  const headers = { 'x-admin-user-id': user?.id || '' };
 
   const fetchFixtures = useCallback(async () => {
     setLoading(true);
