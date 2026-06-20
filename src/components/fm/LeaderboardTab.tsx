@@ -60,10 +60,10 @@ export default function LeaderboardTab() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] font-black text-white truncate">{e.team_name}</p>
-                <p className="text-[9px] text-white/30">{e.manager_name}</p>
+                <p className="text-[10px] text-white/30">{e.manager_name}</p>
               </div>
               <div className="text-right shrink-0">
-                <p className={`text-[9px] font-black ${TIER_COLORS[e.league_tier] || 'text-white/30'}`}>
+                <p className={`text-[10px] font-black ${TIER_COLORS[e.league_tier] || 'text-white/30'}`}>
                   {TIER_NAMES[e.league_tier] || `Lig ${e.league_tier}`}
                 </p>
                 <div className="flex items-center gap-1 justify-end">

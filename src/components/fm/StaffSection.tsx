@@ -281,7 +281,7 @@ export default function StaffSection() {
   // -- Fire handler --
   const handleFire = async (staffId: string, staffName: string) => {
     if (!profile?.id) return;
-    if (!confirm(`${staffName} isten cikarilacak. Devam edilsin mi?`)) return;
+    if (!window.confirm(`${staffName} isten cikarilacak. Devam edilsin mi?`)) return;
     setFiringId(staffId);
     try {
       const res = await fetch('/api/staff/fire', {
@@ -353,22 +353,22 @@ export default function StaffSection() {
           <div className="flex items-center gap-4 mt-4 flex-wrap">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg">
               <Star size={10} className="text-amber-400" />
-              <span className="text-[9px] font-black text-white/40 uppercase tracking-wider">
+              <span className="text-[10px] font-black text-white/40 uppercase tracking-wider">
                 Kalan Hafta: {remainingWeeks}
               </span>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/[0.06] border border-amber-500/20 rounded-lg">
-              <span className="text-[9px] font-black text-amber-400 uppercase tracking-wider">
+              <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider">
                 Kredi: {profileKredi}
               </span>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg">
-              <span className="text-[9px] font-black text-emerald-400 uppercase tracking-wider">
+              <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">
                 Butce: {formatEuro(profileEuro)}
               </span>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg">
-              <span className="text-[9px] font-black text-white/40 uppercase tracking-wider">
+              <span className="text-[10px] font-black text-white/40 uppercase tracking-wider">
                 Toplam: {staffList.length} Personel
               </span>
             </div>
@@ -403,7 +403,7 @@ export default function StaffSection() {
               {isMaxed && (
                 <div className="absolute top-0 left-0 w-full h-full bg-black/40 backdrop-blur-[1px] z-10 flex items-center justify-center">
                   <div className={`px-4 py-2 rounded-xl ${colors.bg} border ${colors.border}`}>
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${colors.text}`}>
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${colors.text}`}>
                       KOTA DOLU
                     </span>
                   </div>
@@ -439,7 +439,7 @@ export default function StaffSection() {
 
               {/* Star Selector */}
               <div className="mb-3">
-                <span className="text-[8px] font-black text-white/30 uppercase tracking-widest block mb-1.5">
+                <span className="text-[10px] font-black text-white/30 uppercase tracking-widest block mb-1.5">
                   Yildiz Seviyesi
                 </span>
                 <div className="flex gap-1">
@@ -470,20 +470,20 @@ export default function StaffSection() {
               {/* Cost Info - New Dual Currency */}
               <div className="space-y-1.5 mb-4 px-3 py-2.5 bg-black/30 rounded-xl border border-white/[0.04]">
                 <div className="flex justify-between items-center">
-                  <span className="text-[8px] font-bold text-white/25 uppercase tracking-wider">Ise Alim Ucreti (Kredi)</span>
+                  <span className="text-[10px] font-bold text-white/25 uppercase tracking-wider">Ise Alim Ucreti (Kredi)</span>
                   <span className={`text-[10px] font-black tabular-nums ${canAffordKredi ? 'text-amber-400' : 'text-red-400'}`}>
                     {hireFeeKredi} Kredi
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[8px] font-bold text-white/25 uppercase tracking-wider">Ise Alim Ucreti (Euro)</span>
+                  <span className="text-[10px] font-bold text-white/25 uppercase tracking-wider">Ise Alim Ucreti (Euro)</span>
                   <span className={`text-[10px] font-black tabular-nums ${canAffordEuro ? 'text-emerald-400' : 'text-red-400'}`}>
                     {formatEuro(hireFeeEuro)}
                   </span>
                 </div>
                 <div className="h-px bg-white/5 my-1" />
                 <div className="flex justify-between items-center">
-                  <span className="text-[8px] font-bold text-white/40 uppercase tracking-wider">Toplam Maliyet</span>
+                  <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Toplam Maliyet</span>
                   <span className="text-[10px] font-black text-white/80 tabular-nums">
                     {hireFeeKredi} Kredi + {formatEuro(hireFeeEuro)}
                   </span>
@@ -493,7 +493,7 @@ export default function StaffSection() {
               {/* Insufficient balance warnings */}
               {!canAfford && !isMaxed && (
                 <div className="mb-3 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  <p className="text-[8px] font-bold text-red-400 uppercase tracking-wider">
+                  <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider">
                     {!canAffordKredi && !canAffordEuro
                       ? 'YETERSIZ KREDI VE EURO'
                       : !canAffordKredi
@@ -554,7 +554,7 @@ export default function StaffSection() {
             <h3 className="text-sm font-black italic uppercase tracking-tighter text-white">
               Aktif Personel
             </h3>
-            <span className="text-[8px] font-black text-white/20 uppercase tracking-widest ml-2">
+            <span className="text-[10px] font-black text-white/20 uppercase tracking-widest ml-2">
               {staffList.length} KISI
             </span>
           </div>
@@ -594,8 +594,8 @@ export default function StaffSection() {
                               />
                             ))}
                           </div>
-                          <span className="text-[7px] font-bold text-white/20">|</span>
-                          <span className="text-[8px] font-bold text-white/30">
+                          <span className="text-[10px] font-bold text-white/20">|</span>
+                          <span className="text-[10px] font-bold text-white/30">
                             {stConfig ? `${stConfig.hireFeeKredi[staff.stars]} Kredi + ${formatEuro(stConfig.hireFeeEuro[staff.stars])}` : `${staff.total_cost} Kredi`}
                           </span>
                         </div>
@@ -605,7 +605,7 @@ export default function StaffSection() {
                     <button
                       onClick={() => handleFire(staff.id, staff.name)}
                       disabled={isFiring}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-red-500/10 hover:border-red-500/20 transition-all text-[8px] font-black uppercase tracking-wider text-white/30 hover:text-red-400 disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-red-500/10 hover:border-red-500/20 transition-all text-[10px] font-black uppercase tracking-wider text-white/30 hover:text-red-400 disabled:opacity-50"
                     >
                       {isFiring ? (
                         <Loader2 size={10} className="animate-spin" />

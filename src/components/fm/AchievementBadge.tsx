@@ -41,7 +41,7 @@ export function AchievementBadge({ badgeType, earnedAt, size = 'md' }: Achieveme
         <p className={`font-bold ${def.color} truncate`}>{def.name}</p>
         <p className="text-white/30 text-[10px] truncate">{def.description}</p>
         {earnedAt && (
-          <p className="text-white/15 text-[8px] mt-0.5">
+          <p className="text-white/15 text-[10px] mt-0.5">
             {new Date(earnedAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })}
           </p>
         )}

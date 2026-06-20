@@ -46,7 +46,7 @@ export default function TeamPlayersModal({ teamName, players, loading, onClose, 
           >
             <div className="flex items-center gap-2 text-white/20">
               <div className="w-10 h-1 rounded-full bg-white/15" />
-              <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">sürükle</span>
               <div className="w-10 h-1 rounded-full bg-white/15" />
             </div>
           </div>
@@ -102,10 +102,10 @@ export default function TeamPlayersModal({ teamName, players, loading, onClose, 
               <div className="min-w-fit">
                 {/* Column Headers for alignment if matches PlayerRow */}
                 <div className="flex items-center gap-4 px-2 py-2 mb-2 bg-black/40 border border-white/5 rounded-lg">
-                    <div className="w-32 md:w-48 text-center text-[8px] font-black uppercase text-white/20 tracking-widest">
+                    <div className="w-32 md:w-48 text-center text-[10px] font-black uppercase text-white/20 tracking-widest">
                         OYUNCU BİLGİSİ
                     </div>
-                    <div className="flex-1 grid grid-cols-13 text-center text-[7px] font-black uppercase text-white/20 tracking-widest">
+                    <div className="flex-1 grid grid-cols-13 text-center text-[10px] font-black uppercase text-white/20 tracking-widest">
                         <span>Klt</span>
                         <span>Klc</span>
                         <span>Tk</span>

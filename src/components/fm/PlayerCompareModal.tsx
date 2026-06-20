@@ -43,7 +43,7 @@ export default function PlayerCompareModal({ player1, player2, onClose }: Props)
         >
           {/* Header */}
           <div className="sticky top-0 bg-zinc-900/95 border-b border-white/10 p-4 flex items-center justify-between">
-            <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Oyuncu Karşılaştırma</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Oyuncu Karşılaştırma</p>
             <button onClick={onClose}><X size={16} className="text-white/30 hover:text-white" /></button>
           </div>
 
@@ -51,14 +51,14 @@ export default function PlayerCompareModal({ player1, player2, onClose }: Props)
           <div className="grid grid-cols-3 p-4 border-b border-white/5">
             <div className="text-center">
               <p className="text-sm font-black text-blue-400">{player1.name?.split(' ').pop()}</p>
-              <p className="text-[9px] text-white/30">{player1.position} · {player1.age} yaş</p>
-              <p className="text-[9px] text-blue-400/60">{((player1.market_value||0)/1e6).toFixed(1)}M€</p>
+              <p className="text-[10px] text-white/30">{player1.position} · {player1.age} yaş</p>
+              <p className="text-[10px] text-blue-400/60">{((player1.market_value||0)/1e6).toFixed(1)}M€</p>
             </div>
-            <div className="text-center text-[9px] text-white/15 uppercase tracking-widest flex items-center justify-center">vs</div>
+            <div className="text-center text-[10px] text-white/15 uppercase tracking-widest flex items-center justify-center">vs</div>
             <div className="text-center">
               <p className="text-sm font-black text-amber-400">{player2.name?.split(' ').pop()}</p>
-              <p className="text-[9px] text-white/30">{player2.position} · {player2.age} yaş</p>
-              <p className="text-[9px] text-amber-400/60">{((player2.market_value||0)/1e6).toFixed(1)}M€</p>
+              <p className="text-[10px] text-white/30">{player2.position} · {player2.age} yaş</p>
+              <p className="text-[10px] text-amber-400/60">{((player2.market_value||0)/1e6).toFixed(1)}M€</p>
             </div>
           </div>
 
@@ -78,7 +78,7 @@ export default function PlayerCompareModal({ player1, player2, onClose }: Props)
                     </div>
                   </div>
                   {/* Stat adı */}
-                  <p className="text-[9px] text-white/30 text-center uppercase tracking-wider">{label}</p>
+                  <p className="text-[10px] text-white/30 text-center uppercase tracking-wider">{label}</p>
                   {/* Oyuncu 2 */}
                   <div className="flex items-center gap-1.5">
                     <div className="w-12 h-1.5 bg-white/5 rounded-full overflow-hidden">
@@ -94,12 +94,12 @@ export default function PlayerCompareModal({ player1, player2, onClose }: Props)
           {/* Maaş karşılaştırma */}
           <div className="grid grid-cols-3 p-4 border-t border-white/5 text-center">
             <div>
-              <p className="text-[9px] text-white/30">Haftalık Maaş</p>
+              <p className="text-[10px] text-white/30">Haftalık Maaş</p>
               <p className="text-xs font-black text-blue-400">{((player1.salary||0)/1000).toFixed(0)}K€</p>
             </div>
             <div />
             <div>
-              <p className="text-[9px] text-white/30">Haftalık Maaş</p>
+              <p className="text-[10px] text-white/30">Haftalık Maaş</p>
               <p className="text-xs font-black text-amber-400">{((player2.salary||0)/1000).toFixed(0)}K€</p>
             </div>
           </div>

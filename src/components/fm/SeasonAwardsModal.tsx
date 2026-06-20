@@ -241,7 +241,7 @@ export default function SeasonAwardsModal({
           >
             <div className="flex items-center gap-2 text-white/20">
               <div className="w-10 h-1 rounded-full bg-white/15" />
-              <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">sürükle</span>
               <div className="w-10 h-1 rounded-full bg-white/15" />
             </div>
           </div>

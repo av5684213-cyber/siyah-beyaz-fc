@@ -263,7 +263,7 @@ export default function YouthAcademyTab({
     const { canIntake, reason } = canDoSeasonIntake(currentWeek, seasonIntakeUsed);
     if (!canIntake && currentWeek > 0) {
       // Sezon bitmemişse uyarı göster ama engelleme (manual override)
-      const proceed = confirm(`${reason}\n\nYine de alım yapmak istiyor musunuz? (Önerilmez)`);
+      const proceed = window.confirm(`${reason}\n\nYine de alım yapmak istiyor musunuz? (Önerilmez)`);
       if (!proceed) {
         setShowIntakeConfirm(false);
         return;
@@ -385,7 +385,7 @@ export default function YouthAcademyTab({
           {/* Stats row */}
           <div className="flex flex-wrap gap-3">
             <div className="px-4 py-2.5 bg-black/40 border border-white/[0.06] rounded-xl">
-              <span className="text-[9px] font-black text-white/20 uppercase block leading-none mb-1">
+              <span className="text-[10px] font-black text-white/20 uppercase block leading-none mb-1">
                 Genç Oyuncu
               </span>
               <span className="text-sm font-mono font-bold text-white leading-none">
@@ -393,7 +393,7 @@ export default function YouthAcademyTab({
               </span>
             </div>
             <div className="px-4 py-2.5 bg-black/40 border border-white/[0.06] rounded-xl">
-              <span className="text-[9px] font-black text-white/20 uppercase block leading-none mb-1">
+              <span className="text-[10px] font-black text-white/20 uppercase block leading-none mb-1">
                 Haftalık Masraf
               </span>
               <span className="text-sm font-mono font-bold text-amber-400 leading-none">
@@ -404,7 +404,7 @@ export default function YouthAcademyTab({
             {/* Geri sayım sayacı (yükseltme aktifse) */}
             {isUpgradeActive && (
               <div className="px-4 py-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                <span className="text-[9px] font-black text-amber-400/60 uppercase block leading-none mb-1 flex items-center gap-1">
+                <span className="text-[10px] font-black text-amber-400/60 uppercase block leading-none mb-1 flex items-center gap-1">
                   <Timer size={8} /> YÜKSELTME
                 </span>
                 <span className="text-sm font-mono font-bold text-amber-400 leading-none">
@@ -431,7 +431,7 @@ export default function YouthAcademyTab({
             )}
             {isUpgradeActive && !speedUpUsedProp && !canSpeedUp && (
               <div className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl opacity-50">
-                <span className="text-[9px] font-black text-white/30 uppercase block leading-none mb-1 flex items-center gap-1">
+                <span className="text-[10px] font-black text-white/30 uppercase block leading-none mb-1 flex items-center gap-1">
                   <FastForward size={8} /> HIZLANDIR
                 </span>
                 <span className="text-[10px] font-bold text-white/20">5 Kredi gerekli</span>
@@ -478,7 +478,7 @@ export default function YouthAcademyTab({
             >
               <RefreshCw size={14} />
               {seasonIntakeUsed ? 'Alım Yapıldı' : 'Yeni Sezon Alımı'}
-              <span className="text-[9px] font-mono opacity-70">(10 KR)</span>
+              <span className="text-[10px] font-mono opacity-70">(10 KR)</span>
             </button>
           </div>
         </div>
@@ -498,18 +498,18 @@ export default function YouthAcademyTab({
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 px-2 py-1 bg-emerald-500/10 border border-emerald-500/15 rounded-lg">
               <Zap size={10} className="text-emerald-400" />
-              <span className="text-[9px] font-black text-emerald-400">+{(aggregateEffects.trainingSpeed * 100).toFixed(0)}%</span>
-              <span className="text-[8px] text-emerald-400/50">Ant</span>
+              <span className="text-[10px] font-black text-emerald-400">+{(aggregateEffects.trainingSpeed * 100).toFixed(0)}%</span>
+              <span className="text-[10px] text-emerald-400/50">Ant</span>
             </div>
             <div className="flex items-center gap-1 px-2 py-1 bg-blue-500/10 border border-blue-500/15 rounded-lg">
               <Eye size={10} className="text-blue-400" />
-              <span className="text-[9px] font-black text-blue-400">+{(aggregateEffects.scoutQuality * 100).toFixed(0)}%</span>
-              <span className="text-[8px] text-blue-400/50">Göz</span>
+              <span className="text-[10px] font-black text-blue-400">+{(aggregateEffects.scoutQuality * 100).toFixed(0)}%</span>
+              <span className="text-[10px] text-blue-400/50">Göz</span>
             </div>
             <div className="flex items-center gap-1 px-2 py-1 bg-red-500/10 border border-red-500/15 rounded-lg">
               <Heart size={10} className="text-red-400" />
-              <span className="text-[9px] font-black text-red-400">-{(aggregateEffects.injuryPrevention * 100).toFixed(0)}%</span>
-              <span className="text-[8px] text-red-400/50">Skt</span>
+              <span className="text-[10px] font-black text-red-400">-{(aggregateEffects.injuryPrevention * 100).toFixed(0)}%</span>
+              <span className="text-[10px] text-red-400/50">Skt</span>
             </div>
           </div>
         </div>
@@ -565,17 +565,17 @@ export default function YouthAcademyTab({
                 {/* Effects */}
                 <div className="flex items-center gap-3 mb-4">
                   {facility.effects.trainingSpeed > 0 && (
-                    <span className="text-[9px] font-bold text-emerald-400/60">
+                    <span className="text-[10px] font-bold text-emerald-400/60">
                       Ant: +{(facility.effects.trainingSpeed * currentLevel * 100).toFixed(0)}%
                     </span>
                   )}
                   {facility.effects.scoutQuality > 0 && (
-                    <span className="text-[9px] font-bold text-blue-400/60">
+                    <span className="text-[10px] font-bold text-blue-400/60">
                       Göz: +{(facility.effects.scoutQuality * currentLevel * 100).toFixed(0)}%
                     </span>
                   )}
                   {facility.effects.injuryPrevention > 0 && (
-                    <span className="text-[9px] font-bold text-red-400/60">
+                    <span className="text-[10px] font-bold text-red-400/60">
                       Skt: -{(facility.effects.injuryPrevention * currentLevel * 100).toFixed(0)}%
                     </span>
                   )}
@@ -643,7 +643,7 @@ export default function YouthAcademyTab({
                     }`}
                   >
                     {tab.label}
-                    <span className={`text-[8px] font-mono ${
+                    <span className={`text-[10px] font-mono ${
                       activeCategory === tab.id ? 'text-black/40' : 'text-white/20'
                     }`}>
                       {count}
@@ -673,7 +673,7 @@ export default function YouthAcademyTab({
                 ].map(col => (
                   <th
                     key={col.label}
-                    className={`${col.w} px-4 py-3 text-left text-[9px] font-black uppercase tracking-widest text-white/25`}
+                    className={`${col.w} px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-white/25`}
                   >
                     {col.label}
                   </th>
@@ -730,7 +730,7 @@ export default function YouthAcademyTab({
                                 {player.name}
                               </span>
                               {player.isWonderkid && (
-                                <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-400/15 border border-amber-400/25 rounded text-[8px] font-black text-amber-400 shrink-0">
+                                <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-400/15 border border-amber-400/25 rounded text-[10px] font-black text-amber-400 shrink-0">
                                   <Star size={8} fill="currentColor" />
                                   WK
                                 </span>
@@ -740,7 +740,7 @@ export default function YouthAcademyTab({
                                 const isSuperTalent = (player.potential || 0) >= 80 && (player.rating || 0) >= 65;
                                 if (!isReady && !isSuperTalent) return null;
                                 return (
-                                  <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded border ${
+                                  <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded border ${
                                     isSuperTalent
                                       ? 'bg-amber-500/20 border-amber-500/30 text-amber-400'
                                       : 'bg-emerald-500/15 border-emerald-500/20 text-emerald-400'
@@ -752,7 +752,7 @@ export default function YouthAcademyTab({
                             </div>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               {player.injured && (
-                                <span className="flex items-center gap-0.5 text-[8px] text-red-400 font-bold">
+                                <span className="flex items-center gap-0.5 text-[10px] text-red-400 font-bold">
                                   <AlertTriangle size={8} />
                                   {player.injuryWeeksRemaining}h
                                 </span>
@@ -798,7 +798,7 @@ export default function YouthAcademyTab({
                               }
                             />
                           ))}
-                          <span className="text-[9px] font-mono text-white/30 ml-1.5">
+                          <span className="text-[10px] font-mono text-white/30 ml-1.5">
                             {player.potential}
                           </span>
                         </div>
@@ -806,7 +806,7 @@ export default function YouthAcademyTab({
 
                       {/* Development curve */}
                       <td className="px-4 py-3">
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${devColor.bg} ${devColor.text}`}>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${devColor.bg} ${devColor.text}`}>
                           {getDevelopmentCurveLabel(player.developmentCurve)}
                         </span>
                       </td>
@@ -816,7 +816,7 @@ export default function YouthAcademyTab({
                         {player.scoutReport ? (
                           <button
                             onClick={(e) => { e.stopPropagation(); setSelectedPlayer(player); }}
-                            className="flex items-center gap-1 text-[9px] font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
+                            className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
                           >
                             <Eye size={10} />
                             Rapor
@@ -824,7 +824,7 @@ export default function YouthAcademyTab({
                         ) : (
                           <button
                             onClick={(e) => { e.stopPropagation(); handleScoutPlayer(player); }}
-                            className="flex items-center gap-1 text-[9px] font-bold text-white/25 hover:text-blue-400 transition-colors"
+                            className="flex items-center gap-1 text-[10px] font-bold text-white/25 hover:text-blue-400 transition-colors"
                           >
                             <Eye size={10} />
                             Tara
@@ -845,13 +845,13 @@ export default function YouthAcademyTab({
                           {promotion.ready ? (
                             <button
                               onClick={(e) => { e.stopPropagation(); handlePromote(player); }}
-                              className="px-3 py-1.5 bg-emerald-500 text-black text-[9px] font-black uppercase tracking-wider rounded-lg
+                              className="px-3 py-1.5 bg-emerald-500 text-black text-[10px] font-black uppercase tracking-wider rounded-lg
                                 hover:bg-emerald-400 active:scale-95 transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]"
                             >
                               A Takımına Al
                             </button>
                           ) : (
-                            <span className="text-[8px] text-white/15 font-bold uppercase tracking-wider">
+                            <span className="text-[10px] text-white/15 font-bold uppercase tracking-wider">
                               {player.age < 17 ? 'Çok Genç' : `↑${95 - promotion.confidence}%`}
                             </span>
                           )}
@@ -950,7 +950,7 @@ export default function YouthAcademyTab({
                 {/* Rating + Potential */}
                 <div className="flex gap-3 shrink-0">
                   <div className="text-center px-4 py-2 bg-black/40 border border-white/[0.06] rounded-xl">
-                    <span className="text-[8px] font-black text-white/20 uppercase block mb-1">Rating</span>
+                    <span className="text-[10px] font-black text-white/20 uppercase block mb-1">Rating</span>
                     <span className={`text-lg font-mono font-black ${
                       selectedPlayer.rating >= 65 ? 'text-amber-400' : selectedPlayer.rating >= 55 ? 'text-white' : 'text-white/50'
                     }`}>
@@ -958,7 +958,7 @@ export default function YouthAcademyTab({
                     </span>
                   </div>
                   <div className="text-center px-4 py-2 bg-black/40 border border-white/[0.06] rounded-xl">
-                    <span className="text-[8px] font-black text-white/20 uppercase block mb-1">Potansiyel</span>
+                    <span className="text-[10px] font-black text-white/20 uppercase block mb-1">Potansiyel</span>
                     <div className="flex gap-0.5">
                       {[...Array(5)].map((_, i) => (
                         <Star
@@ -980,12 +980,12 @@ export default function YouthAcademyTab({
                   {/* Scout info */}
                   <div className="flex items-center gap-2 px-4 py-2 bg-black/30 border border-white/[0.04] rounded-xl">
                     <Eye size={12} className="text-blue-400" />
-                    <span className="text-[9px] font-bold text-blue-400">{selectedPlayer.scoutReport.scoutName}</span>
-                    <span className="text-[9px] text-white/15">•</span>
-                    <span className="text-[9px] text-white/20 font-mono">
+                    <span className="text-[10px] font-bold text-blue-400">{selectedPlayer.scoutReport.scoutName}</span>
+                    <span className="text-[10px] text-white/15">•</span>
+                    <span className="text-[10px] text-white/20 font-mono">
                       {new Date(selectedPlayer.scoutReport.date).toLocaleDateString('tr-TR')}
                     </span>
-                    <span className="ml-auto text-[9px] text-white/15">
+                    <span className="ml-auto text-[10px] text-white/15">
                       Önerilen: <span className="text-white/40 font-bold">{selectedPlayer.scoutReport.recommendedRole}</span>
                     </span>
                   </div>
@@ -1015,7 +1015,7 @@ export default function YouthAcademyTab({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Strengths */}
                     <div>
-                      <span className="text-[9px] font-black text-emerald-400/60 uppercase tracking-widest block mb-2">
+                      <span className="text-[10px] font-black text-emerald-400/60 uppercase tracking-widest block mb-2">
                         Güçlü Yönleri
                       </span>
                       <div className="flex flex-wrap gap-1.5">
@@ -1034,7 +1034,7 @@ export default function YouthAcademyTab({
                     </div>
                     {/* Weaknesses */}
                     <div>
-                      <span className="text-[9px] font-black text-red-400/60 uppercase tracking-widest block mb-2">
+                      <span className="text-[10px] font-black text-red-400/60 uppercase tracking-widest block mb-2">
                         Zayıf Yönleri
                       </span>
                       <div className="flex flex-wrap gap-1.5">
@@ -1078,14 +1078,14 @@ export default function YouthAcademyTab({
                         {getDevelopmentCurveLabel(selectedPlayer.developmentCurve)}
                       </span>
                     </div>
-                    <span className="text-[9px] text-white/15 font-mono">
+                    <span className="text-[10px] text-white/15 font-mono">
                       {selectedPlayer.totalTrainingWeeks} hafta eğitim
                     </span>
                   </div>
 
                   {/* Weekly training progress bars for key stats */}
                   <div>
-                    <span className="text-[9px] font-black text-white/25 uppercase tracking-widest block mb-3">
+                    <span className="text-[10px] font-black text-white/25 uppercase tracking-widest block mb-3">
                       Temel İstatistikler
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1096,7 +1096,7 @@ export default function YouthAcademyTab({
                         const barColor = statValue >= 70 ? 'bg-amber-400' : statValue >= 55 ? 'bg-emerald-400' : statValue >= 40 ? 'bg-blue-400' : 'bg-white/20';
                         return (
                           <div key={statKey} className="flex items-center gap-2.5 py-1.5 px-3 bg-black/20 rounded-lg">
-                            <span className="text-[9px] font-bold text-white/30 w-12 shrink-0 uppercase">
+                            <span className="text-[10px] font-bold text-white/30 w-12 shrink-0 uppercase">
                               {label}
                             </span>
                             <div className="flex-1 h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
@@ -1113,7 +1113,7 @@ export default function YouthAcademyTab({
                               {statValue}
                             </span>
                             {gained > 0 && (
-                              <span className="text-[8px] font-mono text-emerald-400/60 shrink-0">
+                              <span className="text-[10px] font-mono text-emerald-400/60 shrink-0">
                                 +{gained}
                               </span>
                             )}
@@ -1126,7 +1126,7 @@ export default function YouthAcademyTab({
                   {/* Personality traits */}
                   {selectedPlayer.personalityTraits.length > 0 && (
                     <div>
-                      <span className="text-[9px] font-black text-white/25 uppercase tracking-widest block mb-2">
+                      <span className="text-[10px] font-black text-white/25 uppercase tracking-widest block mb-2">
                         Kişilik Özellikleri
                       </span>
                       <div className="flex flex-wrap gap-1.5">
@@ -1135,7 +1135,7 @@ export default function YouthAcademyTab({
                           return (
                             <span
                               key={i}
-                              className={`px-2 py-0.5 rounded text-[9px] font-bold border ${
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                                 isPositive
                                   ? 'bg-emerald-500/10 border-emerald-500/15 text-emerald-400/70'
                                   : 'bg-red-500/10 border-red-500/15 text-red-400/70'
@@ -1152,7 +1152,7 @@ export default function YouthAcademyTab({
                   {/* Position traits */}
                   {selectedPlayer.traits.length > 0 && (
                     <div>
-                      <span className="text-[9px] font-black text-white/25 uppercase tracking-widest block mb-2">
+                      <span className="text-[10px] font-black text-white/25 uppercase tracking-widest block mb-2">
                         Yetenek Özellikleri
                       </span>
                       <div className="flex flex-wrap gap-1.5">
@@ -1163,7 +1163,7 @@ export default function YouthAcademyTab({
                             : level === 'LACIVERT' ? 'text-blue-400 border-blue-400/25 bg-blue-500/10'
                             : 'text-white/40 border-white/10 bg-white/5';
                           return (
-                            <span key={i} className={`px-2 py-0.5 rounded text-[9px] font-bold border ${levelColor}`}>
+                            <span key={i} className={`px-2 py-0.5 rounded text-[10px] font-bold border ${levelColor}`}>
                               {trait}
                               {level && <span className="ml-1 opacity-60">[{level}]</span>}
                             </span>
@@ -1176,7 +1176,7 @@ export default function YouthAcademyTab({
                   {/* Value + Actions */}
                   <div className="flex items-center justify-between pt-4 border-t border-white/[0.04]">
                     <div>
-                      <span className="text-[9px] font-black text-white/20 uppercase tracking-widest block mb-1">
+                      <span className="text-[10px] font-black text-white/20 uppercase tracking-widest block mb-1">
                         Tahmini Değer
                       </span>
                       <span className="text-lg font-mono font-black text-amber-400">
@@ -1242,7 +1242,7 @@ export default function YouthAcademyTab({
 
                   {/* Still show basic stats even without scout report */}
                   <div className="mt-6 pt-6 border-t border-white/[0.04]">
-                    <span className="text-[9px] font-black text-white/20 uppercase tracking-widest block mb-3">
+                    <span className="text-[10px] font-black text-white/20 uppercase tracking-widest block mb-3">
                       Temel İstatistikler
                     </span>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-md mx-auto">
@@ -1259,7 +1259,7 @@ export default function YouthAcademyTab({
                         const val = (selectedPlayer as Record<string, any>)[stat.key] as number ?? 50;
                         return (
                           <div key={stat.key} className="text-center py-2 bg-black/20 rounded-lg">
-                            <span className="text-[8px] text-white/20 block mb-0.5">{stat.label}</span>
+                            <span className="text-[10px] text-white/20 block mb-0.5">{stat.label}</span>
                             <span className={`text-[12px] font-mono font-bold ${
                               val >= 65 ? 'text-amber-400' : val >= 55 ? 'text-white/60' : 'text-white/30'
                             }`}>

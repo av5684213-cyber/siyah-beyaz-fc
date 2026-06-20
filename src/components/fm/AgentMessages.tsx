@@ -251,7 +251,7 @@ export default function AgentMessages({ userId, onUpdate }: AgentMessagesProps) 
             </CardTitle>
           </div>
           {unreadCount > 0 && (
-            <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-black px-2 py-0.5">
+            <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black px-2 py-0.5">
               {unreadCount} yeni
             </Badge>
           )}
@@ -297,7 +297,7 @@ export default function AgentMessages({ userId, onUpdate }: AgentMessagesProps) 
                           <span className={`text-xs font-bold ${!msg.is_read ? 'text-white/90' : 'text-white/60'} truncate`}>
                             {playerName}
                           </span>
-                          <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${config.bg} ${config.color} border ${config.border}`}>
+                          <span className={`text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${config.bg} ${config.color} border ${config.border}`}>
                             {config.label}
                           </span>
                         </div>
@@ -333,7 +333,7 @@ export default function AgentMessages({ userId, onUpdate }: AgentMessagesProps) 
                                 {msg.message_text}
                               </p>
                               <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5">
-                                <span className="text-[9px] text-white/25">
+                                <span className="text-[10px] text-white/25">
                                   {new Date(msg.created_at).toLocaleString('tr-TR', {
                                     day: 'numeric',
                                     month: 'short',
@@ -367,7 +367,7 @@ export default function AgentMessages({ userId, onUpdate }: AgentMessagesProps) 
                                     {opt.icon}
                                     <div className="min-w-0">
                                       <div className="text-[10px] font-bold truncate">{opt.label}</div>
-                                      <div className="text-[8px] opacity-60">{opt.desc}</div>
+                                      <div className="text-[10px] opacity-60">{opt.desc}</div>
                                     </div>
                                   </button>
                                 ))}

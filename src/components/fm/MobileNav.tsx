@@ -82,7 +82,7 @@ export default function MobileNav({ activeTab, onTabChange }: MobileNavProps) {
                   <div className="absolute -top-px left-1/2 -translate-x-1/2 w-8 h-0.5 bg-amber-400 rounded-full" />
                 )}
                 <Icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
-                <span className="text-[8px] font-bold uppercase tracking-wider">
+                <span className="text-[10px] font-bold uppercase tracking-wider">
                   {item.label}
                 </span>
               </button>

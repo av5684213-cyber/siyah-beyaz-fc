@@ -128,7 +128,7 @@ function FormDots({ results }: { results: FormResult[] }) {
       {results.map((result, i) => (
         <div key={i} className={`w-2.5 h-2.5 rounded-full ${colorMap[result]}`} />
       ))}
-      {results.length === 0 && <span className="text-[9px] text-white/15">—</span>}
+      {results.length === 0 && <span className="text-[10px] text-white/15">—</span>}
     </div>
   );
 }
@@ -142,7 +142,7 @@ function ResultPill({ result }: { result: 'W' | 'D' | 'L' | null }) {
   };
   const c = config[result];
   return (
-    <span className={`${c.bg} ${c.text} text-[9px] font-black px-1.5 py-0.5 rounded`}>
+    <span className={`${c.bg} ${c.text} text-[10px] font-black px-1.5 py-0.5 rounded`}>
       {c.label}
     </span>
   );
@@ -151,7 +151,7 @@ function ResultPill({ result }: { result: 'W' | 'D' | 'L' | null }) {
 function TeamShield({ name, isUser }: { name: string; isUser: boolean }) {
   return (
     <div
-      className={`w-7 h-7 rounded-md flex items-center justify-center text-[8px] font-black shrink-0 ${
+      className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 ${
         isUser
           ? 'bg-gradient-to-br from-amber-500/25 to-amber-700/15 text-amber-300 border border-amber-500/30'
           : 'bg-white/[0.05] text-white/40 border border-white/10'
@@ -295,11 +295,11 @@ export default function FixtureScreen({
               >
                 {tur}. Hafta
               </span>
-              <span className="text-[9px] text-white/15 font-semibold">
+              <span className="text-[10px] text-white/15 font-semibold">
                 — {matches.length} Maç
               </span>
               {isCurrentTur && (
-                <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold uppercase tracking-wider">
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold uppercase tracking-wider">
                   Mevcut
                 </span>
               )}
@@ -372,7 +372,7 @@ export default function FixtureScreen({
                           ) : isLive ? (
                             <div className="flex items-center justify-center gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                              <span className="text-[9px] font-black text-red-400 uppercase">Canlı</span>
+                              <span className="text-[10px] font-black text-red-400 uppercase">Canlı</span>
                             </div>
                           ) : (
                             <span className="text-[10px] text-white/25 font-semibold font-mono">
@@ -397,7 +397,7 @@ export default function FixtureScreen({
                               {match.home_team}
                             </span>
                             {isUserMatch && match.home_team === teamName && (
-                              <span className="ml-1 px-1.5 py-0.5 rounded text-[7px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">EV</span>
+                              <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">EV</span>
                             )}
                           </div>
                           <div className="flex items-center gap-2">
@@ -414,14 +414,14 @@ export default function FixtureScreen({
                               {match.away_team}
                             </span>
                             {isUserMatch && match.away_team === teamName && (
-                              <span className="ml-1 px-1.5 py-0.5 rounded text-[7px] font-black uppercase bg-sky-500/20 text-sky-400 border border-sky-500/20">DEP</span>
+                              <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-sky-500/20 text-sky-400 border border-sky-500/20">DEP</span>
                             )}
                           </div>
                         </div>
 
                         {/* Date */}
                         <div className="w-14 shrink-0 text-right hidden sm:block">
-                          <span className="text-[9px] text-white/20">
+                          <span className="text-[10px] text-white/20">
                             {formatDate(match.match_date)}
                           </span>
                         </div>
@@ -433,7 +433,7 @@ export default function FixtureScreen({
                               e.stopPropagation();
                               onWatchMatch(match);
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-red-600/90 to-red-500/90 hover:from-red-500 hover:to-red-400 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-[0_0_10px_rgba(239,68,68,0.2)] transition-all hover:scale-105 active:scale-95 animate-pulse shrink-0"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-red-600/90 to-red-500/90 hover:from-red-500 hover:to-red-400 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-[0_0_10px_rgba(239,68,68,0.2)] transition-all hover:scale-105 active:scale-95 animate-pulse shrink-0"
                           >
                             <Eye size={9} />
                             İzle
@@ -460,17 +460,17 @@ export default function FixtureScreen({
         <table className="w-full min-w-[640px]">
           <thead>
             <tr className="bg-white/[0.03] border-b border-white/[0.06]">
-              <th className="text-left px-4 py-2.5 text-[9px] font-bold uppercase tracking-widest text-white/30 w-8">#</th>
-              <th className="text-left px-4 py-2.5 text-[9px] font-bold uppercase tracking-widest text-white/30">Takım</th>
-              <th className="text-center px-2 py-2.5 text-[9px] font-bold uppercase tracking-widest text-white/30 w-10">O</th>
-              <th className="text-center px-2 py-2.5 text-[9px] font-bold uppercase tracking-widest text-white/30 w-10">G</th>
-              <th className="text-center px-2 py-2.5 text-[9px] font-bold uppercase tracking-widest text-white/30 w-10">B</th>
-              <th className="text-center px-2 py-2.5 text-[9px] font-bold uppercase tracking-widest text-white/30 w-10">M</th>
-              <th className="text-center px-2 py-2.5 text-[9px] font-bold uppercase tracking-widest text-white/30 w-10">AG</th>
-              <th className="text-center px-2 py-2.5 text-[9px] font-bold uppercase tracking-widest text-white/30 w-10">YG</th>
-              <th className="text-center px-2 py-2.5 text-[9px] font-bold uppercase tracking-widest text-white/30 w-12">Averaj</th>
-              <th className="text-center px-3 py-2.5 text-[9px] font-bold uppercase tracking-widest text-white/30 w-28">Form</th>
-              <th className="text-center px-4 py-2.5 text-[9px] font-bold uppercase tracking-widest text-white/30 w-12">Puan</th>
+              <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/30 w-8">#</th>
+              <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/30">Takım</th>
+              <th className="text-center px-2 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/30 w-10">O</th>
+              <th className="text-center px-2 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/30 w-10">G</th>
+              <th className="text-center px-2 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/30 w-10">B</th>
+              <th className="text-center px-2 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/30 w-10">M</th>
+              <th className="text-center px-2 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/30 w-10">AG</th>
+              <th className="text-center px-2 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/30 w-10">YG</th>
+              <th className="text-center px-2 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/30 w-12">Averaj</th>
+              <th className="text-center px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/30 w-28">Form</th>
+              <th className="text-center px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-white/30 w-12">Puan</th>
             </tr>
           </thead>
           <tbody>
@@ -531,7 +531,7 @@ export default function FixtureScreen({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div
-                        className={`w-6 h-6 rounded-md flex items-center justify-center text-[9px] font-bold ${
+                        className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold ${
                           isUserTeam
                             ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                             : 'bg-white/[0.05] text-white/40'
@@ -583,15 +583,15 @@ export default function FixtureScreen({
       <div className="flex items-center gap-4 px-4 py-2.5 border-t border-white/[0.04] bg-white/[0.01]">
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-2.5 rounded-sm bg-emerald-500/30 border border-emerald-500/40" />
-          <span className="text-[9px] text-white/25">Şampiyonluk / Yükselme</span>
+          <span className="text-[10px] text-white/25">Şampiyonluk / Yükselme</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-2.5 rounded-sm bg-red-500/30 border border-red-500/40" />
-          <span className="text-[9px] text-white/25">Düşme</span>
+          <span className="text-[10px] text-white/25">Düşme</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-2.5 rounded-sm bg-amber-500/30 border border-amber-500/40" />
-          <span className="text-[9px] text-white/25">Takımın</span>
+          <span className="text-[10px] text-white/25">Takımın</span>
         </div>
       </div>
     </div>
@@ -651,7 +651,7 @@ export default function FixtureScreen({
               <div className="w-16 shrink-0">
                 {isUserMatch && resultColor ? (
                   <span
-                    className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                    className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
                       resultColor === 'emerald'
                         ? 'bg-emerald-500/15 text-emerald-400'
                         : resultColor === 'amber'
@@ -682,7 +682,7 @@ export default function FixtureScreen({
                       {match.home_team}
                     </span>
                     {isUserMatch && match.home_team === teamName && (
-                      <span className="px-1.5 py-0.5 rounded text-[7px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">EV</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">EV</span>
                     )}
                   </div>
 
@@ -696,7 +696,7 @@ export default function FixtureScreen({
                     >
                       {match.home_score}
                     </span>
-                    <span className="text-[9px] text-white/20">-</span>
+                    <span className="text-[10px] text-white/20">-</span>
                     <span
                       className={`text-sm font-black tabular-nums ${
                         isUserMatch && resultColor === 'emerald' ? 'text-emerald-400'
@@ -710,7 +710,7 @@ export default function FixtureScreen({
                   {/* Away team */}
                   <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
                     {isUserMatch && match.away_team === teamName && (
-                      <span className="px-1.5 py-0.5 rounded text-[7px] font-black uppercase bg-sky-500/20 text-sky-400 border border-sky-500/20">DEP</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-sky-500/20 text-sky-400 border border-sky-500/20">DEP</span>
                     )}
                     <span
                       className={`text-[11px] font-bold truncate ${
@@ -723,7 +723,7 @@ export default function FixtureScreen({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-[9px] text-white/15">
+                  <span className="text-[10px] text-white/15">
                     {formatDate(match.match_date)} · {match.match_time}
                   </span>
                 </div>

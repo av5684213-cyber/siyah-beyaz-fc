@@ -128,7 +128,7 @@ export default function LeagueInfoCard({ profileId }: { profileId: string }) {
             <p className={`text-xs font-black ${colors.text}`}>{leagueInfo.leagueName || tierLabel}</p>
           </div>
         </div>
-        <span className={`px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-wider border ${colors.badge}`}>
+        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${colors.badge}`}>
           {leagueInfo.tier}. KADEME
         </span>
       </div>
@@ -136,18 +136,18 @@ export default function LeagueInfoCard({ profileId }: { profileId: string }) {
       {/* Sıralama */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-black/30 border border-white/[0.04] rounded-xl p-3 text-center">
-          <span className="text-[8px] text-white/20 uppercase font-bold tracking-widest">Sıra</span>
+          <span className="text-[10px] text-white/20 uppercase font-bold tracking-widest">Sıra</span>
           <div className="flex items-baseline justify-center gap-1 mt-1">
             <span className="text-xl font-black font-mono text-white">{leagueInfo.position || '-'}</span>
-            <span className="text-[9px] text-white/20">/ {leagueInfo.totalTeams || 18}</span>
+            <span className="text-[10px] text-white/20">/ {leagueInfo.totalTeams || 18}</span>
           </div>
         </div>
         <div className="bg-black/30 border border-white/[0.04] rounded-xl p-3 text-center">
-          <span className="text-[8px] text-white/20 uppercase font-bold tracking-widest">Puan</span>
+          <span className="text-[10px] text-white/20 uppercase font-bold tracking-widest">Puan</span>
           <p className="text-xl font-black font-mono text-white mt-1">{leagueInfo.points || 0}</p>
         </div>
         <div className="bg-black/30 border border-white/[0.04] rounded-xl p-3 text-center">
-          <span className="text-[8px] text-white/20 uppercase font-bold tracking-widest">Lig</span>
+          <span className="text-[10px] text-white/20 uppercase font-bold tracking-widest">Lig</span>
           <p className={`text-lg font-black ${colors.text} mt-1`}>{tierLabel}</p>
         </div>
       </div>
@@ -163,14 +163,14 @@ export default function LeagueInfoCard({ profileId }: { profileId: string }) {
 
       {/* Açıklama */}
       {leagueInfo.tier > 1 && (
-        <p className="text-[9px] text-white/20 leading-relaxed">
+        <p className="text-[10px] text-white/20 leading-relaxed">
           {leagueInfo.tier === 4
             ? '4. Lig\'den düşme yok. İlk 2 sıra bir üst lige yükselir (şampiyon doğrudan, playoff kazananı da).'
             : `${tierLabel}'de son 2 sıra küme düşer. İlk 2 sıra bir üst lige yükselir.`}
         </p>
       )}
       {leagueInfo.tier === 1 && (
-        <p className="text-[9px] text-white/20 leading-relaxed">
+        <p className="text-[10px] text-white/20 leading-relaxed">
           1. Lig şampiyonluk mücadelesi. Son 2 sıra 2. Lig'e düşer.
         </p>
       )}

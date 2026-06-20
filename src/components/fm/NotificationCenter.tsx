@@ -113,7 +113,7 @@ export default function NotificationCenter({ profileId, supabase }: Notification
       >
         <Bell size={18} className="text-white/60" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -137,14 +137,14 @@ export default function NotificationCenter({ profileId, supabase }: Notification
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllAsRead}
-                    className="text-[9px] font-bold text-amber-400 hover:text-amber-300 transition-colors"
+                    className="text-[10px] font-bold text-amber-400 hover:text-amber-300 transition-colors"
                   >
                     Tümünü Oku
                   </button>
                 )}
                 <button
                   onClick={clearAll}
-                  className="text-[9px] font-bold text-red-400 hover:text-red-300 transition-colors"
+                  className="text-[10px] font-bold text-red-400 hover:text-red-300 transition-colors"
                 >
                   Temizle
                 </button>
@@ -187,7 +187,7 @@ export default function NotificationCenter({ profileId, supabase }: Notification
                       <p className="text-[10px] text-white/40 line-clamp-2 mt-0.5">
                         {notif.body}
                       </p>
-                      <p className="text-[9px] text-white/20 mt-1">
+                      <p className="text-[10px] text-white/20 mt-1">
                         {formatDistanceToNow(new Date(notif.created_at))}
                       </p>
                     </div>

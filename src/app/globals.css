@@ -704,3 +704,91 @@ img {
     -ms-overflow-style: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBİL KUSURSUZLUK — Son ayarlar
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Mobilde pull-to-refresh'i engelle (sayfa içi scroll için) */
+html {
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobilde touch-action: yatay swipe için pan-y, dikey scroll için pan-x */
+/* Sadece content alanında, button/form elementlerinde değil */
+@media (max-width: 1023px) {
+  section, main, article, .scrollable-content {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Mobilde input zoom'u tamamen engelle */
+@media (max-width: 639px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Mobilde resim sürükleme ve uzun basma menüsünü engelle */
+img, picture, video {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* Mobilde link ve button uzun basma menüsünü engelle */
+a, button, [role="button"] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Mobilde scroll bar tamamen gizli (temiz görünüm) */
+@media (max-width: 1023px) {
+  ::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+  }
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+}
+
+/* Mobilde text selection kapalı (app-like deneyim) */
+@media (max-width: 1023px) {
+  body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  input, textarea, [contenteditable] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+  }
+}
+
+/* iOS Safari: 100vh hatası düzeltmesi */
+@media (max-width: 1023px) {
+  .h-screen, .min-h-screen {
+    height: 100vh;
+    height: 100dvh; /* dynamic viewport height — iOS 15+ */
+  }
+  .max-h-screen {
+    max-height: 100vh;
+    max-height: 100dvh;
+  }
+}
+
+/* Mobilde active feedback — butona basınca görsel tepki */
+@media (max-width: 1023px) {
+  button:active, a:active, [role="button"]:active {
+    transform: scale(0.97);
+    transition: transform 0.05s ease;
+  }
+}

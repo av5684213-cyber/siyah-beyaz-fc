@@ -150,19 +150,19 @@ export default function ContractOfferModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="bg-zinc-900 border border-white/10 rounded-[2rem] w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl relative"
+          className="bg-zinc-900 border border-white/10 rounded-[2rem] w-full max-w-md sm:max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl rounded-2xl sm:rounded-[2rem] relative"
           onClick={(e) => e.stopPropagation()}
           style={{ transform: `translate(${position.x}px, ${position.y}px)`, userSelect: isDragging ? 'none' : 'auto' }}
         >
           {/* Drag Handle */}
           <div
             ref={handleRef}
-            className="flex items-center justify-center px-4 py-1 bg-zinc-900 border-b border-white/[0.04] cursor-grab active:cursor-grabbing hover:bg-zinc-800/50 transition-colors select-none rounded-t-[2rem]"
+            className="flex items-center justify-center px-4 py-1 bg-zinc-900 border-b border-white/[0.04] cursor-grab active:cursor-grabbing hover:bg-zinc-800/50 transition-colors select-none rounded-t-2xl sm:rounded-t-[2rem]"
             title="Sürüklemek için tutun · Çift tıklayın: sıfırla"
           >
             <div className="flex items-center gap-2 text-white/20">
               <div className="w-10 h-1 rounded-full bg-white/15" />
-              <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">sürükle</span>
               <div className="w-10 h-1 rounded-full bg-white/15" />
             </div>
           </div>
@@ -201,7 +201,7 @@ export default function ContractOfferModal({
               </div>
               <div className="text-right">
                 <div className="text-2xl font-black text-emerald-400">{rating}</div>
-                <div className="text-[8px] text-white/30 uppercase tracking-widest">Klt</div>
+                <div className="text-[10px] text-white/30 uppercase tracking-widest">Klt</div>
               </div>
             </div>
 
@@ -216,7 +216,7 @@ export default function ContractOfferModal({
               ].map((s) => (
                 <div key={s.label} className="text-center bg-white/5 rounded-xl p-2">
                   <div className="text-[11px] font-black text-white/80">{s.val}</div>
-                  <div className="text-[7px] font-black text-white/30 uppercase">{s.label}</div>
+                  <div className="text-[10px] font-black text-white/30 uppercase">{s.label}</div>
                 </div>
               ))}
             </div>
@@ -263,13 +263,13 @@ export default function ContractOfferModal({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-3">
-                <div className="text-[8px] font-black text-amber-400/60 uppercase tracking-widest mb-1">Haftalik Ucret (Euro)</div>
+                <div className="text-[10px] font-black text-amber-400/60 uppercase tracking-widest mb-1">Haftalik Ucret (Euro)</div>
                 <div className="text-sm font-black text-amber-300">
                   {formatEuro(demands.minWeeklySalary)} - {formatEuro(demands.maxWeeklySalary)}
                 </div>
               </div>
               <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-3">
-                <div className="text-[8px] font-black text-amber-400/60 uppercase tracking-widest mb-1">Imza Ucreti (Kredi)</div>
+                <div className="text-[10px] font-black text-amber-400/60 uppercase tracking-widest mb-1">Imza Ucreti (Kredi)</div>
                 <div className="text-sm font-black text-amber-300">
                   {demands.minSigningFee} - {demands.maxSigningFee}
                 </div>
@@ -288,7 +288,7 @@ export default function ContractOfferModal({
 
             {/* Weekly Salary */}
             <div className="space-y-2">
-              <label className="flex items-center gap-1.5 text-[9px] font-black text-white/40 uppercase tracking-widest">
+              <label className="flex items-center gap-1.5 text-[10px] font-black text-white/40 uppercase tracking-widest">
                 <Euro size={10} />
                 Haftalik Ucret (Euro)
               </label>
@@ -309,7 +309,7 @@ export default function ContractOfferModal({
                   }}
                 />
               </div>
-              <div className="flex justify-between text-[8px] text-white/20">
+              <div className="flex justify-between text-[10px] text-white/20">
                 <span>{formatEuro(demands.minWeeklySalary)}</span>
                 <span>{formatEuro(demands.maxWeeklySalary)}</span>
               </div>
@@ -317,7 +317,7 @@ export default function ContractOfferModal({
 
             {/* Contract Duration */}
             <div className="space-y-2">
-              <label className="flex items-center gap-1.5 text-[9px] font-black text-white/40 uppercase tracking-widest">
+              <label className="flex items-center gap-1.5 text-[10px] font-black text-white/40 uppercase tracking-widest">
                 <Calendar size={10} />
                 Sozlesme Suresi (Hafta): {contractWeeks}
               </label>
@@ -329,7 +329,7 @@ export default function ContractOfferModal({
                 onChange={(e) => setContractWeeks(Number(e.target.value))}
                 className="w-full h-2 bg-zinc-800 rounded-full appearance-none cursor-pointer accent-emerald-500"
               />
-              <div className="flex justify-between text-[8px] text-white/20">
+              <div className="flex justify-between text-[10px] text-white/20">
                 <span>1 Hafta</span>
                 <span>17 Hafta (Yarim Sezon)</span>
                 <span>34 Hafta (Tam Sezon)</span>
@@ -338,7 +338,7 @@ export default function ContractOfferModal({
 
             {/* Signing Fee */}
             <div className="space-y-2">
-              <label className="flex items-center gap-1.5 text-[9px] font-black text-white/40 uppercase tracking-widest">
+              <label className="flex items-center gap-1.5 text-[10px] font-black text-white/40 uppercase tracking-widest">
                 <Coins size={10} />
                 Imza Ucreti (Kredi)
               </label>
@@ -359,7 +359,7 @@ export default function ContractOfferModal({
                   }}
                 />
               </div>
-              <div className="flex justify-between text-[8px] text-white/20">
+              <div className="flex justify-between text-[10px] text-white/20">
                 <span>{demands.minSigningFee} Kredi</span>
                 <span>{demands.maxSigningFee} Kredi</span>
               </div>
@@ -367,7 +367,7 @@ export default function ContractOfferModal({
 
             {/* Cost Summary */}
             <div className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-2">
-              <div className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-2">Maliyet Ozeti</div>
+              <div className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-2">Maliyet Ozeti</div>
               {!isAuctionWin && (
                 <div className="flex justify-between text-[11px]">
                   <span className="text-white/50">Transfer Bedeli (Euro)</span>

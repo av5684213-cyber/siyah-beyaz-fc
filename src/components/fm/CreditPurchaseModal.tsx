@@ -148,18 +148,18 @@ export default function CreditPurchaseModal({ currentCredits, userId, onClose, o
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 30 }}
           transition={{ type: 'spring', damping: 25 }}
-          className="relative w-full max-w-lg bg-zinc-900 border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl"
+          className="relative w-full max-w-md sm:max-w-lg bg-zinc-900 border border-white/10 rounded-2xl sm:rounded-[2rem] overflow-hidden shadow-2xl"
           style={{ transform: `translate(${position.x}px, ${position.y}px)`, userSelect: isDragging ? 'none' : 'auto' }}
         >
           {/* Drag Handle */}
           <div
             ref={handleRef}
-            className="flex items-center justify-center px-4 py-1 bg-zinc-900 border-b border-white/[0.04] cursor-grab active:cursor-grabbing hover:bg-zinc-800/50 transition-colors select-none rounded-t-[2rem]"
+            className="flex items-center justify-center px-4 py-1 bg-zinc-900 border-b border-white/[0.04] cursor-grab active:cursor-grabbing hover:bg-zinc-800/50 transition-colors select-none rounded-t-2xl sm:rounded-t-[2rem]"
             title="Sürüklemek için tutun · Çift tıklayın: sıfırla"
           >
             <div className="flex items-center gap-2 text-white/20">
               <div className="w-10 h-1 rounded-full bg-white/15" />
-              <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">sürükle</span>
               <div className="w-10 h-1 rounded-full bg-white/15" />
             </div>
           </div>
@@ -207,7 +207,7 @@ export default function CreditPurchaseModal({ currentCredits, userId, onClose, o
                 >
                   {/* Popular badge */}
                   {pkg.popular && (
-                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-blue-500 rounded-full text-[7px] font-black uppercase tracking-widest text-white shadow-lg">
+                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-blue-500 rounded-full text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
                       En Popüler
                     </div>
                   )}
@@ -222,12 +222,12 @@ export default function CreditPurchaseModal({ currentCredits, userId, onClose, o
                           <span className={`text-lg font-black ${colors.text}`}>{pkg.credits}</span>
                           <span className="text-[10px] font-bold text-white/40 uppercase">Kredi</span>
                           {pkg.bonus > 0 && (
-                            <span className="px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase rounded">
+                            <span className="px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase rounded">
                               +{pkg.bonus} Bonus
                             </span>
                           )}
                         </div>
-                        <p className="text-[9px] text-white/25 mt-0.5">
+                        <p className="text-[10px] text-white/25 mt-0.5">
                           Toplam: {totalCredits} Kredi • {pkg.price}
                         </p>
                       </div>
@@ -265,7 +265,7 @@ export default function CreditPurchaseModal({ currentCredits, userId, onClose, o
 
           {/* Footer Note */}
           <div className="px-6 pb-6">
-            <p className="text-[8px] text-white/15 text-center uppercase tracking-widest leading-relaxed">
+            <p className="text-[10px] text-white/15 text-center uppercase tracking-widest leading-relaxed">
               Krediler aninda hesabiniza eklenir. Simulasyon modunda krediler ucretsiz saglanir.
             </p>
           </div>

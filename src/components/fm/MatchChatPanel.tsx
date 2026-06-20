@@ -72,7 +72,7 @@ function MessageBubble({ msg, isOwn }: { msg: MatchChatMessage; isOwn: boolean }
       >
         <span className="text-lg">{msg.content}</span>
         <span className="text-white/30 text-[10px]">{msg.sender_name}</span>
-        {msg.minute && <span className="text-white/15 text-[9px]">{msg.minute}'</span>}
+        {msg.minute && <span className="text-white/15 text-[10px]">{msg.minute}'</span>}
       </motion.div>
     );
   }
@@ -99,7 +99,7 @@ function MessageBubble({ msg, isOwn }: { msg: MatchChatMessage; isOwn: boolean }
         <span className={`text-[10px] font-bold ${isOwn ? 'text-red-400' : 'text-white/50'} uppercase tracking-tight`}>
           {msg.sender_name}
         </span>
-        <span className="text-white/15 text-[8px]">
+        <span className="text-white/15 text-[10px]">
           {new Date(msg.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
@@ -216,7 +216,7 @@ export default function MatchChatPanel({
           <span className="text-white/70 text-xs font-bold uppercase tracking-wider">CANLI SOHBET</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-white/20 text-[9px]">{chatCount} mesaj • {reactionCount} reaksiyon</span>
+          <span className="text-white/20 text-[10px]">{chatCount} mesaj • {reactionCount} reaksiyon</span>
           {onToggleCollapse && (
             <button
               onClick={onToggleCollapse}

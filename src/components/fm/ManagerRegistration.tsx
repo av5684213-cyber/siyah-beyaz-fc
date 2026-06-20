@@ -314,8 +314,8 @@ export default function ManagerRegistration() {
                     <div className={`w-6 h-6 rounded-lg flex items-center justify-center mb-1 ${philosophy === p.id ? 'bg-black' : 'bg-white/5'}`}>
                       {React.cloneElement(p.icon as React.ReactElement, { size: 12, className: philosophy === p.id ? 'text-white' : (p.icon as React.ReactElement).props.className })}
                     </div>
-                    <div className={`text-[9px] font-black uppercase tracking-widest ${philosophy === p.id ? 'text-black' : 'text-white'}`}>{p.name}</div>
-                    <div className={`text-[7px] font-bold uppercase ${philosophy === p.id ? 'text-black/40' : 'text-emerald-400'}`}>{p.bonus}</div>
+                    <div className={`text-[10px] font-black uppercase tracking-widest ${philosophy === p.id ? 'text-black' : 'text-white'}`}>{p.name}</div>
+                    <div className={`text-[10px] font-bold uppercase ${philosophy === p.id ? 'text-black/40' : 'text-emerald-400'}`}>{p.bonus}</div>
                   </button>
                 ))}
               </div>

@@ -122,7 +122,7 @@ export default React.memo(function PlayerRow({
     >
       <div className="flex flex-col shrink-0 w-48 min-w-0">
           {(player.club || player.team_name) && (
-            <span className="text-[8px] font-bold uppercase tracking-wider text-amber-400/60 block leading-none mb-0.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400/60 block leading-none mb-0.5">
               {toTitleCase(player.club || player.team_name || '')}
             </span>
           )}
@@ -137,26 +137,26 @@ export default React.memo(function PlayerRow({
               <span className="text-[10px] text-amber-400 drop-shadow-sm" title="Kulüp Efsanesi">⭐</span>
             )}
             {player.is_for_sale && (
-              <span className="px-1 py-0 rounded-sm bg-emerald-500/20 border border-emerald-500/30 text-[6px] font-bold uppercase text-emerald-400 shrink-0">
+              <span className="px-1 py-0 rounded-sm bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold uppercase text-emerald-400 shrink-0">
                 LİSTEDE
               </span>
             )}
             {Math.round(player.cond || 100) < 40 && (
-              <span className="text-[8px] bg-red-500/20 text-red-400 px-1 rounded">YORGUN</span>
+              <span className="text-[10px] bg-red-500/20 text-red-400 px-1 rounded">YORGUN</span>
             )}
           </div>
           <div className="flex items-center gap-2 mt-1 whitespace-nowrap">
-             <span className="text-[7px] font-bold text-white/40 uppercase tracking-widest leading-none shrink-0">{toTitleCase(teamName || 'Boşta')}</span>
+             <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest leading-none shrink-0">{toTitleCase(teamName || 'Boşta')}</span>
              <span className="w-1 h-1 bg-white/10 rounded-full shrink-0" />
-             <span className="text-[7px] font-bold text-white/20 uppercase tracking-widest leading-none shrink-0">{player.age} YAŞ</span>
+             <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest leading-none shrink-0">{player.age} YAŞ</span>
              <span className="w-1 h-1 bg-white/10 rounded-full shrink-0" />
-             <span className="text-[7px] font-mono font-bold text-emerald-500/60 leading-none shrink-0">{formatCurrency(marketValue)}</span>
+             <span className="text-[10px] font-mono font-bold text-emerald-500/60 leading-none shrink-0">{formatCurrency(marketValue)}</span>
           </div>
           
           {/* TRAITS & PLAYSTYLE AT BOTTOM LEFT OF CARD INFO */}
           <div className="flex flex-wrap gap-1 mt-1.5">
             {player.playStyle && (
-              <div className="px-1.5 py-0.5 rounded-sm bg-white/10 border border-white/10 text-[6px] font-black uppercase text-white/60 tracking-wider">
+              <div className="px-1.5 py-0.5 rounded-sm bg-white/10 border border-white/10 text-[10px] font-black uppercase text-white/60 tracking-wider">
                 {player.scouted || isAdmin || isOwnTeam ? player.playStyle : '(? STİL)'}
               </div>
             )}
@@ -166,7 +166,7 @@ export default React.memo(function PlayerRow({
               const level = player.traitLevels?.[tname] || info.level;
               const traitStyles = getTraitColor(level);
               return (
-                <div key={idx} className={`px-1.5 py-0.5 rounded-sm bg-gradient-to-br border text-[6px] font-black uppercase tracking-wider transition-all hover:scale-110 cursor-help ${traitStyles}`}>
+                <div key={idx} className={`px-1.5 py-0.5 rounded-sm bg-gradient-to-br border text-[10px] font-black uppercase tracking-wider transition-all hover:scale-110 cursor-help ${traitStyles}`}>
                   {player.scouted || isAdmin || isOwnTeam ? tname : '??'}
                 </div>
               );
@@ -193,7 +193,7 @@ export default React.memo(function PlayerRow({
                   isFocused ? 'bg-white/20 text-white border border-white/30' : 'bg-black/40 hover:bg-white/5'
               }`}
             >
-              <span className={`text-[9px] font-mono font-bold leading-none ${
+              <span className={`text-[10px] font-mono font-bold leading-none ${
                   isFocused ? 'text-white' :
                   isSpecial ? 'text-white/80' :
                   s.key === 'cond' ? (Number(s.val) >= 70 ? 'text-emerald-400' : Number(s.val) >= 40 ? 'text-amber-400' : 'text-red-400') : 

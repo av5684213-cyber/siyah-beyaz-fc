@@ -160,7 +160,7 @@ function StatBox({ label, value, icon }: { label: string; value: number | string
     <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-3 text-center">
       {icon && <div className="mb-1 flex justify-center">{icon}</div>}
       <div className="text-white/90 text-lg font-bold">{value}</div>
-      <div className="text-white/30 text-[9px] uppercase tracking-wider">{label}</div>
+      <div className="text-white/30 text-[10px] uppercase tracking-wider">{label}</div>
     </div>
   );
 }
@@ -337,7 +337,7 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
               <div key={item.type} className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-2 text-center">
                 <div className="text-2xl mb-1">{label.icon}</div>
                 <div className={`text-lg font-bold ${label.color}`}>{item.count}</div>
-                <div className="text-white/30 text-[8px] uppercase">{label.title}</div>
+                <div className="text-white/30 text-[10px] uppercase">{label.title}</div>
               </div>
             );
           })}
@@ -376,7 +376,7 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
                 )}
               </div>
               {!m.unlocked && (
-                <div className="absolute bottom-1 right-2 text-white/15 text-[8px]">{m.requirement}</div>
+                <div className="absolute bottom-1 right-2 text-white/15 text-[10px]">{m.requirement}</div>
               )}
             </motion.div>
           ))}
@@ -465,11 +465,11 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
                             {/* Best 11 special render */}
                             {award.award_type === 'best_11' && award.stat_detail && (
                               <div className="mt-2 space-y-1 ml-8">
-                                <p className="text-[8px] font-black uppercase tracking-widest text-white/20 mb-2">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-2">
                                   Sezonun En İyi 11'i
                                 </p>
                                 {Object.entries(award.stat_detail as Record<string, any>).map(([slot, player]) => (
-                                  <div key={slot} className="flex items-center justify-between text-[9px] bg-white/[0.02] rounded-lg px-2 py-1">
+                                  <div key={slot} className="flex items-center justify-between text-[10px] bg-white/[0.02] rounded-lg px-2 py-1">
                                     <span className="text-white/30 font-bold w-10">{slot}</span>
                                     <span className="text-white/60 font-bold flex-1">{(player as any).name}</span>
                                     <span className="text-amber-400 font-black">{((player as any).rating || 0).toFixed(0)}</span>
@@ -520,7 +520,7 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
                         {trophy.league_name || trophy.team_name || ''}
                       </p>
                       {trophy.season && (
-                        <p className="text-white/25 text-[9px]">{trophy.season.replace('S', 'Sezon ').replace('_', ' ')}</p>
+                        <p className="text-white/25 text-[10px]">{trophy.season.replace('S', 'Sezon ').replace('_', ' ')}</p>
                       )}
                     </div>
                   </div>
@@ -564,7 +564,7 @@ export default function TrophyCabinetTab({ profileId, teamName }: TrophyCabinetT
                   transition={{ delay: idx * 0.03 }}
                   className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-3 flex items-center gap-3"
                 >
-                  <div className={`px-2 py-1 rounded-lg border text-[9px] font-bold ${tierClass}`}>
+                  <div className={`px-2 py-1 rounded-lg border text-[10px] font-bold ${tierClass}`}>
                     {tierLabels[entry.legend_tier] || 'Bronz'}
                   </div>
                   <div className="flex-1 min-w-0">

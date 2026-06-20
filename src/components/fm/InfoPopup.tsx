@@ -66,7 +66,7 @@ export default function InfoPopup({ title, infoKey, isOpen, onClose }: InfoPopup
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-widest text-white/40 hover:bg-white/10 hover:text-white transition-all"
+                  className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-white/40 hover:bg-white/10 hover:text-white transition-all"
                 >
                   Anladım
                 </button>

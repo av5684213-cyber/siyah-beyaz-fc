@@ -226,7 +226,7 @@ export default function RefereeSection() {
           <div className="flex items-center gap-4 mt-4 flex-wrap">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg">
               <Gavel size={10} className="text-amber-400" />
-              <span className="text-[9px] font-black text-white/40 uppercase tracking-wider">
+              <span className="text-[10px] font-black text-white/40 uppercase tracking-wider">
                 {referees.length} Hakem
               </span>
             </div>
@@ -259,7 +259,7 @@ export default function RefereeSection() {
                   <span className="text-lg">{emoji}</span>
                 </div>
                 <div className="text-right">
-                  <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${colors.text} ${colors.bg} ${colors.border}`}>
+                  <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${colors.text} ${colors.bg} ${colors.border}`}>
                     {label}
                   </span>
                 </div>
@@ -278,7 +278,7 @@ export default function RefereeSection() {
               {/* Strictness bar */}
               <div className="mb-3">
                 <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">Sertlik</span>
+                  <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Sertlik</span>
                   <span className="text-[10px] font-mono font-bold text-white/50">{strictness}</span>
                 </div>
                 <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
@@ -291,7 +291,7 @@ export default function RefereeSection() {
 
               {/* Experience stars */}
               <div className="flex items-center justify-between">
-                <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">Deneyim</span>
+                <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Deneyim</span>
                 <div className="flex gap-0.5">
                   {[...Array(10)].map((_, si) => (
                     <Star
@@ -305,7 +305,7 @@ export default function RefereeSection() {
 
               {/* Stats summary */}
               {(ref.total_matches != null && ref.total_matches > 0 || ref.total_yellows != null && ref.total_yellows > 0 || ref.total_reds != null && ref.total_reds > 0) && (
-                <div className="mt-3 pt-3 border-t border-white/5 flex items-center gap-3 text-[8px] font-bold text-white/20 uppercase">
+                <div className="mt-3 pt-3 border-t border-white/5 flex items-center gap-3 text-[10px] font-bold text-white/20 uppercase">
                   {ref.total_matches != null && ref.total_matches > 0 && (
                     <span className="flex items-center gap-1">
                       <Shield size={8} />

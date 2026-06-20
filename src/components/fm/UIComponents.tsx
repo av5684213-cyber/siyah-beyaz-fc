@@ -22,17 +22,17 @@ export const NavButton = ({ icon, label, active, onClick, badge, className, disa
     {icon}
     <span>{label}</span>
     {disabled && (
-      <span className="absolute right-2 text-[7px] font-black uppercase tracking-widest text-white/20 bg-white/5 px-1.5 py-0.5 rounded">
+      <span className="absolute right-2 text-[10px] font-black uppercase tracking-widest text-white/20 bg-white/5 px-1.5 py-0.5 rounded">
         YAKINDA
       </span>
     )}
     {dimmed && !disabled && (
-      <span className="absolute right-2 text-[7px] font-black uppercase tracking-widest text-amber-500/30 bg-amber-500/5 px-1.5 py-0.5 rounded">
+      <span className="absolute right-2 text-[10px] font-black uppercase tracking-widest text-amber-500/30 bg-amber-500/5 px-1.5 py-0.5 rounded">
         BETA
       </span>
     )}
     {badge && (
-      <span className="absolute -right-1 -top-1 bg-red-600 text-white text-[7px] px-2 py-0.5 rounded-full font-black animate-pulse shadow-lg border border-white/20 whitespace-nowrap">
+      <span className="absolute -right-1 -top-1 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-black animate-pulse shadow-lg border border-white/20 whitespace-nowrap">
         {badge}
       </span>
     )}

@@ -124,19 +124,19 @@ export default function NextMatchOpponentSquad({ userId }: NextMatchOpponentSqua
         transition={{ delay: index * 0.04 }}
         className="flex items-center gap-3 p-2.5 bg-white/[0.02] border border-white/5 rounded-lg hover:bg-white/[0.04] transition-colors group"
       >
-        <div className="w-5 text-center text-[9px] font-mono text-white/15 font-bold">
+        <div className="w-5 text-center text-[10px] font-mono text-white/15 font-bold">
           {index + 1}
         </div>
-        <div className={`px-2 py-1 rounded text-[8px] font-black uppercase tracking-wider border ${colorClass}`}>
+        <div className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider border ${colorClass}`}>
           {pos}
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[11px] font-bold text-white/80 truncate">{player.name}</div>
-          <div className="text-[8px] text-white/25 uppercase font-bold tracking-wider">{posLabel} • {player.age} yaş • {player.nation || ''}</div>
+          <div className="text-[10px] text-white/25 uppercase font-bold tracking-wider">{posLabel} • {player.age} yaş • {player.nation || ''}</div>
         </div>
         <div className="text-right">
           <div className="text-[12px] font-black text-emerald-400">{player.rating}</div>
-          <div className="text-[7px] text-white/20 uppercase font-bold">KLT</div>
+          <div className="text-[10px] text-white/20 uppercase font-bold">KLT</div>
         </div>
         <div className="w-12">
           <div className="h-1 bg-white/5 rounded-full overflow-hidden">
@@ -148,7 +148,7 @@ export default function NextMatchOpponentSquad({ userId }: NextMatchOpponentSqua
               }}
             />
           </div>
-          <div className="text-[7px] text-white/15 text-center mt-0.5 uppercase">Form</div>
+          <div className="text-[10px] text-white/15 text-center mt-0.5 uppercase">Form</div>
         </div>
       </motion.div>
     );
@@ -171,7 +171,7 @@ export default function NextMatchOpponentSquad({ userId }: NextMatchOpponentSqua
           <button
             onClick={handleReveal}
             disabled={loading}
-            className={`px-4 py-2.5 text-[9px] font-black uppercase tracking-widest border transition-all ${
+            className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-widest border transition-all ${
               loading
                 ? 'bg-white/5 border-white/10 text-white/20 cursor-wait'
                 : 'bg-purple-500/20 border-purple-500/30 text-purple-400 hover:bg-purple-500/30 hover:text-purple-300 active:scale-95'
@@ -233,7 +233,7 @@ export default function NextMatchOpponentSquad({ userId }: NextMatchOpponentSqua
                 <Shield size={12} className="text-purple-400" />
                 <h3 className="text-[10px] font-black text-white/50 uppercase tracking-widest">İLK 11</h3>
                 <div className="flex-1 h-px bg-white/5" />
-                <div className="text-[8px] text-white/20 font-bold">
+                <div className="text-[10px] text-white/20 font-bold">
                   ORT: {squad.starting.length > 0 ? Math.round(squad.starting.reduce((sum, p) => sum + (p.rating || 0), 0) / squad.starting.length) : 0} KLT
                 </div>
               </div>
@@ -247,7 +247,7 @@ export default function NextMatchOpponentSquad({ userId }: NextMatchOpponentSqua
                 return (
                 <div className="mt-3 p-3 bg-white/[0.02] border border-white/5 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">Takım Gücü</span>
+                    <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">Takım Gücü</span>
                     <span className="text-[10px] font-black text-purple-400">
                       {avgRating} KLT
                     </span>
@@ -272,7 +272,7 @@ export default function NextMatchOpponentSquad({ userId }: NextMatchOpponentSqua
                 >
                   <div className="flex items-center gap-2">
                     <Users size={12} className="text-white/30" />
-                    <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">
+                    <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">
                       YEDEKLER ({squad.subs.length})
                     </span>
                   </div>

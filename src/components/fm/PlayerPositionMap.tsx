@@ -43,9 +43,9 @@ const POS_LABELS_TR: Record<string, string> = {
 
 // ─── Size presets ───
 const SIZE_MAP = {
-  sm: { width: 'w-full', height: 'h-[140px]', dotPrimary: 'w-3 h-3', dotSecondary: 'w-2 h-2', labelSize: 'text-[6px]', tooltipSize: 'text-[8px]', padding: 'p-2' },
-  md: { width: 'w-full', height: 'h-[200px]', dotPrimary: 'w-4 h-4', dotSecondary: 'w-2.5 h-2.5', labelSize: 'text-[7px]', tooltipSize: 'text-[9px]', padding: 'p-3' },
-  lg: { width: 'w-full', height: 'h-[280px]', dotPrimary: 'w-5 h-5', dotSecondary: 'w-3 h-3', labelSize: 'text-[8px]', tooltipSize: 'text-[10px]', padding: 'p-4' },
+  sm: { width: 'w-full', height: 'h-[140px]', dotPrimary: 'w-3 h-3', dotSecondary: 'w-2 h-2', labelSize: 'text-[10px]', tooltipSize: 'text-[10px]', padding: 'p-2' },
+  md: { width: 'w-full', height: 'h-[200px]', dotPrimary: 'w-4 h-4', dotSecondary: 'w-2.5 h-2.5', labelSize: 'text-[10px]', tooltipSize: 'text-[10px]', padding: 'p-3' },
+  lg: { width: 'w-full', height: 'h-[280px]', dotPrimary: 'w-5 h-5', dotSecondary: 'w-3 h-3', labelSize: 'text-[10px]', tooltipSize: 'text-[10px]', padding: 'p-4' },
 };
 
 interface PlayerPositionMapProps {
@@ -78,7 +78,7 @@ export default function PlayerPositionMap({
   return (
     <div className={`${s.padding}`}>
       {/* Label */}
-      <div className="text-[7px] font-black uppercase tracking-[0.2em] text-white/25 mb-1.5">Saha Yerleşimi</div>
+      <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/25 mb-1.5">Saha Yerleşimi</div>
 
       {/* Pitch container */}
       <div
@@ -313,12 +313,12 @@ export default function PlayerPositionMap({
       <div className="flex items-center gap-3 mt-1.5">
         <div className="flex items-center gap-1">
           <div className="w-2 h-2 rounded-full bg-amber-400 border border-amber-300/80" />
-          <span className="text-[6px] text-white/30 font-bold uppercase">Ana Mevki</span>
+          <span className="text-[10px] text-white/30 font-bold uppercase">Ana Mevki</span>
         </div>
         {secondaryPositions.length > 0 && (
           <div className="flex items-center gap-1">
             <div className="w-1.5 h-1.5 rounded-full bg-cyan-400/60 border border-cyan-400/40" />
-            <span className="text-[6px] text-white/30 font-bold uppercase">Yan Mevki</span>
+            <span className="text-[10px] text-white/30 font-bold uppercase">Yan Mevki</span>
           </div>
         )}
       </div>

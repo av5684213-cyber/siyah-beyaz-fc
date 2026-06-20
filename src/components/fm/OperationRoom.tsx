@@ -172,12 +172,12 @@ export default function OperationRoom({ trainingState, budget, onUpdateState, on
             <div key={op.id} className={`p-4 border rounded relative overflow-hidden transition-all group ${isPending ? 'opacity-50 grayscale' : 'hover:border-white/20'} ${isDefense ? 'border-blue-500/30 bg-blue-500/5' : 'border-white/5 bg-white/5'}`}>
               <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
                 <InfoTrigger title={op.name} infoKey={opInfoKey as any} />
-                <span className="text-[7px] font-black text-white/20 uppercase tracking-tighter">
+                <span className="text-[10px] font-black text-white/20 uppercase tracking-tighter">
                    KULLANIM: {activeOps.filter(ao => ao.operationId === op.id).length}/10
                 </span>
               </div>
               <div className="flex justify-between items-start mb-3">
-                <div className={`px-2 py-0.5 border text-[8px] font-black uppercase ${tierStyle}`}>
+                <div className={`px-2 py-0.5 border text-[10px] font-black uppercase ${tierStyle}`}>
                   TIER {op.tier} {isDefense ? '// DEFENSIVE' : '// OFFENSIVE'}
                 </div>
                 <div className="text-[10px] font-mono font-bold text-white/40 mr-6">{op.cost.toLocaleString()} €</div>
@@ -195,21 +195,21 @@ export default function OperationRoom({ trainingState, budget, onUpdateState, on
               
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <div className="text-[7px] text-white/20 uppercase font-black mb-1">Başarı Şansı</div>
+                  <div className="text-[10px] text-white/20 uppercase font-black mb-1">Başarı Şansı</div>
                   <div className="flex items-center gap-1">
                     <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
                       <div className="h-full bg-emerald-500" style={{ width: `${op.successRate * 100}%` }} />
                     </div>
-                    <span className="text-[8px] font-mono text-emerald-400">%{Math.round(op.successRate * 100)}</span>
+                    <span className="text-[10px] font-mono text-emerald-400">%{Math.round(op.successRate * 100)}</span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-[7px] text-white/20 uppercase font-black mb-1">Skandal Riski</div>
+                  <div className="text-[10px] text-white/20 uppercase font-black mb-1">Skandal Riski</div>
                   <div className="flex items-center gap-1">
                     <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
                       <div className="h-full bg-red-500" style={{ width: `${op.scandalRisk * 100}%` }} />
                     </div>
-                    <span className="text-[8px] font-mono text-red-500">%{Math.round(op.scandalRisk * 100)}</span>
+                    <span className="text-[10px] font-mono text-red-500">%{Math.round(op.scandalRisk * 100)}</span>
                   </div>
                 </div>
               </div>
@@ -217,7 +217,7 @@ export default function OperationRoom({ trainingState, budget, onUpdateState, on
               <button
                 disabled={isPending || budget < op.cost}
                 onClick={() => handleLaunch(op)}
-                className={`w-full py-2 text-[9px] font-black uppercase tracking-widest border transition-all ${
+                className={`w-full py-2 text-[10px] font-black uppercase tracking-widest border transition-all ${
                   isPending 
                     ? 'bg-white/5 border-white/10 text-white/20' 
                     : budget < op.cost 
@@ -241,14 +241,14 @@ export default function OperationRoom({ trainingState, budget, onUpdateState, on
       {/* Active Operations Log */}
       {activeOps.length > 0 && (
         <div className="mt-6 border-t border-white/5 pt-4">
-          <h4 className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em] mb-3 flex items-center gap-2">
+          <h4 className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-3 flex items-center gap-2">
              <MessageSquare size={10} /> SON OPERASYON RAPORLARI
           </h4>
           <div className="space-y-2">
             {activeOps.slice(-5).reverse().map(ao => {
               const op = OPERATIONS.find(o => o.id === ao.operationId);
               return (
-                <div key={ao.id} className="flex items-center justify-between p-2 bg-white/5 border border-white/5 rounded text-[9px]">
+                <div key={ao.id} className="flex items-center justify-between p-2 bg-white/5 border border-white/5 rounded text-[10px]">
                   <span className="font-bold text-white/60">{op?.name}</span>
                   <span className={`font-black tracking-widest ${
                     ao.status === 'success' ? 'text-emerald-400' :

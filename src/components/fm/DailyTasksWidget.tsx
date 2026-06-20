@@ -201,15 +201,15 @@ export default function DailyTasksWidget({ userId }: DailyTasksWidgetProps) {
 
                   {/* Reward & Progress text */}
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[9px] text-white/20">
+                    <span className="text-[10px] text-white/20">
                       {isCompleted ? (
                         <span className="text-amber-400/60">Tamamlandı</span>
                       ) : (
                         <span>{progress}/{target}</span>
                       )}
                     </span>
-                    <span className="text-[9px] text-white/15">•</span>
-                    <span className="text-[9px] flex items-center gap-0.5">
+                    <span className="text-[10px] text-white/15">•</span>
+                    <span className="text-[10px] flex items-center gap-0.5">
                       {task.reward_type === 'money' ? (
                         <>
                           <Coins size={8} className="text-emerald-400/50" />
@@ -241,7 +241,7 @@ export default function DailyTasksWidget({ userId }: DailyTasksWidgetProps) {
 
                 {/* Claimed indicator */}
                 {isClaimed && (
-                  <span className="shrink-0 text-[9px] text-emerald-400/40 font-bold">ALINDI</span>
+                  <span className="shrink-0 text-[10px] text-emerald-400/40 font-bold">ALINDI</span>
                 )}
               </motion.div>
             );

@@ -109,7 +109,7 @@ export default function SwipeablePlayerCard({
               </div>
               <div className="text-amber-400 font-bold text-sm">{player.ovr}</div>
             </div>
-            <div className="text-[9px] text-white/20 mt-1 text-center">
+            <div className="text-[10px] text-white/20 mt-1 text-center">
               ← Listele  |  Kaldır →  |  ↑ Sözleşme
             </div>
           </div>

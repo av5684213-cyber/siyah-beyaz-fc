@@ -49,13 +49,13 @@ function PlayerMarker({ player, pos, team, onClick, isSelected }: { player: Play
               (player.specificPosition || player.position) === 'GK' ? 'bg-[#7AB4E8]' : ['CB','LB','RB','LWB','RWB','DEF'].includes(player.specificPosition || player.position) ? 'bg-[#7EDBC8]' : ['CDM','CM','CAM','LM','RM','LW','RW','MID'].includes(player.specificPosition || player.position) ? 'bg-[#F0C87A]' : 'bg-[#E87878]'
             }`}>
               {player.name.slice(0, 2).toUpperCase()}
-              <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full border-2 border-zinc-950 flex items-center justify-center text-[8px] font-black ${
+              <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full border-2 border-zinc-950 flex items-center justify-center text-[10px] font-black ${
                   efficiency > 90 ? 'bg-emerald-400 text-zinc-950' : efficiency > 80 ? 'bg-yellow-400 text-zinc-950' : 'bg-red-400 text-white'
               }`}>
                   {efficiency.toFixed(0)}
               </div>
             </div>
-            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-zinc-900 border border-white/10 px-2 py-1 rounded text-[8px] font-black uppercase text-white shadow-2xl">
+            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-zinc-900 border border-white/10 px-2 py-1 rounded text-[10px] font-black uppercase text-white shadow-2xl">
               {player.name} <span className="text-white/40">{player.specificPosition || player.position}</span>
             </div>
         </div>
@@ -552,7 +552,7 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
         >
           <div className="flex items-center gap-2 text-white/20">
             <div className="w-10 h-1 rounded-full bg-white/15" />
-            <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">sürükle</span>
             <div className="w-10 h-1 rounded-full bg-white/15" />
           </div>
         </div>
@@ -616,7 +616,7 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
                            }`}
                          >
                             {WEATHER_ICONS[w]}
-                            <span className="text-[8px] font-black uppercase">{w === 'Sunny' ? 'Güneş' : w === 'Rainy' ? 'Yağmur' : 'Kar'}</span>
+                            <span className="text-[10px] font-black uppercase">{w === 'Sunny' ? 'Güneş' : w === 'Rainy' ? 'Yağmur' : 'Kar'}</span>
                          </button>
                       ))}
                    </div>
@@ -651,7 +651,7 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
                          <button 
                            key={ref}
                            onClick={() => setSettings(prev => ({ ...prev, refereeStrictness: ref }))}
-                           className={`p-2 rounded-lg border text-[8px] font-black uppercase tracking-widest transition-all ${
+                           className={`p-2 rounded-lg border text-[10px] font-black uppercase tracking-widest transition-all ${
                              settings.refereeStrictness === ref ? 'bg-red-600 border-red-500 text-white' : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10'
                            }`}
                          >
@@ -668,13 +668,13 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
                    <div className="grid grid-cols-2 gap-2">
                       <button 
                         onClick={() => setSettings(prev => ({ ...prev, scenario: prev.scenario === 'RedCard' ? undefined : 'RedCard' }))}
-                        className={`p-3 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all ${settings.scenario === 'RedCard' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'}`}
+                        className={`p-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${settings.scenario === 'RedCard' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'}`}
                       >
                         10 Kişi Kalma
                       </button>
                       <button 
                         onClick={() => setSettings(prev => ({ ...prev, scenario: prev.scenario === 'LateGoal' ? undefined : 'LateGoal' }))}
-                        className={`p-3 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all ${settings.scenario === 'LateGoal' ? 'bg-red-600 border-red-500 text-white' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}
+                        className={`p-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${settings.scenario === 'LateGoal' ? 'bg-red-600 border-red-500 text-white' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}
                       >
                         Son 5 Dakika
                       </button>
@@ -736,7 +736,7 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
                              );
                           })}
                           <div className="absolute top-4 left-4 flex flex-col gap-1 items-start z-30 pointer-events-none">
-                             <div className="text-[8px] font-black text-blue-400/50 uppercase tracking-widest">AS TAKIM (A)</div>
+                             <div className="text-[10px] font-black text-blue-400/50 uppercase tracking-widest">AS TAKIM (A)</div>
                              <span className="text-[10px] font-black text-blue-400 bg-blue-400/10 px-2 py-1 rounded border border-blue-400/20 uppercase backdrop-blur-md">
                                 GÜÇ: {Math.floor(squadAMembers.reduce((s,p) => s+p.rating,0)/(squadAMembers.length||1))}
                              </span>
@@ -761,7 +761,7 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
                              );
                           })}
                           <div className="absolute top-4 right-4 flex flex-col gap-1 items-end z-30 pointer-events-none">
-                             <div className="text-[8px] font-black text-red-400/50 uppercase tracking-widest">YEDEK TAKIM (B)</div>
+                             <div className="text-[10px] font-black text-red-400/50 uppercase tracking-widest">YEDEK TAKIM (B)</div>
                              <span className="text-[10px] font-black text-red-400 bg-red-400/10 px-2 py-1 rounded border border-red-400/20 uppercase backdrop-blur-md">
                                 GÜÇ: {Math.floor(squadBMembers.reduce((s,p) => s+p.rating,0)/(squadBMembers.length||1))}
                              </span>
@@ -802,7 +802,7 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
                               className="p-3 bg-blue-600/10 border border-blue-500/20 rounded-xl flex gap-3 items-start"
                             >
                                <Zap size={14} className="text-blue-400 flex-shrink-0 mt-0.5" />
-                               <p className="text-[9px] text-white/70 font-bold leading-relaxed">{insight}</p>
+                               <p className="text-[10px] text-white/70 font-bold leading-relaxed">{insight}</p>
                             </motion.div>
                          ))}
                       </div>
@@ -817,14 +817,14 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
                     <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
                        <motion.div initial={{ width: 0 }} animate={{ width: `${matchAccuracy}%` }} className="h-full bg-gradient-to-r from-blue-600 to-indigo-400" />
                     </div>
-                    <p className="text-[8px] text-white/40 uppercase font-black tracking-widest leading-relaxed">
+                    <p className="text-[10px] text-white/40 uppercase font-black tracking-widest leading-relaxed">
                        OYUNCULARIN %{matchAccuracy}&apos;Ü MEVCUT TAKTİĞE UYGUN TRAİTLERE SAHİP.
                     </p>
                 </section>
 
                 <section className="grid grid-cols-2 gap-3">
                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-2">
-                       <h4 className="text-[8px] font-black text-white/20 uppercase tracking-widest leading-none">XG POTANSİYELİ</h4>
+                       <h4 className="text-[10px] font-black text-white/20 uppercase tracking-widest leading-none">XG POTANSİYELİ</h4>
                        <span className="text-xl font-black italic tracking-tighter text-white">
                          {simResults.length > 0
                            ? (simResults.reduce((s, r) => s + r.score.home, 0) / simResults.length).toFixed(1)
@@ -832,7 +832,7 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
                        </span>
                    </div>
                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-2">
-                       <h4 className="text-[8px] font-black text-white/20 uppercase tracking-widest leading-none">GALİBİYET ORANI</h4>
+                       <h4 className="text-[10px] font-black text-white/20 uppercase tracking-widest leading-none">GALİBİYET ORANI</h4>
                        <span className="text-xl font-black italic tracking-tighter text-emerald-400">
                          {simResults.length > 0
                            ? `%${Math.round((simResults.filter(r => r.score.home > r.score.away).length / simResults.length) * 100)}`
@@ -891,8 +891,8 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
                        <div className="flex items-center gap-3">
                           <Save size={18} className="text-blue-400" />
                           <div className="text-left">
-                             <div className="text-[9px] font-black text-blue-400 uppercase tracking-widest">ANALİZ TAMAMLANDI</div>
-                             <div className="text-[7px] text-white/40 uppercase font-bold">BU TAKTİĞİ ANA TAKTİĞİN YAP</div>
+                             <div className="text-[10px] font-black text-blue-400 uppercase tracking-widest">ANALİZ TAMAMLANDI</div>
+                             <div className="text-[10px] text-white/40 uppercase font-bold">BU TAKTİĞİ ANA TAKTİĞİN YAP</div>
                           </div>
                        </div>
                        <ChevronRight size={16} className="text-white/20 group-hover:text-blue-400 transition-all" />
@@ -939,7 +939,7 @@ export default function TacticLab({ onClose, squad }: TacticLabProps) {
                       }`}
                     >
                       <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-[9px] font-black shadow-lg ${
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-black shadow-lg ${
                           (p.specificPosition || p.position) === 'GK' ? 'bg-[#7AB4E8]' : ['CB','LB','RB','LWB','RWB','DEF'].includes(p.specificPosition || p.position) ? 'bg-[#7EDBC8]' : ['CDM','CM','CAM','LM','RM','LW','RW','MID'].includes(p.specificPosition || p.position) ? 'bg-[#F0C87A]' : 'bg-[#E87878]'
                         }`}>
                           {p.specificPosition || p.position}

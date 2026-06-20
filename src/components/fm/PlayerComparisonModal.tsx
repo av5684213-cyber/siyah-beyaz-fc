@@ -85,7 +85,7 @@ function PlayerSelector({
           return (
             <div className={`mt-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md ${meta ? `${meta.bg} ${meta.color}` : 'bg-white/5 text-white/60'} border ${meta ? meta.border : 'border-white/10'}`}>
               <Icon size={9} />
-              <span className="text-[9px] font-bold tracking-wide">{arch}</span>
+              <span className="text-[10px] font-bold tracking-wide">{arch}</span>
             </div>
           );
         })()}
@@ -139,18 +139,18 @@ function PlayerSelector({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-bold text-white/80 truncate">{p.name}</div>
-                  <div className="flex items-center gap-1 text-[8px] text-white/30">
+                  <div className="flex items-center gap-1 text-[10px] text-white/30">
                     <span>{p.position || p.specificPosition || '?'} · OVR {p.rating || p.ovr || '?'}</span>
                   </div>
                   {arch && (
                     <div className={`inline-flex items-center gap-0.5 mt-0.5 px-1 py-0 rounded ${meta ? `${meta.bg} ${meta.color}` : 'bg-white/5 text-white/50'} border ${meta ? meta.border : 'border-white/10'}`}>
                       <Icon size={7} />
-                      <span className="text-[7px] font-bold tracking-wide">{arch}</span>
+                      <span className="text-[10px] font-bold tracking-wide">{arch}</span>
                     </div>
                   )}
                 </div>
                 {p.id === player.id && (
-                  <span className={`text-[8px] font-black ${c.text} uppercase`}>● Seçili</span>
+                  <span className={`text-[10px] font-black ${c.text} uppercase`}>● Seçili</span>
                 )}
               </button>
               );
@@ -308,7 +308,7 @@ export default function PlayerComparisonModal({
                   return (
                     <div className={`mt-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md ${meta ? `${meta.bg} ${meta.color}` : 'bg-white/5 text-white/60'} border ${meta ? meta.border : 'border-white/10'}`}>
                       <Icon size={9} />
-                      <span className="text-[9px] font-bold tracking-wide">{arch}</span>
+                      <span className="text-[10px] font-bold tracking-wide">{arch}</span>
                     </div>
                   );
                 })()}
@@ -337,7 +337,7 @@ export default function PlayerComparisonModal({
                   return (
                     <div className={`mt-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md ${meta ? `${meta.bg} ${meta.color}` : 'bg-white/5 text-white/60'} border ${meta ? meta.border : 'border-white/10'}`}>
                       <Icon size={9} />
-                      <span className="text-[9px] font-bold tracking-wide">{arch}</span>
+                      <span className="text-[10px] font-bold tracking-wide">{arch}</span>
                     </div>
                   );
                 })()}
@@ -373,22 +373,22 @@ export default function PlayerComparisonModal({
                       <span className="text-[10px] font-black tracking-wide truncate">{arch1}</span>
                     </div>
                   ) : (
-                    <span className="text-[9px] text-white/20 italic">—</span>
+                    <span className="text-[10px] text-white/20 italic">—</span>
                   )}
                 </div>
                 {/* Merkez — karşılaştırma rozeti */}
                 <div className="text-center">
-                  <div className="text-[8px] font-black uppercase tracking-widest text-white/30 mb-0.5">Arketip</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-0.5">Arketip</div>
                   {sameArch ? (
-                    <div className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                    <div className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
                       ⚡ AYNI
                     </div>
                   ) : sameCat ? (
-                    <div className="text-[9px] font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">
+                    <div className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">
                       ≈ BENZER
                     </div>
                   ) : (
-                    <div className="text-[9px] font-black text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                    <div className="text-[10px] font-black text-white/40 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
                       ≠ FARKLI
                     </div>
                   )}
@@ -401,17 +401,17 @@ export default function PlayerComparisonModal({
                       <span className="text-[10px] font-black tracking-wide truncate">{arch2}</span>
                     </div>
                   ) : (
-                    <span className="text-[9px] text-white/20 italic">—</span>
+                    <span className="text-[10px] text-white/20 italic">—</span>
                   )}
                 </div>
               </div>
               {(p1?.playStyle || p2?.playStyle) && (
                 <div className="mt-2 pt-2 border-t border-white/10 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                  <div className="text-[9px] text-white/40 text-right truncate">
+                  <div className="text-[10px] text-white/40 text-right truncate">
                     {p1?.playStyle ? `🎮 ${p1.playStyle}` : '—'}
                   </div>
-                  <div className="text-[7px] font-black uppercase tracking-widest text-white/20">Stil</div>
-                  <div className="text-[9px] text-white/40 text-left truncate">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-white/20">Stil</div>
+                  <div className="text-[10px] text-white/40 text-left truncate">
                     {p2?.playStyle ? `🎮 ${p2.playStyle}` : '—'}
                   </div>
                 </div>
@@ -432,31 +432,31 @@ export default function PlayerComparisonModal({
               <div key={i} className={`rounded-xl border ${colorClasses} p-3`}>
                 {/* Temel bilgiler */}
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[8px] font-black uppercase tracking-wider text-white/30">Pozisyon</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-white/30">Pozisyon</span>
                   <span className="text-[10px] font-bold text-white/70">{p.position || p.specificPosition || '?'}</span>
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[8px] font-black uppercase tracking-wider text-white/30">Yaş</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-white/30">Yaş</span>
                   <span className="text-[10px] font-bold text-white/70">{p.age || '?'}</span>
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[8px] font-black uppercase tracking-wider text-white/30">Rating</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-white/30">Rating</span>
                   <span className="text-[10px] font-bold text-white/70">{p.rating || p.ovr || '?'}</span>
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[8px] font-black uppercase tracking-wider text-white/30">Potansiyel</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-white/30">Potansiyel</span>
                   <span className="text-[10px] font-bold text-white/70">{p.potential || '?'}</span>
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[8px] font-black uppercase tracking-wider text-white/30">Uyruk</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-white/30">Uyruk</span>
                   <span className="text-[10px] font-bold text-white/70">{p.nation || p.nationality || '?'}</span>
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[8px] font-black uppercase tracking-wider text-white/30">Mevki Ayak</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-white/30">Mevki Ayak</span>
                   <span className="text-[10px] font-bold text-white/70">{p.preferred_foot || '?'}</span>
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[8px] font-black uppercase tracking-wider text-white/30">Değer</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-white/30">Değer</span>
                   <span className="text-[10px] font-bold text-white/70">{(p.market_value || 0).toLocaleString('tr-TR')} €</span>
                 </div>
 
@@ -469,13 +469,13 @@ export default function PlayerComparisonModal({
                   const Icon = meta ? meta.icon : Star;
                   return (
                     <div className="mt-2 pt-2 border-t border-white/10">
-                      <span className="text-[8px] font-black uppercase tracking-wider text-white/30 block mb-1">Arketip</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-white/30 block mb-1">Arketip</span>
                       <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md ${meta ? `${meta.bg} ${meta.color}` : 'bg-white/5 text-white/60'} border ${meta ? meta.border : 'border-white/10'}`}>
                         <Icon size={9} />
-                        <span className="text-[9px] font-black tracking-wide">{arch}</span>
+                        <span className="text-[10px] font-black tracking-wide">{arch}</span>
                       </div>
                       {p?.playStyle && (
-                        <div className="mt-1 text-[9px] text-white/40">🎮 {p.playStyle}</div>
+                        <div className="mt-1 text-[10px] text-white/40">🎮 {p.playStyle}</div>
                       )}
                     </div>
                   );
@@ -484,10 +484,10 @@ export default function PlayerComparisonModal({
                 {/* ── Özellikler (Traits) ── */}
                 {p.traits && Array.isArray(p.traits) && p.traits.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-white/10">
-                    <span className="text-[8px] font-black uppercase tracking-wider text-white/30 block mb-1">Özellikler</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-white/30 block mb-1">Özellikler</span>
                     <div className="flex flex-wrap gap-1">
                       {p.traits.slice(0, 5).map((t: string, ti: number) => (
-                        <span key={ti} className={`text-[8px] px-1.5 py-0.5 rounded ${color === 'amber' ? 'bg-amber-500/15 text-amber-300/80' : 'bg-blue-500/15 text-blue-300/80'}`}>
+                        <span key={ti} className={`text-[10px] px-1.5 py-0.5 rounded ${color === 'amber' ? 'bg-amber-500/15 text-amber-300/80' : 'bg-blue-500/15 text-blue-300/80'}`}>
                           {t}
                         </span>
                       ))}

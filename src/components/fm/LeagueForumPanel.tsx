@@ -73,7 +73,7 @@ export default function LeagueForumPanel({ userId, leagueId }: { userId: string;
           className="p-3 bg-white/[0.03] border border-white/8 rounded-xl">
           <div className="flex justify-between items-start mb-1.5">
             <p className="text-[10px] font-black text-white/70">{p.team_name}</p>
-            <p className="text-[8px] text-white/20">
+            <p className="text-[10px] text-white/20">
               {new Date(p.created_at).toLocaleDateString('tr-TR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}
             </p>
           </div>

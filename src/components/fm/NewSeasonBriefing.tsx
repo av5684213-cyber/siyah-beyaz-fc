@@ -185,7 +185,7 @@ export default function NewSeasonBriefing({
             >
               <div className="flex items-center justify-center gap-2">
                 <Calendar size={14} className="text-white/30" />
-                <p className="text-[9px] uppercase tracking-widest text-white/20">{season}. Sezon</p>
+                <p className="text-[10px] uppercase tracking-widest text-white/20">{season}. Sezon</p>
               </div>
               <h3 className="text-xl font-black text-white">{newLeagueName}</h3>
               <p className="text-[10px] text-white/40">
@@ -193,15 +193,15 @@ export default function NewSeasonBriefing({
               </p>
               <div className="grid grid-cols-3 gap-2 pt-2">
                 <div className="bg-white/[0.03] rounded-lg p-2">
-                  <p className="text-[7px] text-white/20 uppercase font-bold">Maç Saatleri</p>
+                  <p className="text-[10px] text-white/20 uppercase font-bold">Maç Saatleri</p>
                   <p className="text-xs font-bold text-white/60">12:00 / 18:00</p>
                 </div>
                 <div className="bg-white/[0.03] rounded-lg p-2">
-                  <p className="text-[7px] text-white/20 uppercase font-bold">Toplam Maç</p>
+                  <p className="text-[10px] text-white/20 uppercase font-bold">Toplam Maç</p>
                   <p className="text-xs font-bold text-white/60">34 Hafta</p>
                 </div>
                 <div className="bg-white/[0.03] rounded-lg p-2">
-                  <p className="text-[7px] text-white/20 uppercase font-bold">Maç Günleri</p>
+                  <p className="text-[10px] text-white/20 uppercase font-bold">Maç Günleri</p>
                   <p className="text-xs font-bold text-white/60">Hafta İçi</p>
                 </div>
               </div>
@@ -217,7 +217,7 @@ export default function NewSeasonBriefing({
               >
                 <div className="flex items-center justify-center gap-2">
                   <Trophy size={14} className="text-amber-400/60" />
-                  <p className="text-[9px] uppercase tracking-widest text-amber-400/40 font-bold">
+                  <p className="text-[10px] uppercase tracking-widest text-amber-400/40 font-bold">
                     Geçen Sezon Ödülleri
                   </p>
                 </div>
@@ -226,16 +226,16 @@ export default function NewSeasonBriefing({
                     <div key={i} className="flex items-center justify-between px-3 py-1.5 bg-white/[0.02] rounded-lg">
                       <div className="flex items-center gap-2">
                         <Star size={10} className="text-amber-400/40" />
-                        <span className="text-[9px] font-bold text-amber-400/70 uppercase tracking-wider">
+                        <span className="text-[10px] font-bold text-amber-400/70 uppercase tracking-wider">
                           {AWARD_LABELS[award.award_type] || award.award_type}
                         </span>
                       </div>
                       <div className="text-right">
                         {award.player_name && (
-                          <span className="text-[9px] text-white/60 font-semibold">{award.player_name}</span>
+                          <span className="text-[10px] text-white/60 font-semibold">{award.player_name}</span>
                         )}
                         {award.team_name && !award.player_name && (
-                          <span className="text-[9px] text-white/40">{award.team_name}</span>
+                          <span className="text-[10px] text-white/40">{award.team_name}</span>
                         )}
                       </div>
                     </div>
@@ -254,7 +254,7 @@ export default function NewSeasonBriefing({
               >
                 <div className="flex items-center justify-center gap-2">
                   <Users size={14} className="text-white/30" />
-                  <p className="text-[9px] uppercase tracking-widest text-white/20 font-bold">
+                  <p className="text-[10px] uppercase tracking-widest text-white/20 font-bold">
                     İlk Maçlar
                   </p>
                 </div>
@@ -262,7 +262,7 @@ export default function NewSeasonBriefing({
                   {nextFixtures.map((fix, i) => (
                     <div key={i} className="flex items-center justify-between px-3 py-2 bg-white/[0.02] rounded-lg">
                       <div className="flex items-center gap-2">
-                        <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded ${
+                        <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded ${
                           fix.is_home 
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                             : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
@@ -288,7 +288,7 @@ export default function NewSeasonBriefing({
                 transition={{ delay: 0.6 }}
                 className="bg-white/[0.03] border border-white/8 rounded-2xl p-5 text-left"
               >
-                <p className="text-[9px] uppercase tracking-widest text-white/20 text-center mb-4">
+                <p className="text-[10px] uppercase tracking-widest text-white/20 text-center mb-4">
                   Bu Sezon Vedaya Durdu
                 </p>
                 <div className="space-y-3">
@@ -307,7 +307,7 @@ export default function NewSeasonBriefing({
                     </div>
                   ))}
                 </div>
-                <p className="text-[9px] text-white/12 italic text-center mt-4">
+                <p className="text-[10px] text-white/12 italic text-center mt-4">
                   "Her efsanenin bir son sahnesi vardır."
                 </p>
               </motion.div>
@@ -317,7 +317,7 @@ export default function NewSeasonBriefing({
             {loading && (
               <div className="flex items-center justify-center gap-2 py-4">
                 <div className="w-4 h-4 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
-                <span className="text-[9px] text-white/30 uppercase tracking-widest">Yükleniyor...</span>
+                <span className="text-[10px] text-white/30 uppercase tracking-widest">Yükleniyor...</span>
               </div>
             )}
 

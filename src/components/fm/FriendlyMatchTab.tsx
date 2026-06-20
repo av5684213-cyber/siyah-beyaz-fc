@@ -713,13 +713,13 @@ export function FriendlyMatchTab() {
               </div>
               <div>
                 <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">Hazırlık Maçı Merkezi</h2>
-                <p className="text-[8px] text-white/30 uppercase tracking-[0.3em] font-black">Kadro Uyumu & Form Yönetimi</p>
+                <p className="text-[10px] text-white/30 uppercase tracking-[0.3em] font-black">Kadro Uyumu & Form Yönetimi</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-3 ml-11">
-              <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-wider rounded-full">+10% Pozisyon Uyumu</span>
-              <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[8px] font-black uppercase tracking-wider rounded-full">2x Antrenman Puanı</span>
-              <span className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 text-[8px] font-black uppercase tracking-wider rounded-full">-5% Kondisyon</span>
+              <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-wider rounded-full">+10% Pozisyon Uyumu</span>
+              <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-wider rounded-full">2x Antrenman Puanı</span>
+              <span className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-wider rounded-full">-5% Kondisyon</span>
             </div>
           </div>
 
@@ -742,7 +742,7 @@ export function FriendlyMatchTab() {
                 </div>
                 <div className="flex flex-col leading-none">
                   <span className="text-[11px]">{inQueue ? 'SIRADAN ÇIK' : 'SIRAYA GİR'}</span>
-                  <span className="text-[7px] opacity-60 font-bold">
+                  <span className="text-[10px] opacity-60 font-bold">
                     {inQueue ? 'BEKLEMEYİ İPTAL ET' : 'ÜCRETSİZ — OTOMATİK EŞLEŞME'}
                   </span>
                 </div>
@@ -767,7 +767,7 @@ export function FriendlyMatchTab() {
                   </div>
                   <div className="flex flex-col leading-none">
                     <span className="text-[11px]">HAZIRLIK MAÇI TEKLİFİ VER</span>
-                    <span className="text-[7px] opacity-60 font-bold">
+                    <span className="text-[10px] opacity-60 font-bold">
                       {(profile?.credits || 0) < 1 ? 'YETERSİZ KREDİ' : '⚡ 1 KREDİ — ÖNCELİKLİ EŞLEŞME'}
                     </span>
                   </div>
@@ -820,7 +820,7 @@ export function FriendlyMatchTab() {
                   </div>
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-widest text-white/40">EŞLEŞME BEKLENİYOR</h3>
-                    <p className="text-[8px] text-white/20 uppercase tracking-wider font-bold">5 DAKİKA İÇİNDE RAKİP ARANIYOR</p>
+                    <p className="text-[10px] text-white/20 uppercase tracking-wider font-bold">5 DAKİKA İÇİNDE RAKİP ARANIYOR</p>
                   </div>
                 </div>
                 <div className="text-4xl font-black font-mono text-amber-400 tracking-wider">
@@ -840,7 +840,7 @@ export function FriendlyMatchTab() {
               {/* Queue list */}
               {queue.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-[8px] font-black uppercase tracking-widest text-white/20 mb-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-2">
                     SIRA LİSTESİ ({queue.length} TAKIM)
                   </p>
                   {queue.slice(0, 8).map((entry, idx) => (
@@ -852,7 +852,7 @@ export function FriendlyMatchTab() {
                           : 'bg-black/20'
                       }`}
                     >
-                      <span className={`text-[9px] font-black w-5 text-center ${idx === 0 ? 'text-emerald-400' : 'text-white/20'}`}>
+                      <span className={`text-[10px] font-black w-5 text-center ${idx === 0 ? 'text-emerald-400' : 'text-white/20'}`}>
                         {idx + 1}.
                       </span>
                       <span className={`text-[10px] font-bold flex-1 ${
@@ -860,10 +860,10 @@ export function FriendlyMatchTab() {
                       }`}>
                         {entry.team_name || 'Bilinmeyen Takım'}
                         {entry.user_id === profile?.id && (
-                          <span className="ml-2 text-[7px] font-black uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">SİZ</span>
+                          <span className="ml-2 text-[10px] font-black uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">SİZ</span>
                         )}
                         {entry.is_priority && (
-                          <span className="ml-1 text-[7px] font-black uppercase text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">ÖNCELİKLİ</span>
+                          <span className="ml-1 text-[10px] font-black uppercase text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">ÖNCELİKLİ</span>
                         )}
                       </span>
                       {idx < 2 && queue.length >= 2 && (
@@ -872,7 +872,7 @@ export function FriendlyMatchTab() {
                     </div>
                   ))}
                   {queue.length > 8 && (
-                    <p className="text-[8px] text-white/20 text-center mt-2">
+                    <p className="text-[10px] text-white/20 text-center mt-2">
                       +{queue.length - 8} takım daha bekliyor
                     </p>
                   )}
@@ -931,21 +931,21 @@ export function FriendlyMatchTab() {
                     <div className="p-1 bg-emerald-500/10 rounded-lg mt-0.5"><Swords size={12} className="text-emerald-400" /></div>
                     <div>
                       <p className="text-[10px] font-black text-white/60 uppercase">Hazırlık Maçı Teklifi Ver</p>
-                      <p className="text-[9px] text-white/30">Sıraya girin, 5 dakika içinde rakip bulunca otomatik maç başlar.</p>
+                      <p className="text-[10px] text-white/30">Sıraya girin, 5 dakika içinde rakip bulunca otomatik maç başlar.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="p-1 bg-amber-500/10 rounded-lg mt-0.5"><Users size={12} className="text-amber-400" /></div>
                     <div>
                       <p className="text-[10px] font-black text-white/60 uppercase">Otomatik Eşleşme</p>
-                      <p className="text-[9px] text-white/30">İlk 2 takım eşleşir. Kalanlar sıradaki eşleşmeyi bekler.</p>
+                      <p className="text-[10px] text-white/30">İlk 2 takım eşleşir. Kalanlar sıradaki eşleşmeyi bekler.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="p-1 bg-red-500/10 rounded-lg mt-0.5"><Timer size={12} className="text-red-400" /></div>
                     <div>
                       <p className="text-[10px] font-black text-white/60 uppercase">5 Dakika Kuralı</p>
-                      <p className="text-[9px] text-white/30">Süre bittiğinde sıra temizlenir. Tekrar girmeniz gerekir.</p>
+                      <p className="text-[10px] text-white/30">Süre bittiğinde sıra temizlenir. Tekrar girmeniz gerekir.</p>
                     </div>
                   </div>
                 </div>
@@ -967,11 +967,11 @@ export function FriendlyMatchTab() {
                       key={entry.user_id}
                       className="flex items-center gap-3 px-4 py-2 rounded-xl bg-black/20"
                     >
-                      <span className="text-[9px] font-black w-5 text-center text-white/20">{idx + 1}.</span>
+                      <span className="text-[10px] font-black w-5 text-center text-white/20">{idx + 1}.</span>
                       <span className="text-[10px] font-bold flex-1 text-white/50">
                         {entry.team_name}
                         {entry.is_priority && (
-                          <span className="ml-1 text-[7px] font-black uppercase text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">ÖNCELİKLİ</span>
+                          <span className="ml-1 text-[10px] font-black uppercase text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">ÖNCELİKLİ</span>
                         )}
                       </span>
                     </div>
@@ -994,7 +994,7 @@ export function FriendlyMatchTab() {
                   <Clock size={14} className="text-white/30" />
                   <h3 className="text-xs font-black uppercase tracking-widest text-white/40">Geçmiş Hazırlık Maçları</h3>
                 </div>
-                <span className="text-[9px] text-white/20 font-bold">{history.length} MAÇ</span>
+                <span className="text-[10px] text-white/20 font-bold">{history.length} MAÇ</span>
               </div>
               <div className="p-4 max-h-[400px] overflow-y-auto">
                 {history.length === 0 ? (
@@ -1014,13 +1014,13 @@ export function FriendlyMatchTab() {
                         >
                           {/* Venue */}
                           <div className="flex flex-col items-center gap-1 w-12">
-                            <span className={`text-[8px] font-black uppercase tracking-widest ${
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${
                               isHome ? 'text-emerald-400' : 'text-sky-400'
                             }`}>
                               {isHome ? 'EV' : 'DEP'}
                             </span>
                             {result && (
-                              <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                                 result === 'W' ? 'bg-emerald-500/20 text-emerald-400' :
                                 result === 'D' ? 'bg-amber-500/20 text-amber-400' :
                                 'bg-red-500/20 text-red-400'
@@ -1061,12 +1061,12 @@ export function FriendlyMatchTab() {
 
                           {/* Date & Replay */}
                           <div className="flex flex-col items-end gap-1 ml-3 w-20">
-                            <span className="text-[9px] text-white/30 font-bold">
+                            <span className="text-[10px] text-white/30 font-bold">
                               {new Date(m.played_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
                             </span>
                             <button
                               onClick={() => router.push(`/match/${m.id}`)}
-                              className="flex items-center gap-1 px-2 py-0.5 bg-white/5 hover:bg-white/10 rounded-md text-[8px] font-black uppercase tracking-widest text-white/40 hover:text-white/70 transition-all"
+                              className="flex items-center gap-1 px-2 py-0.5 bg-white/5 hover:bg-white/10 rounded-md text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white/70 transition-all"
                             >
                               <Eye size={8} /> Tekrar İzle
                             </button>

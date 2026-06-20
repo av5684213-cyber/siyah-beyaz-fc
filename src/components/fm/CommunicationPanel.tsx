@@ -186,7 +186,7 @@ export default function CommunicationPanel({ userId, userName, teamName }: Commu
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => { if(confirm('Mesajları temizle?')) { setMessages([]); setInbox([]); } }} title="Temizle"><Trash2 size={12} className="text-white/20 hover:text-red-500" /></button>
+                <button onClick={() => { if(window.confirm('Mesajları temizle?')) { setMessages([]); setInbox([]); } }} title="Temizle"><Trash2 size={12} className="text-white/20 hover:text-red-500" /></button>
                 <button onClick={() => setIsOpen(false)}><X size={16} className="text-white/20 hover:text-white" /></button>
               </div>
             </div>
@@ -205,8 +205,8 @@ export default function CommunicationPanel({ userId, userName, teamName }: Commu
                   inbox.map((m) => (
                     <div key={m.id} className="p-3 bg-white/5 rounded-xl border border-white/5 space-y-1">
                       <div className="flex justify-between items-center">
-                        <span className="text-[9px] font-black text-red-500 uppercase">{m.sender_name}</span>
-                        <span className="text-[7px] text-white/20">{new Date(m.timestamp).toLocaleTimeString()}</span>
+                        <span className="text-[10px] font-black text-red-500 uppercase">{m.sender_name}</span>
+                        <span className="text-[10px] text-white/20">{new Date(m.timestamp).toLocaleTimeString()}</span>
                       </div>
                       <p className="text-[10px] text-white/70">{m.content}</p>
                     </div>
@@ -250,7 +250,7 @@ export default function CommunicationPanel({ userId, userName, teamName }: Commu
 
               {selectedRecipient && (
                 <div className="flex items-center justify-between bg-red-500/10 border border-red-500/20 rounded-lg p-2 mb-3">
-                  <span className="text-[9px] font-black text-red-500 uppercase italic">ALICI: {selectedRecipient.team_name}</span>
+                  <span className="text-[10px] font-black text-red-500 uppercase italic">ALICI: {selectedRecipient.team_name}</span>
                   <button onClick={() => setSelectedRecipient(null)}><X size={12} /></button>
                 </div>
               )}

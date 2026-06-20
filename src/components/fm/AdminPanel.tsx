@@ -234,7 +234,7 @@ export default function AdminPanel() {
   };
 
   const deletePlayer = async (playerId: string, name: string) => {
-    if (!confirm(`"${name}" oyuncusunu silmek istediğinize emin misiniz?`)) return;
+    if (!window.confirm(`"${name}" oyuncusunu silmek istediğinize emin misiniz?`)) return;
     try {
       await fetch(`/api/admin/teams/players?playerId=${playerId}`, { method: 'DELETE', headers });
       setTeamPlayers(prev => prev.filter(p => p.id !== playerId));
@@ -318,13 +318,13 @@ export default function AdminPanel() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/5">
-                    <th className="text-left px-4 py-3 text-[9px] font-black uppercase tracking-widest text-zinc-500">Takım</th>
-                    <th className="text-left px-3 py-3 text-[9px] font-black uppercase tracking-widest text-zinc-500">Lig</th>
-                    <th className="text-right px-3 py-3 text-[9px] font-black uppercase tracking-widest text-zinc-500">Bütçe</th>
-                    <th className="text-center px-3 py-3 text-[9px] font-black uppercase tracking-widest text-zinc-500">Oyuncu</th>
-                    <th className="text-center px-3 py-3 text-[9px] font-black uppercase tracking-widest text-zinc-500">Seviye</th>
-                    <th className="text-center px-3 py-3 text-[9px] font-black uppercase tracking-widest text-zinc-500">Tip</th>
-                    <th className="text-center px-3 py-3 text-[9px] font-black uppercase tracking-widest text-zinc-500">İşlem</th>
+                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">Takım</th>
+                    <th className="text-left px-3 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">Lig</th>
+                    <th className="text-right px-3 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">Bütçe</th>
+                    <th className="text-center px-3 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">Oyuncu</th>
+                    <th className="text-center px-3 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">Seviye</th>
+                    <th className="text-center px-3 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">Tip</th>
+                    <th className="text-center px-3 py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">İşlem</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -341,12 +341,12 @@ export default function AdminPanel() {
                           </div>
                           <div>
                             <p className="font-bold">{t.team_name}</p>
-                            <p className="text-[9px] text-zinc-500">{t.manager_name}</p>
+                            <p className="text-[10px] text-zinc-500">{t.manager_name}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-3 py-3">
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-black border ${tierColors[t.league_tier] || 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${tierColors[t.league_tier] || 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>
                           {t.league_tier ? `${t.league_tier}. Lig` : 'Ligsiz'}
                         </span>
                       </td>
@@ -355,9 +355,9 @@ export default function AdminPanel() {
                       <td className="px-3 py-3 text-center"><span className="bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded font-bold">Lv.{t.level}</span></td>
                       <td className="px-3 py-3 text-center">
                         {t.is_bot ? (
-                          <span className="px-2 py-0.5 rounded text-[8px] font-black bg-amber-500/10 text-amber-400">BOT</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/10 text-amber-400">BOT</span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded text-[8px] font-black bg-emerald-500/10 text-emerald-400">GERÇEK</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/10 text-emerald-400">GERÇEK</span>
                         )}
                       </td>
                       <td className="px-3 py-3 text-center">
@@ -405,7 +405,7 @@ export default function AdminPanel() {
                   { key: 'league_tier', label: 'Lig Seviyesi' },
                 ].map(f => (
                   <div key={f.key}>
-                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-1">{f.label}</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block mb-1">{f.label}</label>
                     <input type="number" value={editValues[f.key] ?? 0} onChange={e => setEditValues(v => ({ ...v, [f.key]: parseInt(e.target.value) || 0 }))}
                       className="w-full bg-black border border-white/10 rounded-lg px-3 py-1.5 text-xs" />
                   </div>
@@ -459,19 +459,19 @@ export default function AdminPanel() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3">
               <p className="text-sm font-black text-emerald-400">{formatMoney(selectedTeam.money)}</p>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Bütçe</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Bütçe</p>
             </div>
             <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3">
               <p className="text-sm font-black text-amber-400">{selectedTeam.credits}</p>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Kredi</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Kredi</p>
             </div>
             <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3">
               <p className="text-sm font-black text-blue-400">Lv.{selectedTeam.level}</p>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Seviye</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Seviye</p>
             </div>
             <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-3">
               <p className="text-sm font-black text-purple-400">{selectedTeam.player_count}</p>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Oyuncu</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Oyuncu</p>
             </div>
           </div>
 
@@ -494,21 +494,21 @@ export default function AdminPanel() {
                 <table className="w-full text-xs">
                   <thead className="sticky top-0 bg-zinc-900">
                     <tr className="border-b border-white/5">
-                      <th className="text-left px-3 py-2 text-[8px] font-black uppercase tracking-widest text-zinc-500">Oyuncu</th>
-                      <th className="text-center px-2 py-2 text-[8px] font-black uppercase tracking-widest text-zinc-500">Pos</th>
-                      <th className="text-center px-2 py-2 text-[8px] font-black uppercase tracking-widest text-zinc-500">REY</th>
-                      <th className="text-center px-2 py-2 text-[8px] font-black uppercase tracking-widest text-zinc-500">Yaş</th>
-                      <th className="text-right px-2 py-2 text-[8px] font-black uppercase tracking-widest text-zinc-500">Değer</th>
-                      <th className="text-center px-2 py-2 text-[8px] font-black uppercase tracking-widest text-zinc-500">Kond</th>
-                      <th className="text-center px-2 py-2 text-[8px] font-black uppercase tracking-widest text-zinc-500">G/A/M</th>
-                      <th className="text-center px-2 py-2 text-[8px] font-black uppercase tracking-widest text-zinc-500">İşlem</th>
+                      <th className="text-left px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">Oyuncu</th>
+                      <th className="text-center px-2 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">Pos</th>
+                      <th className="text-center px-2 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">REY</th>
+                      <th className="text-center px-2 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">Yaş</th>
+                      <th className="text-right px-2 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">Değer</th>
+                      <th className="text-center px-2 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">Kond</th>
+                      <th className="text-center px-2 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">G/A/M</th>
+                      <th className="text-center px-2 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">İşlem</th>
                     </tr>
                   </thead>
                   <tbody>
                     {teamPlayers.map(p => (
                       <tr key={p.id} className="border-b border-white/5 hover:bg-white/[0.02]">
                         <td className="px-3 py-2"><span className="font-bold">{p.name}</span> {p.is_injured && <span className="w-1.5 h-1.5 bg-red-500 rounded-full inline-block ml-1" />}</td>
-                        <td className="px-2 py-2 text-center"><span className={`px-1 py-0.5 rounded text-[8px] font-black ${posColors[p.position] || 'bg-zinc-800 text-zinc-400'}`}>{p.specific_position || p.position}</span></td>
+                        <td className="px-2 py-2 text-center"><span className={`px-1 py-0.5 rounded text-[10px] font-black ${posColors[p.position] || 'bg-zinc-800 text-zinc-400'}`}>{p.specific_position || p.position}</span></td>
                         <td className="px-2 py-2 text-center font-black">
                           {editingPlayer === p.id ? (
                             <input type="number" value={editPlayerValues.rating} onChange={e => setEditPlayerValues(v => ({ ...v, rating: parseInt(e.target.value) || 0 }))} className="w-12 bg-black border border-white/10 rounded px-1 py-0.5 text-center" />
@@ -564,10 +564,10 @@ export default function AdminPanel() {
                   {transferTeams.filter(t => t.id !== selectedTeam.id).filter(t => !transferSearch || t.team_name?.toLowerCase().includes(transferSearch.toLowerCase()) || t.manager_name?.toLowerCase().includes(transferSearch.toLowerCase())).map(t => (
                     <button key={t.id} onClick={() => setTransferTargetId(t.id)}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-all ${transferTargetId === t.id ? 'bg-purple-500/10 border border-purple-500/30' : 'bg-zinc-800/50 hover:bg-zinc-800 border border-transparent'}`}>
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[9px] font-black" style={{ backgroundColor: t.primary_color || '#fff', color: t.secondary_color || '#000' }}>{t.team_name?.charAt(0) || '?'}</div>
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black" style={{ backgroundColor: t.primary_color || '#fff', color: t.secondary_color || '#000' }}>{t.team_name?.charAt(0) || '?'}</div>
                       <div>
                         <p className="text-xs font-bold">{t.team_name}</p>
-                        <p className="text-[9px] text-zinc-500">{t.manager_name}</p>
+                        <p className="text-[10px] text-zinc-500">{t.manager_name}</p>
                       </div>
                     </button>
                   ))}
@@ -624,7 +624,7 @@ export default function AdminPanel() {
         <div className="bg-zinc-900/50 rounded-3xl border border-white/10 overflow-hidden">
           <div className="p-4 bg-zinc-800/50 border-b border-white/5 flex justify-between items-center">
             <h3 className="text-[10px] font-black uppercase text-white/40">Kendi Kadro Yönetimi</h3>
-            <button onClick={() => { const ok = confirm('Tüm kadroyu silmek istediğinizden emin misiniz?'); if (ok) setSquad([]); }} className="flex items-center gap-2 text-[10px] font-black text-red-500 hover:text-red-400">
+            <button onClick={() => { const ok = window.confirm('Tüm kadroyu silmek istediğinizden emin misiniz?'); if (ok) setSquad([]); }} className="flex items-center gap-2 text-[10px] font-black text-red-500 hover:text-red-400">
               <Trash2 size={12} /> TÜMÜNÜ SİL
             </button>
           </div>
@@ -635,7 +635,7 @@ export default function AdminPanel() {
                   <span className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-[10px] font-black text-white/40">{idx + 1}</span>
                   <div>
                     <p className="text-xs font-black text-white uppercase">{p.name}</p>
-                    <p className="text-[8px] font-bold text-white/20 uppercase">{(p as any).specificPosition || (p as any).specific_position || p.position} • {p.rating} REY</p>
+                    <p className="text-[10px] font-bold text-white/20 uppercase">{(p as any).specificPosition || (p as any).specific_position || p.position} • {p.rating} REY</p>
                   </div>
                 </div>
                 <button onClick={() => setSquad(prev => prev.filter(pl => pl.id !== p.id))} className="p-2 bg-red-500/10 hover:bg-red-500/20 rounded-lg text-red-500"><Trash2 size={14} /></button>
@@ -651,14 +651,14 @@ export default function AdminPanel() {
           <div className="p-4 bg-zinc-800/50 border-b border-white/5 flex justify-between items-center">
             <h3 className="text-[10px] font-black uppercase text-white/40">Lig & Fikstür Yönetimi</h3>
             <div className="flex gap-2">
-              <button className="px-3 py-1 bg-amber-500 text-black text-[9px] font-black uppercase rounded-lg">Fikstür Çek</button>
-              <button className="px-3 py-1 bg-blue-500 text-white text-[9px] font-black uppercase rounded-lg">Tümünü Simüle Et</button>
+              <button className="px-3 py-1 bg-amber-500 text-black text-[10px] font-black uppercase rounded-lg">Fikstür Çek</button>
+              <button className="px-3 py-1 bg-blue-500 text-white text-[10px] font-black uppercase rounded-lg">Tümünü Simüle Et</button>
             </div>
           </div>
           <div className="p-8 flex flex-col items-center justify-center text-center opacity-40">
             <Trophy size={48} className="mb-4" />
             <p className="text-[10px] font-bold uppercase tracking-widest">Lig verileri Supabase üzerinden yönetilmektedir.</p>
-            <p className="text-[8px] mt-2">Takımlar sekmesinden her takımın lig bilgisini düzenleyebilirsiniz.</p>
+            <p className="text-[10px] mt-2">Takımlar sekmesinden her takımın lig bilgisini düzenleyebilirsiniz.</p>
           </div>
         </div>
       )}

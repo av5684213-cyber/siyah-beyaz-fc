@@ -73,25 +73,25 @@ export default function PlayerStatsTab({ player }: { player: Player }) {
       <div className="grid grid-cols-5 gap-px bg-white/5 border border-white/10 rounded-sm overflow-hidden">
         <div className="p-3 bg-[#0a0f15] text-center">
             <div className="text-[14px] font-black text-white">{stats.reduce((acc, s) => acc + (Number(s.matches_played) || 0), 0)}</div>
-            <div className="text-[7px] font-bold uppercase tracking-widest text-white/20">Maç</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-white/20">Maç</div>
         </div>
         <div className="p-3 bg-[#0a0f15] text-center">
             <div className={`text-[14px] font-black ${player.position !== 'GK' ? 'text-white' : 'text-white/40'}`}>{stats.reduce((acc, s) => acc + (Number(s.goals) || 0), 0)}</div>
-            <div className="text-[7px] font-bold uppercase tracking-widest text-white/20">Gol</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-white/20">Gol</div>
         </div>
         <div className="p-3 bg-[#0a0f15] text-center">
             <div className="text-[14px] font-black text-white">{stats.reduce((acc, s) => acc + (Number(s.assists) || 0), 0)}</div>
-            <div className="text-[7px] font-bold uppercase tracking-widest text-white/20">Asist</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-white/20">Asist</div>
         </div>
         <div className="p-3 bg-[#0a0f15] text-center">
             <div className="text-[14px] font-black text-white">{stats.reduce((acc, s) => acc + (Number(s.yellow_cards) || 0), 0)}</div>
-            <div className="text-[7px] font-bold uppercase tracking-widest text-white/20">Sarı</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-white/20">Sarı</div>
         </div>
         <div className="p-3 bg-[#0a0f15] text-center">
             <div className="text-[14px] font-black text-amber-400">
                {(stats.reduce((acc, s) => acc + (Number(s.avg_rating) || 0), 0) / (stats.length || 1)).toFixed(2)}
             </div>
-            <div className="text-[7px] font-bold uppercase tracking-widest text-white/20">Ort. Puan</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-white/20">Ort. Puan</div>
         </div>
       </div>
 
@@ -100,21 +100,21 @@ export default function PlayerStatsTab({ player }: { player: Player }) {
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-2">
             <Target size={11} className="text-emerald-400" />
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400/60">Teknik Analiz (Detaylı Veri)</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/60">Teknik Analiz (Detaylı Veri)</span>
           </div>
           
           <div className="grid grid-cols-2 gap-2">
             {isGK ? (
               Object.entries(player.saveStats || {}).map(([type, count]) => (
                 <div key={type} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-sm">
-                  <span className="text-[9px] font-bold text-white/30 truncate">{saveTypeLabels[type] || type}</span>
+                  <span className="text-[10px] font-bold text-white/30 truncate">{saveTypeLabels[type] || type}</span>
                   <span className="text-[12px] font-black text-blue-400">{count}</span>
                 </div>
               ))
             ) : (
               Object.entries(player.goalStats || {}).map(([type, count]) => (
                 <div key={type} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-sm">
-                  <span className="text-[9px] font-bold text-white/30 truncate">{goalTypeLabels[type] || type}</span>
+                  <span className="text-[10px] font-bold text-white/30 truncate">{goalTypeLabels[type] || type}</span>
                   <span className="text-[12px] font-black text-emerald-400">{count}</span>
                 </div>
               ))
@@ -126,7 +126,7 @@ export default function PlayerStatsTab({ player }: { player: Player }) {
       <div className="space-y-2">
         <div className="flex items-center gap-2 px-2">
           <BarChart3 size={11} className="text-white/30" />
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40">Sezonlara Göre Kariyer Geçmişi</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Sezonlara Göre Kariyer Geçmişi</span>
         </div>
 
         {stats.length > 0 ? (
@@ -134,15 +134,15 @@ export default function PlayerStatsTab({ player }: { player: Player }) {
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="bg-white/[0.02] border-b border-white/5">
-                  <th className="px-3 py-2 text-[8px] font-black uppercase text-white/30">Sezon</th>
-                  <th className="px-3 py-2 text-[8px] font-black uppercase text-white/30">Takım</th>
-                  <th className="px-3 py-2 text-[8px] font-black uppercase text-white/30 text-center">Oyn</th>
-                  <th className="px-3 py-2 text-[8px] font-black uppercase text-white/30 text-center">Gol</th>
-                  <th className="px-3 py-2 text-[8px] font-black uppercase text-white/30 text-center">Ast</th>
-                  <th className="px-3 py-2 text-[8px] font-black uppercase text-white/30 text-center">Faul</th>
-                  <th className="px-3 py-2 text-[8px] font-black uppercase text-white/30 text-center">Sarı</th>
-                  <th className="px-3 py-2 text-[8px] font-black uppercase text-white/30 text-center">Kır</th>
-                  <th className="px-3 py-2 text-[8px] font-black uppercase text-white/30 text-right">Ort</th>
+                  <th className="px-3 py-2 text-[10px] font-black uppercase text-white/30">Sezon</th>
+                  <th className="px-3 py-2 text-[10px] font-black uppercase text-white/30">Takım</th>
+                  <th className="px-3 py-2 text-[10px] font-black uppercase text-white/30 text-center">Oyn</th>
+                  <th className="px-3 py-2 text-[10px] font-black uppercase text-white/30 text-center">Gol</th>
+                  <th className="px-3 py-2 text-[10px] font-black uppercase text-white/30 text-center">Ast</th>
+                  <th className="px-3 py-2 text-[10px] font-black uppercase text-white/30 text-center">Faul</th>
+                  <th className="px-3 py-2 text-[10px] font-black uppercase text-white/30 text-center">Sarı</th>
+                  <th className="px-3 py-2 text-[10px] font-black uppercase text-white/30 text-center">Kır</th>
+                  <th className="px-3 py-2 text-[10px] font-black uppercase text-white/30 text-right">Ort</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.03]">
@@ -177,7 +177,7 @@ export default function PlayerStatsTab({ player }: { player: Player }) {
       <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-sm">
         <div className="flex items-center gap-2 mb-2">
            <Star size={12} className="text-amber-400" />
-           <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">Veri Analiz Notu</span>
+           <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Veri Analiz Notu</span>
         </div>
         <p className="text-[10px] text-white/40 leading-relaxed italic">
           Oyuncunun performans verileri her maç sonu otomatik olarak güncellenir. Sezon geçişlerinde kariyer tablosuna yeni bir satır eklenir ve oyuncunun tarihçesi kalıcı olarak saklanır.

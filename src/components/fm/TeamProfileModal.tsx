@@ -214,7 +214,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
       return;
     }
 
-    if (!confirm('Amblem yüklemek için 2 Kredi harcanacak. Devam?')) return;
+    if (!window.confirm('Amblem yüklemek için 2 Kredi harcanacak. Devam?')) return;
 
     try {
       const reader = new FileReader();
@@ -272,13 +272,13 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
         >
           <div className="flex items-center gap-2 text-white/20">
             <div className="w-10 h-1 rounded-full bg-white/15" />
-            <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">sürükle</span>
             <div className="w-10 h-1 rounded-full bg-white/15" />
           </div>
         </div>
 
         {/* ═══ HEADER PANEL ═══ */}
-        <div className="p-8 bg-zinc-900 border-b border-white/5 relative">
+        <div className="p-4 sm:p-8 bg-zinc-900 border-b border-white/5 relative">
           <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/5 blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
           
           <div className="flex flex-col lg:flex-row justify-between gap-6 relative z-10">
@@ -296,7 +296,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
                     title="Amblem yukle (2 Kredi)"
                   >
                     <ImagePlus size={20} className="text-white/20 group-hover:text-amber-400 transition-colors mb-1" />
-                    <span className="text-[6px] font-black text-white/15 uppercase tracking-wider group-hover:text-amber-400/60 transition-colors">2 Kredi</span>
+                    <span className="text-[10px] font-black text-white/15 uppercase tracking-wider group-hover:text-amber-400/60 transition-colors">2 Kredi</span>
                   </button>
                 )}
                 <input 
@@ -326,7 +326,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
             <div className="flex flex-wrap gap-2 self-end">
               <button 
                 onClick={async () => {
-                  if (confirm(`${teamName} takimina 1 Kredi karsiliginda hazirlik maci teklif etmek istiyor musunuz?`)) {
+                  if (window.confirm(`${teamName} takimina 1 Kredi karsiliginda hazirlik maci teklif etmek istiyor musunuz?`)) {
                     alert('Hazirlik maci teklifiniz iletildi!');
                   }
                 }}
@@ -353,7 +353,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6 border-t border-white/5 pt-6">
             {/* Last 5 Form */}
             <div className="flex flex-col gap-2">
-              <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">SON 5 MAC</span>
+              <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">SON 5 MAC</span>
               <div className="flex gap-1.5">
                 {formDisplay.map((f: string, i: number) => {
                   const cfg = FORM_CONFIG[f] || FORM_CONFIG.D;
@@ -372,7 +372,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
 
             {/* Average Quality */}
             <div className="flex flex-col gap-2">
-              <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">ORTALAMA KALITE</span>
+              <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">ORTALAMA KALITE</span>
               <div className="flex items-center gap-3">
                 <div className="w-32 h-2.5 bg-white/5 rounded-full overflow-hidden">
                   <div 
@@ -393,7 +393,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
 
             {/* Squad Size */}
             <div className="flex flex-col gap-2">
-              <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">KADRO</span>
+              <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">KADRO</span>
               <div className="flex items-center gap-2">
                 <Users size={14} className="text-white/30" />
                 <span className="text-sm font-black text-white">{players.length} <span className="text-white/30 font-normal text-xs">Oyuncu</span></span>
@@ -406,7 +406,7 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
         <div className="flex-1 overflow-auto p-4 md:p-6">
           <div className="min-w-[900px]">
             {/* Table Header */}
-            <div className="grid gap-px text-[8px] font-black uppercase tracking-wider text-white/30 px-3 py-2.5 bg-black/30 rounded-t-xl border border-white/5 border-b-0" style={{ gridTemplateColumns: '56px 1fr repeat(11, 52px) 52px' }}>
+            <div className="grid gap-px text-[10px] font-black uppercase tracking-wider text-white/30 px-3 py-2.5 bg-black/30 rounded-t-xl border border-white/5 border-b-0" style={{ gridTemplateColumns: '56px 1fr repeat(11, 52px) 52px' }}>
               <SortHeader label="Poz" sortKey="Poz" sortBy={sortBy} sortDirection={sortDirection} onToggle={toggleSort} />
               <SortHeader label="Oyuncu" sortKey="Oyuncu" sortBy={sortBy} sortDirection={sortDirection} onToggle={toggleSort} className="justify-start" />
               {STAT_KEYS.map(s => (
@@ -434,23 +434,23 @@ export default function TeamProfileModal({ teamName, onClose, onMessage, onOffer
                       className={`grid gap-px px-3 py-2 border-b border-white/[0.03] hover:bg-white/[0.03] cursor-pointer transition-all ${posColor}`}
                       style={{ gridTemplateColumns: '56px 1fr repeat(11, 52px) 52px' }}
                     >
-                      <div className="text-center text-[9px] font-black flex items-center justify-center">
+                      <div className="text-center text-[10px] font-black flex items-center justify-center">
                         {player.specificPosition || player.position}
                       </div>
-                      <div className="text-left text-[9px] font-bold text-white/80 truncate flex items-center">
+                      <div className="text-left text-[10px] font-bold text-white/80 truncate flex items-center">
                         {toTitleCase(player.name)}
                       </div>
                       {STAT_KEYS.map(s => {
                         const val = getStatVal(player, s.field, s.key);
                         return (
-                          <div key={s.key} className={`text-center text-[9px] font-black flex items-center justify-center ${
+                          <div key={s.key} className={`text-center text-[10px] font-black flex items-center justify-center ${
                             val >= 85 ? 'text-emerald-300' : val >= 75 ? 'text-emerald-400' : val >= 60 ? 'text-yellow-400' : val >= 45 ? 'text-orange-400' : 'text-red-400'
                           }`}>
                             {val}
                           </div>
                         );
                       })}
-                      <div className="text-center text-[9px] font-black text-amber-400 flex items-center justify-center">
+                      <div className="text-center text-[10px] font-black text-amber-400 flex items-center justify-center">
                         {getStatVal(player, 'rating', 'Tplm')}
                       </div>
                       <div className="flex items-center justify-center pr-1">

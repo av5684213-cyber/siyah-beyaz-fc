@@ -349,14 +349,14 @@ export default function RivalMessagingPanel({ userId, userName, teamName }: Riva
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-white truncate">{info.name}</span>
-            <span className="text-[9px] text-white/30 shrink-0 ml-2">{formatTimeAgo(conv.lastMessageAt)}</span>
+            <span className="text-[10px] text-white/30 shrink-0 ml-2">{formatTimeAgo(conv.lastMessageAt)}</span>
           </div>
           <div className="flex items-center justify-between mt-0.5">
             <p className="text-[10px] text-white/40 truncate pr-2">
               {conv.lastMessageContent || 'Henüz mesaj yok'}
             </p>
             {(conv.unreadCount || 0) > 0 && (
-              <span className="shrink-0 min-w-[18px] h-[18px] bg-red-600 rounded-full text-[9px] font-black text-white flex items-center justify-center">
+              <span className="shrink-0 min-w-[18px] h-[18px] bg-red-600 rounded-full text-[10px] font-black text-white flex items-center justify-center">
                 {conv.unreadCount}
               </span>
             )}
@@ -386,7 +386,7 @@ export default function RivalMessagingPanel({ userId, userName, teamName }: Riva
         }`}>
           {/* Category badge */}
           {msg.messageType !== 'general' && (
-            <div className={`flex items-center gap-1 px-2.5 pt-2 text-[8px] font-bold uppercase tracking-widest`}
+            <div className={`flex items-center gap-1 px-2.5 pt-2 text-[10px] font-bold uppercase tracking-widest`}
               style={{ color: categoryMeta.color }}
             >
               {CATEGORY_ICONS[msg.messageType]}
@@ -401,7 +401,7 @@ export default function RivalMessagingPanel({ userId, userName, teamName }: Riva
 
           {/* Footer: time + read status */}
           <div className={`flex items-center gap-1.5 px-3 pb-1.5 ${isMine ? 'justify-end' : 'justify-start'}`}>
-            <span className="text-[8px] text-white/20">{formatTimeAgo(msg.createdAt)}</span>
+            <span className="text-[10px] text-white/20">{formatTimeAgo(msg.createdAt)}</span>
             {isMine && (
               msg.isRead
                 ? <CheckCheck size={10} className="text-blue-400" />
@@ -433,7 +433,7 @@ export default function RivalMessagingPanel({ userId, userName, teamName }: Riva
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="w-[360px] h-[540px] bg-zinc-950 border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-4"
+            className="w-full max-w-[360px] h-[80vh] sm:h-[540px] bg-zinc-950 border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden mb-4"
           >
             {/* ─── Header ─────────────────────────────────────── */}
             <div className="p-3 bg-zinc-900/80 border-b border-white/5 flex items-center justify-between shrink-0">
@@ -455,7 +455,7 @@ export default function RivalMessagingPanel({ userId, userName, teamName }: Riva
                     </div>
                     <div>
                       <p className="text-[11px] font-bold text-white leading-none">{getOtherInfo(activeConversation).name}</p>
-                      <p className="text-[8px] text-white/30">
+                      <p className="text-[10px] text-white/30">
                         {getOtherInfo(activeConversation).isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}
                       </p>
                     </div>
@@ -470,7 +470,7 @@ export default function RivalMessagingPanel({ userId, userName, teamName }: Riva
                     <MessageSquare size={14} className="text-red-500" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Mesajlar</span>
                     {totalUnread > 0 && (
-                      <span className="min-w-[16px] h-[16px] bg-red-600 rounded-full text-[8px] font-black text-white flex items-center justify-center px-1">
+                      <span className="min-w-[16px] h-[16px] bg-red-600 rounded-full text-[10px] font-black text-white flex items-center justify-center px-1">
                         {totalUnread}
                       </span>
                     )}
@@ -510,7 +510,7 @@ export default function RivalMessagingPanel({ userId, userName, teamName }: Riva
                         <MessageSquare size={40} />
                         <div className="text-center">
                           <p className="text-[11px] font-black uppercase">Henüz mesaj yok</p>
-                          <p className="text-[9px] text-white/40 mt-1">Rakip menajerlere mesaj gönder</p>
+                          <p className="text-[10px] text-white/40 mt-1">Rakip menajerlere mesaj gönder</p>
                         </div>
                       </div>
                     ) : (
@@ -557,7 +557,7 @@ export default function RivalMessagingPanel({ userId, userName, teamName }: Riva
                           </div>
                           <div className="min-w-0">
                             <p className="text-[11px] font-bold text-white truncate">{manager.teamName}</p>
-                            <p className="text-[9px] text-white/30">{manager.managerName}</p>
+                            <p className="text-[10px] text-white/30">{manager.managerName}</p>
                           </div>
                         </button>
                       ))}
@@ -612,7 +612,7 @@ export default function RivalMessagingPanel({ userId, userName, teamName }: Riva
                               <button
                                 key={i}
                                 onClick={() => { setInputText(reply); setShowQuickReplies(false); inputRef.current?.focus(); }}
-                                className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-[9px] text-white/60 hover:text-white transition-all"
+                                className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-[10px] text-white/60 hover:text-white transition-all"
                               >
                                 {reply}
                               </button>
@@ -636,7 +636,7 @@ export default function RivalMessagingPanel({ userId, userName, teamName }: Riva
                               <button
                                 key={key}
                                 onClick={() => { setSelectedCategory(key); setShowCategories(false); setShowQuickReplies(true); }}
-                                className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[9px] font-bold transition-all ${
+                                className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
                                   selectedCategory === key
                                     ? 'bg-red-500/10 border border-red-500/20 text-red-400'
                                     : 'bg-white/5 border border-transparent text-white/40 hover:text-white hover:bg-white/10'
@@ -656,7 +656,7 @@ export default function RivalMessagingPanel({ userId, userName, teamName }: Riva
                       {/* Selected category indicator */}
                       {selectedCategory !== 'general' && (
                         <div className="flex items-center gap-1.5 mb-2 px-1">
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[8px] font-bold"
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold"
                             style={{ background: `${MESSAGE_CATEGORIES[selectedCategory].color}15`, color: MESSAGE_CATEGORIES[selectedCategory].color, border: `1px solid ${MESSAGE_CATEGORIES[selectedCategory].color}30` }}
                           >
                             {CATEGORY_ICONS[selectedCategory]}
@@ -728,7 +728,7 @@ export default function RivalMessagingPanel({ userId, userName, teamName }: Riva
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 min-w-[20px] h-[20px] bg-black border-2 border-red-600 text-[9px] font-black text-white flex items-center justify-center rounded-full px-1"
+            className="absolute -top-1 -right-1 min-w-[20px] h-[20px] bg-black border-2 border-red-600 text-[10px] font-black text-white flex items-center justify-center rounded-full px-1"
           >
             {totalUnread > 99 ? '99+' : totalUnread}
           </motion.span>

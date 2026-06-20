@@ -406,7 +406,7 @@ export default function PostMatchSummary({
               {activeTab === 'players' && (
                 <div className="space-y-1.5">
                   {/* Başlık satırı */}
-                  <div className="grid grid-cols-[1fr_auto_auto] gap-2 px-3 pb-1 text-[9px] font-black uppercase tracking-widest text-white/20">
+                  <div className="grid grid-cols-[1fr_auto_auto] gap-2 px-3 pb-1 text-[10px] font-black uppercase tracking-widest text-white/20">
                     <span>Oyuncu</span>
                     <span className="w-16 text-center">G/A</span>
                     <span className="w-10 text-right">Puan</span>
@@ -465,7 +465,7 @@ export default function PostMatchSummary({
                           className="flex items-start gap-3"
                         >
                           {/* dakika badge */}
-                          <div className="w-[60px] flex-shrink-0 flex items-center justify-end pr-3">
+                          <div className="w-[40px] sm:w-[60px] flex-shrink-0 flex items-center justify-end pr-3">
                             <span className="text-[11px] font-black text-white/40 tabular-nums">
                               {event.minute}&apos;
                             </span>
@@ -493,7 +493,7 @@ export default function PostMatchSummary({
                                 {style.label}
                               </span>
                               {!isHomeTeam && (
-                                <span className="text-[9px] text-white/20 uppercase tracking-widest">rakip</span>
+                                <span className="text-[10px] text-white/20 uppercase tracking-widest">rakip</span>
                               )}
                             </div>
                             {event.text && (
@@ -566,7 +566,7 @@ export default function PostMatchSummary({
                         ].map(({ label, v, color }) => (
                           <div key={label} className="text-center">
                             <div className={`text-sm font-black ${color}`}>{v}</div>
-                            <div className="text-[9px] text-white/25 uppercase tracking-widest">{label}</div>
+                            <div className="text-[10px] text-white/25 uppercase tracking-widest">{label}</div>
                           </div>
                         ))}
                       </div>
