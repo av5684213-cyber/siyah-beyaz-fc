@@ -56,7 +56,7 @@ function MatchTimeWarningBanner() {
         </div>
         <div className="flex-shrink-0 hidden sm:flex items-center gap-1 px-2 py-1 rounded bg-amber-500/10 border border-amber-500/20">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500/50" />
-          <span className="text-[9px] font-bold text-amber-400/70 uppercase tracking-widest">Beklemede</span>
+          <span className="text-[10px] font-bold text-amber-400/70 uppercase tracking-widest">Beklemede</span>
         </div>
       </div>
     </div>
@@ -1075,7 +1075,7 @@ const MatchDay = ({
               {slotLabel} · {currentSlot} · TUR {currentSlot === '18:00' ? (cycleStatus as any).eveningTur : (cycleStatus as any).morningTur}/34 · MAÇ {matchIndex + 1}/9 · {matchTime} · {matchesLeft - 1} MAÇ KALDI
             </p>
             {minsToNextMatch > 0 && (
-              <p className="text-white/40 text-[9px] tracking-[0.3em] font-bold mt-1.5 uppercase">
+              <p className="text-white/40 text-[10px] tracking-[0.3em] font-bold mt-1.5 uppercase">
                 SONRAKİ MAÇ {minsToNextMatch} DAKİKA SONRA
               </p>
             )}
@@ -1084,16 +1084,16 @@ const MatchDay = ({
           {/* 2 slot durumu — hangisi canlı, hangisi bekliyor */}
           <div className="grid grid-cols-2 gap-3 w-full max-w-2xl">
             <div className={`p-3 rounded-xl border ${currentSlot === '12:00' ? 'bg-red-500/10 border-red-500/40 animate-pulse' : 'bg-zinc-900/40 border-white/8 opacity-60'}`}>
-              <div className="text-[9px] font-black text-white/40 uppercase tracking-wider">ÖĞLE SLOTU</div>
+              <div className="text-[10px] font-black text-white/40 uppercase tracking-wider">ÖĞLE SLOTU</div>
               <div className="text-2xl font-black text-white tabular-nums mt-1">12:00</div>
-              <div className={`text-[9px] font-black mt-1 uppercase tracking-wider ${currentSlot === '12:00' ? 'text-red-400' : 'text-emerald-400/60'}`}>
+              <div className={`text-[10px] font-black mt-1 uppercase tracking-wider ${currentSlot === '12:00' ? 'text-red-400' : 'text-emerald-400/60'}`}>
                 {currentSlot === '12:00' ? '● CANLI' : '✓ OYNANDI'}
               </div>
             </div>
             <div className={`p-3 rounded-xl border ${currentSlot === '18:00' ? 'bg-red-500/10 border-red-500/40 animate-pulse' : 'bg-zinc-900/40 border-white/8'}`}>
-              <div className="text-[9px] font-black text-white/40 uppercase tracking-wider">AKŞAM SLOTU</div>
+              <div className="text-[10px] font-black text-white/40 uppercase tracking-wider">AKŞAM SLOTU</div>
               <div className="text-2xl font-black text-white tabular-nums mt-1">18:00</div>
-              <div className={`text-[9px] font-black mt-1 uppercase tracking-wider ${currentSlot === '18:00' ? 'text-red-400' : 'text-amber-400/60'}`}>
+              <div className={`text-[10px] font-black mt-1 uppercase tracking-wider ${currentSlot === '18:00' ? 'text-red-400' : 'text-amber-400/60'}`}>
                 {currentSlot === '18:00' ? '● CANLI' : '↗ BEKLENİYOR'}
               </div>
             </div>
@@ -1124,13 +1124,13 @@ const MatchDay = ({
                         : 'bg-zinc-900/40 border-white/8'
                     }`}
                   >
-                    <div className="text-[8px] font-black text-white/30 uppercase">
+                    <div className="text-[10px] font-black text-white/30 uppercase">
                       {isPlayed ? '✓' : isCurrent ? '●' : `MAÇ ${i + 1}`}
                     </div>
                     <div className={`text-sm font-black tabular-nums mt-0.5 ${isCurrent ? 'text-red-400' : isPlayed ? 'text-emerald-400/60' : 'text-white/40'}`}>
                       {fmt(startMin)}
                     </div>
-                    <div className="text-[8px] text-white/30 tabular-nums">{fmt(endMin)}</div>
+                    <div className="text-[10px] text-white/30 tabular-nums">{fmt(endMin)}</div>
                   </div>
                 );
               })}
@@ -1156,7 +1156,7 @@ const MatchDay = ({
             {liveFixtureId ? '⚡ CANLI MAÇA GİT' : 'Fikstüre Git'}
           </button>
           {liveFixtureId && (
-            <p className="text-[9px] text-red-400/40 mt-2">
+            <p className="text-[10px] text-red-400/40 mt-2">
               Maç ID: {liveFixtureId.slice(0, 8)}...
             </p>
           )}
@@ -1211,7 +1211,7 @@ const MatchDay = ({
           <p className={`text-[10px] tracking-[0.4em] font-black mt-4 uppercase ${isSeasonEnd ? 'text-amber-500' : 'text-white/40'}`}>
             {subtitle}
           </p>
-          <p className="text-white/30 text-[9px] tracking-[0.3em] font-bold mt-1.5 uppercase">
+          <p className="text-white/30 text-[10px] tracking-[0.3em] font-bold mt-1.5 uppercase">
             Sıradaki: {cycleStatus.nextEventTime}
           </p>
         </div>
@@ -1224,8 +1224,8 @@ const MatchDay = ({
         {/* Sezon ilerleme barı */}
         <div className="w-full max-w-2xl">
           <div className="flex items-center gap-2 mb-1.5 px-1">
-            <span className="text-[9px] font-black text-white/40 uppercase tracking-wider">SEZON İLERLEMESİ</span>
-            <span className="text-[9px] font-black text-amber-500 ml-auto">
+            <span className="text-[10px] font-black text-white/40 uppercase tracking-wider">SEZON İLERLEMESİ</span>
+            <span className="text-[10px] font-black text-amber-500 ml-auto">
               {isSeasonEnd ? '34/34 TUR (TAMAMLANDI)' : `${(cycleStatus as any).eveningTur || (cycleStatus as any).morningTur || 0}/34 TUR`}
             </span>
           </div>
@@ -1292,7 +1292,7 @@ const MatchDay = ({
                   {slotLabel} · TUR {(cycleStatus as any).nextSlot === '12:00' ? (cycleStatus as any).morningTur : (cycleStatus as any).eveningTur}/34 · MAÇLAR BAŞLIYOR: {cycleStatus.nextEventTime} ({cycleStatus.countDownMinutes} DK KALDI)
                 </p>
                 {cycleStatus.previousSlot && (
-                  <p className="text-white/30 text-[9px] tracking-[0.3em] font-bold mt-1.5 uppercase">
+                  <p className="text-white/30 text-[10px] tracking-[0.3em] font-bold mt-1.5 uppercase">
                     ÖNCEKİ SLOT: {cycleStatus.previousSlot}
                   </p>
                 )}
@@ -1301,8 +1301,8 @@ const MatchDay = ({
             {/* Sezon ilerleme barı */}
             <div className="w-full max-w-2xl">
               <div className="flex items-center gap-2 mb-1.5 px-1">
-                <span className="text-[9px] font-black text-white/40 uppercase tracking-wider">SEZON İLERLEMESİ</span>
-                <span className="text-[9px] font-black text-amber-500 ml-auto">
+                <span className="text-[10px] font-black text-white/40 uppercase tracking-wider">SEZON İLERLEMESİ</span>
+                <span className="text-[10px] font-black text-amber-500 ml-auto">
                   {((cycleStatus as any).eveningTur || (cycleStatus as any).morningTur || 0)}/34 TUR
                 </span>
               </div>
@@ -1320,7 +1320,7 @@ const MatchDay = ({
                 <div className="w-1 h-4 bg-amber-500 rounded-full" />
                 <h3 className="text-xs font-black text-amber-500 uppercase tracking-[0.3em]">BUGÜNKÜ MAÇLAR</h3>
                 <div className="flex-1 h-px bg-gradient-to-r from-amber-500/30 to-transparent" />
-                <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">2 SLOT · 18 MAÇ</span>
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">2 SLOT · 18 MAÇ</span>
               </div>
 
               {/* 2 slot yan yana */}
@@ -1344,28 +1344,30 @@ const MatchDay = ({
                         <div className="flex items-center gap-2">
                           <span className="text-2xl font-black text-white tabular-nums">{slot.name}</span>
                           {isNextSlot && (
-                            <span className="px-1.5 py-0.5 bg-amber-500 text-black rounded text-[8px] font-black uppercase tracking-wider">SIRADAKİ</span>
+                            <span className="px-1.5 py-0.5 bg-amber-500 text-black rounded text-[10px] font-black uppercase tracking-wider">SIRADAKİ</span>
                           )}
                           {isPlayed && (
-                            <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-[8px] font-black uppercase tracking-wider">OYNANDI</span>
+                            <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded text-[10px] font-black uppercase tracking-wider">OYNANDI</span>
                           )}
                         </div>
-                        <span className="text-[9px] font-black text-white/40 uppercase tracking-wider">{slot.label}</span>
+                        <span className="text-[10px] font-black text-white/40 uppercase tracking-wider">{slot.label}</span>
                       </div>
 
                       {/* 9 maçlık mini grid */}
-                      <div className="grid grid-cols-9 gap-1">
+                      <div className="overflow-x-auto no-scrollbar -mx-1 px-1">
+                        <div className="grid grid-cols-9 gap-1 min-w-[480px]">
                         {Array.from({ length: 9 }, (_, i) => {
                           const startMin = slot.startMin + i * 10;
                           return (
                             <div key={i} className="text-center">
-                              <div className="text-[7px] font-black text-white/30 uppercase">M{i + 1}</div>
+                              <div className="text-[10px] font-black text-white/30 uppercase">M{i + 1}</div>
                               <div className="text-[10px] font-black text-amber-400/80 tabular-nums">{fmt(startMin).slice(0, 5)}</div>
                             </div>
                           );
                         })}
+                        </div>
                       </div>
-                      <p className="text-[9px] text-white/40 mt-2 text-center">{slot.period} · 9 maç</p>
+                      <p className="text-[10px] text-white/40 mt-2 text-center">{slot.period} · 9 maç</p>
                     </div>
                   );
                 })}
@@ -1378,8 +1380,8 @@ const MatchDay = ({
             </div>
 
             <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
-                <div className="p-3 bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-widest text-white/40">LOBİ: AKTİF</div>
-                <div className="p-3 bg-white/5 border border-white/10 text-[9px] font-bold uppercase tracking-widest text-white/40">MEDYA: HAZIR</div>
+                <div className="p-3 bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/40">LOBİ: AKTİF</div>
+                <div className="p-3 bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/40">MEDYA: HAZIR</div>
             </div>
 
             {/* Canlı maçlar artık maç sayfasında — fikstüre yönlendir */}
@@ -1421,14 +1423,14 @@ const MatchDay = ({
       <div className="p-2 sm:p-6 md:p-12 bg-black/60 backdrop-blur-md border-b border-white/10 flex flex-col items-center">
         <div className="flex items-center gap-2 sm:gap-8 md:gap-12">
           <div className="text-center">
-            <div className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-[0.3em] sm:tracking-[0.4em] mb-1 sm:mb-2">HOME</div>
+            <div className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-[0.3em] sm:tracking-[0.4em] mb-1 sm:mb-2">HOME</div>
             <div className="text-4xl sm:text-7xl md:text-9xl font-black tracking-tighter leading-none italic">
               {score.home}
             </div>
           </div>
           <div className="text-xl sm:text-4xl md:text-5xl font-black text-white/10 mb-[-10px] sm:mb-[-20px] tracking-widest italic">VS</div>
           <div className="text-center">
-            <div className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-[0.3em] sm:tracking-[0.4em] mb-1 sm:mb-2">AWAY</div>
+            <div className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-[0.3em] sm:tracking-[0.4em] mb-1 sm:mb-2">AWAY</div>
             <div className="text-4xl sm:text-7xl md:text-9xl font-black tracking-tighter leading-none italic">
               {score.away}
             </div>
@@ -1507,11 +1509,11 @@ const MatchDay = ({
                           <span className="text-sm">{info.emoji}</span>
                           <span className="text-[10px] font-black text-white/90 uppercase tracking-wider">{info.label}</span>
                         </div>
-                        <p className="text-[9px] text-white/50 leading-relaxed">{info.desc}</p>
+                        <p className="text-[10px] text-white/50 leading-relaxed">{info.desc}</p>
                         {strictLabel && (
                           <div className="pt-1 border-t border-white/10 mt-1">
-                            <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Sertlik: </span>
-                            <span className="text-[9px] font-bold text-amber-400/70">{strictLabel}</span>
+                            <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Sertlik: </span>
+                            <span className="text-[10px] font-bold text-amber-400/70">{strictLabel}</span>
                           </div>
                         )}
                       </div>
@@ -1534,7 +1536,7 @@ const MatchDay = ({
             </span>
           </div>
           {matchState.isFriendly && (
-            <span className="px-2 sm:px-3 py-1 bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[7px] sm:text-[8px] font-black uppercase tracking-widest rounded-full">
+            <span className="px-2 sm:px-3 py-1 bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] sm:text-[10px] font-black uppercase tracking-widest rounded-full">
               Hızlandırılmış Mod
             </span>
           )}
@@ -1548,7 +1550,7 @@ const MatchDay = ({
           <button 
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-4 sm:py-6 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.4em] transition-all duration-300 relative ${
+            className={`flex-1 py-4 sm:py-6 text-[10px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.4em] transition-all duration-300 relative ${
               activeTab === tab ? 'text-white' : 'text-white/20 hover:text-white/40'
             }`}>
             {tab === 'commentary' ? 'Canlı Anlatım' : tab === 'statistics' ? 'Savaş Verileri' : 'STRATEJİ ÜSSÜ'}
@@ -1612,7 +1614,7 @@ const MatchDay = ({
                           GOL!
                         </motion.span>
                       )}
-                      <div className={`text-[7px] font-black uppercase tracking-[0.3em] ${event.type === 'GOAL' ? 'opacity-60' : 'opacity-40'}`}>
+                      <div className={`text-[10px] font-black uppercase tracking-[0.3em] ${event.type === 'GOAL' ? 'opacity-60' : 'opacity-40'}`}>
                         {event.type === 'GOAL' ? 'GOL' : 
                          event.type === 'TACTIC' ? 'TEKNİK DİREKTÖR MÜDAHALESİ' : 
                          event.type === 'YELLOW' ? 'SARI KART' :
@@ -1634,11 +1636,11 @@ const MatchDay = ({
                     </div>
                     {event.type === 'GOAL' && (
                       <div className="flex items-center gap-2 mt-0.5 pt-0.5 border-t border-white/5">
-                        <span className="text-[7px] font-black uppercase tracking-widest text-white/30">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/30">
                           {event.team === 'HOME' ? 'EV SAHİBİ' : 'DEPLASMAN'}
                         </span>
                         {event.assistant && (
-                          <span className="text-[7px] font-bold tracking-tight text-white/30">
+                          <span className="text-[10px] font-bold tracking-tight text-white/30">
                             Asist: {event.assistant}
                           </span>
                         )}
@@ -1754,7 +1756,7 @@ const MatchDay = ({
                <div className="p-8 bg-zinc-900/60 border border-white/5 rounded-[2rem]">
                   <div className="flex items-center justify-between mb-6">
                     <h4 className="text-xl font-black italic tracking-tighter">SAHADAKİLER (DEĞİŞTİR)</h4>
-                    <span className="text-[8px] text-white/30">Değişiklik: {subsUsed}/{MAX_SUBS}</span>
+                    <span className="text-[10px] text-white/30">Değişiklik: {subsUsed}/{MAX_SUBS}</span>
                   </div>
                   <div className="grid grid-cols-1 gap-2">
                      {homeSquad.map((player) => (
@@ -1786,7 +1788,7 @@ const MatchDay = ({
       <div className="p-3 sm:p-6 bg-black/60 backdrop-blur-md border-t border-white/10 flex justify-center">
         <div className="flex items-center gap-3 sm:gap-6">
             <div className={`w-1.5 h-1.5 rounded-full ${gameMinute < 90 ? 'bg-white animate-pulse' : 'bg-white/10'}`}></div>
-            <span className="text-[9px] font-black uppercase tracking-[0.6em] text-white/30">
+            <span className="text-[10px] font-black uppercase tracking-[0.6em] text-white/30">
                 {gameMinute < 90 ? 'CANLI ANALİZ SİSTEMİ AKTİF' : 'ANALİZ TAMAMLANDI'}
             </span>
         </div>

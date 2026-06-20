@@ -92,7 +92,7 @@ export function AppHeader({ profile }: AppHeaderProps) {
         <div className="min-w-0 flex-1">
           <h1 className="text-sm sm:text-2xl font-black italic tracking-tighter leading-none flex items-baseline gap-1.5 text-white min-w-0">
             <span className="truncate">{toTitleCase(profile?.team_name || '')}</span>
-            <span className="text-[8px] sm:text-[10px] not-italic bg-white/10 px-1.5 py-0.5 rounded text-white/60 tracking-normal shrink-0 hidden sm:inline">PRO</span>
+            <span className="text-[10px] sm:text-[10px] not-italic bg-white/10 px-1.5 py-0.5 rounded text-white/60 tracking-normal shrink-0 hidden sm:inline">PRO</span>
           </h1>
           {/* Meta info — compact modda gizle */}
           <AnimatePresence>
@@ -101,7 +101,7 @@ export function AppHeader({ profile }: AppHeaderProps) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="flex items-center gap-1.5 sm:gap-3 mt-1 text-[9px] uppercase font-bold tracking-[0.15em] sm:tracking-[0.2em] text-white/40 flex-wrap min-w-0 overflow-hidden"
+                className="flex items-center gap-1.5 sm:gap-3 mt-1 text-[10px] uppercase font-bold tracking-[0.15em] sm:tracking-[0.2em] text-white/40 flex-wrap min-w-0 overflow-hidden"
               >
                 <span className="flex items-center gap-1 font-black min-w-0">
                   <Activity size={10} style={{ color: profile?.secondary_color || '#ef4444' }} className="shrink-0" />
@@ -122,12 +122,12 @@ export function AppHeader({ profile }: AppHeaderProps) {
         {/* TR Saat — sadece sm+ ve non-compact */}
         {!isCompact && (
           <div className="hidden sm:flex flex-col items-end gap-0.5 text-right px-2 lg:px-4 border-l border-white/5 whitespace-nowrap">
-            <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold">{t('header_tr_time')}</p>
+            <p className="text-[10px] text-white/20 uppercase tracking-[0.2em] font-bold">{t('header_tr_time')}</p>
             <div className="flex flex-col items-end leading-none">
               <span className="font-mono text-sm font-bold text-white/80 tabular-nums">
                 {trTime ? trTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
               </span>
-              <span className="text-[8px] text-white/40 font-bold uppercase tracking-tight">
+              <span className="text-[10px] text-white/40 font-bold uppercase tracking-tight">
                 {trTime ? trTime.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'short' }) : '---'}
               </span>
             </div>
@@ -148,7 +148,7 @@ export function AppHeader({ profile }: AppHeaderProps) {
         <div className="text-right flex flex-col items-end border-l border-white/5 pl-1.5 sm:pl-4">
           <div className="flex items-center gap-1.5 sm:gap-2 justify-end">
             <div className="w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center border border-amber-600 shadow-[0_0_10px_rgba(251,191,36,0.3)] shrink-0">
-              <span className="text-[8px] font-black text-amber-900">K</span>
+              <span className="text-[10px] font-black text-amber-900">K</span>
             </div>
             <p className="font-mono text-xs sm:text-lg font-medium tracking-tighter text-amber-400 whitespace-nowrap">
               {profile?.credits?.toLocaleString() || '0'}

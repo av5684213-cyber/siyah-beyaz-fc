@@ -335,7 +335,7 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
                         <button
                             key={pos}
                             onClick={() => setFilterPos(pos)}
-                            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterPos === pos ? 'bg-red-600 text-white' : 'bg-white/5 text-white/30 hover:bg-white/10'}`}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${filterPos === pos ? 'bg-red-600 text-white' : 'bg-white/5 text-white/30 hover:bg-white/10'}`}
                         >
                             {pos}
                         </button>
@@ -343,23 +343,23 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
                 </div>
             </div>
 
-            <div className="overflow-x-auto rounded-2xl border border-white/5">
-                <table className="w-full text-left border-collapse bg-zinc-900/40">
+            <div className="overflow-x-auto rounded-2xl border border-white/5 no-scrollbar">
+                <table className="w-full text-left border-collapse bg-zinc-900/40 min-w-[600px]">
                     <thead>
                         <tr className="bg-zinc-900/80 border-b border-white/10">
-                            <th className="p-4 text-[9px] font-black uppercase text-white/30 truncate">OYUNCU</th>
-                            <th className="p-4 text-[9px] font-black uppercase text-white/30 text-center">TAKIM</th>
-                            <th className="p-4 text-[9px] font-black uppercase text-white/30 text-center">Klt</th>
-                            <th className="p-4 text-[9px] font-black uppercase text-white/30 text-center">Klc</th>
-                            <th className="p-4 text-[9px] font-black uppercase text-white/30 text-center">Tk</th>
-                            <th className="p-4 text-[9px] font-black uppercase text-white/30 text-center">Pas</th>
-                            <th className="p-4 text-[9px] font-black uppercase text-white/30 text-center">Şut</th>
-                            <th className="p-4 text-[9px] font-black uppercase text-white/30 text-center">Kfa</th>
-                            <th className="p-4 text-[9px] font-black uppercase text-white/30 text-center">Hız</th>
-                            <th className="p-4 text-[9px] font-black uppercase text-white/30 text-center">Güç</th>
-                            <th className="p-4 text-[9px] font-black uppercase text-white/30 text-center">Alg</th>
-                            <th className="p-4 text-[9px] font-black uppercase text-white/30 text-center">Top</th>
-                            <th className="p-4 text-[9px] font-black uppercase text-white/30 text-center">Tplm</th>
+                            <th className="p-4 text-[10px] font-black uppercase text-white/30 truncate">OYUNCU</th>
+                            <th className="p-4 text-[10px] font-black uppercase text-white/30 text-center">TAKIM</th>
+                            <th className="p-4 text-[10px] font-black uppercase text-white/30 text-center">Klt</th>
+                            <th className="p-4 text-[10px] font-black uppercase text-white/30 text-center">Klc</th>
+                            <th className="p-4 text-[10px] font-black uppercase text-white/30 text-center">Tk</th>
+                            <th className="p-4 text-[10px] font-black uppercase text-white/30 text-center">Pas</th>
+                            <th className="p-4 text-[10px] font-black uppercase text-white/30 text-center">Şut</th>
+                            <th className="p-4 text-[10px] font-black uppercase text-white/30 text-center">Kfa</th>
+                            <th className="p-4 text-[10px] font-black uppercase text-white/30 text-center">Hız</th>
+                            <th className="p-4 text-[10px] font-black uppercase text-white/30 text-center">Güç</th>
+                            <th className="p-4 text-[10px] font-black uppercase text-white/30 text-center">Alg</th>
+                            <th className="p-4 text-[10px] font-black uppercase text-white/30 text-center">Top</th>
+                            <th className="p-4 text-[10px] font-black uppercase text-white/30 text-center">Tplm</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -427,7 +427,7 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
                     >
                         <div className="flex items-center gap-2 mb-1">
                             {isActiveTier && <div className={`w-1.5 h-1.5 rounded-full ${lc.accent}`} />}
-                            <span className="text-[8px] uppercase font-black tracking-widest text-white/30">
+                            <span className="text-[10px] uppercase font-black tracking-widest text-white/30">
                                 {TIER_LABELS[tier]}
                             </span>
                         </div>
@@ -445,10 +445,10 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
                 <div className="flex items-center justify-between border-b border-white/5 mb-2 pb-2">
                    <div className="flex items-center gap-2">
                      <span className="text-[10px] font-black uppercase tracking-widest text-white/40">AKTİF BÖLÜMLER</span>
-                     <span className="px-1.5 py-0.5 rounded-md bg-white/10 text-[9px] font-black text-white/60">{activeTierLeagues.length} GRUP</span>
+                     <span className="px-1.5 py-0.5 rounded-md bg-white/10 text-[10px] font-black text-white/60">{activeTierLeagues.length} GRUP</span>
                    </div>
                    {currentLeague?.tier === 4 && (
-                     <span className="text-[9px] font-bold text-violet-400 animate-pulse">YENI DEPARTMANLAR AKTIF</span>
+                     <span className="text-[10px] font-bold text-violet-400 animate-pulse">YENI DEPARTMANLAR AKTIF</span>
                    )}
                 </div>
                 
@@ -463,7 +463,7 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
                                 : 'text-white/40 border-white/5 hover:text-white hover:bg-white/5'
                             }`}
                         >
-                            <span className="text-[8px] opacity-40">GRUP</span>
+                            <span className="text-[10px] opacity-40">GRUP</span>
                             {l.name.replace('4. Lig ', '').replace('Bölüm ', '') || l.name}
                         </button>
                     ))}
@@ -474,15 +474,15 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
 
       {/* Zone Legend */}
       <div className="flex flex-wrap gap-4 px-2">
-        <div className="flex items-center gap-1.5 text-[8px] uppercase font-bold tracking-widest text-white/30">
+        <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-white/30">
           <div className="w-3 h-0.5 bg-emerald-500 rounded" />
           {currentLeague?.tier === 1 ? 'Şampiyonluk' : 'Doğrudan Çıkma'}
         </div>
-        <div className="flex items-center gap-1.5 text-[8px] uppercase font-bold tracking-widest text-white/30">
+        <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-white/30">
           <div className={`w-3 h-0.5 ${currentLeague?.tier === 1 ? 'bg-sky-500' : 'bg-amber-500'} rounded`} />
           {currentLeague?.tier === 1 ? 'Avrupa' : 'Play-off'}
         </div>
-        <div className="flex items-center gap-1.5 text-[8px] uppercase font-bold tracking-widest text-white/30">
+        <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-white/30">
           <div className="w-3 h-0.5 bg-red-500 rounded" />
           Düşme
         </div>
@@ -501,11 +501,11 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
                 <p className={`text-xs sm:text-sm font-black uppercase tracking-wider ${colors.text} truncate`}>
                   {currentLeague?.name || '1. Lig'}
                 </p>
-                <p className="text-[8px] text-white/20 uppercase tracking-widest font-bold">Hafta 1 / 34</p>
+                <p className="text-[10px] text-white/20 uppercase tracking-widest font-bold">Hafta 1 / 34</p>
               </div>
             </div>
             {data?.source === 'fallback' && (
-              <span className="text-[8px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase font-black tracking-widest shrink-0">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase font-black tracking-widest shrink-0">
                 Offline
               </span>
             )}
@@ -517,13 +517,13 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
           <div className="min-w-[520px]">
             {/* Column Headers */}
             <div className="grid grid-cols-[2rem_1fr_repeat(8,_3.5rem)] items-center px-3 sm:px-4 py-2.5 border-b border-white/5 bg-zinc-900/50">
-              <span className="text-[8px] font-black uppercase tracking-widest text-white/20 text-center">#</span>
-              <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Takım</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/20 text-center">#</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Takım</span>
               {[{ l: 'O', k: 'played' }, { l: 'G', k: 'won' }, { l: 'B', k: 'drawn' }, { l: 'M', k: 'lost' }, { l: 'AG', k: 'goals_for' }, { l: 'YG', k: 'goals_against' }, { l: 'AV', k: 'goal_diff' }, { l: 'P', k: 'points' }].map(h => (
                 <span
                   key={h.k}
                   onClick={() => handleSort(h.k)}
-                  className={`text-[8px] font-black uppercase tracking-widest text-center cursor-pointer hover:text-white transition-colors touch-target-44 flex items-center justify-center ${sortKey === h.k ? 'text-white' : 'text-white/20'}`}
+                  className={`text-[10px] font-black uppercase tracking-widest text-center cursor-pointer hover:text-white transition-colors touch-target-44 flex items-center justify-center ${sortKey === h.k ? 'text-white' : 'text-white/20'}`}
                 >
                   {h.l}{sortKey === h.k && (sortDir === 'desc' ? ' ↓' : ' ↑')}
                 </span>
@@ -582,7 +582,7 @@ export default React.memo(function LeagueStandings({ isAdmin }: { isAdmin?: bool
                       {toTitleCase(teamName) || teamName || 'Bilinmiyor'}
                     </span>
                     {isBot && !isUser && (
-                      <span className="text-[9px] text-cyan-400/50 font-mono shrink-0">BOT</span>
+                      <span className="text-[10px] text-cyan-400/50 font-mono shrink-0">BOT</span>
                     )}
                   </div>
                   <span className="text-xs font-mono text-white/30 text-center">{played}</span>
@@ -666,7 +666,7 @@ function FixturesList({ leagueId }: { leagueId: number }) {
                 <div className="px-3 py-1 bg-black/60 rounded-lg text-sm font-black italic border border-white/10">
                    {f.status === 'finished' ? `${f.home_score} - ${f.away_score}` : f.match_time}
                 </div>
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">{f.tur}. Hafta</span>
+                <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{f.tur}. Hafta</span>
               </div>
               <div className="flex-1 text-left pl-4">
                 <p className="text-xs font-black uppercase italic text-white truncate">{f.away?.name || 'Bilinmiyor'}</p>

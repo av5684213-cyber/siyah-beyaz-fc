@@ -33,12 +33,12 @@ function AttrFilter({ label, value, onChange }: { label: string, value: any, onC
   const attrs = ['Klc', 'Tk', 'Pas', 'Sut', 'Kfa', 'Hız', 'Güç', 'Alg', 'Top'];
   return (
     <div className="space-y-1">
-      <label className="text-[8px] font-black text-white/20 uppercase">{label}</label>
+      <label className="text-[10px] font-black text-white/20 uppercase">{label}</label>
       <div className="flex gap-1">
         <select 
           value={value.key}
           onChange={(e) => onChange({...value, key: e.target.value})}
-          className="w-[60%] bg-zinc-900 border border-white/10 rounded-lg p-2 text-[9px] font-black uppercase text-white outline-none"
+          className="w-[60%] bg-zinc-900 border border-white/10 rounded-lg p-2 text-[10px] font-black uppercase text-white outline-none"
         >
           {attrs.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
@@ -47,7 +47,7 @@ function AttrFilter({ label, value, onChange }: { label: string, value: any, onC
           value={value.min}
           onChange={(e) => onChange({...value, min: Number(e.target.value)})}
           placeholder="Min"
-          className="w-[40%] bg-zinc-900 border border-white/10 rounded-lg p-2 text-[9px] font-black text-white outline-none"
+          className="w-[40%] bg-zinc-900 border border-white/10 rounded-lg p-2 text-[10px] font-black text-white outline-none"
         />
       </div>
     </div>
@@ -85,7 +85,7 @@ function AuctionTimer({ expiresAt }: { expiresAt?: string }) {
   if (!expiresAt) return null;
 
   return (
-    <div className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider ${
+    <div className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider ${
       isExpired ? 'text-red-400' : isUrgent ? 'text-amber-400 animate-pulse' : 'text-emerald-400'
     }`}>
       <Timer size={12} />
@@ -424,7 +424,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
       ? `${playerName} için ${formatCurrency(nextBid)} (MAKSİMUM BEDEL) ödeyip oyuncuyu hemen almak istiyor musunuz?`
       : `${playerName} için ${formatCurrency(nextBid)} teklif vermek istiyor musunuz?`;
 
-    if (confirm(confirmMsg)) {
+    if (window.confirm(confirmMsg)) {
       const result = await placeBid(listing.id, userId, profile.team_name, nextBid);
       if (result.success) {
         if (result.autoWin) {
@@ -443,7 +443,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
   };
 
   const handleCancelAuction = async (listingId: string) => {
-    if (!confirm('Bu açık artırmayı iptal etmek istediğinize emin misiniz? (Teklif yoksa iptal edilebilir)')) return;
+    if (!window.confirm('Bu açık artırmayı iptal etmek istediğinize emin misiniz? (Teklif yoksa iptal edilebilir)')) return;
     setLoading(true);
     try {
       const result = await cancelAuction(listingId, userId);
@@ -516,7 +516,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setShowCreditPurchase(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-amber-500/25 hover:text-amber-300 transition-all"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/25 hover:text-amber-300 transition-all"
                     >
                       <Coins size={12} />
                       Kredi Satın Al
@@ -530,7 +530,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 bg-white/5 p-3 sm:p-4 rounded-2xl border border-white/5">
                   {/* Position Filter — Detaylı Pozisyon Sistemi */}
                   <div className="space-y-1">
-                    <label className="text-[8px] font-black text-white/20 uppercase">MEVKİİ</label>
+                    <label className="text-[10px] font-black text-white/20 uppercase">MEVKİİ</label>
                     <select 
                       value={filter.position}
                       onChange={(e) => setFilter({...filter, position: e.target.value})}
@@ -568,7 +568,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
 
                   {/* Kalite Range */}
                   <div className="space-y-1">
-                    <label className="text-[8px] font-black text-white/20 uppercase">KALİTE (Klt)</label>
+                    <label className="text-[10px] font-black text-white/20 uppercase">KALİTE (Klt)</label>
                     <div className="flex gap-2">
                       <input 
                         type="number" 
@@ -627,24 +627,24 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <div className="w-8 h-8 bg-zinc-800 rounded-lg flex items-center justify-center text-[9px] font-black italic border border-white/10 shrink-0">
+                            <div className="w-8 h-8 bg-zinc-800 rounded-lg flex items-center justify-center text-[10px] font-black italic border border-white/10 shrink-0">
                               {p?.specific_position || p?.position || '??'}
                             </div>
                             <div className="min-w-0">
                               <div className="text-xs font-black italic tracking-tighter truncate">
                                 {toTitleCase(p?.name)}
                                 {listing.is_auction && (
-                                  <span className="ml-1 px-1 py-px rounded text-[6px] font-black uppercase bg-amber-500/20 text-amber-400">ARTIRMA</span>
+                                  <span className="ml-1 px-1 py-px rounded text-[10px] font-black uppercase bg-amber-500/20 text-amber-400">ARTIRMA</span>
                                 )}
                               </div>
-                              <div className="text-[8px] text-white/30 truncate">
+                              <div className="text-[10px] text-white/30 truncate">
                                 {listing.seller_id === 'free-agent-system' ? 'SERBEST OYUNCU' : toTitleCase(listing.seller_name || '')}
                               </div>
                             </div>
                           </div>
                           <div className="text-right shrink-0 ml-2">
                             <div className="text-[10px] font-mono text-emerald-400 font-bold">{formatCurrency(listing.price)}</div>
-                            <div className="text-[8px] text-white/30">Klt {p?.Klt || p?.rating || 0}</div>
+                            <div className="text-[10px] text-white/30">Klt {p?.Klt || p?.rating || 0}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
@@ -652,7 +652,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                             <button
                               onClick={(e) => { e.stopPropagation(); handleBid(listing); }}
                               disabled={listing.seller_id === userId || loading}
-                              className="w-full sm:w-auto px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                              className="w-full sm:w-auto px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30"
                             >
                               <Gavel size={10} className="inline mr-1" />Teklif Ver
                             </button>
@@ -660,7 +660,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                             <button
                               onClick={(e) => { e.stopPropagation(); setContractListing(listing); setContractMode('free-agent'); }}
                               disabled={loading}
-                              className="w-full sm:w-auto px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                              className="w-full sm:w-auto px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                             >
                               <FileText size={10} className="inline mr-1" />Sözleşme
                             </button>
@@ -668,7 +668,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                             <button
                               onClick={(e) => { e.stopPropagation(); handleBuy(listing); }}
                               disabled={loading}
-                              className="w-full sm:w-auto px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                              className="w-full sm:w-auto px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                             >
                               Satın Al
                             </button>
@@ -722,12 +722,12 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                                 <div>
                                   <div className="text-[13px] font-black italic tracking-tighter truncate max-w-[120px]">{toTitleCase(p?.name)}
                                     {listing.is_auction && (
-                                      <span className="ml-1 px-1 py-px rounded text-[6px] font-black uppercase bg-amber-500/20 text-amber-400 border border-amber-500/20">
+                                      <span className="ml-1 px-1 py-px rounded text-[10px] font-black uppercase bg-amber-500/20 text-amber-400 border border-amber-500/20">
                                         ARTIRMA
                                       </span>
                                     )}
                                   </div>
-                                  <div className="text-[8px] font-black text-white/30 uppercase tracking-widest truncate max-w-[120px]">
+                                  <div className="text-[10px] font-black text-white/30 uppercase tracking-widest truncate max-w-[120px]">
                                     {listing.seller_id === 'free-agent-system' ? 'SERBEST OYUNCU' : (
                                       <>
                                         {toTitleCase(listing.seller_name || '')}
@@ -759,7 +759,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                                     {listing.current_bid ? formatCurrency(listing.current_bid) : 'Henüz teklif yok'}
                                   </div>
                                   {listing.bid_count && listing.bid_count > 0 && (
-                                    <div className="text-[8px] text-white/20">{listing.bid_count} teklif</div>
+                                    <div className="text-[10px] text-white/20">{listing.bid_count} teklif</div>
                                   )}
                                 </div>
                               ) : (
@@ -767,14 +767,14 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                               )}
                             </td>
                             <td className="p-3 text-center">
-                              {listing.is_auction ? <AuctionTimer expiresAt={listing.expires_at} /> : <span className="text-[9px] text-white/20">—</span>}
+                              {listing.is_auction ? <AuctionTimer expiresAt={listing.expires_at} /> : <span className="text-[10px] text-white/20">—</span>}
                             </td>
                             <td className="p-3 text-center">
                               {listing.is_auction ? (
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleBid(listing); }}
                                   disabled={listing.seller_id === userId || loading}
-                                  className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${
+                                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
                                     listing.seller_id === userId 
                                       ? 'bg-white/5 text-white/20 cursor-not-allowed' 
                                       : 'bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 hover:text-amber-300'
@@ -787,7 +787,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setContractListing(listing); setContractMode('free-agent'); }}
                                   disabled={loading}
-                                  className="px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:text-emerald-300 transition-all"
+                                  className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:text-emerald-300 transition-all"
                                 >
                                   <FileText size={10} className="inline mr-1" />
                                   Sozlesme Teklifi
@@ -796,7 +796,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleBuy(listing); }}
                                   disabled={loading}
-                                  className="px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:text-emerald-300 transition-all"
+                                  className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:text-emerald-300 transition-all"
                                 >
                                   Satın Al
                                 </button>
@@ -818,7 +818,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                     <Globe className="text-cyan-500" size={16} />
                     <h4 className="text-[11px] font-black uppercase tracking-widest text-white/60">Kiralık Listesine Gönder</h4>
                   </div>
-                  <div className="text-[9px] text-white/25 uppercase tracking-widest">
+                  <div className="text-[10px] text-white/25 uppercase tracking-widest">
                     {squad.filter(p => !p.is_injured && !(p as any).is_on_loan_market && !(p as any).loan_status).length} UYGun OYUNCU
                   </div>
                 </div>
@@ -844,19 +844,19 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                             key={player.id}
                             className={`flex items-center gap-2 p-2 rounded-lg border ${posColor} hover:border-cyan-500/50 transition-all group/loan`}
                           >
-                            <div className="w-8 h-8 rounded-md flex items-center justify-center text-[8px] font-black bg-black/30 shrink-0">
+                            <div className="w-8 h-8 rounded-md flex items-center justify-center text-[10px] font-black bg-black/30 shrink-0">
                               {player.specificPosition || player.position}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="text-[10px] font-black truncate">{toTitleCase(player.name)}</div>
-                              <div className="text-[8px] text-white/30">Klt {player.rating} • {feeStr}</div>
+                              <div className="text-[10px] text-white/30">Klt {player.rating} • {feeStr}</div>
                             </div>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleLoanPlayer(player);
                               }}
-                              className="shrink-0 px-2 py-1 rounded-md text-[7px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/25 hover:bg-cyan-500 hover:text-white transition-all opacity-60 group-hover/loan:opacity-100"
+                              className="shrink-0 px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/25 hover:bg-cyan-500 hover:text-white transition-all opacity-60 group-hover/loan:opacity-100 min-h-[36px]"
                               title="Kiralık Olarak Gönder"
                             >
                               <Globe size={10} className="inline mr-0.5" />
@@ -899,7 +899,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p?.name)}</div>
-                        <div className="text-[9px] text-white/30">
+                        <div className="text-[10px] text-white/30">
                           Başlangıç: {formatCurrency(listing.starting_price || listing.price)}
                           {listing.current_bid && ` | En Yüksek: ${formatCurrency(listing.current_bid)}`}
                           {listing.bid_count && ` | ${listing.bid_count} teklif`}
@@ -909,7 +909,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                       {!listing.bid_count && (
                         <button
                           onClick={() => handleCancelAuction(listing.id)}
-                          className="px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all"
+                          className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all"
                         >
                           <XCircle size={10} className="inline mr-1" />
                           İptal
@@ -929,7 +929,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                     <Handshake className="text-emerald-500" size={20} />
                     <div>
                       <h4 className="text-sm font-black uppercase tracking-widest text-white/80">Kazanilan Artirmalar</h4>
-                      <p className="text-[9px] text-white/30 uppercase tracking-widest">Sozlesme imzalamak icin tiklayin</p>
+                      <p className="text-[10px] text-white/30 uppercase tracking-widest">Sozlesme imzalamak icin tiklayin</p>
                     </div>
                   </div>
                 </div>
@@ -945,21 +945,21 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p?.name)}</div>
-                          <div className="text-[9px] text-white/30">
+                          <div className="text-[10px] text-white/30">
                             Kazandiginiz Teklif: {formatCurrency(bidAmount)}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => { setContractListing(listing); setContractMode('auction-win'); }}
-                            className="px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:text-emerald-300 transition-all flex items-center gap-1"
+                            className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:text-emerald-300 transition-all flex items-center gap-1"
                           >
                             <FileText size={10} />
                             Sozlesme Imzala
                           </button>
                           <button
                             onClick={async () => {
-                              if (!confirm(`Vazgecerseniz teklif bedelinin %5'i (${formatCurrency(penaltyAmount)}) saticiya tazminat olarak odenecektir. Emin misiniz?`)) return;
+                              if (!window.confirm(`Vazgeverseniz teklif bedelinin %5'i (${formatCurrency(penaltyAmount)}) saticiya tazminat olarak odenecektir. Emin misiniz?`)) return;
                               try {
                                 const res = await fetch('/api/contract-offer', {
                                   method: 'PUT',
@@ -984,7 +984,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                                 sonnerToast.error('Bir hata oluştu.');
                               }
                             }}
-                            className="px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 hover:text-red-300 transition-all flex items-center gap-1"
+                            className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 hover:text-red-300 transition-all flex items-center gap-1"
                           >
                             <XCircle size={10} />
                             Vazgec
@@ -1033,11 +1033,11 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                          <div className="text-sm font-black font-mono text-emerald-400">{formatCurrency(user.money)}</div>
                          <div className="flex items-center justify-end gap-2 mt-0.5">
                            {(user.championship_count || 0) > 0 && (
-                             <span className="text-[8px] text-yellow-400 font-black">
+                             <span className="text-[10px] text-yellow-400 font-black">
                                🏆 {user.championship_count}x
                              </span>
                            )}
-                           <span className="text-[8px] text-white/25">
+                           <span className="text-[10px] text-white/25">
                              Rep: {user.reputation || 0}
                            </span>
                          </div>
@@ -1080,17 +1080,17 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-[13px] font-black italic tracking-tighter truncate">{toTitleCase(p.name)}</div>
-                          <div className="text-[9px] text-white/30">
+                          <div className="text-[10px] text-white/30">
                             {toTitleCase(p.team_name || 'Bilinmeyen')} • {p.age} YAŞ • Klt {p.klt || p.rating || 0}
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="text-[11px] font-black text-cyan-400">{feeStr}</div>
-                          <div className="text-[8px] text-white/20 uppercase">Kiralık Ücret (Euro)</div>
+                          <div className="text-[10px] text-white/20 uppercase">Kiralık Ücret (Euro)</div>
                         </div>
                         <button
                           onClick={async () => {
-                            if (!confirm(`${toTitleCase(p.name)} oyuncusunu ${feeStr} + 10 Kredi karşılığında kiralamak istiyor musunuz?\n\n• ${feeStr} oyuncu sahibine ödenecek\n• 10 Kredi sistem komisyonu olarak düşülecek`)) return;
+                            if (!window.confirm(`${toTitleCase(p.name)} oyuncusunu ${feeStr} + 10 Kredi karşılığında kiralamak istiyor musunuz?\n\n• ${feeStr} oyuncu sahibine ödenecek\n• 10 Kredi sistem komisyonu olarak düşülecek`)) return;
                             try {
                               const res = await fetch('/api/loans/request', {
                                 method: 'POST',
@@ -1108,7 +1108,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                               sonnerToast.error('Bir hata oluştu.');
                             }
                           }}
-                          className="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 hover:text-cyan-300 transition-all"
+                          className="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 hover:text-cyan-300 transition-all"
                         >
                           Kirala (10 KR + Euro)
                         </button>
@@ -1126,7 +1126,7 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                   <Globe className="text-cyan-400" size={16} />
                   <h4 className="text-[11px] font-black uppercase tracking-widest text-white/60">Kiralık Listesine Gönder</h4>
                 </div>
-                <div className="text-[9px] text-white/25 uppercase tracking-widest">
+                <div className="text-[10px] text-white/25 uppercase tracking-widest">
                   {squad.filter(p => !p.is_injured && !(p as any).is_on_loan_market && !(p as any).loan_status).length} UYGUN OYUNCU
                 </div>
               </div>
@@ -1152,19 +1152,19 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
                           key={player.id}
                           className={`flex items-center gap-2 p-2.5 rounded-lg border ${posColor} hover:border-cyan-500/50 transition-all group/loan`}
                         >
-                          <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[9px] font-black bg-black/30 shrink-0">
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-black bg-black/30 shrink-0">
                             {player.specificPosition || player.position}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-[10px] font-black truncate">{toTitleCase(player.name)}</div>
-                            <div className="text-[8px] text-white/30">Klt {player.rating} • {feeStr}</div>
+                            <div className="text-[10px] text-white/30">Klt {player.rating} • {feeStr}</div>
                           </div>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleLoanPlayer(player);
                             }}
-                            className="shrink-0 px-2.5 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/25 hover:bg-cyan-500 hover:text-white transition-all"
+                            className="shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/25 hover:bg-cyan-500 hover:text-white transition-all"
                             title="Kiralık Olarak Gönder"
                           >
                             <Globe size={10} className="inline mr-0.5" />
@@ -1234,14 +1234,14 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4"
           onClick={() => setLoanModalPlayer(null)}
         >
           <motion.div
             initial={{ scale: 0.9, y: 20 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.9, y: 20 }}
-            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl"
+            className="bg-zinc-900 border border-white/10 rounded-none sm:rounded-2xl p-4 sm:p-6 max-w-md w-full mx-2 sm:mx-4 shadow-2xl max-h-[95vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">
@@ -1285,9 +1285,9 @@ export function MultiplayerTab({ userId, profile, squad, onSetSquad, onSetProfil
               const feeStr = fee >= 1_000_000 ? `${(fee / 1_000_000).toFixed(1)}M €` : fee >= 1_000 ? `${(fee / 1_000).toFixed(0)}K €` : `${fee} €`;
               return (
                 <div className="bg-white/5 border border-white/10 rounded-xl p-3 mb-4 text-center">
-                  <div className="text-[8px] font-black text-white/30 uppercase tracking-widest mb-1">Hesaplanan Kiralık Ücret</div>
+                  <div className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Hesaplanan Kiralık Ücret</div>
                   <div className="text-xl font-black text-cyan-400">{feeStr}</div>
-                  <div className="text-[8px] text-white/20 mt-1">
+                  <div className="text-[10px] text-white/20 mt-1">
                     Piyasa değeri: {(() => {
                       const mv = loanModalPlayer.market_value || (loanModalPlayer.rating || 50) * 50000;
                       return mv >= 1_000_000 ? `${(mv / 1_000_000).toFixed(1)}M €` : mv >= 1_000 ? `${(mv / 1_000).toFixed(0)}K €` : `${mv} €`;

@@ -436,7 +436,7 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
             </p>
           </div>
           <div className="ml-auto text-right">
-            <div className="text-[9px] text-white/20 font-black uppercase mb-1">💰 Kredi</div>
+            <div className="text-[10px] text-white/20 font-black uppercase mb-1">💰 Kredi</div>
             <div className="text-lg font-mono font-bold text-amber-400">{profile.credits || 0}</div>
           </div>
         </motion.div>
@@ -486,10 +486,10 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
             >
               {/* Rarity Badge & Quantity */}
               <div className="flex items-center justify-between mb-3">
-                <span className={`text-[7px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded border ${rarity.text} ${rarity.bg} ${rarity.border}`}>
+                <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded border ${rarity.text} ${rarity.bg} ${rarity.border}`}>
                   {item.rarity === 'common' ? 'SIRADAN' : item.rarity === 'rare' ? 'NADİR' : item.rarity === 'epic' ? 'EPİK' : 'EFSANEVİ'}
                 </span>
-                <span className={`text-[9px] font-mono font-bold ${hasQuantity ? 'text-white/60' : 'text-white/15'}`}>
+                <span className={`text-[10px] font-mono font-bold ${hasQuantity ? 'text-white/60' : 'text-white/15'}`}>
                   x{item.quantity}
                 </span>
               </div>
@@ -512,14 +512,14 @@ export default function InventoryTab({ userId, onMarketRedirect }: { userId?: st
               {/* Effect */}
               <div className="flex items-center gap-1.5 mb-3">
                 <Zap size={8} className={rarity.text} />
-                <span className="text-[9px] font-bold text-white/40">{item.effect}</span>
+                <span className="text-[10px] font-bold text-white/40">{item.effect}</span>
               </div>
 
               {/* Use Button */}
               <button
                 onClick={() => handleUseItem(item)}
                 disabled={!hasQuantity || isUsed}
-                className={`w-full py-2 text-[9px] font-black uppercase tracking-widest border rounded-xl transition-all ${
+                className={`w-full py-2 text-[10px] font-black uppercase tracking-widest border rounded-xl transition-all ${
                   isUsed
                     ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 scale-95'
                     : hasQuantity

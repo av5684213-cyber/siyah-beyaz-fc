@@ -120,7 +120,7 @@ const AntrenmanSatirBilesen = React.memo(function AntrenmanSatirBilesen({
       
       {/* Pozisyon rozeti ve İsim */}
       <div className="w-48 shrink-0 flex items-center gap-3">
-        <div className={`w-8 h-8 flex items-center justify-center text-[9px] font-black rounded shrink-0 ${
+        <div className={`w-8 h-8 flex items-center justify-center text-[10px] font-black rounded shrink-0 ${
           isU21 ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-white/5 text-white/40'
         }`}>
           {player.specificPosition || player.position}
@@ -130,7 +130,7 @@ const AntrenmanSatirBilesen = React.memo(function AntrenmanSatirBilesen({
           className="min-w-0 text-left hover:opacity-70 transition-opacity"
         >
           <div className="text-[10px] font-black tracking-tight truncate text-white/90">{toTitleCase(player.name)}</div>
-          <div className="text-[7px] text-white/20 font-bold uppercase tracking-widest">{player.age} yaş {isU21 && <span className="text-emerald-400/60">• ACADEMY</span>}</div>
+          <div className="text-[10px] text-white/20 font-bold uppercase tracking-widest">{player.age} yaş {isU21 && <span className="text-emerald-400/60">• ACADEMY</span>}</div>
         </button>
       </div>
 
@@ -237,7 +237,7 @@ const AntrenmanSatirBilesen = React.memo(function AntrenmanSatirBilesen({
             initial={{ scale: 0, rotate: -45 }}
             animate={{ scale: 1, rotate: 0 }}
             exit={{ scale: 0 }}
-            className="bg-white/5 px-2 py-1 rounded text-[7px] font-black uppercase text-white/30 border border-white/5"
+            className="bg-white/5 px-2 py-1 rounded text-[10px] font-black uppercase text-white/30 border border-white/5"
           >
              {TRAINING_PROGRAMS.find(p => p.id === assignment.programId)?.name.slice(0, 3)}
           </motion.div>
@@ -612,7 +612,7 @@ export default function TrainingAcademy({
           <GraduationCap size={18} className="text-emerald-400" />
           <div>
             <h2 className="text-sm font-black italic uppercase tracking-tighter text-emerald-100">Training & Academy</h2>
-            <span className="text-[7px] text-emerald-400/40 uppercase tracking-[0.3em] font-black">OYUNCU GELİŞİM MERKEZİ</span>
+            <span className="text-[10px] text-emerald-400/40 uppercase tracking-[0.3em] font-black">OYUNCU GELİŞİM MERKEZİ</span>
           </div>
         </div>
 
@@ -634,11 +634,11 @@ export default function TrainingAcademy({
               )}
               <div className="flex flex-col items-start leading-none">
                  <span className="text-[10px] font-black text-white uppercase tracking-wider">9v9 LABORATUVARI</span>
-                 <span className="text-[6px] text-blue-200 uppercase font-bold tracking-widest">TAKTIK TEST MERKEZİ</span>
+                 <span className="text-[10px] text-blue-200 uppercase font-bold tracking-widest">TAKTIK TEST MERKEZİ</span>
               </div>
            </div>
            {assistantCoachCount < 1 && (
-             <span className="ml-2 text-[6px] text-amber-400/80 font-bold uppercase tracking-wider whitespace-nowrap">
+             <span className="ml-2 text-[10px] text-amber-400/80 font-bold uppercase tracking-wider whitespace-nowrap">
                En az 1 Yardımcı Antrenör gerekir
              </span>
            )}
@@ -655,12 +655,12 @@ export default function TrainingAcademy({
                 />
               ))}
             </div>
-            <span className="text-emerald-400 text-[7px] font-black uppercase tracking-widest">{sessionsToday}/2</span>
+            <span className="text-emerald-400 text-[10px] font-black uppercase tracking-widest">{sessionsToday}/2</span>
           </div>
-          <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[7px] font-black uppercase tracking-widest">
+          <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest">
             {trainingState?.assignments?.length || 0} ATAMA
           </span>
-          <span className={`px-2 py-0.5 border text-[7px] font-black uppercase tracking-widest ${
+          <span className={`px-2 py-0.5 border text-[10px] font-black uppercase tracking-widest ${
             (trainingState?.coachQuality || 1.0) >= 1.5 ? 'bg-red-500/10 border-red-500/20 text-red-400' :
             (trainingState?.coachQuality || 1.0) >= 1.0 ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
             'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
@@ -703,15 +703,15 @@ export default function TrainingAcademy({
                     {programIcons[prog.id]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className={`text-[8px] font-black uppercase tracking-wide leading-snug ${isSelected ? colors.text : 'text-white/60'}`}>{prog.name}</div>
-                    <span className={`text-[6px] font-black px-1 rounded ${colors.bg} ${colors.text}`}>{allowedLabel}</span>
+                    <div className={`text-[10px] font-black uppercase tracking-wide leading-snug ${isSelected ? colors.text : 'text-white/60'}`}>{prog.name}</div>
+                    <span className={`text-[10px] font-black px-1 rounded ${colors.bg} ${colors.text}`}>{allowedLabel}</span>
                   </div>
                 </div>
-                <div className="text-[6px] text-white/20 leading-relaxed mb-1">{prog.description}</div>
+                <div className="text-[10px] text-white/20 leading-relaxed mb-1">{prog.description}</div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[6px] text-white/15 font-black uppercase">{(prog.targetStats as unknown as string[]).map(s => STAT_LABELS[s] || s).join(', ')}</span>
+                  <span className="text-[10px] text-white/15 font-black uppercase">{(prog.targetStats as unknown as string[]).map(s => STAT_LABELS[s] || s).join(', ')}</span>
                   {assignedCount > 0 && (
-                    <span className={`text-[8px] font-black ${colors.text}`}>{assignedCount}</span>
+                    <span className={`text-[10px] font-black ${colors.text}`}>{assignedCount}</span>
                   )}
                 </div>
                 {isSelected && <div className={`absolute inset-0 ${colors.glow} opacity-50 pointer-events-none`} />}
@@ -725,7 +725,7 @@ export default function TrainingAcademy({
           {/* Training Intensity */}
           <div className="p-3 bg-emerald-950/30 border border-emerald-500/10 rounded space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-[7px] text-emerald-300/40 uppercase font-black tracking-[0.3em] flex items-center gap-1">
+              <span className="text-[10px] text-emerald-300/40 uppercase font-black tracking-[0.3em] flex items-center gap-1">
                 <AlertTriangle size={10} className="text-emerald-400" /> ANTRENMAN YOĞUNLUĞU
               </span>
               <div className="flex items-center gap-2">
@@ -733,7 +733,7 @@ export default function TrainingAcademy({
                   {(trainingState?.coachQuality || 1.0).toFixed(1)}x
                 </span>
                 {/* Risk Level Badge */}
-                <span className={`px-1.5 py-0.5 rounded text-[6px] font-black uppercase tracking-wider ${
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
                   (trainingState?.coachQuality || 1.0) >= 1.5
                     ? 'bg-red-500/20 border border-red-500/30 text-red-400'
                     : (trainingState?.coachQuality || 1.0) >= 1.0
@@ -747,17 +747,17 @@ export default function TrainingAcademy({
             <input type="range" min="0.5" max="2.0" step="0.1" value={trainingState?.coachQuality || 1.0}
               onChange={(e) => handleCoachChange(parseFloat(e.target.value))}
               className="w-full h-1 bg-white/10 appearance-none cursor-pointer accent-emerald-400" />
-            <div className="flex justify-between text-[6px] font-black text-white/15 uppercase">
+            <div className="flex justify-between text-[10px] font-black text-white/15 uppercase">
               <span>Hafif (0.5x)</span><span>Normal (1.0x)</span><span>Ağır (2.0x)</span>
             </div>
             <div className="space-y-0.5">
-              <div className="text-[5px] text-white/25 uppercase font-bold">
+              <div className="text-[10px] text-white/25 uppercase font-bold">
                 Düşük yoğunluk (0.5x–0.9x): Düşük gelişim, düşük sakatlık riski.
               </div>
-              <div className="text-[5px] text-white/25 uppercase font-bold">
+              <div className="text-[10px] text-white/25 uppercase font-bold">
                 Orta yoğunluk (1.0x–1.4x): Dengeli gelişim, orta sakatlık riski.
               </div>
-              <div className="text-[5px] text-white/25 uppercase font-bold">
+              <div className="text-[10px] text-white/25 uppercase font-bold">
                 Yüksek yoğunluk (1.5x–2.0x): Yüksek gelişim, yüksek sakatlık riski.
               </div>
             </div>
@@ -769,17 +769,17 @@ export default function TrainingAcademy({
               const resetResting = squad.map(p => ({ ...p, isResting: false }));
               onSquadUpdate(resetResting);
             }}
-              className={`flex-1 py-2.5 border text-[8px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 bg-white/[0.02] border-white/5 text-white/40 hover:bg-white/10`}>
+              className={`flex-1 py-2.5 border text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 bg-white/[0.02] border-white/5 text-white/40 hover:bg-white/10`}>
               <Zap size={10}/> KİMSE DİNLENMESİN
             </button>
             <button onClick={handleRecover}
-              className="flex-1 py-2.5 bg-teal-500/5 border border-teal-500/10 text-teal-400/50 text-[8px] font-black uppercase tracking-widest hover:bg-teal-500/10 active:scale-95 transition-all flex items-center justify-center gap-2">
+              className="flex-1 py-2.5 bg-teal-500/5 border border-teal-500/10 text-teal-400/50 text-[10px] font-black uppercase tracking-widest hover:bg-teal-500/10 active:scale-95 transition-all flex items-center justify-center gap-2">
               <Heart size={10}/> DİNLENME (+20)
             </button>
             <button 
               onClick={handleRunSession}
               disabled={isTraining || sessionsToday >= 2 || assistantCoachCount < 2}
-              className={`flex-1 py-2.5 border text-[8px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2.5 border text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
                 isTraining
                   ? 'bg-emerald-500/5 border-emerald-500/10 text-emerald-400/50 cursor-wait animate-pulse'
                   : sessionsToday >= 2
@@ -796,11 +796,11 @@ export default function TrainingAcademy({
           {assistantCoachCount < 2 && (
             <div className="flex items-center gap-2 px-1">
               <Lock size={10} className="text-amber-400/60" />
-              <span className="text-[7px] text-amber-400/80 font-bold uppercase tracking-wider">Bu özellik için 2. Yardımcı Antrenör gerekir</span>
+              <span className="text-[10px] text-amber-400/80 font-bold uppercase tracking-wider">Bu özellik için 2. Yardımcı Antrenör gerekir</span>
             </div>
           )}
 
-          <div className="flex gap-2 text-[6px] font-black uppercase tracking-wider text-white/15">
+          <div className="flex gap-2 text-[10px] font-black uppercase tracking-wider text-white/15">
             <span>U21 Bonus: <span className="text-emerald-400/50">+25%</span></span>
             <span>•</span>
             <span>Knd &lt; 20 Riskli</span>
@@ -817,12 +817,12 @@ export default function TrainingAcademy({
               >
                 <div className="p-3 bg-emerald-950/20 border border-emerald-500/10 rounded space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[7px] text-emerald-300/60 uppercase font-black tracking-[0.3em] flex items-center gap-1">
+                    <span className="text-[10px] text-emerald-300/60 uppercase font-black tracking-[0.3em] flex items-center gap-1">
                       <TrendingUp size={10} className="text-emerald-400" /> ANTRENMAN SONUÇLARI
                     </span>
                     <button
                       onClick={() => setLastTrainingResults(null)}
-                      className="text-[7px] text-white/20 hover:text-white/50 uppercase font-black tracking-wider transition-colors"
+                      className="text-[10px] text-white/20 hover:text-white/50 uppercase font-black tracking-wider transition-colors"
                     >
                       KAPAT
                     </button>
@@ -854,7 +854,7 @@ export default function TrainingAcademy({
                         animate={{ opacity: 1, scale: 1 }}
                         className="mb-3 p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-emerald-500/10 border border-amber-500/20"
                       >
-                        <p className="text-[8px] font-black uppercase tracking-widest text-amber-400/70 mb-2 flex items-center gap-1">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-400/70 mb-2 flex items-center gap-1">
                           <Star size={9} className="text-amber-400" />
                           BU HAFTANIN EN ÇOK GELİŞENİ
                         </p>
@@ -863,13 +863,13 @@ export default function TrainingAcademy({
                             <p className="text-sm font-black text-white leading-tight">
                               {toTitleCase(best.name?.split(' ').pop() || best.name || '')}
                             </p>
-                            <p className="text-[9px] text-white/40">
+                            <p className="text-[10px] text-white/40">
                               {best.position} · {best.age} yaş · {Math.round(best.rating || 0)} OVR
                             </p>
                           </div>
                           <div className="text-right shrink-0">
                             <p className="text-[10px] font-black text-emerald-400">{bestGains.join('  ')}</p>
-                            <p className="text-[8px] text-white/30">+{bestTotal.toFixed(1)} puan</p>
+                            <p className="text-[10px] text-white/30">+{bestTotal.toFixed(1)} puan</p>
                           </div>
                         </div>
                       </motion.div>
@@ -884,12 +884,12 @@ export default function TrainingAcademy({
                         .map(([stat, gain]) => `${STAT_LABELS[stat] || stat} +${gain.toFixed(1)}`);
                       return (
                         <div key={playerId} className="flex items-center justify-between py-1 px-2 bg-white/[0.02] border border-white/5 rounded">
-                          <span className="text-[9px] font-black text-white/70 truncate max-w-[120px]">{toTitleCase(player.name)}</span>
+                          <span className="text-[10px] font-black text-white/70 truncate max-w-[120px]">{toTitleCase(player.name)}</span>
                           <div className="flex items-center gap-2">
                             {statGains.length > 0 ? (
-                              <span className="text-[8px] font-mono text-emerald-400">{statGains.join(', ')}</span>
+                              <span className="text-[10px] font-mono text-emerald-400">{statGains.join(', ')}</span>
                             ) : (
-                              <span className="text-[8px] text-white/20">Gelişim yok</span>
+                              <span className="text-[10px] text-white/20">Gelişim yok</span>
                             )}
                             {result.injuryRisk && (
                               <AlertTriangle size={10} className="text-red-400 shrink-0" />
@@ -912,13 +912,13 @@ export default function TrainingAcademy({
         <div className="flex items-center gap-4 px-4 py-3 bg-black/40 border border-white/5 rounded-t min-w-[900px]">
           <div 
             onClick={() => toggleSort('position')}
-            className="w-48 shrink-0 text-left text-[9px] font-black uppercase text-white/40 tracking-widest cursor-pointer hover:text-emerald-400 transition-colors flex items-center gap-2"
+            className="w-48 shrink-0 text-left text-[10px] font-black uppercase text-white/40 tracking-widest cursor-pointer hover:text-emerald-400 transition-colors flex items-center gap-2"
           >
             POZ {sortBy === 'position' && (sortDirection === 'desc' ? '▼' : '▲')}
           </div>
           <div 
             onClick={() => toggleSort('assignment')}
-            className="w-32 shrink-0 text-left text-[9px] font-black uppercase text-white/40 tracking-widest cursor-pointer hover:text-emerald-400 transition-colors flex items-center gap-2"
+            className="w-32 shrink-0 text-left text-[10px] font-black uppercase text-white/40 tracking-widest cursor-pointer hover:text-emerald-400 transition-colors flex items-center gap-2"
           >
             AKTİF / GELİŞİM {sortBy === 'assignment' && (sortDirection === 'desc' ? '▼' : '▲')}
           </div>
@@ -941,7 +941,7 @@ export default function TrainingAcademy({
               <div 
                 key={h.label} 
                 onClick={() => toggleSort(h.key as any)}
-                className={`text-center text-[9px] font-black uppercase tracking-tighter leading-none cursor-pointer transition-colors flex flex-col items-center justify-center gap-1 py-1 rounded hover:bg-white/5 ${sortBy === h.key ? 'text-emerald-400' : 'text-white/20'}`}
+                className={`text-center text-[10px] font-black uppercase tracking-tighter leading-none cursor-pointer transition-colors flex flex-col items-center justify-center gap-1 py-1 rounded hover:bg-white/5 ${sortBy === h.key ? 'text-emerald-400' : 'text-white/20'}`}
               >
                 {h.label}
                 <div className={`w-1 h-1 rounded-full ${sortBy === h.key ? 'bg-emerald-400' : 'bg-transparent'}`} />
@@ -953,19 +953,19 @@ export default function TrainingAcademy({
 
         {/* Table Controls (Filters) */}
         <div className="flex items-center gap-2 px-3 py-2 bg-emerald-950/10 border-b border-emerald-500/10 min-w-[900px]">
-          <span className="text-[7px] text-emerald-300/30 uppercase font-black tracking-[0.3em]">FİLTRELER</span>
+          <span className="text-[10px] text-emerald-300/30 uppercase font-black tracking-[0.3em]">FİLTRELER</span>
           <div className="flex-1" />
           <div className="flex gap-1">
             {['ALL', 'GK', 'DEF', 'MID', 'FWD'].map(pos => (
               <button key={pos} onClick={() => setFilterPos(pos)}
-                className={`px-1.5 py-0.5 text-[6px] font-black uppercase tracking-wider border transition-all ${
+                className={`px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider border transition-all ${
                   filterPos === pos ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' : 'border-white/5 text-white/15 hover:border-white/10'
                 }`}>{pos}</button>
             ))}
           </div>
           {selectedProgram && (
             <button onClick={() => setShowAssignModal(!showAssignModal)}
-              className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[6px] font-black uppercase tracking-wider hover:bg-emerald-500/20 transition-all">
+              className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-wider hover:bg-emerald-500/20 transition-all">
               {showAssignModal ? 'KAPAT' : 'TOPLU ATAMA'}
             </button>
           )}
@@ -1007,7 +1007,7 @@ export default function TrainingAcademy({
           </div>
           <div>
             <h3 className="text-sm font-black italic uppercase tracking-tighter text-cyan-100">Mac Analisti Onerisi</h3>
-            <span className="text-[6px] text-cyan-400/40 uppercase tracking-[0.3em] font-black">ANTRENMAN TAVSIYESI</span>
+            <span className="text-[10px] text-cyan-400/40 uppercase tracking-[0.3em] font-black">ANTRENMAN TAVSIYESI</span>
           </div>
           {hasAnalyst && analystStars > 0 && (
             <div className="ml-auto flex items-center gap-1">
@@ -1018,7 +1018,7 @@ export default function TrainingAcademy({
                   className={i < analystStars ? 'text-cyan-400 fill-cyan-400' : 'text-white/10'}
                 />
               ))}
-              <span className="text-[8px] font-bold text-cyan-400/60 ml-1">{analystStars}★</span>
+              <span className="text-[10px] font-bold text-cyan-400/60 ml-1">{analystStars}★</span>
             </div>
           )}
         </div>
@@ -1037,7 +1037,7 @@ export default function TrainingAcademy({
               </div>
               <div>
                 <p className="text-[10px] font-black text-amber-300/80 uppercase tracking-wider mb-1">Yardımcı Antrenör gerekli</p>
-                <p className="text-[9px] text-white/30 leading-relaxed">
+                <p className="text-[10px] text-white/30 leading-relaxed">
                   Bu özellik için Yardımcı Antrenör işe almalısınız. Yerleşke → Personel
                 </p>
               </div>
@@ -1049,7 +1049,7 @@ export default function TrainingAcademy({
               </div>
               <div>
                 <p className="text-[10px] font-black text-amber-300/80 uppercase tracking-wider mb-1">Mac analistiniz yok</p>
-                <p className="text-[9px] text-white/30 leading-relaxed">
+                <p className="text-[10px] text-white/30 leading-relaxed">
                   Mac Analisti Onerisi gorebilmek icin Yerleske sekmesinden bir Mac Analisti satin alin. Analistinizin yildiz sayisi arttikca tavsiyeler daha detayli olur.
                 </p>
               </div>
@@ -1065,11 +1065,11 @@ export default function TrainingAcademy({
                 </p>
                 {analystStars >= 3 && (
                   <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5">
-                    <span className="text-[7px] font-black text-cyan-400/40 uppercase tracking-widest">ANALIST DETAY</span>
-                    <span className="text-[7px] text-white/15">•</span>
-                    <span className="text-[7px] text-white/20">Kadro: {squad.length} oyuncu</span>
-                    <span className="text-[7px] text-white/15">•</span>
-                    <span className="text-[7px] text-white/20">Ort. Kondisyon: %{Math.round(squad.reduce((s, p) => s + (p.cond || 100), 0) / Math.max(1, squad.length))}</span>
+                    <span className="text-[10px] font-black text-cyan-400/40 uppercase tracking-widest">ANALIST DETAY</span>
+                    <span className="text-[10px] text-white/15">•</span>
+                    <span className="text-[10px] text-white/20">Kadro: {squad.length} oyuncu</span>
+                    <span className="text-[10px] text-white/15">•</span>
+                    <span className="text-[10px] text-white/20">Ort. Kondisyon: %{Math.round(squad.reduce((s, p) => s + (p.cond || 100), 0) / Math.max(1, squad.length))}</span>
                   </div>
                 )}
               </div>

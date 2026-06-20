@@ -712,10 +712,10 @@ export default function NewspaperTab() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${getCategoryColor(article.category)}`}>
+                    <span className={`text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${getCategoryColor(article.category)}`}>
                       {getCategoryLabel(article.category)}
                     </span>
-                    <span className="text-[8px] text-white/15 font-bold">
+                    <span className="text-[10px] text-white/15 font-bold">
                       {'★'.repeat(article.importance)}
                     </span>
                   </div>
@@ -727,11 +727,11 @@ export default function NewspaperTab() {
                   </p>
                   {article.impact && (
                     <div className="flex items-center gap-3 mt-2">
-                      <span className={`text-[8px] font-bold flex items-center gap-1 ${article.impact.morale >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className={`text-[10px] font-bold flex items-center gap-1 ${article.impact.morale >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {article.impact.morale >= 0 ? <TrendingUp size={8} /> : <TrendingDown size={8} />}
                         Moral {article.impact.morale >= 0 ? '+' : ''}{article.impact.morale}
                       </span>
-                      <span className={`text-[8px] font-bold flex items-center gap-1 ${article.impact.reputation >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className={`text-[10px] font-bold flex items-center gap-1 ${article.impact.reputation >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {article.impact.reputation >= 0 ? <TrendingUp size={8} /> : <TrendingDown size={8} />}
                         Rep {article.impact.reputation >= 0 ? '+' : ''}{article.impact.reputation}
                       </span>
@@ -775,7 +775,7 @@ export default function NewspaperTab() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${getCategoryColor(article.category)}`}>
+                      <span className={`text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${getCategoryColor(article.category)}`}>
                         {getCategoryLabel(article.category)}
                       </span>
                     </div>
@@ -813,7 +813,7 @@ export default function NewspaperTab() {
                 <button
                   key={league.id}
                   onClick={() => setActiveLeagueId(league.id)}
-                  className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider whitespace-nowrap transition-all border ${
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all border ${
                     activeLeagueId === league.id
                       ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
                       : 'bg-white/5 text-white/30 border-white/5 hover:text-white/50 hover:border-white/10'
@@ -829,7 +829,7 @@ export default function NewspaperTab() {
           {activeLeague && (
             <div className="flex items-center gap-2 px-1">
               <Trophy size={10} className="text-amber-500/60" />
-              <span className="text-[9px] font-bold text-amber-400/60 uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-amber-400/60 uppercase tracking-wider">
                 {activeLeague.name}
               </span>
             </div>
@@ -847,10 +847,10 @@ export default function NewspaperTab() {
             {!standingsLoading && standingsError && (
               <div className="flex flex-col items-center justify-center py-8 text-white/20">
                 <AlertTriangle size={16} className="mb-2 opacity-30" />
-                <p className="text-[9px] uppercase tracking-wider font-bold">{standingsError}</p>
+                <p className="text-[10px] uppercase tracking-wider font-bold">{standingsError}</p>
                 <button
                   onClick={() => fetchStandingsForLeague(activeLeagueId)}
-                  className="mt-2 text-[8px] px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/60 border border-white/5 transition-all"
+                  className="mt-2 text-[10px] px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/60 border border-white/5 transition-all"
                 >
                   Tekrar Dene
                 </button>
@@ -859,7 +859,8 @@ export default function NewspaperTab() {
 
             {/* Puan durumu tablosu */}
             {!standingsLoading && !standingsError && standings.length > 0 && (
-              <table className="w-full text-[10px]">
+              <div className="overflow-x-auto no-scrollbar">
+              <table className="w-full text-[10px] min-w-[480px]">
                 <thead>
                   <tr className="border-b border-white/5 text-white/20">
                     <th className="text-left py-2 px-3 font-black uppercase">#</th>
@@ -907,14 +908,15 @@ export default function NewspaperTab() {
                   })}
                 </tbody>
               </table>
+              </div>
             )}
 
             {/* Boş durum - lig bulunamadı */}
             {!standingsLoading && !standingsError && standings.length === 0 && userLeagues.length === 0 && (
               <div className="flex flex-col items-center justify-center py-8 text-white/20">
                 <Trophy size={20} className="mb-2 opacity-20" />
-                <p className="text-[9px] uppercase tracking-wider font-bold">Lig bulunamadı</p>
-                <p className="text-[8px] text-white/10 mt-1">Takımınız bir lige kayıtlı değil</p>
+                <p className="text-[10px] uppercase tracking-wider font-bold">Lig bulunamadı</p>
+                <p className="text-[10px] text-white/10 mt-1">Takımınız bir lige kayıtlı değil</p>
               </div>
             )}
 
@@ -922,8 +924,8 @@ export default function NewspaperTab() {
             {!standingsLoading && !standingsError && standings.length === 0 && userLeagues.length > 0 && (
               <div className="flex flex-col items-center justify-center py-8 text-white/20">
                 <Trophy size={20} className="mb-2 opacity-20" />
-                <p className="text-[9px] uppercase tracking-wider font-bold">Henüz puan durumu yok</p>
-                <p className="text-[8px] text-white/10 mt-1">Maçlar başladığında güncellenecek</p>
+                <p className="text-[10px] uppercase tracking-wider font-bold">Henüz puan durumu yok</p>
+                <p className="text-[10px] text-white/10 mt-1">Maçlar başladığında güncellenecek</p>
               </div>
             )}
 
@@ -931,9 +933,9 @@ export default function NewspaperTab() {
             {standings.length > 0 && (
               <div className="p-2 border-t border-white/5 flex items-center justify-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-500/40" />
-                <span className="text-[7px] text-white/15 font-bold uppercase">Doğrudan Çıkma</span>
+                <span className="text-[10px] text-white/15 font-bold uppercase">Doğrudan Çıkma</span>
                 <div className="w-2 h-2 rounded-full bg-amber-500/40 ml-2" />
-                <span className="text-[7px] text-white/15 font-bold uppercase">Play-off</span>
+                <span className="text-[10px] text-white/15 font-bold uppercase">Play-off</span>
               </div>
             )}
           </div>

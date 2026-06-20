@@ -338,7 +338,7 @@ export default function FinancialTab({
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`px-2 py-0.5 text-[8px] font-black uppercase tracking-widest border rounded-full ${hc.color} ${hc.bg} ${hc.border}`}>
+                      <span className={`px-2 py-0.5 text-[10px] font-black uppercase tracking-widest border rounded-full ${hc.color} ${hc.bg} ${hc.border}`}>
                         {hc.label}
                       </span>
                       {healthStatus === 'bankrupt' && (
@@ -349,7 +349,7 @@ export default function FinancialTab({
                       {fmtMoney(money)}
                     </h2>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[9px] text-white/20 font-bold uppercase tracking-widest">Mevcut Bakiye</span>
+                      <span className="text-[10px] text-white/20 font-bold uppercase tracking-widest">Mevcut Bakiye</span>
                     </div>
                   </div>
                 </div>
@@ -363,7 +363,7 @@ export default function FinancialTab({
                       ) : (
                         <TrendingDown size={12} className="text-red-400" />
                       )}
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">
                         Haftalık
                       </span>
                     </div>
@@ -376,7 +376,7 @@ export default function FinancialTab({
                   <div className="text-center px-6 py-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <Repeat size={12} className="text-white/20" />
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">
                         Aylık
                       </span>
                     </div>
@@ -413,9 +413,9 @@ export default function FinancialTab({
                   />
                 </div>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-[8px] text-white/15">FFP Limiti: {fmtMoney(wageBillLimit)}/hafta</span>
+                  <span className="text-[10px] text-white/15">FFP Limiti: {fmtMoney(wageBillLimit)}/hafta</span>
                   {weeksRunway !== Infinity && weeklyBurn > 0 && (
-                    <span className={`text-[8px] font-bold ${
+                    <span className={`text-[10px] font-bold ${
                       weeksRunway < 3 ? 'text-red-400' : weeksRunway < 8 ? 'text-amber-400' : 'text-white/20'
                     }`}>
                       {weeksRunway} hafta bütçe kaldı
@@ -436,7 +436,7 @@ export default function FinancialTab({
                 <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-4 group hover:bg-white/[0.02] transition-colors">
                   <div className="flex items-center gap-2 mb-2">
                     <stat.icon size={12} className={`${stat.color} opacity-60`} />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-white/25">{stat.label}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/25">{stat.label}</span>
                   </div>
                   <div className={`text-lg font-black font-mono ${stat.color}`}>{stat.value}</div>
                 </div>
@@ -480,7 +480,7 @@ export default function FinancialTab({
                           <span className={`text-[11px] font-black font-mono ${catColor[cat]}`}>{fmtMoney(src.amount)}</span>
                         </div>
                         {src.calculation && (
-                          <p className="text-[9px] text-white/20 pb-1 leading-relaxed">{src.calculation}</p>
+                          <p className="text-[10px] text-white/20 pb-1 leading-relaxed">{src.calculation}</p>
                         )}
                       </div>
                     ))}
@@ -492,7 +492,7 @@ export default function FinancialTab({
             {/* Dağılım çubuğu */}
             {revenueBreakdown && weeklyRevenue > 0 && (
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-4">
-                <div className="text-[9px] font-black uppercase tracking-widest text-white/20 mb-3">Haftalık Gelir Dağılımı — {fmtMoney(weeklyRevenue)}</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-3">Haftalık Gelir Dağılımı — {fmtMoney(weeklyRevenue)}</div>
                 <div className="w-full h-3 bg-white/[0.04] rounded-full overflow-hidden flex">
                   {(['matchday', 'commercial', 'broadcast', 'prize'] as const).map((cat, i) => {
                     const total = (revenueBreakdown[cat] ?? []).reduce((s: number, r: any) => s + r.amount, 0);
@@ -510,7 +510,7 @@ export default function FinancialTab({
                   ].map((item) => (
                     <div key={item.label} className="flex items-center gap-1.5">
                       <div className={`w-2 h-2 rounded-full ${item.color}`} />
-                      <span className="text-[8px] font-bold text-white/25 uppercase tracking-widest">{item.label}</span>
+                      <span className="text-[10px] font-bold text-white/25 uppercase tracking-widest">{item.label}</span>
                     </div>
                   ))}
                 </div>
@@ -523,17 +523,17 @@ export default function FinancialTab({
                 <Building2 size={12} className="text-white/30" />
                 <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Stadyum</span>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 <div>
-                  <span className="text-[8px] text-white/15 font-bold uppercase tracking-widest">Kapasite</span>
+                  <span className="text-[10px] text-white/15 font-bold uppercase tracking-widest">Kapasite</span>
                   <p className="text-sm font-black text-white/60">{(profile.stadium_capacity ?? 5000).toLocaleString('tr-TR')}</p>
                 </div>
                 <div>
-                  <span className="text-[8px] text-white/15 font-bold uppercase tracking-widest">Bilet Fiyatı</span>
+                  <span className="text-[10px] text-white/15 font-bold uppercase tracking-widest">Bilet Fiyatı</span>
                   <p className="text-sm font-black text-white/60">{fmtMoneyFull(profile.ticket_price ?? 50)}</p>
                 </div>
                 <div>
-                  <span className="text-[8px] text-white/15 font-bold uppercase tracking-widest">İtibar</span>
+                  <span className="text-[10px] text-white/15 font-bold uppercase tracking-widest">İtibar</span>
                   <p className="text-sm font-black text-white/60">{profile.reputation ?? 50}/100</p>
                 </div>
               </div>
@@ -581,7 +581,7 @@ export default function FinancialTab({
             {/* Gider dağılım çubuğu */}
             {expenseBreakdown && weeklyExpenses > 0 && (
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-4">
-                <div className="text-[9px] font-black uppercase tracking-widest text-white/20 mb-3">Toplam Haftalık Gider — {fmtMoney(weeklyExpenses)}</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-3">Toplam Haftalık Gider — {fmtMoney(weeklyExpenses)}</div>
                 <div className="w-full h-3 bg-white/[0.04] rounded-full overflow-hidden flex">
                   {(['wages', 'facility', 'operation', 'agent'] as const).map((cat, i) => {
                     const total = (expenseBreakdown[cat] ?? []).reduce((s: number, e: any) => s + e.amount, 0);
@@ -598,7 +598,7 @@ export default function FinancialTab({
                   ].map(item => (
                     <div key={item.label} className="flex items-center gap-1.5">
                       <div className={`w-2 h-2 rounded-full ${item.color}`} />
-                      <span className="text-[8px] font-bold text-white/25 uppercase tracking-widest">{item.label}</span>
+                      <span className="text-[10px] font-bold text-white/25 uppercase tracking-widest">{item.label}</span>
                     </div>
                   ))}
                 </div>
@@ -626,7 +626,7 @@ export default function FinancialTab({
                 <button
                   onClick={handleGenerateOffer}
                   disabled={sponsors.length >= FINANCIAL_DEFAULTS.maxSponsors}
-                  className="px-4 py-2 text-[9px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg hover:bg-amber-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
+                  className="px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg hover:bg-amber-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
                 >
                   <Zap size={10} />
                   Yeni Sponsor Teklifleri
@@ -652,17 +652,17 @@ export default function FinancialTab({
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-bold text-white/80 truncate">{sp.name}</span>
-                              <span className={`px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest border rounded-full shrink-0 ${sponsorTypeColor(sp.type)}`}>
+                              <span className={`px-1.5 py-0.5 text-[10px] font-black uppercase tracking-widest border rounded-full shrink-0 ${sponsorTypeColor(sp.type)}`}>
                                 {sponsorTypeLabel(sp.type)}
                               </span>
                             </div>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[9px] text-white/20">
+                              <span className="text-[10px] text-white/20">
                                 <Clock size={8} className="inline mr-0.5" />
                                 {weeksLeft} hafta kaldı
                               </span>
-                              <span className="text-[9px] text-white/10">•</span>
-                              <span className="text-[9px] text-white/20">
+                              <span className="text-[10px] text-white/10">•</span>
+                              <span className="text-[10px] text-white/20">
                                 {'★'.repeat(sp.prestige)}{'☆'.repeat(5 - sp.prestige)}
                               </span>
                             </div>
@@ -670,7 +670,7 @@ export default function FinancialTab({
                         </div>
                         <div className="text-right shrink-0">
                           <div className="text-xs font-black font-mono text-emerald-400">{fmtMoney(sp.weeklyPayout)}</div>
-                          <div className="text-[8px] text-white/15 font-bold uppercase">/ hafta</div>
+                          <div className="text-[10px] text-white/15 font-bold uppercase">/ hafta</div>
                         </div>
                       </div>
                     );
@@ -681,7 +681,7 @@ export default function FinancialTab({
               {sponsors.length >= FINANCIAL_DEFAULTS.maxSponsors && (
                 <div className="mt-3 flex items-center gap-2 px-1">
                   <AlertTriangle size={10} className="text-amber-400/50" />
-                  <span className="text-[9px] text-amber-400/50 font-bold">
+                  <span className="text-[10px] text-amber-400/50 font-bold">
                     Maksimum sponsor sayısına ulaştınız ({FINANCIAL_DEFAULTS.maxSponsors})
                   </span>
                 </div>
@@ -695,7 +695,7 @@ export default function FinancialTab({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
                   onClick={handleRejectOffer}
                 >
                   <motion.div
@@ -703,7 +703,7 @@ export default function FinancialTab({
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="bg-[#0d1117] border border-amber-500/20 rounded-2xl p-6 max-w-md w-full mx-4 shadow-[0_0_40px_rgba(245,158,11,0.08)]"
+                    className="bg-[#0d1117] border border-amber-500/20 rounded-none sm:rounded-2xl p-4 sm:p-6 max-w-md w-full mx-2 sm:mx-4 shadow-[0_0_40px_rgba(245,158,11,0.08)] max-h-[95vh] overflow-y-auto"
                   >
                     <div className="flex items-center justify-between mb-5">
                       <div className="flex items-center gap-3">
@@ -712,7 +712,7 @@ export default function FinancialTab({
                         </div>
                         <div>
                           <h3 className="text-sm font-black uppercase tracking-tight text-white">Sponsor Teklifi</h3>
-                          <span className={`px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest border rounded-full ${sponsorTypeColor(sponsorOffer.type)}`}>
+                          <span className={`px-1.5 py-0.5 text-[10px] font-black uppercase tracking-widest border rounded-full ${sponsorTypeColor(sponsorOffer.type)}`}>
                             {sponsorTypeLabel(sponsorOffer.type)}
                           </span>
                         </div>
@@ -747,7 +747,7 @@ export default function FinancialTab({
 
                     {sponsorOffer.bonusConditions.length > 0 && (
                       <div className="mb-5 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-amber-400/60 mb-2 block">Bonus Koşulları</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 mb-2 block">Bonus Koşulları</span>
                         {sponsorOffer.bonusConditions.map((bc, i) => (
                           <div key={i} className="flex items-center justify-between text-[10px] py-1">
                             <span className="text-white/40">
@@ -760,14 +760,14 @@ export default function FinancialTab({
                     )}
 
                     {(sponsorOffer as any)?.bonusCondition && (
-                      <p className="text-[9px] text-amber-400/60 mt-2">
+                      <p className="text-[10px] text-amber-400/60 mt-2">
                         Bonus: {(sponsorOffer as any).bonusCondition} → +{((sponsorOffer as any).bonusAmount || 0).toLocaleString('tr-TR')}€
                       </p>
                     )}
 
                     {negotiating === (sponsorOffer as any)?.id ? (
                       <div className="space-y-2 mt-3">
-                        <p className="text-[9px] text-white/40">Haftalık teklifiniz (min: {Math.round(((sponsorOffer as any)?.weeklyPayout || 0) * 0.7).toLocaleString('tr-TR')}€)</p>
+                        <p className="text-[10px] text-white/40">Haftalık teklifiniz (min: {Math.round(((sponsorOffer as any)?.weeklyPayout || 0) * 0.7).toLocaleString('tr-TR')}€)</p>
                         <input
                           type="number"
                           value={customOffer}
@@ -855,7 +855,7 @@ export default function FinancialTab({
                     transition={{ duration: 0.8 }}
                   />
                 </div>
-                <div className="flex justify-between text-[9px] text-white/20">
+                <div className="flex justify-between text-[10px] text-white/20">
                   <span>Haftalık maaş: <span className="text-white/50 font-black">{fmtMoney(fin.totalWages)}</span></span>
                   <span>Tavan: <span className="text-white/50 font-black">{fmtMoney(wageBillLimit)}</span></span>
                 </div>
@@ -887,22 +887,22 @@ export default function FinancialTab({
                         />
                       </div>
                       <div className="flex justify-between">
-                        <span className={`text-[9px] font-black ${
+                        <span className={`text-[10px] font-black ${
                           wageUtilPct > 90 ? 'text-red-400' :
                           wageUtilPct > 70 ? 'text-amber-400' : 'text-emerald-400'
                         }`}>%{wageUtilPct} kullanım</span>
-                        <span className="text-[9px] text-white/25">
+                        <span className="text-[10px] text-white/25">
                           {fmtMoney(Math.max(0, wageLimit - weeklyWages))} kapasite kaldı
                         </span>
                       </div>
                     </div>
                     {wageUtilPct > 90 && (
-                      <p className="text-[9px] text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-1">
+                      <p className="text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-1">
                         FFP ihlali riski — oyuncu satmayı veya maaş indirmeyi düşünün
                       </p>
                     )}
                     {wageUtilPct > 0 && wageUtilPct <= 50 && (
-                      <p className="text-[9px] text-emerald-400/50 text-center">
+                      <p className="text-[10px] text-emerald-400/50 text-center">
                         Finansal sağlık iyi — {fmtMoney(Math.max(0, wageLimit - weeklyWages))} transfer kapasitesi mevcut
                       </p>
                     )}
@@ -919,11 +919,11 @@ export default function FinancialTab({
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-white/30">Haftalık Maaş Dağılımı</h3>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-[9px] text-white/20">
+                  <span className="text-[10px] text-white/20">
                     Toplam: <span className="text-white/50 font-black font-mono">{fmtMoney(fin.totalWages)}</span>
                   </span>
                   {wageUtilization > 90 && (
-                    <span className="flex items-center gap-1 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest border rounded-full text-red-400 bg-red-500/10 border-red-500/20 animate-pulse">
+                    <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest border rounded-full text-red-400 bg-red-500/10 border-red-500/20 animate-pulse">
                       <AlertTriangle size={8} />
                       FFP Aşılıyor
                     </span>
@@ -984,16 +984,16 @@ export default function FinancialTab({
               </div>
 
               {/* Position Summary Cards */}
-              <div className="grid grid-cols-4 gap-2 mt-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
                 {salaryByPosition.map((pos) => (
                   <div key={pos.position} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-2.5 text-center">
                     <div
                       className="w-2 h-2 rounded-full mx-auto mb-1.5"
                       style={{ backgroundColor: pos.color }}
                     />
-                    <div className="text-[8px] text-white/25 font-bold uppercase tracking-widest mb-0.5">{pos.position}</div>
+                    <div className="text-[10px] text-white/25 font-bold uppercase tracking-widest mb-0.5">{pos.position}</div>
                     <div className="text-[11px] font-black font-mono" style={{ color: pos.color }}>{fmtMoney(pos.salary)}</div>
-                    <div className="text-[8px] text-white/15 mt-0.5">{pos.count} oyuncu</div>
+                    <div className="text-[10px] text-white/15 mt-0.5">{pos.count} oyuncu</div>
                   </div>
                 ))}
               </div>
@@ -1001,7 +1001,7 @@ export default function FinancialTab({
               {/* FFP Cap vs Current */}
               <div className="mt-4 pt-3 border-t border-white/[0.06]">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-white/25">Maaş vs FFP Tavanı</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/25">Maaş vs FFP Tavanı</span>
                   <span className={`text-[10px] font-black font-mono ${
                     wageUtilization > 90 ? 'text-red-400' : wageUtilization > 75 ? 'text-amber-400' : 'text-emerald-400'
                   }`}>
@@ -1027,24 +1027,24 @@ export default function FinancialTab({
                   />
                 </div>
                 <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-[8px] text-white/15">
+                  <span className="text-[10px] text-white/15">
                     Maaş: <span className="text-white/40 font-bold font-mono">{fmtMoney(fin.totalWages)}</span>
                   </span>
-                  <span className="text-[8px] text-white/15">
+                  <span className="text-[10px] text-white/15">
                     Tavan: <span className="text-white/40 font-bold font-mono">{fmtMoney(wageBillLimit)}</span>
                   </span>
                 </div>
                 {wageUtilization > 90 && (
                   <div className="mt-2 flex items-start gap-1.5 px-2 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
                     <AlertTriangle size={10} className="text-red-400 shrink-0 mt-0.5" />
-                    <span className="text-[9px] text-red-400 font-medium leading-relaxed">
+                    <span className="text-[10px] text-red-400 font-medium leading-relaxed">
                       Toplam maaşlar FFP tavanını {wageUtilization > 100 ? 'aşıyor' : 'tehdit ediyor'}.
                       {wageUtilization > 100 ? ' Acil maaş düşürme veya oyuncu satışı gerekli.' : ' Oyuncu satışı veya maaş indirimini değerlendirin.'}
                     </span>
                   </div>
                 )}
                 {wageUtilization > 0 && wageUtilization <= 70 && (
-                  <div className="mt-2 text-[9px] text-emerald-400/50 text-center">
+                  <div className="mt-2 text-[10px] text-emerald-400/50 text-center">
                     FFP uyumlu — {fmtMoney(Math.max(0, wageBillLimit - fin.totalWages))} transfer bütçesi mevcut
                   </div>
                 )}
@@ -1054,7 +1054,7 @@ export default function FinancialTab({
             {/* Sezon P&L Tahmini */}
             <div className="rounded-2xl border border-white/[0.06] bg-white/[0.01] p-5">
               <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-4">Sezon Tahmini (42 Hafta)</div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
                   { label: 'Toplam Gelir', value: fin.seasonRevenue, color: 'text-emerald-400' },
                   { label: 'Toplam Gider', value: fin.seasonExpenses, color: 'text-red-400' },
@@ -1062,7 +1062,7 @@ export default function FinancialTab({
                 ].map(({ label, value, color }) => (
                   <div key={label} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
                     <div className={`text-base font-black font-mono ${color}`}>{fmtMoney(value)}</div>
-                    <div className="text-[8px] text-white/20 uppercase tracking-widest mt-1">{label}</div>
+                    <div className="text-[10px] text-white/20 uppercase tracking-widest mt-1">{label}</div>
                   </div>
                 ))}
               </div>
@@ -1075,10 +1075,10 @@ export default function FinancialTab({
                 <div className="text-3xl font-black font-mono text-white">{fmtMoney(money)}</div>
                 {weeklyBurn > 0 && (
                   <div className="pb-1">
-                    <div className="text-[9px] text-white/25">
+                    <div className="text-[10px] text-white/25">
                       {weeksRunway === Infinity ? '∞' : `${weeksRunway} hafta`} pist kaldı
                     </div>
-                    <div className={`text-[9px] font-black ${weeksRunway < 4 ? 'text-red-400' : weeksRunway < 8 ? 'text-amber-400' : 'text-white/30'}`}>
+                    <div className={`text-[10px] font-black ${weeksRunway < 4 ? 'text-red-400' : weeksRunway < 8 ? 'text-amber-400' : 'text-white/30'}`}>
                       Haftalık kayıp: {fmtMoney(weeklyBurn)}
                     </div>
                   </div>
@@ -1122,7 +1122,7 @@ export default function FinancialTab({
                       animate={{ width: `${revenuePct}%` }}
                       transition={{ duration: 0.8, ease: 'easeOut' }}
                     >
-                      <span className="text-[9px] font-black text-white/80">{revenuePct > 15 ? fmtMoney(weeklyRevenue) : ''}</span>
+                      <span className="text-[10px] font-black text-white/80">{revenuePct > 15 ? fmtMoney(weeklyRevenue) : ''}</span>
                     </motion.div>
                   </div>
                 </div>
@@ -1143,7 +1143,7 @@ export default function FinancialTab({
                       animate={{ width: `${expensePct}%` }}
                       transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
                     >
-                      <span className="text-[9px] font-black text-white/80">{expensePct > 15 ? fmtMoney(weeklyExpenses) : ''}</span>
+                      <span className="text-[10px] font-black text-white/80">{expensePct > 15 ? fmtMoney(weeklyExpenses) : ''}</span>
                     </motion.div>
                   </div>
                 </div>
@@ -1192,7 +1192,7 @@ export default function FinancialTab({
                   { label: 'Gider/Gelir Oranı', value: weeklyRevenue > 0 ? weeklyExpenses / weeklyRevenue : 0, format: (v: number) => `%${(v * 100).toFixed(0)}`, color: (weeklyRevenue > 0 ? weeklyExpenses / weeklyRevenue : 0) > 1 ? 'text-red-400' : 'text-emerald-400' },
                 ].map((stat, i) => (
                   <div key={i} className="text-center">
-                    <span className="text-[8px] text-white/15 font-bold uppercase tracking-widest block mb-1">{stat.label}</span>
+                    <span className="text-[10px] text-white/15 font-bold uppercase tracking-widest block mb-1">{stat.label}</span>
                     <span className={`text-sm font-black font-mono ${stat.color}`}>{stat.format(stat.value)}</span>
                   </div>
                 ))}

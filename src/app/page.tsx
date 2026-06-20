@@ -926,7 +926,7 @@ export default function Home() {
                     <RefreshCw size={16} className="text-amber-400 animate-spin" />
                  </div>
                  <div>
-                    <p className="text-[7px] font-black uppercase tracking-widest text-white/40">YÜKSELTME DEVAM EDİYOR</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40">YÜKSELTME DEVAM EDİYOR</p>
                     <p className="text-[11px] font-bold uppercase italic">
                       {profile.active_upgrade_type === 'academy' ? 'Yetiştirme Merkezi' : 'Stadyum Tesisi'} • LV. {(profile.stadium_upgrades?.[profile.active_upgrade_id!] || 0) + 1}
                     </p>
@@ -934,7 +934,7 @@ export default function Home() {
               </div>
               <div className="flex items-center gap-4">
                  <div className="text-right">
-                    <p className="text-[7px] font-black uppercase tracking-widest text-white/30">KALAN</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white/30">KALAN</p>
                     {profile.active_upgrade_end_at ? (
                       <UpgradeCountdown endAt={profile.active_upgrade_end_at} />
                     ) : (
@@ -943,7 +943,7 @@ export default function Home() {
                  </div>
                  <button 
                   onClick={() => setActiveTab('stadium')}
-                  className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all"
+                  className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
                  >
                   DETAY
                  </button>
@@ -959,7 +959,7 @@ export default function Home() {
                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-white/5 rotate-0 transition-transform overflow-hidden"><img src="/game-icon.png" alt="Touchline Manager" className="w-full h-full object-cover" /></div>
                 <div>
                   <p className="text-sm font-black uppercase tracking-wider text-white">MANAGER Pro</p>
-                  <p className="text-[9px] uppercase tracking-widest text-white/30 font-bold">Football Sim</p>
+                  <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold">Football Sim</p>
                 </div>
               </div>
             </div>
@@ -980,13 +980,13 @@ export default function Home() {
             <NavButton icon={<Trophy size={18} />} label="LİG" active={activeTab === 'league'} onClick={() => setActiveTab('league')} />
 
             <div className="mt-4 px-3 py-1 mb-2 border-t border-white/5 pt-4 group">
-               <p className="text-[8px] font-black tracking-widest text-white/20 uppercase mb-2 group-hover:text-emerald-400 transition-colors">EKONOMİ</p>
+               <p className="text-[10px] font-black tracking-widest text-white/20 uppercase mb-2 group-hover:text-emerald-400 transition-colors">EKONOMİ</p>
                <NavButton icon={<Globe size={18} />} label="TRANSFER PAZARI" active={activeTab === 'multiplayer'} onClick={() => setActiveTab('multiplayer')} />
                <NavButton icon={<DollarSign size={18} />} label="FİNANSAL" active={activeTab === 'financial'} onClick={() => setActiveTab('financial')} />
             </div>
             
             <div className="mt-4 px-3 py-1 mb-2 border-t border-white/5 pt-4 group">
-               <p className="text-[8px] font-black tracking-widest text-white/20 uppercase mb-2 group-hover:text-amber-400 transition-colors">AKADemi & KUPA</p>
+               <p className="text-[10px] font-black tracking-widest text-white/20 uppercase mb-2 group-hover:text-amber-400 transition-colors">AKADemi & KUPA</p>
                <NavButton icon={<Users size={18} />} label="GENÇLİK AKAD." active={activeTab === 'youth'} onClick={() => setActiveTab('youth')} />
                <NavButton icon={<Trophy size={18} />} label="KUPALAR" active={activeTab === 'cups'} onClick={() => setActiveTab('cups')} />
                <NavButton icon={<Award size={18} />} label="ÖDÜLLER" active={activeTab === 'awards'} onClick={() => setActiveTab('awards')} />

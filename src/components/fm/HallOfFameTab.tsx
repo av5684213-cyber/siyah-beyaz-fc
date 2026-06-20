@@ -95,7 +95,7 @@ function LegendCard({ entry, index }: { entry: HallOfFameEntry; index: number })
       {/* Club Legend Badge */}
       {entry.is_club_legend && (
         <div className="absolute top-2 right-2 bg-amber-500/20 border border-amber-500/30 rounded-lg px-2 py-0.5">
-          <span className="text-amber-300 text-[9px] font-bold uppercase tracking-wider">Kulüp Efsanesi</span>
+          <span className="text-amber-300 text-[10px] font-bold uppercase tracking-wider">Kulüp Efsanesi</span>
         </div>
       )}
 
@@ -126,7 +126,7 @@ function LegendCard({ entry, index }: { entry: HallOfFameEntry; index: number })
           </div>
           <div className="text-right">
             <div className="text-white/90 font-bold text-lg">{entry.peak_rating}</div>
-            <div className="text-white/30 text-[8px] uppercase">Peak</div>
+            <div className="text-white/30 text-[10px] uppercase">Peak</div>
           </div>
         </div>
 
@@ -134,19 +134,19 @@ function LegendCard({ entry, index }: { entry: HallOfFameEntry; index: number })
         <div className="grid grid-cols-4 gap-2 mt-3">
           <div className="bg-black/20 rounded-lg p-1.5 text-center">
             <div className="text-white/80 text-sm font-bold">{entry.total_goals}</div>
-            <div className="text-white/25 text-[8px]">GOL</div>
+            <div className="text-white/25 text-[10px]">GOL</div>
           </div>
           <div className="bg-black/20 rounded-lg p-1.5 text-center">
             <div className="text-white/80 text-sm font-bold">{entry.total_assists}</div>
-            <div className="text-white/25 text-[8px]">ASİST</div>
+            <div className="text-white/25 text-[10px]">ASİST</div>
           </div>
           <div className="bg-black/20 rounded-lg p-1.5 text-center">
             <div className="text-white/80 text-sm font-bold">{entry.total_matches}</div>
-            <div className="text-white/25 text-[8px]">MAÇ</div>
+            <div className="text-white/25 text-[10px]">MAÇ</div>
           </div>
           <div className="bg-black/20 rounded-lg p-1.5 text-center">
             <div className="text-white/80 text-sm font-bold">{entry.avg_rating}</div>
-            <div className="text-white/25 text-[8px]">AVG</div>
+            <div className="text-white/25 text-[10px]">AVG</div>
           </div>
         </div>
 
@@ -185,7 +185,7 @@ function LegendCard({ entry, index }: { entry: HallOfFameEntry; index: number })
           {/* Awards Detail */}
           {entry.awards_won.length > 0 && (
             <div className="pt-2 border-t border-white/[0.04]">
-              <p className="text-white/30 text-[9px] uppercase mb-1">Kazanılan Ödüller</p>
+              <p className="text-white/30 text-[10px] uppercase mb-1">Kazanılan Ödüller</p>
               <div className="space-y-1">
                 {entry.awards_won.map(awardType => {
                   const label = AWARD_LABELS[awardType as AwardType];
@@ -218,12 +218,12 @@ function RecordCard({ record, index }: { record: AllTimeRecord; index: number })
     >
       <div className="text-2xl">{record.icon}</div>
       <div className="flex-1 min-w-0">
-        <div className="text-white/50 text-[9px] uppercase tracking-wider">{record.label}</div>
+        <div className="text-white/50 text-[10px] uppercase tracking-wider">{record.label}</div>
         <div className="text-white/80 text-sm font-medium truncate">{record.playerName}</div>
       </div>
       <div className="text-right">
         <div className="text-amber-300 font-bold text-lg">{record.value}</div>
-        <div className="text-white/25 text-[8px] uppercase">{record.unit}</div>
+        <div className="text-white/25 text-[10px] uppercase">{record.unit}</div>
       </div>
     </motion.div>
   );
@@ -297,27 +297,27 @@ export default function HallOfFameTab({ profileId, teamName }: HallOfFameTabProp
         <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-2 text-center">
           <div className="text-xl mb-0.5">💎</div>
           <div className="text-cyan-300 font-bold text-sm">{platinumCount}</div>
-          <div className="text-white/25 text-[7px] uppercase">Platin</div>
+          <div className="text-white/25 text-[10px] uppercase">Platin</div>
         </div>
         <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-2 text-center">
           <div className="text-xl mb-0.5">🥇</div>
           <div className="text-yellow-300 font-bold text-sm">{goldCount}</div>
-          <div className="text-white/25 text-[7px] uppercase">Altın</div>
+          <div className="text-white/25 text-[10px] uppercase">Altın</div>
         </div>
         <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-2 text-center">
           <div className="text-xl mb-0.5">🥈</div>
           <div className="text-gray-300 font-bold text-sm">{silverCount}</div>
-          <div className="text-white/25 text-[7px] uppercase">Gümüş</div>
+          <div className="text-white/25 text-[10px] uppercase">Gümüş</div>
         </div>
         <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-2 text-center">
           <div className="text-xl mb-0.5">🥉</div>
           <div className="text-amber-600 font-bold text-sm">{bronzeCount}</div>
-          <div className="text-white/25 text-[7px] uppercase">Bronz</div>
+          <div className="text-white/25 text-[10px] uppercase">Bronz</div>
         </div>
         <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-2 text-center">
           <div className="text-xl mb-0.5">👑</div>
           <div className="text-amber-300 font-bold text-sm">{clubLegendCount}</div>
-          <div className="text-white/25 text-[7px] uppercase">K. Efsanesi</div>
+          <div className="text-white/25 text-[10px] uppercase">K. Efsanesi</div>
         </div>
       </div>
 

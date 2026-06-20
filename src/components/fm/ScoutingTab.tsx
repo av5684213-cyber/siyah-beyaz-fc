@@ -95,7 +95,7 @@ function ArchetypeMultiSelect({ selected, onChange, scoutLevel }: {
 
   return (
     <div className="space-y-1 relative">
-      <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Arketip</label>
+      <label className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Arketip</label>
       <button
         type="button"
         onClick={() => { if (scoutLevel >= 3) setIsOpen(!isOpen); }}
@@ -122,7 +122,7 @@ function ArchetypeMultiSelect({ selected, onChange, scoutLevel }: {
                 <button
                   type="button"
                   onClick={() => onChange([])}
-                  className="w-full text-left px-2 py-1.5 text-[9px] font-bold text-red-400/60 uppercase tracking-widest hover:bg-white/5 rounded-lg transition-colors"
+                  className="w-full text-left px-3 py-2 text-[10px] font-bold text-red-400/60 uppercase tracking-widest hover:bg-white/5 rounded-lg transition-colors min-h-[36px]"
                 >
                   Seçimleri Temizle
                 </button>
@@ -650,17 +650,17 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
       <div className="flex items-center justify-between gap-2 bg-white/5 p-3 sm:p-4 rounded-2xl border border-white/5">
         <div className="min-w-0">
           <h2 className="text-base sm:text-xl font-black italic uppercase tracking-tighter text-white truncate">Gözlemcilik Ağı</h2>
-          <p className="text-[8px] sm:text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] sm:tracking-[0.4em] mt-0.5">Yetenek Avı</p>
+          <p className="text-[10px] sm:text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] sm:tracking-[0.4em] mt-0.5">Yetenek Avı</p>
         </div>
         <div className="flex gap-1.5 sm:gap-2 shrink-0">
            <div className="px-2 py-1 sm:px-3 sm:py-1.5 bg-black/40 border border-white/10 rounded-lg">
-             <span className="text-[8px] font-black text-white/20 uppercase block leading-none mb-0.5">Bütçe</span>
+             <span className="text-[10px] font-black text-white/20 uppercase block leading-none mb-0.5">Bütçe</span>
              <span className="text-[10px] sm:text-xs font-mono font-bold text-emerald-400 leading-none">
                €{((profile?.money || 0) / 1000000).toFixed(1)}M
              </span>
            </div>
            <div className="px-2 py-1 sm:px-3 sm:py-1.5 bg-black/40 border border-white/10 rounded-lg">
-             <span className="text-[8px] font-black text-white/20 uppercase block leading-none mb-0.5">Gözlemci</span>
+             <span className="text-[10px] font-black text-white/20 uppercase block leading-none mb-0.5">Gözlemci</span>
              <span className={`text-[10px] sm:text-xs font-mono font-bold leading-none ${activeScoutSlots > 0 ? 'text-amber-400' : 'text-red-400'}`}>
                {activeScoutSlots}/3
              </span>
@@ -680,12 +680,12 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-red-400">Gözlemci Yok</h3>
-            <p className="text-[9px] sm:text-[10px] text-red-300/70 leading-tight mt-0.5">
+            <p className="text-[10px] sm:text-[10px] text-red-300/70 leading-tight mt-0.5">
               Yerleşke {'>'} Personel'den gözlemci satın al.
             </p>
             <button 
               onClick={() => setActiveTab('stadium')}
-              className="inline-flex items-center gap-1 mt-1.5 px-2 py-1 bg-red-500/20 text-red-400 text-[9px] font-black uppercase tracking-widest rounded-md hover:bg-red-500/30 transition-all"
+              className="inline-flex items-center gap-1 mt-1.5 px-3 py-2 bg-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-widest rounded-md hover:bg-red-500/30 transition-all min-h-[40px]"
             >
               <Users size={10} />
               Yerleşke'ye Git
@@ -723,10 +723,10 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                     </div>
                     {!isActive && <Lock size={9} className="text-white/20 ml-auto" />}
                   </div>
-                  <p className={`text-[8px] sm:text-[10px] font-black uppercase tracking-widest ${isActive ? info.color : 'text-white/20'} truncate`}>
+                  <p className={`text-[10px] sm:text-[10px] font-black uppercase tracking-widest ${isActive ? info.color : 'text-white/20'} truncate`}>
                     {info.label}
                   </p>
-                  <p className="hidden sm:block text-[8px] font-bold text-white/20 uppercase tracking-widest mt-0.5">
+                  <p className="hidden sm:block text-[10px] font-bold text-white/20 uppercase tracking-widest mt-0.5">
                     {info.desc}
                   </p>
                 </div>
@@ -743,7 +743,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
             <Users className="text-white/40 shrink-0" size={14} />
             <div className="min-w-0">
               <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-white/70 truncate">Gözlemci Slotları</h3>
-              <p className="text-[8px] sm:text-[9px] font-bold text-white/20 uppercase tracking-widest truncate">
+              <p className="text-[10px] sm:text-[10px] font-bold text-white/20 uppercase tracking-widest truncate">
                 {activeScoutSlots > 0 
                   ? `${activeScoutSlots}/3 aktif — Seviye ${scoutLevel} arama` 
                   : 'Gözlemci yok — Arama devre dışı'}
@@ -764,7 +764,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                       ))}
                     </div>
                   </div>
-                  <div className={`px-1.5 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest shrink-0 ${
+                  <div className={`px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest shrink-0 ${
                     scout.status === 'IDLE' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-amber-500/20 text-amber-500 animate-pulse'
                   }`}>
                     {scout.status === 'IDLE' ? 'BOŞTA' : 'GÖREVDE'}
@@ -774,13 +774,13 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                   {scout.status === 'IDLE' ? (
                     <div className="text-center space-y-1 opacity-40">
                       <Activity className="mx-auto" size={14} />
-                      <p className="text-[8px] font-black uppercase tracking-widest">Görev bekliyor</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest">Görev bekliyor</p>
                     </div>
                   ) : (
                     <div className="text-center space-y-1.5">
                       <MapIcon className="mx-auto text-amber-500/40" size={18} />
                       <div>
-                        <p className="text-[8px] font-black uppercase tracking-widest text-white/40 truncate">{scout.location}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/40 truncate">{scout.location}</p>
                         <p className="text-xs sm:text-sm font-mono font-bold text-white tracking-widest">{scout.remainingDays} GÜN</p>
                       </div>
                     </div>
@@ -790,7 +790,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
           )) : (
             <div className="col-span-full text-center py-6 text-white/30">
               <Users size={20} className="mx-auto mb-2 opacity-40" />
-              <p className="text-[9px] font-black uppercase tracking-widest">Henüz gözlemci yok — Personel sekmesinden işe alabilirsiniz</p>
+              <p className="text-[10px] font-black uppercase tracking-widest">Henüz gözlemci yok — Personel sekmesinden işe alabilirsiniz</p>
             </div>
           )}
         </div>
@@ -801,7 +801,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
          <div className="mb-3 sm:mb-4 flex items-center justify-between gap-2">
             <div className="min-w-0">
                <h3 className="text-sm sm:text-base font-black italic uppercase tracking-tighter text-white truncate">Advanced Search & Keşif Merkezi</h3>
-               <p className="hidden sm:block text-[9px] font-bold text-white/30 uppercase tracking-[0.4em] mt-1">Oyuncu Özelliklerine Göre Detaylı Arama</p>
+               <p className="hidden sm:block text-[10px] font-bold text-white/30 uppercase tracking-[0.4em] mt-1">Oyuncu Özelliklerine Göre Detaylı Arama</p>
             </div>
             <div className={`flex items-center gap-1.5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full shrink-0 ${
               activeScoutSlots < 1 
@@ -815,12 +815,12 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                {activeScoutSlots < 1 ? (
                  <>
                    <Ban size={10} className="text-red-500" />
-                   <span className="text-[8px] sm:text-[10px] font-black text-red-500">GÖZLEMCİ GEREKLİ</span>
+                   <span className="text-[10px] sm:text-[10px] font-black text-red-500">GÖZLEMCİ GEREKLİ</span>
                  </>
                ) : (
                  <>
                    <Database size={10} className={scoutLevel === 3 ? 'text-emerald-500' : 'text-amber-500'} />
-                   <span className={`text-[8px] sm:text-[10px] font-black ${scoutLevel === 3 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                   <span className={`text-[10px] sm:text-[10px] font-black ${scoutLevel === 3 ? 'text-emerald-500' : 'text-amber-500'}`}>
                      SEVİYE {scoutLevel}
                    </span>
                  </>
@@ -832,13 +832,13 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
          <div className="space-y-2 mb-3 sm:mb-4">
             <div className="flex items-center gap-2 mb-2">
                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white/10 rounded-md flex items-center justify-center shrink-0">
-                  <span className="text-[8px] sm:text-[9px] font-black text-white">1</span>
+                  <span className="text-[10px] sm:text-[10px] font-black text-white">1</span>
                </div>
-               <span className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest truncate">Temel Arama — İsim, Pozisyon, Yaş</span>
+               <span className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest truncate">Temel Arama — İsim, Pozisyon, Yaş</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                <div className="col-span-2 space-y-1">
-                   <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Oyuncu İsmi</label>
+                   <label className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Oyuncu İsmi</label>
                    <input 
                      type="text"
                      value={advancedFilters.name || ''}
@@ -849,7 +849,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                    />
                </div>
                <div className="space-y-1">
-                   <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Pozisyon</label>
+                   <label className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Pozisyon</label>
                    <select
                      value={advancedFilters.position}
                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, position: e.target.value })}
@@ -865,7 +865,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                </div>
                <div className="grid grid-cols-2 gap-2">
                  <div className="space-y-1">
-                     <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Min Yaş</label>
+                     <label className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Min Yaş</label>
                      <input 
                        type="number"
                        value={advancedFilters.ageMin || ''}
@@ -876,7 +876,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                      />
                  </div>
                  <div className="space-y-1">
-                     <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Max Yaş</label>
+                     <label className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Max Yaş</label>
                      <input 
                        type="number"
                        value={advancedFilters.ageMax || ''}
@@ -894,15 +894,15 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
          <div className={`space-y-2 mb-3 sm:mb-4 ${scoutLevel < 2 ? 'opacity-30 pointer-events-none' : ''}`}>
             <div className="flex items-center gap-2 mb-2">
                <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center shrink-0 ${scoutLevel >= 2 ? 'bg-amber-500/20' : 'bg-white/5'}`}>
-                  <span className={`text-[8px] sm:text-[9px] font-black ${scoutLevel >= 2 ? 'text-amber-400' : 'text-white/30'}`}>2</span>
+                  <span className={`text-[10px] sm:text-[10px] font-black ${scoutLevel >= 2 ? 'text-amber-400' : 'text-white/30'}`}>2</span>
                </div>
-               <span className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest truncate">Genişletilmiş — OVR, Nadirlik, İstatikler</span>
+               <span className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest truncate">Genişletilmiş — OVR, Nadirlik, İstatikler</span>
                {scoutLevel < 2 && <Lock size={9} className="text-white/20 ml-1 shrink-0" />}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
                <div className="grid grid-cols-2 gap-2">
                  <div className="space-y-1">
-                     <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Min OVR</label>
+                     <label className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Min OVR</label>
                      <input 
                        type="number"
                        value={advancedFilters.ovrMin || ''}
@@ -912,7 +912,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                      />
                  </div>
                  <div className="space-y-1">
-                     <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Max OVR</label>
+                     <label className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Max OVR</label>
                      <input 
                        type="number"
                        value={advancedFilters.ovrMax || ''}
@@ -923,7 +923,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                  </div>
                </div>
                <div className="space-y-1">
-                   <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Nadirlik</label>
+                   <label className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">Nadirlik</label>
                    <select
                      value={advancedFilters.rarity}
                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, rarity: e.target.value })}
@@ -951,7 +951,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                  { id: 'Tplm' as const, label: 'Tplm' },
                ].map((attr) => (
                  <div key={attr.id} className="space-y-1">
-                   <label className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">{attr.label}</label>
+                   <label className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest">{attr.label}</label>
                    <input 
                      type="number"
                      value={advancedFilters[attr.id] || ''}
@@ -968,9 +968,9 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
          <div className={`space-y-2 mb-4 sm:mb-6 ${scoutLevel < 3 ? 'opacity-30 pointer-events-none' : ''}`}>
             <div className="flex items-center gap-2 mb-2">
                <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center shrink-0 ${scoutLevel >= 3 ? 'bg-emerald-500/20' : 'bg-white/5'}`}>
-                  <span className={`text-[8px] sm:text-[9px] font-black ${scoutLevel >= 3 ? 'text-emerald-400' : 'text-white/30'}`}>3</span>
+                  <span className={`text-[10px] sm:text-[10px] font-black ${scoutLevel >= 3 ? 'text-emerald-400' : 'text-white/30'}`}>3</span>
                </div>
-               <span className="text-[8px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest truncate">Detaylı — Arketip, Yetenekler</span>
+               <span className="text-[10px] sm:text-[10px] font-black text-white/40 uppercase tracking-widest truncate">Detaylı — Arketip, Yetenekler</span>
                {scoutLevel < 3 && <Lock size={9} className="text-white/20 ml-1 shrink-0" />}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -1008,7 +1008,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
          {searchError && (
            <div className="bg-red-500/10 border border-red-500/20 p-2.5 sm:p-3 rounded-lg flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
              <AlertCircle className="text-red-400 shrink-0" size={14} />
-             <p className="text-[9px] sm:text-[10px] font-bold text-red-300 uppercase tracking-widest min-w-0 flex-1">{searchError}</p>
+             <p className="text-[10px] sm:text-[10px] font-bold text-red-300 uppercase tracking-widest min-w-0 flex-1">{searchError}</p>
              <button onClick={() => setSearchError('')} className="ml-auto text-white/30 hover:text-white shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center">
                <X size={12} />
              </button>
@@ -1018,10 +1018,10 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
          {advancedResults.length > 0 && (
            <div className="animate-in fade-in slide-in-from-top-4 space-y-2 sm:space-y-3">
              <div className="flex items-center gap-2 border-b border-white/5 pb-2 sm:pb-3">
-                <span className="text-[9px] sm:text-[10px] font-black text-white/20 uppercase tracking-widest truncate">BULUNAN SONUÇLAR ({advancedResults.length})</span>
+                <span className="text-[10px] sm:text-[10px] font-black text-white/20 uppercase tracking-widest truncate">BULUNAN SONUÇLAR ({advancedResults.length})</span>
                 <button 
                   onClick={() => { setAdvancedResults([]); setSearchError(''); }}
-                  className="ml-auto text-[8px] font-black text-white/20 hover:text-white uppercase shrink-0"
+                  className="ml-auto text-[10px] font-black text-white/20 hover:text-white uppercase shrink-0"
                 >
                   TEMİZLE
                 </button>
@@ -1045,21 +1045,21 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                           </div>
                           <div className="min-w-0">
                             <p className="text-[10px] sm:text-xs font-black uppercase italic leading-none mb-1 group-hover:text-amber-400 transition-colors truncate">{(p && p.name) || 'Bilinmeyen'}</p>
-                            <p className="text-[7px] sm:text-[8px] font-black text-white/30 uppercase tracking-widest truncate">{getPlayerPos(p as Record<string, unknown>)} • {p.age} YAŞ</p>
+                            <p className="text-[10px] sm:text-[10px] font-black text-white/30 uppercase tracking-widest truncate">{getPlayerPos(p as Record<string, unknown>)} • {p.age} YAŞ</p>
                           </div>
                        </div>
                        <div className="flex items-center gap-1 shrink-0 flex-col items-end">
                          {scoutLevel >= 2 && (
-                           <span className={`text-[7px] font-black uppercase ${rarity.color}`}>{rarity.label}</span>
+                           <span className={`text-[10px] font-black uppercase ${rarity.color}`}>{rarity.label}</span>
                          )}
-                         <p className="text-[7px] font-bold text-emerald-400/60 uppercase tracking-widest truncate max-w-[80px]">{p.team_name || 'SERBEST'}</p>
+                         <p className="text-[10px] font-bold text-emerald-400/60 uppercase tracking-widest truncate max-w-[80px]">{p.team_name || 'SERBEST'}</p>
                        </div>
                      </div>
                      {/* Arketip ve Özellikler */}
                      {scoutLevel >= 3 && (
                        <div className="flex flex-wrap gap-1 mb-2">
                          {p.archetype && (
-                           <span className="px-1.5 py-0.5 bg-amber-500/15 text-amber-300 text-[7px] font-black uppercase tracking-wider rounded border border-amber-500/20">
+                           <span className="px-1.5 py-0.5 bg-amber-500/15 text-amber-300 text-[10px] font-black uppercase tracking-wider rounded border border-amber-500/20">
                              {p.archetype}
                            </span>
                          )}
@@ -1070,13 +1070,13 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                                             lvl === 'LACIVERT' ? 'bg-blue-500/15 text-blue-300 border-blue-500/20' :
                                             'bg-white/5 text-white/50 border-white/10';
                            return (
-                             <span key={t} className={`px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wider rounded border ${lvlColor}`}>
+                             <span key={t} className={`px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded border ${lvlColor}`}>
                                {t}
                              </span>
                            );
                          })}
                          {playerNegTraits.map((t) => (
-                           <span key={t} className="px-1.5 py-0.5 bg-red-500/10 text-red-400/80 text-[7px] font-bold uppercase tracking-wider rounded border border-red-500/15">
+                           <span key={t} className="px-1.5 py-0.5 bg-red-500/10 text-red-400/80 text-[10px] font-bold uppercase tracking-wider rounded border border-red-500/15">
                              {t}
                            </span>
                          ))}
@@ -1085,15 +1085,15 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                      <div className="flex items-center justify-between gap-2">
                        <div className="grid grid-cols-3 gap-1.5">
                           <div className="text-center">
-                            <p className="text-[6px] text-white/40 uppercase">PAS</p>
+                            <p className="text-[10px] text-white/40 uppercase">PAS</p>
                             <p className="text-[10px] font-mono font-bold">{p.pas || 0}</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-[6px] text-white/40 uppercase">ŞUT</p>
+                            <p className="text-[10px] text-white/40 uppercase">ŞUT</p>
                             <p className="text-[10px] font-mono font-bold">{p.sut || 0}</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-[6px] text-white/40 uppercase">HIZ</p>
+                            <p className="text-[10px] text-white/40 uppercase">HIZ</p>
                             <p className="text-[10px] font-mono font-bold">{p.hiz || 0}</p>
                           </div>
                        </div>
@@ -1117,7 +1117,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                              console.warn('Keşfet kaydı başarısız:', err);
                            }
                          }}
-                         className="min-h-[36px] px-2 py-1 bg-amber-500/20 text-amber-400 text-[9px] font-black uppercase tracking-widest rounded-md hover:bg-amber-500/30 transition-all shrink-0"
+                         className="min-h-[36px] px-2 py-1 bg-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest rounded-md hover:bg-amber-500/30 transition-all shrink-0"
                        >
                          Keşfet
                        </button>
@@ -1133,8 +1133,8 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
          {advancedResults.length === 0 && !searchError && !isSearching && (
            <div className="py-6 sm:py-12 text-center">
              <Search className="mx-auto text-white/10 mb-2 sm:mb-3" size={24} />
-             <p className="text-[9px] sm:text-[10px] font-bold text-white/20 uppercase tracking-widest">Filtreleri ayarlayın ve ARA butonuna tıklayın</p>
-             <p className="text-[8px] sm:text-[9px] text-white/10 mt-1 uppercase">
+             <p className="text-[10px] sm:text-[10px] font-bold text-white/20 uppercase tracking-widest">Filtreleri ayarlayın ve ARA butonuna tıklayın</p>
+             <p className="text-[10px] sm:text-[10px] text-white/10 mt-1 uppercase">
                {activeScoutSlots < 1 
                  ? 'Arama için en az 1 gözlemci gereklidir' 
                  : `Seviye ${scoutLevel} arama aktif — ${SCOUT_LEVEL_INFO[scoutLevel].desc}`}
@@ -1163,7 +1163,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shrink-0">
                      <span className="text-black text-[10px] sm:text-xs font-black italic">{p.rating}</span>
                    </div>
-                   <span className="px-1.5 py-0.5 bg-white/10 rounded text-[8px] font-black text-white/40 shrink-0">{p.position}</span>
+                   <span className="px-1.5 py-0.5 bg-white/10 rounded text-[10px] font-black text-white/40 shrink-0">{p.position}</span>
                 </div>
                 <h4 className="text-[10px] sm:text-xs font-black uppercase italic text-white mb-2 sm:mb-3 line-clamp-1">{p.name || 'Bilinmeyen'}</h4>
                 <div className="flex gap-1.5 sm:gap-2">
@@ -1176,13 +1176,13 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                    </button>
                    <button 
                      onClick={() => handleDismissPlayer(p.id as string)}
-                     className="min-h-[36px] flex-1 py-1.5 sm:py-2 bg-white/5 border border-white/5 rounded-lg sm:rounded-xl text-[8px] font-black uppercase text-white/40 hover:bg-red-500/20 hover:text-red-500 transition-all"
+                     className="min-h-[36px] flex-1 py-1.5 sm:py-2 bg-white/5 border border-white/5 rounded-lg sm:rounded-xl text-[10px] font-black uppercase text-white/40 hover:bg-red-500/20 hover:text-red-500 transition-all"
                    >
                      REDDET
                    </button>
                    <button 
                      onClick={() => onPlayerClick?.(p as unknown as Player)}
-                     className="min-h-[36px] flex-1 py-1.5 sm:py-2 bg-emerald-500 text-black text-[8px] font-black uppercase rounded-lg sm:rounded-xl hover:scale-105 transition-all"
+                     className="min-h-[36px] flex-1 py-1.5 sm:py-2 bg-emerald-500 text-black text-[10px] font-black uppercase rounded-lg sm:rounded-xl hover:scale-105 transition-all"
                    >
                      TEKLİF YAP
                    </button>
@@ -1203,11 +1203,11 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                 <h3 className="text-sm sm:text-base font-black italic uppercase tracking-tighter text-white truncate">Kayıtlı Aramalar</h3>
              </div>
              <div className="flex items-center gap-2 shrink-0">
-               <span className="text-[8px] sm:text-[9px] font-black text-white/20 uppercase tracking-widest">{savedSearches.length} KAYIT</span>
+               <span className="text-[10px] sm:text-[10px] font-black text-white/20 uppercase tracking-widest">{savedSearches.length} KAYIT</span>
                {savedSearches.length > 0 && (
                  <button
                    onClick={() => { setSavedSearches([]); try { (typeof window !== "undefined" && localStorage).removeItem('sbfc_scout_searches'); } catch (e) { console.warn("[silent-catch]", e); } }}
-                   className="text-[8px] font-bold text-red-400/50 hover:text-red-400 uppercase tracking-widest min-h-[36px] px-1"
+                   className="text-[10px] font-bold text-red-400/50 hover:text-red-400 uppercase tracking-widest min-h-[36px] px-1"
                  >
                    Temizle
                  </button>
@@ -1229,8 +1229,8 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                    <div className="flex-1 min-w-0">
                      <p className="text-[10px] font-black uppercase italic text-white/60 group-hover:text-amber-400 transition-colors truncate">{search.label}</p>
                      <div className="flex items-center gap-2 mt-0.5">
-                       <span className="text-[8px] font-bold text-emerald-400/60 uppercase tracking-widest">{search.resultCount} oyuncu</span>
-                       <span className="text-[8px] font-bold text-white/15 uppercase tracking-widest truncate">
+                       <span className="text-[10px] font-bold text-emerald-400/60 uppercase tracking-widest">{search.resultCount} oyuncu</span>
+                       <span className="text-[10px] font-bold text-white/15 uppercase tracking-widest truncate">
                          {new Date(search.timestamp).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                        </span>
                      </div>
@@ -1248,7 +1248,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                </div>
              ))}
              {savedSearches.length === 0 && (
-               <div className="py-8 text-center text-white/10 italic text-[9px] sm:text-[10px] uppercase tracking-widest">
+               <div className="py-8 text-center text-white/10 italic text-[10px] sm:text-[10px] uppercase tracking-widest">
                  Henüz kayıtlı arama bulunmuyor. Arama yapınca otomatik kaydedilir.
                </div>
              )}
@@ -1262,19 +1262,19 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                 <Eye className="text-amber-500 shrink-0" size={16} />
                 <h3 className="text-sm sm:text-base font-black italic uppercase tracking-tighter text-white truncate">İzleme Listesi</h3>
              </div>
-             <span className="text-[8px] sm:text-[9px] font-black text-white/20 uppercase tracking-widest shrink-0">{watchlistPlayers.length} OYUNCU</span>
+             <span className="text-[10px] sm:text-[10px] font-black text-white/20 uppercase tracking-widest shrink-0">{watchlistPlayers.length} OYUNCU</span>
            </div>
 
            <div className="space-y-1.5 sm:space-y-2 max-h-[300px] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
              {(watchlistPlayers || []).map((p: Player) => (
                <div key={p.id} className="flex items-center justify-between p-2 sm:p-3 bg-white/[0.02] border border-white/5 rounded-lg sm:rounded-xl group hover:border-amber-500/20 transition-all gap-2">
                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded bg-amber-500/10 flex items-center justify-center text-[9px] sm:text-[10px] font-black italic text-amber-500 shrink-0">
+                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded bg-amber-500/10 flex items-center justify-center text-[10px] sm:text-[10px] font-black italic text-amber-500 shrink-0">
                      {p.rating}
                    </div>
                    <div className="min-w-0">
                      <p className="text-[10px] font-black uppercase italic text-white truncate">{p.name || 'Bilinmeyen'}</p>
-                     <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest truncate">{getPlayerPos(p as Record<string, unknown>)} • {p.age} Yaş</p>
+                     <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest truncate">{getPlayerPos(p as Record<string, unknown>)} • {p.age} Yaş</p>
                    </div>
                  </div>
                  <div className="flex items-center gap-1 shrink-0">
@@ -1294,7 +1294,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                </div>
              ))}
              {watchlistPlayers.length === 0 && (
-               <div className="py-8 text-center text-white/10 italic text-[9px] sm:text-[10px] uppercase tracking-widest">
+               <div className="py-8 text-center text-white/10 italic text-[10px] sm:text-[10px] uppercase tracking-widest">
                  İzleme listesi boş.
                </div>
              )}
@@ -1322,7 +1322,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
 
               <div className="mb-4 sm:mb-6 relative">
                 <h3 className="text-lg sm:text-2xl font-black italic uppercase tracking-tighter text-white truncate">GÖZLEMCİ İŞE AL</h3>
-                <p className="text-[8px] sm:text-[10px] font-bold text-white/30 uppercase tracking-[0.3em] sm:tracking-[0.4em] mt-1 sm:mt-2">Ağına Yeni Bir Uzman Kat</p>
+                <p className="text-[10px] sm:text-[10px] font-bold text-white/30 uppercase tracking-[0.3em] sm:tracking-[0.4em] mt-1 sm:mt-2">Ağına Yeni Bir Uzman Kat</p>
               </div>
 
               <div className="space-y-2 sm:space-y-3 relative">
@@ -1348,10 +1348,10 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
                     </div>
                     <div className="text-right shrink-0">
                        <div className="mb-0.5 sm:mb-1">
-                         <p className="text-[7px] font-black uppercase text-white/40 group-hover:text-black/40">GEREKLİ LİG</p>
-                         <p className={`text-[9px] font-black ${userTier <= s.minTier ? 'text-emerald-500' : 'text-red-500'}`}>{s.minTier}. LİG</p>
+                         <p className="text-[10px] font-black uppercase text-white/40 group-hover:text-black/40">GEREKLİ LİG</p>
+                         <p className={`text-[10px] font-black ${userTier <= s.minTier ? 'text-emerald-500' : 'text-red-500'}`}>{s.minTier}. LİG</p>
                        </div>
-                       <p className="text-[8px] font-black uppercase text-white/40 group-hover:text-black/40">MALİYET</p>
+                       <p className="text-[10px] font-black uppercase text-white/40 group-hover:text-black/40">MALİYET</p>
                        <p className="font-mono font-bold text-[10px] sm:text-xs">${s.price.toLocaleString()}</p>
                     </div>
                   </button>
@@ -1360,7 +1360,7 @@ export default React.memo(function ScoutingTab({ onPlayerClick, isAdmin }: { onP
 
               <button 
                 onClick={() => setShowRecruitModal(false)}
-                className="w-full mt-4 sm:mt-6 min-h-[40px] py-2 sm:py-3 text-[9px] sm:text-[10px] font-black uppercase text-white/20 hover:text-white transition-colors"
+                className="w-full mt-4 sm:mt-6 min-h-[40px] py-2 sm:py-3 text-[10px] sm:text-[10px] font-black uppercase text-white/20 hover:text-white transition-colors"
               >
                 İPTAL ET
               </button>

@@ -139,7 +139,7 @@ function TrainingReportCard({ trainings }: { trainings: TrainingRecord[] }) {
           <div className="p-1.5 sm:p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
             <Dumbbell size={14} className="text-emerald-400" />
           </div>
-          <h3 className="text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-white/30">SON ANTRENMAN RAPORU</h3>
+          <h3 className="text-[10px] sm:text-[10px] uppercase font-bold tracking-widest text-white/30">SON ANTRENMAN RAPORU</h3>
         </div>
         <div className="flex items-center gap-2 py-2 sm:py-4 text-white/20 text-[10px] sm:text-xs">
           <Clock size={14} className="opacity-50 shrink-0" />
@@ -155,7 +155,7 @@ function TrainingReportCard({ trainings }: { trainings: TrainingRecord[] }) {
         <div className="p-1.5 sm:p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
           <Dumbbell size={14} className="text-emerald-400" />
         </div>
-        <h3 className="text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-white/30">SON ANTRENMAN RAPORU</h3>
+        <h3 className="text-[10px] sm:text-[10px] uppercase font-bold tracking-widest text-white/30">SON ANTRENMAN RAPORU</h3>
       </div>
 
       {trainings.slice(0, 2).map((training) => {
@@ -190,7 +190,7 @@ function TrainingReportCard({ trainings }: { trainings: TrainingRecord[] }) {
                 <Clock size={12} className="text-white/25 shrink-0" />
                 <span className="text-[11px] sm:text-xs font-bold text-white/60 truncate">{sessionLabel}</span>
               </div>
-              <span className="text-[9px] text-white/20 font-semibold shrink-0">{formattedDate}</span>
+              <span className="text-[10px] text-white/20 font-semibold shrink-0">{formattedDate}</span>
             </div>
 
             {/* Oyuncu gelişimleri */}
@@ -205,7 +205,7 @@ function TrainingReportCard({ trainings }: { trainings: TrainingRecord[] }) {
                     <div key={p.player_id || idx} className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <div className="w-5 h-5 rounded-md bg-white/[0.04] flex items-center justify-center shrink-0">
-                          <span className="text-[7px] font-black text-white/30">{(p as any).specificPosition || (p as any).specific_position || p.position?.slice(0, 2) || '?'}</span>
+                          <span className="text-[10px] font-black text-white/30">{(p as any).specificPosition || (p as any).specific_position || p.position?.slice(0, 2) || '?'}</span>
                         </div>
                         <span className="text-[11px] font-semibold text-white/70 truncate">
                           {toTitleCase(p.player_name)}
@@ -213,7 +213,7 @@ function TrainingReportCard({ trainings }: { trainings: TrainingRecord[] }) {
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {gains.map(([stat, val]) => (
-                          <span key={stat} className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold">
+                          <span key={stat} className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold">
                             +{val.toFixed(1)} {statLabel(stat)}
                           </span>
                         ))}
@@ -222,7 +222,7 @@ function TrainingReportCard({ trainings }: { trainings: TrainingRecord[] }) {
                   );
                 })}
                 {otherCount > 0 && (
-                  <p className="text-[9px] text-white/15 pl-7">ve diğer {otherCount} oyuncu</p>
+                  <p className="text-[10px] text-white/15 pl-7">ve diğer {otherCount} oyuncu</p>
                 )}
               </div>
             ) : (
@@ -233,21 +233,21 @@ function TrainingReportCard({ trainings }: { trainings: TrainingRecord[] }) {
             <div className="flex items-center gap-4 pt-2 border-t border-white/[0.03]">
               <div className="flex items-center gap-1.5">
                 <Flame size={10} className="text-orange-400/50" />
-                <span className="text-[9px] font-bold text-white/25">Kondisyon:</span>
-                <span className={`text-[9px] font-bold ${(training.avg_cond_change || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <span className="text-[10px] font-bold text-white/25">Kondisyon:</span>
+                <span className={`text-[10px] font-bold ${(training.avg_cond_change || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {(training.avg_cond_change || 0) >= 0 ? '+' : ''}{Number(training.avg_cond_change || 0).toFixed(1)}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <HeartPulse size={10} className="text-pink-400/50" />
-                <span className="text-[9px] font-bold text-white/25">Moral:</span>
-                <span className={`text-[9px] font-bold ${(training.avg_morale_change || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <span className="text-[10px] font-bold text-white/25">Moral:</span>
+                <span className={`text-[10px] font-bold ${(training.avg_morale_change || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {(training.avg_morale_change || 0) >= 0 ? '+' : ''}{Number(training.avg_morale_change || 0).toFixed(1)}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 ml-auto">
                 <Users size={10} className="text-white/15" />
-                <span className="text-[9px] text-white/20">{training.total_players || playerResults.length} oyuncu</span>
+                <span className="text-[10px] text-white/20">{training.total_players || playerResults.length} oyuncu</span>
               </div>
             </div>
           </div>
@@ -383,7 +383,7 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
           {isLive ? '● CANLI MAÇ' : 'SONRAKİ MAÇ'}
         </h3>
         {slotLabel && (
-          <span className={`ml-auto text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
+          <span className={`ml-auto text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
             isLive ? 'bg-red-500/20 text-red-300' : 'bg-amber-500/10 text-amber-400/80'
           }`}>
             {slotLabel}
@@ -393,14 +393,14 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
       <div className="flex items-center justify-between gap-2 sm:gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
-            <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${
+            <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded ${
               nextMatch.is_home ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-blue-500/15 text-blue-400 border border-blue-500/20'
             }`}>
               {nextMatch.is_home ? 'EV SAHİBİ' : 'DEPLASMAN'}
             </span>
-            <span className="text-[9px] text-white/20">{nextMatch.tur}. Hafta</span>
+            <span className="text-[10px] text-white/20">{nextMatch.tur}. Hafta</span>
             {isLive && (
-              <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
+              <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
                 CANLI
               </span>
             )}
@@ -439,30 +439,30 @@ function NextMatchCard({ profileId, onNavigate }: { profileId: string; onNavigat
         <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-amber-500/10">
           <div className="flex items-center gap-2 mb-2 sm:mb-3">
             <Wallet size={12} className="text-emerald-400/60 shrink-0" />
-            <span className="text-[9px] font-black text-emerald-400/60 uppercase tracking-widest">Bilet Geliri Tahmini</span>
+            <span className="text-[10px] font-black text-emerald-400/60 uppercase tracking-widest">Bilet Geliri Tahmini</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3">
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-2 sm:p-3 text-center">
-              <span className="text-[8px] text-white/20 uppercase font-bold tracking-widest">Kapasite</span>
+              <span className="text-[10px] text-white/20 uppercase font-bold tracking-widest">Kapasite</span>
               <p className="text-xs sm:text-sm font-black font-mono text-white/60 mt-1">{attendancePreview.capacity.toLocaleString('tr-TR')}</p>
             </div>
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-2 sm:p-3 text-center">
-              <span className="text-[8px] text-white/20 uppercase font-bold tracking-widest">Tahmini Seyirci</span>
+              <span className="text-[10px] text-white/20 uppercase font-bold tracking-widest">Tahmini Seyirci</span>
               <p className="text-xs sm:text-sm font-black font-mono text-emerald-400 mt-1">{attendancePreview.attendance.toLocaleString('tr-TR')}</p>
             </div>
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-2 sm:p-3 text-center">
-              <span className="text-[8px] text-white/20 uppercase font-bold tracking-widest">Doluluk</span>
+              <span className="text-[10px] text-white/20 uppercase font-bold tracking-widest">Doluluk</span>
               <p className="text-xs sm:text-sm font-black font-mono text-amber-400 mt-1">%{attendancePreview.fillRate}</p>
             </div>
             <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-2 sm:p-3 text-center">
-              <span className="text-[8px] text-emerald-400/40 uppercase font-bold tracking-widest">Bilet Geliri</span>
+              <span className="text-[10px] text-emerald-400/40 uppercase font-bold tracking-widest">Bilet Geliri</span>
               <p className="text-xs sm:text-sm font-black font-mono text-emerald-400 mt-1">{attendancePreview.revenue.toLocaleString('tr-TR')} €</p>
             </div>
           </div>
           <div className="mt-2 flex items-center gap-2 flex-wrap">
-            <span className="text-[7px] text-white/15 uppercase tracking-widest">Bilet: {attendancePreview.ticketPrice} €</span>
-            <span className="text-[7px] text-white/10">•</span>
-            <span className="text-[7px] text-white/15 uppercase tracking-widest">Yiyecek/İçecek: 15 €/kişi</span>
+            <span className="text-[10px] text-white/15 uppercase tracking-widest">Bilet: {attendancePreview.ticketPrice} €</span>
+            <span className="text-[10px] text-white/10">•</span>
+            <span className="text-[10px] text-white/15 uppercase tracking-widest">Yiyecek/İçecek: 15 €/kişi</span>
           </div>
         </div>
       )}
@@ -601,12 +601,12 @@ export function DashboardTab({
                <stat.icon size={12} className="text-white/60" />
              </div>
              <div className="min-w-0">
-               <p className="text-[7px] sm:text-[8px] uppercase font-bold tracking-widest text-white/30 truncate">{stat.label}</p>
+               <p className="text-[10px] sm:text-xs uppercase font-bold tracking-widest text-white/30 truncate">{stat.label}</p>
                <div className="flex items-baseline gap-1">
                  <p className="text-sm sm:text-lg font-black font-mono tracking-tighter text-white leading-none">
                    {typeof stat.value === 'number' && isNaN(stat.value) ? '0' : stat.value}
                  </p>
-                 <span className="text-[7px] uppercase font-bold text-white/20 tracking-widest hidden sm:inline">{stat.sub}</span>
+                 <span className="text-[10px] uppercase font-bold text-white/20 tracking-widest hidden sm:inline">{stat.sub}</span>
                </div>
              </div>
            </div>
@@ -622,7 +622,7 @@ export function DashboardTab({
          >
            <div className="absolute inset-0 opacity-10 bg-gradient-to-br from-white via-white/50 to-transparent" />
            <div className="absolute top-2 right-2 sm:top-3 sm:right-3 flex items-center gap-1.5 sm:gap-2">
-             <span className="hidden sm:inline-block text-[8px] font-black px-2 py-0.5 rounded-full tracking-widest border border-current uppercase">
+             <span className="hidden sm:inline-block text-[10px] font-black px-2 py-0.5 rounded-full tracking-widest border border-current uppercase">
                {profile?.league_name?.toUpperCase() || 'SÜPER LİG'}
              </span>
              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center rotate-3" style={{ backgroundColor: profile?.secondary_color || '#000000', color: profile?.primary_color || '#ffffff' }}>
@@ -634,12 +634,12 @@ export function DashboardTab({
              <h2 className="text-lg sm:text-3xl font-black italic uppercase tracking-tighter leading-[0.85] mb-0.5 sm:mb-1 truncate">
                {profile?.team_name?.toUpperCase() || 'TAKIM'}
              </h2>
-             <p className="text-[7px] sm:text-[9px] uppercase font-bold tracking-[0.3em] opacity-60 truncate">
+             <p className="text-[10px] sm:text-xs uppercase font-bold tracking-[0.3em] opacity-60 truncate">
                {profile?.manager_name ? `${profile.manager_name.toUpperCase()} DÖNEMİ` : 'MENAJER'}
              </p>
              <button
                onClick={() => onNavigate('tactics')}
-               className="hidden sm:mt-2 sm:block bg-current px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest filter invert hover:scale-105 active:scale-95 transition-all"
+               className="hidden sm:mt-2 sm:block bg-current px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest filter invert hover:scale-105 active:scale-95 transition-all"
                style={{ color: profile?.primary_color || '#ffffff' }}
              >
                KADROYU YÖNET →
@@ -688,7 +688,7 @@ export function DashboardTab({
              <div className="p-1 sm:p-1.5 bg-white/5 rounded-lg group-hover:bg-white group-hover:text-black transition-all">
                <btn.icon size={14} />
              </div>
-             <span className="text-[8px] font-black uppercase tracking-widest text-white/40 group-hover:text-white transition-colors text-center leading-tight">{btn.label}</span>
+             <span className="text-[10px] font-black uppercase tracking-widest text-white/40 group-hover:text-white transition-colors text-center leading-tight">{btn.label}</span>
            </button>
            );
          })}
@@ -699,7 +699,7 @@ export function DashboardTab({
        {/* ═══════════════════════════════════════════════════════ */}
        <div>
          <div className="flex items-center justify-between px-1 mb-2">
-            <h3 className="text-[9px] uppercase font-black tracking-[0.3em] text-white/30 flex items-center gap-2">
+            <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-white/30 flex items-center gap-2">
               <Bell size={11} className="text-white/40 shrink-0" />
               BİLDİRİM MERKEZİ
             </h3>
@@ -720,29 +720,29 @@ export function DashboardTab({
              <div className="bg-white/[0.03] border border-white/8 rounded-xl p-2 sm:p-3 col-span-2 lg:col-span-1">
                <div className="flex items-center gap-2 mb-2">
                  <Heart size={11} className="text-rose-400/70 shrink-0" />
-                 <p className="text-[8px] uppercase tracking-widest text-white/30 font-bold">Kadro Durumu</p>
+                 <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold">Kadro Durumu</p>
                </div>
                <div className="flex items-center justify-around">
                  <div className="text-center">
                    <p className="text-base font-black text-emerald-400 leading-none">{squadHealth.fit}</p>
-                   <p className="text-[7px] text-white/30 mt-0.5">Fit</p>
+                   <p className="text-[10px] text-white/30 mt-0.5">Fit</p>
                  </div>
                  <div className="w-px h-6 bg-white/5" />
                  <div className="text-center">
                    <p className="text-base font-black text-amber-400 leading-none">{squadHealth.tired}</p>
-                   <p className="text-[7px] text-white/30 mt-0.5">Yorgun</p>
+                   <p className="text-[10px] text-white/30 mt-0.5">Yorgun</p>
                  </div>
                  <div className="w-px h-6 bg-white/5" />
                  <div className="text-center">
                    <p className="text-base font-black text-red-400 leading-none">{squadHealth.injured}</p>
-                   <p className="text-[7px] text-white/30 mt-0.5">Sakat</p>
+                   <p className="text-[10px] text-white/30 mt-0.5">Sakat</p>
                  </div>
                  {squadHealth.lowMoral > 0 && (
                    <>
                      <div className="w-px h-6 bg-white/5" />
                      <div className="text-center">
                        <p className="text-base font-black text-purple-400 leading-none">{squadHealth.lowMoral}</p>
-                       <p className="text-[7px] text-white/30 mt-0.5">Moralsiz</p>
+                       <p className="text-[10px] text-white/30 mt-0.5">Moralsiz</p>
                      </div>
                    </>
                  )}
@@ -759,7 +759,7 @@ export function DashboardTab({
              }>
                <div className="flex items-center justify-between gap-2">
                  <div className="min-w-0">
-                   <p className="text-[7px] uppercase tracking-widest text-white/30 font-bold">Son Maç</p>
+                   <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold">Son Maç</p>
                    <p className={
                      lastResult.result === 'W' ? 'text-[10px] font-black text-emerald-400 mt-0.5 truncate' :
                      lastResult.result === 'D' ? 'text-[10px] font-black text-blue-400 mt-0.5 truncate' :
@@ -790,9 +790,9 @@ export function DashboardTab({
                <div className="p-1 bg-white/5 rounded border border-white/5 shrink-0">
                  <ArrowRightLeft size={10} className="text-white/60" />
                </div>
-               <h4 className="text-[8px] uppercase font-bold tracking-widest text-white/30 truncate">Transfer Teklifleri</h4>
+               <h4 className="text-[10px] uppercase font-bold tracking-widest text-white/30 truncate">Transfer Teklifleri</h4>
                {transferOffers && transferOffers.length > 0 && (
-                 <span className="ml-auto text-[8px] font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-500/20 shrink-0">
+                 <span className="ml-auto text-[10px] font-black text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-500/20 shrink-0">
                    {transferOffers.length}
                  </span>
                )}
@@ -814,12 +814,12 @@ export function DashboardTab({
                    return (
                      <div key={offer.id} className="flex items-center justify-between gap-2 p-1.5 bg-black/30 border border-white/5 rounded-lg">
                        <div className="min-w-0 flex-1">
-                         <div className="text-[9px] font-bold text-white/80 truncate">{toTitleCase(offer.playerName)}</div>
-                         <div className="text-[7px] text-white/25 font-bold uppercase tracking-wider truncate">{offer.playerPosition} • {offer.date}</div>
+                         <div className="text-[10px] font-bold text-white/80 truncate">{toTitleCase(offer.playerName)}</div>
+                         <div className="text-[10px] text-white/25 font-bold uppercase tracking-wider truncate">{offer.playerPosition} • {offer.date}</div>
                        </div>
                        <div className="flex items-center gap-1.5 shrink-0">
                          <span className="text-[10px] font-black text-emerald-400">{(offer.amount / 1000000).toFixed(1)}M</span>
-                         <span className={`inline-flex items-center gap-0.5 px-1 py-0.5 text-[7px] font-black uppercase tracking-wider border rounded-full ${sc.color}`}>
+                         <span className={`inline-flex items-center gap-0.5 px-1 py-0.5 text-[10px] font-black uppercase tracking-wider border rounded-full ${sc.color}`}>
                            {sc.icon} {sc.label}
                          </span>
                        </div>
@@ -827,7 +827,7 @@ export function DashboardTab({
                    );
                  })}
                  {transferOffers.length > 5 && (
-                   <p className="text-[8px] text-white/30 text-center pt-1">+{transferOffers.length - 5} teklif daha</p>
+                   <p className="text-[10px] text-white/30 text-center pt-1">+{transferOffers.length - 5} teklif daha</p>
                  )}
                </div>
              )}
@@ -850,9 +850,9 @@ export function DashboardTab({
              <div className="bg-amber-500/[0.06] border border-amber-500/15 rounded-xl p-2 sm:p-3 col-span-2 lg:col-span-1">
                <div className="flex items-center gap-2 mb-2">
                  <Info size={10} className="text-amber-400 shrink-0" />
-                 <p className="text-[8px] font-black uppercase tracking-widest text-amber-400/60">Oyun Rehberi</p>
+                 <p className="text-[10px] font-black uppercase tracking-widest text-amber-400/60">Oyun Rehberi</p>
                </div>
-               <div className="space-y-1 text-[8px] text-white/40">
+               <div className="space-y-1 text-[10px] text-white/40">
                  <p>⚽ <span className="text-white/60 font-bold">Lig Maçları</span> — Pzt-Cum 12:00 & 18:00</p>
                  <p>🏆 <span className="text-white/60 font-bold">Kupa</span> — Cmt-Paz, 5 krediyle</p>
                  <p>💪 <span className="text-white/60 font-bold">Antrenman</span> — Hafta içi günde 2 kez</p>
@@ -869,7 +869,7 @@ export function DashboardTab({
                      });
                    }
                  }}
-                 className="mt-2 text-[7px] text-white/20 hover:text-white/40 transition-colors"
+                 className="mt-2 text-[10px] text-white/20 hover:text-white/40 transition-colors"
                >
                  Rehberi Kapat
                </button>
@@ -888,25 +888,25 @@ export function DashboardTab({
                </div>
                <div className="flex items-center gap-2 mb-2">
                  <CalendarDays size={11} className="text-amber-500 shrink-0" />
-                 <p className="text-[8px] font-black uppercase tracking-widest text-amber-500">Yeni Sezon Başladı</p>
+                 <p className="text-[10px] font-black uppercase tracking-widest text-amber-500">Yeni Sezon Başladı</p>
                </div>
                <div className="space-y-1.5 max-h-32 overflow-y-auto">
                  <div>
-                   <p className="text-[7px] font-black text-amber-500 uppercase tracking-wider mb-0.5">Emekli Olanlar</p>
+                   <p className="text-[10px] font-black text-amber-500 uppercase tracking-wider mb-0.5">Emekli Olanlar</p>
                    {retiredLog.retired.filter(p => !!p).slice(0, 3).map((p, idx) => (
-                     <div key={`ret-${p.id || idx}`} className="text-[8px] text-white/70">• {toTitleCase(p.name)} ({p.age})</div>
+                     <div key={`ret-${p.id || idx}`} className="text-[10px] text-white/70">• {toTitleCase(p.name)} ({p.age})</div>
                    ))}
                  </div>
                  <div>
-                   <p className="text-[7px] font-black text-emerald-500 uppercase tracking-wider mb-0.5">Altyapıdan Gelenler</p>
+                   <p className="text-[10px] font-black text-emerald-500 uppercase tracking-wider mb-0.5">Altyapıdan Gelenler</p>
                    {retiredLog.talents.filter(p => !!p).slice(0, 3).map((p, idx) => (
-                     <div key={`tal-${p.id || idx}`} className="text-[8px] text-white/70">• {toTitleCase(p.name)} (17) -Pot: {p.potential}</div>
+                     <div key={`tal-${p.id || idx}`} className="text-[10px] text-white/70">• {toTitleCase(p.name)} (17) -Pot: {p.potential}</div>
                    ))}
                  </div>
                </div>
                <button
                  onClick={onClearRetiredLog}
-                 className="mt-2 w-full px-2 py-1 bg-white/5 hover:bg-white/10 text-white text-[8px] font-black uppercase tracking-widest rounded transition-all min-h-[36px]"
+                 className="mt-2 w-full px-2 py-1 bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded transition-all min-h-[36px]"
                >
                  Anladım
                </button>
@@ -931,18 +931,18 @@ export function DashboardTab({
                  toast.success('Ön bellek temizlendi.');
                  router.refresh();
                }}
-               className="text-[9px] font-black uppercase tracking-widest text-emerald-500/60 hover:text-emerald-400 bg-emerald-500/5 px-3 py-1.5 rounded-lg border border-emerald-500/10"
+               className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60 hover:text-emerald-400 bg-emerald-500/5 px-3 py-1.5 rounded-lg border border-emerald-500/10"
              >
                [ ÖN BELLEĞİ TEMİZLE ]
              </button>
              <button
                onClick={() => {
-                 if (confirm('TÜM VERİLER SİLİNECEK. ONAYLIYOR MUSUN?')) {
+                 if (window.confirm('TÜM VERİLER SİLİNECEK. ONAYLIYOR MUSUN?')) {
                    if (typeof localStorage !== 'undefined') (typeof window !== "undefined" && localStorage).clear();
                    router.refresh();
                  }
                }}
-               className="text-[9px] font-black uppercase tracking-widest text-white/20 hover:text-red-500"
+               className="text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-red-500"
              >
                [ VERİLERİ SIFIRLA ]
              </button>
@@ -962,7 +962,7 @@ export function DashboardTab({
              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                <button
                  onClick={() => { if (profile) { setProfile({ ...profile, money: (profile.money || 0) + 100000000 }); toast.success('+100M €'); } }}
-                 className="bg-black/40 border border-red-600/20 p-2 rounded-lg flex flex-col items-center gap-1 hover:bg-red-600/20 transition-all text-[9px] font-black uppercase tracking-widest text-red-400"
+                 className="bg-black/40 border border-red-600/20 p-2 rounded-lg flex flex-col items-center gap-1 hover:bg-red-600/20 transition-all text-[10px] font-black uppercase tracking-widest text-red-400"
                >
                  <Wallet size={14} />
                  +100M €

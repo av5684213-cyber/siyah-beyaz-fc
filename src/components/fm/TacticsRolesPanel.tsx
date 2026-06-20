@@ -366,7 +366,7 @@ export default function TacticsRolesPanel({
                 {/* Role indicator */}
                 {role && (
                   <div
-                    className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] ${
+                    className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
                       CATEGORY_DOT_COLORS[posGroup] ?? 'bg-zinc-500'
                     }`}
                   >
@@ -380,7 +380,7 @@ export default function TacticsRolesPanel({
                 className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap"
                 style={{ transform: 'translateX(-50%) scaleY(-1)' }}
               >
-                <span className="text-[9px] sm:text-[9px] font-bold text-white/50 uppercase tracking-wider">
+                <span className="text-[10px] sm:text-[10px] font-bold text-white/50 uppercase tracking-wider">
                   {slot.pos}
                 </span>
               </div>
@@ -480,7 +480,7 @@ export default function TacticsRolesPanel({
                                 <Check className="w-3 h-3 text-amber-400 shrink-0" />
                               )}
                             </div>
-                            <p className="text-[9px] text-white/30 mt-0.5 leading-relaxed line-clamp-2">
+                            <p className="text-[10px] text-white/30 mt-0.5 leading-relaxed line-clamp-2">
                               {role.description}
                             </p>
                             {/* Attribute bonuses preview */}
@@ -491,7 +491,7 @@ export default function TacticsRolesPanel({
                                 .map(([attr, val]) => (
                                   <span
                                     key={attr}
-                                    className="text-[8px] px-1.5 py-0.5 rounded bg-white/[0.05] text-emerald-300/70 font-semibold"
+                                    className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.05] text-emerald-300/70 font-semibold"
                                   >
                                     +{val} {attr}
                                   </span>
@@ -596,7 +596,7 @@ export default function TacticsRolesPanel({
                           {inst.name}
                         </span>
                         {inst.options.length > 1 && (
-                          <span className="text-[9px] text-white/25 ml-1">
+                          <span className="text-[10px] text-white/25 ml-1">
                             {inst.options[0]}
                           </span>
                         )}
@@ -606,12 +606,12 @@ export default function TacticsRolesPanel({
                       )}
                     </div>
                     {isActive && !isConflicting && (
-                      <p className="text-[9px] text-white/25 mt-1 ml-5.5 leading-relaxed">
+                      <p className="text-[10px] text-white/25 mt-1 ml-5.5 leading-relaxed">
                         {inst.description}
                       </p>
                     )}
                     {isConflicting && (
-                      <p className="text-[9px] text-red-400/70 mt-1 ml-5.5">
+                      <p className="text-[10px] text-red-400/70 mt-1 ml-5.5">
                         Çakışan talimat!
                       </p>
                     )}
@@ -697,7 +697,7 @@ export default function TacticsRolesPanel({
         {/* Strengths & Weaknesses */}
         {breakdown.strengths.length > 0 && (
           <div className="mb-2">
-            <p className="text-[9px] text-emerald-400/60 uppercase tracking-widest font-bold mb-1">
+            <p className="text-[10px] text-emerald-400/60 uppercase tracking-widest font-bold mb-1">
               Güçlü Yönler
             </p>
             {breakdown.strengths.map((s, i) => (
@@ -710,7 +710,7 @@ export default function TacticsRolesPanel({
         )}
         {breakdown.weaknesses.length > 0 && (
           <div>
-            <p className="text-[9px] text-red-400/60 uppercase tracking-widest font-bold mb-1">
+            <p className="text-[10px] text-red-400/60 uppercase tracking-widest font-bold mb-1">
               Zayıf Yönler
             </p>
             {breakdown.weaknesses.map((w, i) => (
@@ -760,14 +760,14 @@ export default function TacticsRolesPanel({
 
         {/* Compatible positions */}
         <div className="mb-3">
-          <p className="text-[9px] text-white/25 uppercase tracking-widest font-bold mb-1">
+          <p className="text-[10px] text-white/25 uppercase tracking-widest font-bold mb-1">
             Uyumlu Pozisyonlar
           </p>
           <div className="flex flex-wrap gap-1">
             {hoveredRole.compatiblePositions.map((pos) => (
               <span
                 key={pos}
-                className={`text-[9px] px-2 py-0.5 rounded-full border font-bold uppercase ${
+                className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase ${
                   CATEGORY_COLORS[getPositionGroup(pos)] ?? ''
                 }`}
               >
@@ -779,7 +779,7 @@ export default function TacticsRolesPanel({
 
         {/* Attribute bonuses */}
         <div className="mb-3">
-          <p className="text-[9px] text-white/25 uppercase tracking-widest font-bold mb-1">
+          <p className="text-[10px] text-white/25 uppercase tracking-widest font-bold mb-1">
             Özellik Bonusları
           </p>
           <div className="grid grid-cols-2 gap-1">
@@ -790,7 +790,7 @@ export default function TacticsRolesPanel({
                   key={attr}
                   className="flex items-center justify-between px-2 py-1 rounded bg-white/[0.03]"
                 >
-                  <span className="text-[9px] text-white/50">{attr}</span>
+                  <span className="text-[10px] text-white/50">{attr}</span>
                   <span className="text-[10px] font-bold text-emerald-400">
                     +{val}
                   </span>
@@ -801,7 +801,7 @@ export default function TacticsRolesPanel({
 
         {/* Play style affinity */}
         <div>
-          <p className="text-[9px] text-white/25 uppercase tracking-widest font-bold mb-1">
+          <p className="text-[10px] text-white/25 uppercase tracking-widest font-bold mb-1">
             Oyun Stili Uyumu
           </p>
           <div className="space-y-1">
@@ -813,7 +813,7 @@ export default function TacticsRolesPanel({
                   key={style}
                   className="flex items-center gap-2 px-2 py-1 rounded bg-white/[0.02]"
                 >
-                  <span className="text-[9px] text-white/40 flex-1">{style}</span>
+                  <span className="text-[10px] text-white/40 flex-1">{style}</span>
                   <div className="w-16 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
                     <div
                       className={`h-full rounded-full ${
@@ -827,7 +827,7 @@ export default function TacticsRolesPanel({
                     />
                   </div>
                   <span
-                    className={`text-[9px] font-bold ${
+                    className={`text-[10px] font-bold ${
                       affinity >= 0
                         ? 'text-emerald-300'
                         : 'text-red-300'

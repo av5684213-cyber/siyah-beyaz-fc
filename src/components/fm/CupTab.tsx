@@ -115,7 +115,7 @@ function BracketMatchCard({ match, teamName }: { match: BracketMatch; teamName: 
       {match.homeScore != null && (match as any).fixture_id && (
         <a
           href={`/match/${(match as any).fixture_id}`}
-          className="block text-center text-[9px] font-bold uppercase tracking-widest text-emerald-400 hover:text-emerald-300 mt-1 transition-colors"
+          className="block text-center text-[10px] font-bold uppercase tracking-widest text-emerald-400 hover:text-emerald-300 mt-1 transition-colors"
         >
           Maç Detayı →
         </a>
@@ -141,7 +141,7 @@ function BracketColumn({
         ) : (
           <ChevronRight size={12} className="text-white/20" />
         )}
-        <span className="text-[9px] font-black uppercase tracking-widest text-amber-400/80">
+        <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/80">
           {round.name}
         </span>
       </div>
@@ -322,7 +322,7 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
 
             {/* Prize money */}
             <div className="text-right">
-              <div className="text-[9px] font-bold uppercase tracking-widest text-white/20 mb-1">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-white/20 mb-1">
                 Şampiyon Ödülü
               </div>
               <div className="text-xl font-black font-mono text-amber-400">
@@ -381,7 +381,7 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
               <tab.icon size={12} />
               <span>{tab.label}</span>
               {count !== null && count > 0 && (
-                <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[8px] font-black
+                <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-black
                   ${isActive ? 'bg-amber-500/20 text-amber-300' : 'bg-white/5 text-white/20'}`}>
                   {count}
                 </span>
@@ -463,21 +463,21 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
                               <span className="text-white/70">{opponent}</span>
                             </div>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">
                                 {entry.roundName}
                               </span>
-                              <span className="text-[9px] text-white/15">•</span>
-                              <span className="text-[9px] text-white/25">{entry.match.date}</span>
+                              <span className="text-[10px] text-white/15">•</span>
+                              <span className="text-[10px] text-white/25">{entry.match.date}</span>
                             </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {isHome ? (
-                            <span className="px-2 py-1 text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">
+                            <span className="px-2 py-1 text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">
                               Ev
                             </span>
                           ) : (
-                            <span className="px-2 py-1 text-[8px] font-black uppercase tracking-widest bg-white/5 text-white/40 border border-white/10 rounded-full">
+                            <span className="px-2 py-1 text-[10px] font-black uppercase tracking-widest bg-white/5 text-white/40 border border-white/10 rounded-full">
                               Dep
                             </span>
                           )}
@@ -519,13 +519,13 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
                             <span className="text-white/20 mx-1">vs</span>
                             {entry.match.awayTeam}
                           </div>
-                          <span className="text-[8px] text-white/15">
+                          <span className="text-[10px] text-white/15">
                             {entry.roundName} • {entry.match.date}
                           </span>
                         </div>
                       </div>
                       {entry.daysUntilMatch >= 0 && (
-                        <span className="text-[9px] font-mono text-white/15 shrink-0">
+                        <span className="text-[10px] font-mono text-white/15 shrink-0">
                           {entry.daysUntilMatch}g
                         </span>
                       )}
@@ -557,9 +557,9 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
             <div className="rounded-xl border border-white/[0.06] overflow-hidden">
               {/* Header */}
               <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-3 bg-white/[0.03] border-b border-white/[0.06]">
-                <span className="text-[9px] font-black uppercase tracking-widest text-white/30">Takım</span>
-                <span className="text-[9px] font-black uppercase tracking-widest text-white/30">Tur</span>
-                <span className="text-[9px] font-black uppercase tracking-widest text-white/30">Durum</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Takım</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Tur</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Durum</span>
               </div>
 
               {/* Body */}
@@ -599,11 +599,11 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
                       </span>
                       <span>
                         {entry.status === 'active' ? (
-                          <span className="px-2 py-0.5 text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">
+                          <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">
                             Aktif
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 text-[8px] font-black uppercase tracking-widest bg-red-500/5 text-red-400/60 border border-red-500/10 rounded-full">
+                          <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-widest bg-red-500/5 text-red-400/60 border border-red-500/10 rounded-full">
                             Elendi
                           </span>
                         )}
@@ -633,15 +633,15 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
                 >
                   <div className="flex items-start justify-between gap-4 mb-2">
                     <h4 className="text-sm font-bold text-white/80 leading-tight">{item.headline}</h4>
-                    <span className={`shrink-0 px-2 py-0.5 text-[7px] font-black uppercase tracking-widest border rounded-full whitespace-nowrap ${importanceColor(item.importance)}`}>
+                    <span className={`shrink-0 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest border rounded-full whitespace-nowrap ${importanceColor(item.importance)}`}>
                       {importanceLabel(item.importance)}
                     </span>
                   </div>
                   <p className="text-[11px] text-white/30 leading-relaxed mb-3">{item.body}</p>
                   <div className="flex items-center gap-3">
-                    <span className="text-[9px] text-white/15">{item.date}</span>
-                    <span className="text-[9px] text-white/15">•</span>
-                    <span className="text-[9px] text-white/20">{getCupTypeName(cupSeason?.type ?? 'domestic_cup')}</span>
+                    <span className="text-[10px] text-white/15">{item.date}</span>
+                    <span className="text-[10px] text-white/15">•</span>
+                    <span className="text-[10px] text-white/20">{getCupTypeName(cupSeason?.type ?? 'domestic_cup')}</span>
                   </div>
                 </div>
               ))
@@ -685,7 +685,7 @@ export default function CupTab({ cupSeasons, teamName }: CupTabProps) {
                 <span
                   key={round.roundNumber}
                   className={`
-                    px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg border
+                    px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg border
                     ${played && teamMatch
                       ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                       : isCurrentRound && ourStanding.status === 'active'

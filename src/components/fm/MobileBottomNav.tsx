@@ -114,7 +114,7 @@ export default function MobileBottomNav({ activeTab, onTabChange, isAdmin }: Mob
                   />
                 )}
                 <Icon size={16} strokeWidth={isActive ? 2.5 : 1.75} />
-                <span className="text-[8px] font-black uppercase tracking-wider leading-none">
+                <span className="text-[10px] font-black uppercase tracking-wider leading-none">
                   {tab.label}
                 </span>
               </button>
@@ -176,7 +176,7 @@ export default function MobileBottomNav({ activeTab, onTabChange, isAdmin }: Mob
                       }`}
                     >
                       <Icon size={20} className={isActive ? 'text-amber-400' : 'text-white/40'} />
-                      <span className={`text-[9px] font-bold uppercase tracking-wider leading-tight text-center ${
+                      <span className={`text-[10px] font-bold uppercase tracking-wider leading-tight text-center ${
                         isActive ? 'text-amber-400' : 'text-white/30'
                       }`}>
                         {tab.label}
@@ -224,7 +224,7 @@ export default function MobileBottomNav({ activeTab, onTabChange, isAdmin }: Mob
                   strokeWidth={isActive ? 2.5 : 1.75}
                   style={isActive ? { transform: 'scale(1.08)' } : undefined}
                 />
-                <span className="text-[8px] font-black uppercase tracking-wider leading-none">
+                <span className="text-[10px] font-black uppercase tracking-wider leading-none">
                   {tab.label}
                 </span>
               </button>
@@ -254,7 +254,7 @@ export default function MobileBottomNav({ activeTab, onTabChange, isAdmin }: Mob
               strokeWidth={isActiveInMore || showMore ? 2.5 : 1.75}
               style={isActiveInMore || showMore ? { transform: 'scale(1.08)' } : undefined}
             />
-            <span className="text-[8px] font-black uppercase tracking-wider leading-none">
+            <span className="text-[10px] font-black uppercase tracking-wider leading-none">
               Diğer
             </span>
           </button>

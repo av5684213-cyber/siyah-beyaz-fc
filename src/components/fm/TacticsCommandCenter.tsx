@@ -344,7 +344,7 @@ const PlayerIcon = ({ player, condition, pos, onDrop, onDragOver, onDragStart, o
                 </span>
                 {/* Position code at bottom */}
                 <span 
-                  className="absolute bottom-[8%] text-[8px] font-black text-white tracking-tight leading-none z-10"
+                  className="absolute bottom-[8%] text-[10px] font-black text-white tracking-tight leading-none z-10"
                   style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
                 >
                   {posCode}
@@ -355,7 +355,7 @@ const PlayerIcon = ({ player, condition, pos, onDrop, onDragOver, onDragStart, o
         {/* Enhanced 3D depth shadow underneath */}
         <div className="w-11 h-[6px] bg-black/20 rounded-[50%] blur-[3px] mx-auto -mt-1" />
         <div className="mt-0.5 bg-black/80 backdrop-blur-sm text-white px-2 py-0.5 shadow-xl border border-white/10 min-w-[52px] max-w-[92px] rounded-sm">
-            <span className="text-[8px] font-black tracking-tight block text-center leading-tight uppercase">{displayName}</span>
+            <span className="text-[10px] font-black tracking-tight block text-center leading-tight uppercase">{displayName}</span>
         </div>
     </motion.div>
   );
@@ -838,7 +838,7 @@ export default function TacticsCommandCenter({
                   { label: 'Özellik Uyumu', v: tacticalScore.attributeFit },
                 ].map(({ label, v }) => (
                   <div key={label} className="flex items-center gap-2">
-                    <div className="text-[9px] text-white/40 w-24">{label}</div>
+                    <div className="text-[10px] text-white/40 w-24">{label}</div>
                     <div className="h-1.5 flex-1 bg-white/5 rounded-full overflow-hidden max-w-[80px]">
                       <div
                         className={`h-full rounded-full ${
@@ -848,7 +848,7 @@ export default function TacticsCommandCenter({
                         style={{ width: `${v}%` }}
                       />
                     </div>
-                    <div className="text-[9px] text-white/60 tabular-nums w-6">{v}</div>
+                    <div className="text-[10px] text-white/60 tabular-nums w-6">{v}</div>
                   </div>
                 ))}
               </div>
@@ -857,7 +857,7 @@ export default function TacticsCommandCenter({
             {/* Strengths & Weaknesses */}
             {tacticalScore.breakdown?.strengths?.length > 0 && (
               <div className="mb-2">
-                <p className="text-[9px] text-emerald-400/60 uppercase tracking-widest font-bold mb-1">
+                <p className="text-[10px] text-emerald-400/60 uppercase tracking-widest font-bold mb-1">
                   Güçlü Yönler
                 </p>
                 {tacticalScore.breakdown.strengths.map((s: string, i: number) => (
@@ -870,7 +870,7 @@ export default function TacticsCommandCenter({
             )}
             {tacticalScore.breakdown?.weaknesses?.length > 0 && (
               <div>
-                <p className="text-[9px] text-red-400/60 uppercase tracking-widest font-bold mb-1">
+                <p className="text-[10px] text-red-400/60 uppercase tracking-widest font-bold mb-1">
                   Zayıf Yönler
                 </p>
                 {tacticalScore.breakdown.weaknesses.map((w: string, i: number) => (
@@ -934,7 +934,7 @@ export default function TacticsCommandCenter({
                   { label: 'Tarz', val: activeTactic.playStyle, key: 'playStyle', options: ['dengeli', 'hucum', 'savunma', 'kontra', 'tikitaka', 'Gegenpressing', 'Catenaccio', 'Direct Play', 'Wing Play', 'Total Football', 'Route One', 'Possession Football', 'High Press', 'Parking the Bus'] },
                 ].map(ctrl => (
                   <div key={ctrl.key} className="space-y-1.5">
-                    <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] block">{ctrl.label}</label>
+                    <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] block">{ctrl.label}</label>
                     <select 
                       value={ctrl.val}
                       onChange={(e) => onActiveTacticChange({ ...activeTactic, [ctrl.key]: e.target.value })}
@@ -950,7 +950,7 @@ export default function TacticsCommandCenter({
                 {tacticalParams.map(param => (
                   <div key={param.key} className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="text-[9px] font-black text-white/40 uppercase tracking-widest">{param.label}</label>
+                      <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">{param.label}</label>
                       <span className="text-[10px] font-mono text-emerald-400 font-bold">{(activeTactic as any)[param.key]}%</span>
                     </div>
                     <input 
@@ -988,7 +988,7 @@ export default function TacticsCommandCenter({
                       
                       onActiveTacticChange(newTactic);
                     }}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-[9px] font-black uppercase tracking-wider transition-all ${
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-wider transition-all ${
                       (activeTactic as any)[t.key] ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-black/20 border-white/5 text-white/30'
                     }`}
                   >
@@ -1000,7 +1000,7 @@ export default function TacticsCommandCenter({
              {/* ── Taktik Kaydet/Yükle ── */}
              <div className="flex gap-2 mt-2">
                <button
-                 className="flex-1 text-[9px] border border-white/10 text-white/40 hover:text-white py-1.5 rounded-lg"
+                 className="flex-1 text-[10px] border border-white/10 text-white/40 hover:text-white py-1.5 rounded-lg"
                  onClick={() => {
                    const name = prompt('Taktik adı:');
                    if (name) handleSaveTactic(name.trim());
@@ -1010,7 +1010,7 @@ export default function TacticsCommandCenter({
                </button>
                {savedTactics.length > 0 && (
                  <button
-                   className="flex-1 text-[9px] border border-amber-500/20 text-amber-400/70 hover:text-amber-400 py-1.5 rounded-lg"
+                   className="flex-1 text-[10px] border border-amber-500/20 text-amber-400/70 hover:text-amber-400 py-1.5 rounded-lg"
                    onClick={() => setShowSavedPanel(!showSavedPanel)}
                  >
                    📂 Yükle ({savedTactics.length})
@@ -1030,7 +1030,7 @@ export default function TacticsCommandCenter({
                      }}
                    >
                      <span className="text-[10px] text-white font-bold">{t.name}</span>
-                     <span className="text-[9px] text-white/30">{t.formation} M{t.mentality}</span>
+                     <span className="text-[10px] text-white/30">{t.formation} M{t.mentality}</span>
                    </button>
                  ))}
                </div>
@@ -1043,7 +1043,7 @@ export default function TacticsCommandCenter({
           {/* ── Takım Kimyası ── */}
           {teamChemistry && (
             <div className="flex items-center justify-between px-3 py-2 bg-white/[0.02] border border-white/5 rounded-lg">
-              <span className="text-[9px] text-white/30 uppercase tracking-wider">Takım Kimyası</span>
+              <span className="text-[10px] text-white/30 uppercase tracking-wider">Takım Kimyası</span>
               <span className={`text-[11px] font-black ${teamChemistry.color}`}>
                 {teamChemistry.avg}/100 · {teamChemistry.label}
               </span>
@@ -1101,7 +1101,7 @@ export default function TacticsCommandCenter({
             <div className="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
                 {/* ── Mobile: Tap-to-swap info banner ── */}
                 {selectedForSwap && (
-                  <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[9px] font-bold text-amber-400 text-center uppercase tracking-wider mb-2">
+                  <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[10px] font-bold text-amber-400 text-center uppercase tracking-wider mb-2">
                     Takas için hedef oyuncuya dokun • İptal: aynı oyuncuya tekrar dokun
                   </div>
                 )}
@@ -1140,7 +1140,7 @@ export default function TacticsCommandCenter({
                       }`}
                   >
                       <div className="flex items-center gap-3">
-                          <div className="text-[8px] font-black p-1 bg-white/5 rounded text-white/30">{player.specificPosition || player.position}</div>
+                          <div className="text-[10px] font-black p-1 bg-white/5 rounded text-white/30">{player.specificPosition || player.position}</div>
                           <span className="text-[10px] font-bold text-white uppercase truncate max-w-[100px]">{player.name}</span>
                       </div>
                       <span className="text-[10px] font-black text-emerald-400">{player.rating}</span>
@@ -1158,8 +1158,8 @@ export default function TacticsCommandCenter({
           {players.map(p => (
             <div key={p.id} className="p-3 bg-black/40 rounded-xl border border-white/5">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[9px] font-bold text-white truncate max-w-[80px]">{p.name.split(' ').pop()}</span>
-                <span className="text-[8px] font-black text-white/20">{p.position}</span>
+                <span className="text-[10px] font-bold text-white truncate max-w-[80px]">{p.name.split(' ').pop()}</span>
+                <span className="text-[10px] font-black text-white/20">{p.position}</span>
               </div>
               <select
                 value={p.special_role || ''}
@@ -1167,7 +1167,7 @@ export default function TacticsCommandCenter({
                   const newSquad = squad.map(sp => sp.id === p.id ? { ...sp, special_role: e.target.value || null } : sp);
                   onSquadUpdate(newSquad);
                 }}
-                className={`w-full bg-zinc-800/50 border border-white/10 rounded-lg px-2 py-1.5 text-[9px] font-black uppercase outline-none focus:border-emerald-500/50 transition-colors`}
+                className={`w-full bg-zinc-800/50 border border-white/10 rounded-lg px-2 py-1.5 text-[10px] font-black uppercase outline-none focus:border-emerald-500/50 transition-colors`}
               >
                 <option value="">VARZAYILAN</option>
                 {(() => {
@@ -1209,21 +1209,21 @@ export default function TacticsCommandCenter({
                       <AlertTriangle size={12} className={offer.status === 'pending' ? 'text-amber-400' : 'text-white/20'} />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[9px] font-bold text-white/80 truncate">{offer.fromTeam} → {toTitleCase(offer.playerName)}</div>
-                      <div className="text-[7px] text-white/25 font-bold uppercase tracking-widest">{offer.playerPosition} • {offer.date}</div>
+                      <div className="text-[10px] font-bold text-white/80 truncate">{offer.fromTeam} → {toTitleCase(offer.playerName)}</div>
+                      <div className="text-[10px] text-white/25 font-bold uppercase tracking-widest">{offer.playerPosition} • {offer.date}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2.5 shrink-0">
                     <span className="text-[10px] font-black text-emerald-400">{(offer.amount / 1000000).toFixed(1)}M €</span>
-                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-wider border rounded-full ${sc.color}`}>
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider border rounded-full ${sc.color}`}>
                       {sc.icon} {sc.label}
                     </span>
                     {offer.status === 'pending' && (
                       <div className="flex gap-1">
-                        <button onClick={() => onAcceptOffer?.(offer.id)} className="px-2 py-0.5 text-[7px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded hover:bg-emerald-500/30 transition-colors">
+                        <button onClick={() => onAcceptOffer?.(offer.id)} className="px-3 py-1.5 text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded hover:bg-emerald-500/30 transition-colors min-h-[36px]">
                           Kabul
                         </button>
-                        <button onClick={() => onRejectOffer?.(offer.id)} className="px-2 py-0.5 text-[7px] font-black uppercase bg-red-500/20 text-red-400 border border-red-500/30 rounded hover:bg-red-500/30 transition-colors">
+                        <button onClick={() => onRejectOffer?.(offer.id)} className="px-3 py-1.5 text-[10px] font-black uppercase bg-red-500/20 text-red-400 border border-red-500/30 rounded hover:bg-red-500/30 transition-colors min-h-[36px]">
                           Reddet
                         </button>
                       </div>
@@ -1244,7 +1244,7 @@ export default function TacticsCommandCenter({
           </div>
           <h3 className="text-[10px] uppercase font-bold tracking-widest text-white/30">TAKIM SIRALAMASI</h3>
           <div className="flex-1" />
-          <div className="flex items-center gap-3 text-[7px] font-black uppercase tracking-widest">
+          <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest">
             <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#7AB4E8]/10 border-2 border-[#7AB4E8]" /> Kaleci</span>
             <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#7EDBC8]/10 border-2 border-[#7EDBC8]" /> Defans</span>
             <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#F0C87A]/10 border-2 border-[#F0C87A]" /> Orta Saha</span>
@@ -1253,7 +1253,7 @@ export default function TacticsCommandCenter({
         </div>
         <div className="overflow-x-auto">
           {/* Table Header */}
-          <div className="grid gap-px min-w-[950px] text-[8px] font-black uppercase tracking-wider text-white/30 px-3 py-2.5 bg-black/30 rounded-t-xl border border-white/5 border-b-0" style={{ gridTemplateColumns: '56px 1fr repeat(12, 52px)' }}>
+          <div className="grid gap-px min-w-[950px] text-[10px] font-black uppercase tracking-wider text-white/30 px-3 py-2.5 bg-black/30 rounded-t-xl border border-white/5 border-b-0" style={{ gridTemplateColumns: '56px 1fr repeat(12, 52px)' }}>
             <div onClick={() => toggleSort('Poz')} className={`text-center cursor-pointer hover:text-emerald-400 transition-colors flex items-center justify-center gap-0.5 ${sortBy === 'Poz' ? 'text-emerald-400' : ''}`}>
               Poz {sortBy === 'Poz' && (sortDirection === 'desc' ? <ChevronDown size={10} /> : <ChevronUp size={10} />)}
             </div>
@@ -1328,7 +1328,7 @@ export default function TacticsCommandCenter({
                 >
                   {condVal !== null && condVal < 40 && (
                     <div className="absolute -top-1 -right-1 bg-red-500 rounded-full w-3 h-3 flex items-center justify-center z-10">
-                      <span className="text-[6px] font-black text-white">!</span>
+                      <span className="text-[10px] font-black text-white">!</span>
                     </div>
                   )}
                   {/* Hover Tooltip - appears above the row */}
@@ -1347,7 +1347,7 @@ export default function TacticsCommandCenter({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/5 cursor-help">
-                                <div className="w-5 h-5 rounded-md flex items-center justify-center text-[8px] font-black" 
+                                <div className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black" 
                                   style={{ 
                                     background: `linear-gradient(135deg, ${POS_GROUP_COLORS[getPosGroup(player.specificPosition || player.position)] || '#9B9B9B'}40 0%, ${POS_GROUP_COLORS[getPosGroup(player.specificPosition || player.position)] || '#9B9B9B'}20 100%)`,
                                     color: POS_GROUP_COLORS[getPosGroup(player.specificPosition || player.position)] || '#9B9B9B'
@@ -1355,21 +1355,21 @@ export default function TacticsCommandCenter({
                                   {player.specificPosition?.charAt(0) || player.position.charAt(0)}
                                 </div>
                                 <div>
-                                  <div className="text-[9px] font-black text-white/90">{archetypeName}</div>
-                                  <div className="text-[7px] text-white/30 font-medium">Arketip</div>
+                                  <div className="text-[10px] font-black text-white/90">{archetypeName}</div>
+                                  <div className="text-[10px] text-white/30 font-medium">Arketip</div>
                                 </div>
                               </div>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="bg-zinc-900/95 backdrop-blur-xl border border-white/10 shadow-2xl max-w-[220px]">
                               <div className="px-1 py-0.5">
                                 <div className="text-[10px] font-black text-white/90 mb-1">{archetypeName}</div>
-                                <div className="text-[9px] text-white/60 leading-relaxed mb-1.5">
+                                <div className="text-[10px] text-white/60 leading-relaxed mb-1.5">
                                   {ARCHETYPE_INFO[archetypeName]?.desc || 'Bu arketip hakkında bilgi bulunmuyor.'}
                                 </div>
                                 {ARCHETYPE_INFO[archetypeName]?.boosts && ARCHETYPE_INFO[archetypeName].boosts.length > 0 && (
                                   <div className="flex flex-wrap gap-1">
                                     {ARCHETYPE_INFO[archetypeName].boosts.map((b: string) => (
-                                      <span key={b} className="px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded text-[7px] font-bold text-amber-400">
+                                      <span key={b} className="px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded text-[10px] font-bold text-amber-400">
                                         +{b}
                                       </span>
                                     ))}
@@ -1389,7 +1389,7 @@ export default function TacticsCommandCenter({
                           }`}>
                             {formVal !== null ? formVal : '-'}
                           </div>
-                          <div className="text-[7px] text-white/25 font-bold uppercase tracking-wider">Form</div>
+                          <div className="text-[10px] text-white/25 font-bold uppercase tracking-wider">Form</div>
                         </div>
                         <div className="text-center">
                           <div className={`text-[11px] font-black ${
@@ -1397,12 +1397,12 @@ export default function TacticsCommandCenter({
                           }`}>
                             {condVal !== null ? condVal : '-'}
                           </div>
-                          <div className="text-[7px] text-white/25 font-bold uppercase tracking-wider">Kondisyon</div>
+                          <div className="text-[10px] text-white/25 font-bold uppercase tracking-wider">Kondisyon</div>
                           {condVal !== null && condVal < 40 && (
-                            <span className="text-red-400 text-[9px]">⚠ YORGUN</span>
+                            <span className="text-red-400 text-[10px]">⚠ YORGUN</span>
                           )}
                           {condVal !== null && condVal < 20 && (
-                            <span className="text-red-400 text-[9px]">🚫 OYNAMAZ</span>
+                            <span className="text-red-400 text-[10px]">🚫 OYNAMAZ</span>
                           )}
                         </div>
                         <div className="text-center">
@@ -1411,14 +1411,14 @@ export default function TacticsCommandCenter({
                           }`}>
                             {moraleVal !== null ? moraleVal : '-'}
                           </div>
-                          <div className="text-[7px] text-white/25 font-bold uppercase tracking-wider">Moral</div>
+                          <div className="text-[10px] text-white/25 font-bold uppercase tracking-wider">Moral</div>
                         </div>
                       </div>
 
                       {/* Son 5 maç performans */}
                       <div className="pt-2 border-t border-white/5">
                         <div className="flex items-center justify-between">
-                          <span className="text-[7px] text-white/25 font-bold uppercase tracking-wider">Son 5 Maç</span>
+                          <span className="text-[10px] text-white/25 font-bold uppercase tracking-wider">Son 5 Maç</span>
                           <div className="flex gap-1">
                             {last5.map((ind, i) => {
                               const hasRating = ind.rating !== null && ind.rating !== undefined;
@@ -1427,7 +1427,7 @@ export default function TacticsCommandCenter({
                                 ind.rating! >= 6.0 ? 'bg-amber-500/15' :
                                 'bg-red-500/15';
                               return (
-                                <span key={i} className={`w-6 h-5 rounded text-[7px] font-black flex items-center justify-center ${bgColor} ${ind.color}`}>
+                                <span key={i} className={`w-6 h-5 rounded text-[10px] font-black flex items-center justify-center ${bgColor} ${ind.color}`}>
                                   {hasRating ? ind.rating!.toFixed(1) : '-'}
                                 </span>
                               );
@@ -1446,7 +1446,7 @@ export default function TacticsCommandCenter({
                     className={`grid gap-px min-w-[950px] px-3 py-2 border-b border-white/[0.03] hover:bg-white/[0.03] cursor-pointer transition-all ${posColor}`}
                     style={{ gridTemplateColumns: '56px 1fr repeat(12, 52px)' }}
                   >
-                    <div className={`text-center text-[9px] font-black flex items-center justify-center gap-0.5 ${
+                    <div className={`text-center text-[10px] font-black flex items-center justify-center gap-0.5 ${
                       player.position === 'GK' ? 'text-green-300' :
                       ['CB', 'LB', 'RB', 'LWB', 'RWB'].includes(player.specificPosition || player.position) ? 'text-blue-300' :
                       ['CDM', 'CM', 'CAM', 'LM', 'RM'].includes(player.specificPosition || player.position) ? 'text-amber-300' :
@@ -1454,15 +1454,15 @@ export default function TacticsCommandCenter({
                     }`}>
                       <span>{player.specificPosition || player.position}</span>
                       {player.secondaryPositions && player.secondaryPositions.length > 0 && (
-                        <span className="text-[6px] text-white/25 font-normal">/{player.secondaryPositions.join('/')}</span>
+                        <span className="text-[10px] text-white/25 font-normal">/{player.secondaryPositions.join('/')}</span>
                       )}
                     </div>
-                    <div className="text-left text-[9px] font-bold text-white/80 truncate flex items-center gap-1">
+                    <div className="text-left text-[10px] font-bold text-white/80 truncate flex items-center gap-1">
                       {toTitleCase(player.name)}
                       {(player.archetype || player.playStyle) && (
                         <span className="relative group/arch inline-flex items-center">
                           <Info size={10} className="text-amber-400/40 group-hover/arch:text-amber-400 transition-colors cursor-help" />
-                          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 rounded-lg bg-zinc-900/95 border border-amber-500/20 shadow-2xl text-[9px] font-bold text-amber-300 whitespace-nowrap pointer-events-none opacity-0 group-hover/arch:opacity-100 transition-all z-50 backdrop-blur-xl">
+                          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 rounded-lg bg-zinc-900/95 border border-amber-500/20 shadow-2xl text-[10px] font-bold text-amber-300 whitespace-nowrap pointer-events-none opacity-0 group-hover/arch:opacity-100 transition-all z-50 backdrop-blur-xl">
                             {player.archetype || player.playStyle}
                             <span className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-900/95 border-r border-b border-amber-500/20 rotate-45 -mt-1" />
                           </span>
@@ -1472,7 +1472,7 @@ export default function TacticsCommandCenter({
                     {statKeys.map(key => {
                       const val = getStatValue(player, key);
                       return (
-                        <div key={key} className={`text-center text-[9px] font-black flex items-center justify-center ${
+                        <div key={key} className={`text-center text-[10px] font-black flex items-center justify-center ${
                           val >= 85 ? 'text-emerald-300' : val >= 75 ? 'text-emerald-400' : val >= 60 ? 'text-yellow-400' : val >= 45 ? 'text-orange-400' : 'text-red-400'
                         }`}>
                           {val}
@@ -1503,7 +1503,7 @@ export default function TacticsCommandCenter({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[200] flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+              className="fixed inset-0 z-[200] flex items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4"
               onClick={() => setPositionPicker(null)}
             >
               <motion.div
@@ -1511,7 +1511,7 @@ export default function TacticsCommandCenter({
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.9, y: 20 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl"
+                className="bg-zinc-900 border border-white/10 rounded-none sm:rounded-2xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl"
                 onClick={e => e.stopPropagation()}
               >
                 {/* Header */}
@@ -1524,7 +1524,7 @@ export default function TacticsCommandCenter({
                       <h3 className="text-sm font-black uppercase tracking-wider text-white">
                         {groupLabel} Oyuncuları
                       </h3>
-                      <p className="text-[9px] text-white/30 font-bold uppercase tracking-wider">
+                      <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">
                         {positionPicker.targetSlot === 'pitch' ? 'İlk 11' : 'Yedek'} pozisyonu için oyuncu seçin
                       </p>
                     </div>
@@ -1541,12 +1541,12 @@ export default function TacticsCommandCenter({
                 {currentPlayer && (
                   <div className="mb-4 px-4 py-3 rounded-xl border border-white/5" style={{ backgroundColor: `${groupColor}08` }}>
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-black uppercase tracking-widest text-white/30">Mevcut Oyuncu:</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Mevcut Oyuncu:</span>
                       <span className="text-[11px] font-black text-white uppercase">{toTitleCase(currentPlayer.name)}</span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: `${groupColor}20`, color: groupColor }}>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: `${groupColor}20`, color: groupColor }}>
                         {currentPlayer.specificPosition || currentPlayer.position}
                       </span>
-                      <span className="text-[9px] font-black text-emerald-400">⭐ {currentPlayer.rating}</span>
+                      <span className="text-[10px] font-black text-emerald-400">⭐ {currentPlayer.rating}</span>
                     </div>
                   </div>
                 )}
@@ -1576,19 +1576,19 @@ export default function TacticsCommandCenter({
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[9px] font-black border" style={{ backgroundColor: `${groupColor}10`, borderColor: `${groupColor}25`, color: groupColor }}>
+                              <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-black border" style={{ backgroundColor: `${groupColor}10`, borderColor: `${groupColor}25`, color: groupColor }}>
                                 {p.specificPosition || p.position}
                               </div>
                               <div>
                                 <span className="text-[11px] font-bold text-white uppercase block leading-tight">{toTitleCase(p.name)}</span>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                  <span className="text-[8px] font-bold text-white/30">⭐ {p.rating}</span>
-                                  <span className={`text-[8px] font-bold ${cond >= 70 ? 'text-emerald-400' : cond >= 40 ? 'text-amber-400' : 'text-red-400'}`}>Kond: {cond}%</span>
+                                  <span className="text-[10px] font-bold text-white/30">⭐ {p.rating}</span>
+                                  <span className={`text-[10px] font-bold ${cond >= 70 ? 'text-emerald-400' : cond >= 40 ? 'text-amber-400' : 'text-red-400'}`}>Kond: {cond}%</span>
                                   {isInStarting11 && !isCurrentPlayer && (
-                                    <span className="text-[7px] font-black uppercase px-1 py-0.5 rounded bg-emerald-500/15 text-emerald-400">İLK 11</span>
+                                    <span className="text-[10px] font-black uppercase px-1 py-0.5 rounded bg-emerald-500/15 text-emerald-400">İLK 11</span>
                                   )}
                                   {isCurrentPlayer && (
-                                    <span className="text-[7px] font-black uppercase px-1 py-0.5 rounded bg-amber-500/15 text-amber-400">SEÇİLİ</span>
+                                    <span className="text-[10px] font-black uppercase px-1 py-0.5 rounded bg-amber-500/15 text-amber-400">SEÇİLİ</span>
                                   )}
                                 </div>
                               </div>
@@ -1615,7 +1615,7 @@ export default function TacticsCommandCenter({
                         setPositionPicker(prev => prev ? { ...prev, positionGroup: 'ALL' } : null);
                       }
                     }}
-                    className="w-full py-2.5 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                    className="w-full py-2.5 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/10 transition-all"
                   >
                     {positionPicker.positionGroup === 'ALL' ? 'Sadece Aynı Mevkiidekileri Göster' : 'Tüm Oyuncuları Göster'}
                   </button>

@@ -111,34 +111,34 @@ const PlayerRowComponent = React.memo(function PlayerRowComponent({ index, style
               <div className="flex items-center gap-2 mb-1">
                 <h4 className="text-sm font-black italic uppercase tracking-tighter text-white">{toTitleCase(player.name)}</h4>
                 {(player as Record<string, unknown>).is_free_agent ? (
-                  <span className="px-1.5 py-0.5 bg-sky-500/15 border border-sky-500/30 text-sky-400 text-[7px] font-black uppercase tracking-widest rounded">SERBEST</span>
+                  <span className="px-1.5 py-0.5 bg-sky-500/15 border border-sky-500/30 text-sky-400 text-[10px] font-black uppercase tracking-widest rounded">SERBEST</span>
                 ) : (player as Record<string, unknown>).is_for_sale ? (
-                  <span className="px-1.5 py-0.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[7px] font-black uppercase tracking-widest rounded">LİSTEDE</span>
+                  <span className="px-1.5 py-0.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest rounded">LİSTEDE</span>
                 ) : null}
               </div>
               <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">{getPlayerPos(player as Record<string, unknown>)} • {player.age} YAŞ • {player.nation}</p>
             </div>
             <div className="text-right">
               <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{formatCurrency(getEffectiveMarketValue(player))}</p>
-              <p className="text-[9px] text-white/20 uppercase font-bold">Pazar Değeri</p>
+              <p className="text-[10px] text-white/20 uppercase font-bold">Pazar Değeri</p>
             </div>
           </div>
 
           <div className="grid grid-cols-4 gap-2 mb-4 text-center">
             <div className={`p-2 rounded-lg border ${getPosBadgeStyle(getPlayerPos(player as Record<string, unknown>))} border`}>
-              <p className="text-[8px] uppercase font-black opacity-60">{localizePosFull(getPlayerPos(player as Record<string, unknown>))}</p>
+              <p className="text-[10px] uppercase font-black opacity-60">{localizePosFull(getPlayerPos(player as Record<string, unknown>))}</p>
               <p className="text-xs font-black">{getPlayerPos(player as Record<string, unknown>)}</p>
             </div>
             <div className="bg-white/5 p-2 rounded-lg">
-              <p className="text-[8px] text-white/30 uppercase font-black">Rating</p>
+              <p className="text-[10px] text-white/30 uppercase font-black">Rating</p>
               <p className="text-xs font-black text-white">{player.rating}</p>
             </div>
             <div className="bg-white/5 p-2 rounded-lg">
-              <p className="text-[8px] text-white/30 uppercase font-black">{player.position === 'GK' ? 'Klc' : 'Sav'}</p>
+              <p className="text-[10px] text-white/30 uppercase font-black">{player.position === 'GK' ? 'Klc' : 'Sav'}</p>
               <p className="text-xs font-black text-white">{player.position === 'GK' ? (player.goalkeeping || 0) : (player.defending || 0)}</p>
             </div>
             <div className="bg-white/5 p-2 rounded-lg">
-              <p className="text-[8px] text-white/30 uppercase font-black">Pot.</p>
+              <p className="text-[10px] text-white/30 uppercase font-black">Pot.</p>
               <p className="text-xs font-black text-emerald-500">{player.potential}</p>
             </div>
           </div>
@@ -151,7 +151,7 @@ const PlayerRowComponent = React.memo(function PlayerRowComponent({ index, style
               <Handshake size={14} /> GÖRÜŞMELERE BAŞLA
             </button>
             <button
-              className={`text-[8px] px-1.5 py-0.5 rounded border transition-colors ${
+              className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
                 comparePlayer1?.id === player.id
                   ? 'border-amber-500/40 text-amber-400 bg-amber-500/10'
                   : 'border-white/10 text-white/20 hover:text-white/50'
@@ -633,20 +633,20 @@ export default React.memo(function MarketTab() {
         <div className="flex p-1 bg-white/5 rounded-xl border border-white/10 overflow-x-auto">
           <button 
             onClick={() => setActiveSubTab('transfers')}
-            className={`px-3 sm:px-6 py-2 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'transfers' ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}
+            className={`px-3 sm:px-6 py-2 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'transfers' ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}
           >
             Transfer Pazarı
           </button>
           <button 
             onClick={() => setActiveSubTab('kiralik')}
-            className={`px-3 sm:px-6 py-2 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 whitespace-nowrap ${activeSubTab === 'kiralik' ? 'bg-cyan-500 text-white' : 'text-white/40 hover:text-white'}`}
+            className={`px-3 sm:px-6 py-2 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 whitespace-nowrap ${activeSubTab === 'kiralik' ? 'bg-cyan-500 text-white' : 'text-white/40 hover:text-white'}`}
           >
             <Globe size={12} />
             Kiralık
           </button>
           <button 
             onClick={() => setActiveSubTab('sponsors')}
-            className={`px-3 sm:px-6 py-2 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'sponsors' ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}
+            className={`px-3 sm:px-6 py-2 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeSubTab === 'sponsors' ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}
           >
             Sponsorluklar
           </button>
@@ -714,7 +714,7 @@ export default React.memo(function MarketTab() {
               <div className="flex flex-col items-center justify-center py-16 gap-3">
                 <ShoppingBag className="w-10 h-10 text-white/10" />
                 <p className="text-xs text-white/25 text-center">Transfer listesinde veya serbest oyuncu bulunmuyor</p>
-                <p className="text-[9px] text-white/15 text-center">Sadece transfer listesine gönderilmiş oyuncular ve serbest oyuncular burada görünür</p>
+                <p className="text-[10px] text-white/15 text-center">Sadece transfer listesine gönderilmiş oyuncular ve serbest oyuncular burada görünür</p>
               </div>
             ) : (
               <List<PlayerRowData>
@@ -737,12 +737,12 @@ export default React.memo(function MarketTab() {
               </div>
               <div>
                 <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Kiralık Sistemi</h3>
-                <p className="text-[9px] text-white/30 font-bold uppercase tracking-wider">Oyuncu kiralayın veya kiralık pazara çıkarın</p>
+                <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">Oyuncu kiralayın veya kiralık pazara çıkarın</p>
               </div>
             </div>
             <button 
               onClick={() => { fetchLoanPlayers(); fetchMyListings(); }}
-              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-[9px] font-bold uppercase tracking-wider text-white/40 hover:text-white transition-all rounded-lg border border-white/5 flex items-center gap-1.5"
+              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-wider text-white/40 hover:text-white transition-all rounded-lg border border-white/5 flex items-center gap-1.5"
             >
               <RefreshCw size={10} /> Yenile
             </button>
@@ -752,22 +752,22 @@ export default React.memo(function MarketTab() {
           <div className="flex p-1 bg-white/5 rounded-xl border border-white/5">
             <button 
               onClick={() => setRentalSubTab('market')}
-              className={`flex-1 px-4 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${rentalSubTab === 'market' ? 'bg-cyan-500 text-white' : 'text-white/40 hover:text-white'}`}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${rentalSubTab === 'market' ? 'bg-cyan-500 text-white' : 'text-white/40 hover:text-white'}`}
             >
               <Globe size={11} /> Kiralık Pazar
             </button>
             <button 
               onClick={() => setRentalSubTab('my-listed')}
-              className={`flex-1 px-4 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${rentalSubTab === 'my-listed' ? 'bg-amber-500 text-white' : 'text-white/40 hover:text-white'}`}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${rentalSubTab === 'my-listed' ? 'bg-amber-500 text-white' : 'text-white/40 hover:text-white'}`}
             >
               <Send size={11} /> Verdiğim Kiralıklar
               {pendingOffersCount > 0 && (
-                <span className="px-1.5 py-0.5 bg-red-500 text-white text-[7px] font-black rounded-full">{pendingOffersCount}</span>
+                <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-black rounded-full">{pendingOffersCount}</span>
               )}
             </button>
             <button 
               onClick={() => setRentalSubTab('my-rented')}
-              className={`flex-1 px-4 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${rentalSubTab === 'my-rented' ? 'bg-emerald-500 text-white' : 'text-white/40 hover:text-white'}`}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${rentalSubTab === 'my-rented' ? 'bg-emerald-500 text-white' : 'text-white/40 hover:text-white'}`}
             >
               <ArrowRightLeft size={11} /> Aldığım Kiralıklar
             </button>
@@ -813,7 +813,7 @@ export default React.memo(function MarketTab() {
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <h4 className="text-sm font-black italic uppercase tracking-tighter text-white">{toTitleCase(lp.name)}</h4>
-                              <span className="px-1.5 py-0.5 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-[7px] font-black uppercase tracking-widest rounded">KİRALIK</span>
+                              <span className="px-1.5 py-0.5 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-[10px] font-black uppercase tracking-widest rounded">KİRALIK</span>
                             </div>
                             <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">
                               {localizePosFull(posDisplay)} • {lp.age || '?'} YAŞ • {lp.owner_team_name || lp.team_name || 'Bilinmeyen'}
@@ -821,26 +821,26 @@ export default React.memo(function MarketTab() {
                           </div>
                           <div className="text-right">
                             <p className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">{feeStr}</p>
-                            <p className="text-[8px] text-white/20 uppercase font-bold">Günlük</p>
+                            <p className="text-[10px] text-white/20 uppercase font-bold">Günlük</p>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-4 gap-2 mb-4 text-center">
                           <div className={`p-2 rounded-lg border ${getPosBadgeStyle(posDisplay)} border`}>
-                            <p className="text-[7px] uppercase font-black opacity-60">{localizePosFull(posDisplay)}</p>
+                            <p className="text-[10px] uppercase font-black opacity-60">{localizePosFull(posDisplay)}</p>
                             <p className="text-[10px] font-black">{posDisplay}</p>
                           </div>
                           <div className="bg-white/5 p-2 rounded-lg">
-                            <p className="text-[8px] text-white/30 uppercase font-black">Rating</p>
+                            <p className="text-[10px] text-white/30 uppercase font-black">Rating</p>
                             <p className="text-xs font-black text-white">{lp.rating || '?'}</p>
                           </div>
                           <div className="bg-white/5 p-2 rounded-lg">
-                            <p className="text-[8px] text-white/30 uppercase font-black">Pot.</p>
+                            <p className="text-[10px] text-white/30 uppercase font-black">Pot.</p>
                             <p className="text-xs font-black text-emerald-500">{lp.potential || '?'}</p>
                           </div>
                           <div className="bg-white/5 p-2 rounded-lg">
-                            <p className="text-[8px] text-white/30 uppercase font-black">Haftalık</p>
-                            <p className="text-[8px] font-black text-cyan-400">{weekStr}</p>
+                            <p className="text-[10px] text-white/30 uppercase font-black">Haftalık</p>
+                            <p className="text-[10px] font-black text-cyan-400">{weekStr}</p>
                           </div>
                         </div>
 
@@ -891,13 +891,13 @@ export default React.memo(function MarketTab() {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <h4 className="text-sm font-black italic uppercase tracking-tighter text-white">{toTitleCase(offer.player_name)}</h4>
-                                <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[7px] font-black uppercase tracking-widest rounded">{offer.player_position}</span>
-                                <span className="px-1.5 py-0.5 bg-white/5 text-white/40 text-[7px] font-black uppercase tracking-widest rounded">⭐ {offer.player_rating}</span>
+                                <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest rounded">{offer.player_position}</span>
+                                <span className="px-1.5 py-0.5 bg-white/5 text-white/40 text-[10px] font-black uppercase tracking-widest rounded">⭐ {offer.player_rating}</span>
                               </div>
                               <p className="text-[10px] text-white/40 font-bold">
                                 Teklif sahibi: <span className="text-amber-400">{offer.renter_team_name}</span> • Süre: {offer.duration_weeks} hafta • Toplam: {offer.total_cost?.toLocaleString('tr-TR')} € + {offer.commission} KR
                               </p>
-                              <p className="text-[9px] text-white/20 mt-1">Günlük ücret: {offer.daily_cost?.toLocaleString('tr-TR')} €</p>
+                              <p className="text-[10px] text-white/20 mt-1">Günlük ücret: {offer.daily_cost?.toLocaleString('tr-TR')} €</p>
                             </div>
                             <div className="flex gap-2">
                               <button
@@ -924,7 +924,7 @@ export default React.memo(function MarketTab() {
                                   }
                                 }}
                                 disabled={respondingOfferId === offer.id}
-                                className="px-4 py-2.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-white text-[9px] font-black uppercase tracking-widest rounded-xl border border-emerald-500/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                                className="px-4 py-2.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-xl border border-emerald-500/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
                               >
                                 <Check size={12} /> KABUL
                               </button>
@@ -952,7 +952,7 @@ export default React.memo(function MarketTab() {
                                   }
                                 }}
                                 disabled={respondingOfferId === offer.id}
-                                className="px-4 py-2.5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white text-[9px] font-black uppercase tracking-widest rounded-xl border border-red-500/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                                className="px-4 py-2.5 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-xl border border-red-500/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
                               >
                                 <X size={12} /> REDDET
                               </button>
@@ -972,7 +972,7 @@ export default React.memo(function MarketTab() {
                       <div className="flex flex-col items-center justify-center py-16 gap-3">
                         <Send size={36} className="text-amber-500/20" />
                         <p className="text-[10px] text-white/20 text-center">Henüz kiralık pazara oyuncu çıkarmamışsınız.</p>
-                        <p className="text-[9px] text-white/10 text-center">Kadronuzdan bir oyuncuyu &quot;Kiralık Olarak Gönder&quot; ile pazara çıkarabilirsiniz.</p>
+                        <p className="text-[10px] text-white/10 text-center">Kadronuzdan bir oyuncuyu &quot;Kiralık Olarak Gönder&quot; ile pazara çıkarabilirsiniz.</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -986,11 +986,11 @@ export default React.memo(function MarketTab() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-black uppercase tracking-tighter text-white truncate">{toTitleCase(p.name || 'Bilinmeyen')}</p>
-                                <p className="text-[9px] text-white/30 font-bold">{localizePosFull(posDisplay)} • ⭐ {p.rating || '?'} • {p.age || '?'} yaş</p>
+                                <p className="text-[10px] text-white/30 font-bold">{localizePosFull(posDisplay)} • ⭐ {p.rating || '?'} • {p.age || '?'} yaş</p>
                               </div>
                               <div className="text-right">
                                 <p className="text-[10px] font-black text-cyan-400">{(listing.daily_cost || 0).toLocaleString('tr-TR')} €/gün</p>
-                                <span className={`px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded ${
+                                <span className={`px-1.5 py-0.5 text-[10px] font-black uppercase tracking-widest rounded ${
                                   listing.status === 'active' ? 'bg-emerald-500/15 text-emerald-400' :
                                   listing.status === 'pending' ? 'bg-amber-500/15 text-amber-400' :
                                   listing.status === 'rented' ? 'bg-sky-500/15 text-sky-400' :
@@ -1016,9 +1016,9 @@ export default React.memo(function MarketTab() {
                         <div key={offer.id} className="bg-white/[0.02] border border-white/5 rounded-xl p-3 flex items-center gap-3 opacity-50">
                           <div className="flex-1">
                             <p className="text-[10px] font-black text-white/60">{toTitleCase(offer.player_name)} → {offer.renter_team_name}</p>
-                            <p className="text-[9px] text-white/30">{offer.duration_weeks} hafta • {offer.total_cost?.toLocaleString('tr-TR')} €</p>
+                            <p className="text-[10px] text-white/30">{offer.duration_weeks} hafta • {offer.total_cost?.toLocaleString('tr-TR')} €</p>
                           </div>
-                          <span className={`px-2 py-1 text-[8px] font-black uppercase rounded ${
+                          <span className={`px-2 py-1 text-[10px] font-black uppercase rounded ${
                             offer.status === 'accepted' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
                           }`}>
                             {offer.status === 'accepted' ? 'KABUL' : 'RED'}
@@ -1073,7 +1073,7 @@ export default React.memo(function MarketTab() {
                           <div>
                             <div className="flex items-center gap-2">
                               <h4 className="text-sm font-black italic uppercase tracking-tighter text-white">{toTitleCase(rental.player_name)}</h4>
-                              <span className={`px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded ${
+                              <span className={`px-1.5 py-0.5 text-[10px] font-black uppercase tracking-widest rounded ${
                                 rental.status === 'accepted' ? 'bg-emerald-500/15 text-emerald-400' :
                                 rental.status === 'pending' ? 'bg-amber-500/15 text-amber-400' :
                                 'bg-white/5 text-white/30'
@@ -1088,15 +1088,15 @@ export default React.memo(function MarketTab() {
                         </div>
                         <div className="flex flex-wrap gap-4 text-center">
                           <div className="bg-white/5 px-3 py-2 rounded-lg">
-                            <p className="text-[8px] text-white/30 uppercase font-black">Süre</p>
+                            <p className="text-[10px] text-white/30 uppercase font-black">Süre</p>
                             <p className="text-xs font-black text-white">{rental.duration_weeks} hafta</p>
                           </div>
                           <div className="bg-white/5 px-3 py-2 rounded-lg">
-                            <p className="text-[8px] text-white/30 uppercase font-black">Toplam</p>
+                            <p className="text-[10px] text-white/30 uppercase font-black">Toplam</p>
                             <p className="text-xs font-black text-cyan-400">{(rental.total_cost || 0).toLocaleString('tr-TR')} €</p>
                           </div>
                           <div className="bg-white/5 px-3 py-2 rounded-lg">
-                            <p className="text-[8px] text-white/30 uppercase font-black">Bitiş</p>
+                            <p className="text-[10px] text-white/30 uppercase font-black">Bitiş</p>
                             <p className="text-[10px] font-black text-white/60">{rental.loan_end_date || rental.end_date?.split('T')[0] || '?'}</p>
                           </div>
                         </div>
@@ -1147,7 +1147,7 @@ export default React.memo(function MarketTab() {
                           <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">
                             {localizePosFull(getPlayerPos(rentalModalPlayer as Record<string, unknown>))} • ⭐ {rentalModalPlayer.rating} • {rentalModalPlayer.age} yaş
                           </p>
-                          <p className="text-[9px] text-white/20">Sahip: {rentalModalPlayer.owner_team_name || rentalModalPlayer.team_name}</p>
+                          <p className="text-[10px] text-white/20">Sahip: {rentalModalPlayer.owner_team_name || rentalModalPlayer.team_name}</p>
                         </div>
                       </div>
 
@@ -1166,7 +1166,7 @@ export default React.memo(function MarketTab() {
                         <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3 flex items-center gap-1.5">
                           <Calendar size={11} /> Kiralama Süresi (Hafta)
                         </p>
-                        <div className="grid grid-cols-6 gap-2">
+                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                           {[4, 8, 12, 17, 24, 34].map(w => (
                             <button
                               key={w}
@@ -1328,7 +1328,7 @@ export default React.memo(function MarketTab() {
                        </div>
                        <div className="text-right">
                           <p className="text-xl font-black text-white italic">{formatCurrency(s.weeklyPayment)}</p>
-                          <p className="text-[9px] text-white/20 font-black uppercase">HAFTALIK ÖDEME</p>
+                          <p className="text-[10px] text-white/20 font-black uppercase">HAFTALIK ÖDEME</p>
                        </div>
                     </div>
                  </div>
@@ -1346,18 +1346,18 @@ export default React.memo(function MarketTab() {
                   <div className="flex justify-between items-start mb-6">
                     <div>
                        <h4 className="text-lg font-black italic tracking-tighter text-white uppercase">{s.name}</h4>
-                       <span className="text-[8px] bg-white text-black px-2 py-0.5 rounded font-black uppercase tracking-widest">{s.type}</span>
+                       <span className="text-[10px] bg-white text-black px-2 py-0.5 rounded font-black uppercase tracking-widest">{s.type}</span>
                     </div>
                     <Building2 className="text-white/10 group-hover:text-white/30 transition-colors" size={32} />
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                       <p className="text-[8px] text-white/30 font-black uppercase mb-1">HAFTALIK</p>
+                       <p className="text-[10px] text-white/30 font-black uppercase mb-1">HAFTALIK</p>
                        <p className="text-sm font-black text-emerald-400">{formatCurrency(s.weeklyPayment)}</p>
                     </div>
                     <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                       <p className="text-[8px] text-white/30 font-black uppercase mb-1">SÜRE</p>
+                       <p className="text-[10px] text-white/30 font-black uppercase mb-1">SÜRE</p>
                        <p className="text-sm font-black text-white">{s.duration} GÜN</p>
                     </div>
                   </div>
@@ -1408,13 +1408,13 @@ export default React.memo(function MarketTab() {
                 </div>
                 <div className="flex-1 min-w-0">
                    <h3 className="text-lg sm:text-2xl font-black italic tracking-tighter text-white uppercase truncate">{toTitleCase(negotiatingPlayer.name)}</h3>
-                   <p className="text-[9px] sm:text-[10px] text-white/40 font-black uppercase tracking-widest">
+                   <p className="text-[10px] sm:text-[10px] text-white/40 font-black uppercase tracking-widest">
                      {getPlayerPos(negotiatingPlayer as Record<string, unknown>)} • {localizePosFull(getPlayerPos(negotiatingPlayer as Record<string, unknown>))} • {negotiatingPlayer.age} YAŞ • {negotiatingPlayer.nation} • ⭐ {negotiatingPlayer.rating}
                    </p>
                 </div>
                 <div className="text-right shrink-0">
                    <p className="text-xs sm:text-sm font-black text-emerald-400 italic">{formatCurrency(getEffectiveMarketValue(negotiatingPlayer))}</p>
-                   <p className="text-[9px] text-white/20 font-black uppercase">Pazar Değeri</p>
+                   <p className="text-[10px] text-white/20 font-black uppercase">Pazar Değeri</p>
                 </div>
               </div>
 
@@ -1444,7 +1444,7 @@ export default React.memo(function MarketTab() {
                               if (isLoan) setLoanFee(val);
                               else setOfferAmount(val);
                             }}
-                            className="flex-1 py-2 bg-white/5 hover:bg-white/10 text-[9px] font-black uppercase tracking-tighter rounded-lg border border-white/5 transition-all"
+                            className="flex-1 py-2 bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase tracking-tighter rounded-lg border border-white/5 transition-all"
                           >
                             %{mult * 100}
                           </button>
@@ -1464,17 +1464,17 @@ export default React.memo(function MarketTab() {
                       <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl p-3 space-y-1.5">
                         <div className="flex items-center gap-2 mb-1">
                           <Star size={12} className="text-amber-400" />
-                          <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">Oyuncu Talepleri</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Oyuncu Talepleri</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-[9px] text-white/40 font-bold uppercase">Minimum Haftalık Ücret</span>
+                          <span className="text-[10px] text-white/40 font-bold uppercase">Minimum Haftalık Ücret</span>
                           <span className="text-[10px] font-black text-amber-300">{playerDemands.minSalary.toLocaleString('tr-TR')} €</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-[9px] text-white/40 font-bold uppercase">Minimum Sözleşme Süresi</span>
+                          <span className="text-[10px] text-white/40 font-bold uppercase">Minimum Sözleşme Süresi</span>
                           <span className="text-[10px] font-black text-amber-300">{playerDemands.minWeeks} hafta (~{Math.ceil(playerDemands.minWeeks / 12)} yıl)</span>
                         </div>
-                        <p className="text-[8px] text-white/20 mt-1 italic">Teklifiniz oyuncunun taleplerine yakınsa anlaşma şansı artar.</p>
+                        <p className="text-[10px] text-white/20 mt-1 italic">Teklifiniz oyuncunun taleplerine yakınsa anlaşma şansı artar.</p>
                       </div>
                     )}
 
@@ -1512,39 +1512,39 @@ export default React.memo(function MarketTab() {
                           onChange={(e) => setWeeklySalary(Number(e.target.value))}
                           className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-base font-black text-amber-400 focus:outline-none focus:border-amber-500 transition-all pr-14"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-white/20 uppercase">€ / Hafta</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-white/20 uppercase">€ / Hafta</span>
                       </div>
                       <div className="flex gap-2 mt-3">
                         <button
                           onClick={() => setWeeklySalary(15000)}
-                          className={`flex-1 py-1.5 rounded-lg text-[8px] font-black uppercase transition-all border ${
+                          className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all border ${
                             weeklySalary === 15000 ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10'
                           }`}
                         >15K</button>
                         <button
                           onClick={() => setWeeklySalary(30000)}
-                          className={`flex-1 py-1.5 rounded-lg text-[8px] font-black uppercase transition-all border ${
+                          className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all border ${
                             weeklySalary === 30000 ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10'
                           }`}
                         >30K</button>
                         <button
                           onClick={() => setWeeklySalary(60000)}
-                          className={`flex-1 py-1.5 rounded-lg text-[8px] font-black uppercase transition-all border ${
+                          className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all border ${
                             weeklySalary === 60000 ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10'
                           }`}
                         >60K</button>
                         <button
                           onClick={() => setWeeklySalary(90000)}
-                          className={`flex-1 py-1.5 rounded-lg text-[8px] font-black uppercase transition-all border ${
+                          className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all border ${
                             weeklySalary === 90000 ? 'bg-amber-500/20 border-amber-500 text-amber-400' : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10'
                           }`}
                         >90K</button>
                         <button
                           onClick={() => setWeeklySalary(getSuggestedSalary(negotiatingPlayer.rating))}
-                          className="flex-1 py-1.5 rounded-lg text-[8px] font-black uppercase transition-all border bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+                          className="flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all border bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
                         >Öneri</button>
                       </div>
-                      <p className="text-[9px] text-white/20 mt-2">
+                      <p className="text-[10px] text-white/20 mt-2">
                         Önerilen Aralık: {formatCurrency(getSalaryRange(negotiatingPlayer.rating).min)} – {formatCurrency(getSalaryRange(negotiatingPlayer.rating).max)} / hafta
                       </p>
                     </div>
@@ -1575,7 +1575,7 @@ export default React.memo(function MarketTab() {
                         >
                           <div className="pt-4 space-y-4">
                             {/* Loan Fee info */}
-                            <p className="text-[9px] text-white/20 font-bold uppercase">
+                            <p className="text-[10px] text-white/20 font-bold uppercase">
                               Kiralık modunda yukarıdaki bedel kiralık ücreti olarak değerlendirilir.
                             </p>
 
@@ -1587,14 +1587,14 @@ export default React.memo(function MarketTab() {
                               >
                                 <div className="flex items-center gap-2">
                                   <ShieldCheck size={12} className={hasBuyClause ? 'text-emerald-400' : 'text-white/30'} />
-                                  <p className={`text-[9px] font-black uppercase tracking-widest ${hasBuyClause ? 'text-emerald-400' : 'text-white/30'}`}>Satın Alma Opsiyonu</p>
+                                  <p className={`text-[10px] font-black uppercase tracking-widest ${hasBuyClause ? 'text-emerald-400' : 'text-white/30'}`}>Satın Alma Opsiyonu</p>
                                 </div>
                                 <div className={`w-8 h-5 rounded-full transition-all flex items-center ${hasBuyClause ? 'bg-emerald-500 justify-end' : 'bg-white/10 justify-start'}`}>
                                   <div className="w-3 h-3 rounded-full bg-white mx-0.5" />
                                 </div>
                               </button>
                               {hasBuyClause && (
-                                <p className="text-[9px] text-emerald-400/60 mt-1 pl-5">
+                                <p className="text-[10px] text-emerald-400/60 mt-1 pl-5">
                                   Opsiyon Bedeli: {formatCurrency(offerAmount)}
                                 </p>
                               )}
@@ -1602,7 +1602,7 @@ export default React.memo(function MarketTab() {
 
                             {/* Salary Percentage */}
                             <div>
-                              <label className="text-[9px] font-black uppercase tracking-widest text-white/30 block mb-2">
+                              <label className="text-[10px] font-black uppercase tracking-widest text-white/30 block mb-2">
                                 <Percent size={10} className="inline mr-1" /> Maaş Yüzdesi (Sizin Ödediğiniz)
                               </label>
                               <div className="flex gap-2">
@@ -1610,7 +1610,7 @@ export default React.memo(function MarketTab() {
                                   <button
                                     key={pct}
                                     onClick={() => setSalaryPercentage(pct)}
-                                    className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase transition-all border ${
+                                    className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all border ${
                                       salaryPercentage === pct
                                         ? 'bg-sky-500/20 border-sky-500 text-sky-400'
                                         : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10'
@@ -1620,7 +1620,7 @@ export default React.memo(function MarketTab() {
                                   </button>
                                 ))}
                               </div>
-                              <p className="text-[9px] text-white/20 mt-2">
+                              <p className="text-[10px] text-white/20 mt-2">
                                 Haftalık maaş yükünüz: <span className="text-amber-400 font-black">{formatCurrency(Math.round(weeklySalary * salaryPercentage / 100))}</span>
                               </p>
                             </div>
@@ -1640,7 +1640,7 @@ export default React.memo(function MarketTab() {
                         <Trophy size={14} className={bonusesOpen ? 'text-amber-400' : 'text-white/40'} />
                         <p className={`text-[10px] font-black uppercase tracking-widest ${bonusesOpen ? 'text-amber-400' : 'text-white/40'}`}>Performans Bonusları</p>
                         {(goalBonus > 0 || assistBonus > 0 || appearanceBonus > 0) && (
-                          <span className="text-[8px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-black">AKTİF</span>
+                          <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-black">AKTİF</span>
                         )}
                       </div>
                       {bonusesOpen ? <ChevronUp size={14} className="text-white/40" /> : <ChevronDown size={14} className="text-white/40" />}
@@ -1657,7 +1657,7 @@ export default React.memo(function MarketTab() {
                           <div className="px-5 pb-5 space-y-4">
                             {/* Goal Bonus */}
                             <div>
-                              <label className="text-[9px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1.5 mb-2">
+                              <label className="text-[10px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1.5 mb-2">
                                 <Target size={10} /> Gol Bonusu
                               </label>
                               <div className="flex gap-2">
@@ -1665,7 +1665,7 @@ export default React.memo(function MarketTab() {
                                   <button
                                     key={val}
                                     onClick={() => setGoalBonus(val)}
-                                    className={`flex-1 py-2 rounded-lg text-[8px] font-black uppercase transition-all border ${
+                                    className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all border ${
                                       goalBonus === val
                                         ? 'bg-amber-500/20 border-amber-500 text-amber-400'
                                         : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10'
@@ -1679,7 +1679,7 @@ export default React.memo(function MarketTab() {
 
                             {/* Assist Bonus */}
                             <div>
-                              <label className="text-[9px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1.5 mb-2">
+                              <label className="text-[10px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1.5 mb-2">
                                 <Footprints size={10} /> Asist Bonusu
                               </label>
                               <div className="flex gap-2">
@@ -1687,7 +1687,7 @@ export default React.memo(function MarketTab() {
                                   <button
                                     key={val}
                                     onClick={() => setAssistBonus(val)}
-                                    className={`flex-1 py-2 rounded-lg text-[8px] font-black uppercase transition-all border ${
+                                    className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all border ${
                                       assistBonus === val
                                         ? 'bg-amber-500/20 border-amber-500 text-amber-400'
                                         : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10'
@@ -1701,7 +1701,7 @@ export default React.memo(function MarketTab() {
 
                             {/* Appearance Bonus */}
                             <div>
-                              <label className="text-[9px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1.5 mb-2">
+                              <label className="text-[10px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1.5 mb-2">
                                 <Footprints size={10} /> Maç Başı Bonus
                               </label>
                               <div className="flex gap-2">
@@ -1709,7 +1709,7 @@ export default React.memo(function MarketTab() {
                                   <button
                                     key={val}
                                     onClick={() => setAppearanceBonus(val)}
-                                    className={`flex-1 py-2 rounded-lg text-[8px] font-black uppercase transition-all border ${
+                                    className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all border ${
                                       appearanceBonus === val
                                         ? 'bg-amber-500/20 border-amber-500 text-amber-400'
                                         : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10'
@@ -1732,13 +1732,13 @@ export default React.memo(function MarketTab() {
                       <TrendingUp size={14} className="text-white/40" />
                       <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Satış Clause %</p>
                     </div>
-                    <p className="text-[9px] text-white/20 mb-3">Gelecekteki transfer bedelinin satan kulübe ödenecek yüzdesi.</p>
+                    <p className="text-[10px] text-white/20 mb-3">Gelecekteki transfer bedelinin satan kulübe ödenecek yüzdesi.</p>
                     <div className="flex gap-2">
                       {[0, 10, 15, 20, 25, 30].map(pct => (
                         <button
                           key={pct}
                           onClick={() => setSellOnClause(pct)}
-                          className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase transition-all border ${
+                          className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all border ${
                             sellOnClause === pct
                               ? 'bg-purple-500/20 border-purple-500 text-purple-400'
                               : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10'
@@ -1774,13 +1774,13 @@ export default React.memo(function MarketTab() {
 
                     <div className="grid grid-cols-2 gap-3 pt-1">
                       <div className="bg-white/5 p-3 rounded-xl">
-                        <p className="text-[9px] font-black text-white/30 uppercase mb-1">Bütçe Durumu</p>
+                        <p className="text-[10px] font-black text-white/30 uppercase mb-1">Bütçe Durumu</p>
                         <p className={`text-sm font-black ${budgetRemaining >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                           {budgetRemaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(budgetRemaining))}
                         </p>
                       </div>
                       <div className="bg-white/5 p-3 rounded-xl">
-                        <p className="text-[9px] font-black text-white/30 uppercase mb-1">Yıllık Maliyet</p>
+                        <p className="text-[10px] font-black text-white/30 uppercase mb-1">Yıllık Maliyet</p>
                         <p className="text-sm font-black text-amber-400">{formatCurrency(annualCost)}</p>
                       </div>
                     </div>
@@ -1788,7 +1788,7 @@ export default React.memo(function MarketTab() {
                     {budgetRemaining < 0 && (
                       <div className="flex items-center gap-2 bg-red-500/10 p-3 rounded-xl border border-red-500/20">
                         <AlertCircle size={14} className="text-red-400 shrink-0" />
-                        <p className="text-[9px] font-bold text-red-400 uppercase tracking-wider">Bütçeniz bu transfer için yetersiz!</p>
+                        <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Bütçeniz bu transfer için yetersiz!</p>
                       </div>
                     )}
                   </div>
@@ -1891,7 +1891,7 @@ export default React.memo(function MarketTab() {
             <span className="font-black">{comparePlayer1.name?.split(' ').pop()}</span> seçildi.
             Şimdi karşılaştırmak istediğin oyuncuya tıkla ⚖️
           </p>
-          <button className="text-[9px] text-white/30 hover:text-white" onClick={() => setComparePlayer1(null)}>
+          <button className="text-[10px] text-white/30 hover:text-white" onClick={() => setComparePlayer1(null)}>
             İptal
           </button>
         </div>

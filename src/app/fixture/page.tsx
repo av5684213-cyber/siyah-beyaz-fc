@@ -272,16 +272,16 @@ function InjuredSuspendedPlayers({ teamName }: { teamName: string }) {
       <div className="flex items-center gap-2 mb-3">
         <AlertTriangle size={14} className="text-orange-400" />
         <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Sakat / Cezalı</span>
-        <span className="text-[9px] text-white/25 bg-white/5 px-1.5 py-0.5 rounded-full">{players.length}</span>
+        <span className="text-[10px] text-white/25 bg-white/5 px-1.5 py-0.5 rounded-full">{players.length}</span>
       </div>
       <div className="space-y-1.5">
         {players.slice(0, 6).map((p, i) => (
           <div key={i} className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white/[0.02] border border-white/[0.04]">
-            <span className={`text-[8px] font-bold shrink-0 ${p.status === 'Sakat' ? 'text-orange-400' : 'text-red-400'}`}>
+            <span className={`text-[10px] font-bold shrink-0 ${p.status === 'Sakat' ? 'text-orange-400' : 'text-red-400'}`}>
               {p.status === 'Sakat' ? '🏥' : '🟥'} {p.status}
             </span>
             <span className="text-[11px] font-semibold text-white/70 truncate flex-1">{toTitleCase(p.name)}</span>
-            <span className="text-[9px] text-white/30 shrink-0">{p.detail}</span>
+            <span className="text-[10px] text-white/30 shrink-0">{p.detail}</span>
           </div>
         ))}
       </div>
@@ -296,7 +296,7 @@ function InjuredSuspendedPlayers({ teamName }: { teamName: string }) {
 function VenueBadge({ isHome }: { isHome: boolean }) {
   return (
     <span
-      className={`px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded ${
+      className={`px-1.5 py-0.5 text-[10px] font-black uppercase tracking-widest rounded ${
         isHome
           ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
           : 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
@@ -316,7 +316,7 @@ function ResultPill({ result }: { result: FormResult | null }) {
   };
   const c = config[result];
   return (
-    <span className={`${c.bg} ${c.text} text-[9px] font-black px-1.5 py-0.5 rounded`}>
+    <span className={`${c.bg} ${c.text} text-[10px] font-black px-1.5 py-0.5 rounded`}>
       {c.label}
     </span>
   );
@@ -330,19 +330,19 @@ function StatusBadge({ fixture }: { fixture: FixtureListItem }) {
     return (
       <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/15 border border-red-500/30">
         <Circle size={6} className="text-red-400 fill-red-400 animate-pulse" />
-        <span className="text-[8px] font-black text-red-400 uppercase">Canlı</span>
+        <span className="text-[10px] font-black text-red-400 uppercase">Canlı</span>
       </span>
     );
   }
   if (finished) {
     return (
-      <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[8px] font-bold text-white/40 uppercase">
+      <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-white/40 uppercase">
         Bitti
       </span>
     );
   }
   return (
-    <span className="px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[8px] font-bold text-amber-400 uppercase">
+    <span className="px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-400 uppercase">
       Planlanmış
     </span>
   );
@@ -361,7 +361,7 @@ function MonthGroupHeader({ monthYear, count }: { monthYear: string; count: numb
           {monthYear}
         </span>
       </div>
-      <span className="text-[9px] text-white/20 font-semibold">{count} maç</span>
+      <span className="text-[10px] text-white/20 font-semibold">{count} maç</span>
     </div>
   );
 }
@@ -404,7 +404,7 @@ function FixtureListRow({
           <span className="text-[10px] text-white/40 font-semibold">
             {formatDate(match.match_date)}
           </span>
-          <span className="text-[9px] text-white/25 font-mono">
+          <span className="text-[10px] text-white/25 font-mono">
             {match.match_time || '--:--'}
           </span>
         </div>
@@ -427,7 +427,7 @@ function FixtureListRow({
           {live && (
             <span className="flex items-center gap-1">
               <Circle size={4} className="text-red-500 fill-red-500 animate-pulse" />
-              <span className="text-[8px] font-black text-red-400 uppercase">CANLI</span>
+              <span className="text-[10px] font-black text-red-400 uppercase">CANLI</span>
             </span>
           )}
           {finished ? (
@@ -543,10 +543,10 @@ function GoalSummary({ events, homeTeam, awayTeam }: { events: MatchEventRow[]; 
               <span className="text-[10px] text-white/30 font-mono shrink-0">{evt.minute}&apos;</span>
               <span className="text-[11px] font-semibold text-white/70 truncate flex-1">
                 {evt.player_name ? toTitleCase(evt.player_name) : 'Bilinmiyor'}
-                {isPenalty && <span className="text-amber-400/60 ml-1 text-[9px]">(Penaltı)</span>}
-                {isOwn && <span className="text-red-400/60 ml-1 text-[9px]">(K.K.)</span>}
+                {isPenalty && <span className="text-amber-400/60 ml-1 text-[10px]">(Penaltı)</span>}
+                {isOwn && <span className="text-red-400/60 ml-1 text-[10px]">(K.K.)</span>}
               </span>
-              <span className={`text-[8px] font-bold shrink-0 ${
+              <span className={`text-[10px] font-bold shrink-0 ${
                 isHome ? 'text-emerald-400/60' : 'text-sky-400/60'
               }`}>
                 {getShortTeamName(teamLabel)}
@@ -571,7 +571,7 @@ function CardSummary({ events }: { events: MatchEventRow[] }) {
       <div className="flex items-center gap-2 mb-3">
         <Ban size={14} className="text-yellow-400" />
         <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Kartlar</span>
-        <span className="text-[9px] text-white/25 bg-white/5 px-1.5 py-0.5 rounded-full">{cardEvents.length}</span>
+        <span className="text-[10px] text-white/25 bg-white/5 px-1.5 py-0.5 rounded-full">{cardEvents.length}</span>
       </div>
       <div className="space-y-1.5">
         {cardEvents.map((evt, i) => {
@@ -588,7 +588,7 @@ function CardSummary({ events }: { events: MatchEventRow[] }) {
               <span className="text-[11px] font-semibold text-white/70 truncate flex-1">
                 {evt.player_name ? toTitleCase(evt.player_name) : 'Bilinmiyor'}
               </span>
-              <span className={`text-[8px] font-bold shrink-0 ${
+              <span className={`text-[10px] font-bold shrink-0 ${
                 isRed ? 'text-red-400' : isSecondYellow ? 'text-orange-400' : 'text-yellow-400'
               }`}>
                 {isRed ? 'Kırmızı' : isSecondYellow ? '2. Sarı' : 'Sarı'}
@@ -694,7 +694,7 @@ function PreviousEncounters({
       <div className="flex items-center gap-2 mb-3">
         <Swords size={14} className="text-amber-400" />
         <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Önceki Karşılaşmalar</span>
-        <span className="text-[9px] text-white/25 bg-white/5 px-1.5 py-0.5 rounded-full">{matches.length}</span>
+        <span className="text-[10px] text-white/25 bg-white/5 px-1.5 py-0.5 rounded-full">{matches.length}</span>
       </div>
       <div className="space-y-1.5">
         {matches.map((m) => (
@@ -702,7 +702,7 @@ function PreviousEncounters({
             key={m.id}
             className="flex items-center gap-3 px-2.5 py-2 rounded-lg bg-white/[0.02] border border-white/[0.04]"
           >
-            <span className="text-[9px] text-white/25 min-w-[55px] shrink-0 font-mono">
+            <span className="text-[10px] text-white/25 min-w-[55px] shrink-0 font-mono">
               {formatDate(m.match_date)}
             </span>
             <div className="flex-1 flex items-center justify-between overflow-hidden">
@@ -786,7 +786,7 @@ function MatchDetailsPanel({
       <div className="bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-5">
         {/* Competition & Status */}
         <div className="flex items-center justify-between mb-4">
-          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border bg-white/[0.03] ${competition.color} border-white/[0.08]`}>
+          <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border bg-white/[0.03] ${competition.color} border-white/[0.08]`}>
             {competition.icon} {competition.label}
           </span>
           <StatusBadge fixture={fixture} />
@@ -825,7 +825,7 @@ function MatchDetailsPanel({
             ) : (
               <span className="text-2xl font-black text-amber-400/40">VS</span>
             )}
-            <span className="text-[9px] text-white/25 font-mono">
+            <span className="text-[10px] text-white/25 font-mono">
               {fixture.match_time || '--:--'}
             </span>
           </div>
@@ -872,7 +872,7 @@ function MatchDetailsPanel({
 
         {/* Hafta */}
         <div className="mt-2">
-          <span className="text-[9px] text-white/15 font-mono">Hafta {fixture.tur}</span>
+          <span className="text-[10px] text-white/15 font-mono">Hafta {fixture.tur}</span>
         </div>
 
         {/* ── Weather Card ── */}
@@ -1221,7 +1221,7 @@ export default function FixturePage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <button
             onClick={() => router.push('/')}
-            className="flex items-center gap-2 text-white/40 hover:text-white/70 transition-colors"
+            className="flex items-center gap-2 text-white/40 hover:text-white/70 transition-colors min-h-[40px] px-2"
           >
             <ArrowLeft size={18} />
             <span className="text-xs font-bold uppercase tracking-widest">Geri</span>
@@ -1248,7 +1248,7 @@ export default function FixturePage() {
             <button
               key={key}
               onClick={() => { setFilter(key); setSelectedFixtureId(null); }}
-              className={`flex-1 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+              className={`flex-1 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all min-h-[40px] ${
                 filter === key
                   ? 'bg-amber-500/15 text-amber-300 shadow-md shadow-amber-500/5'
                   : 'text-white/30 hover:text-white/50 hover:bg-white/[0.03]'

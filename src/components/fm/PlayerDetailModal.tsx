@@ -120,7 +120,7 @@ function AttrColumn({ title, icon, stats, isObserved = true }: { title: string; 
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-1.5 px-2 py-1.5 bg-white/[0.03] border border-white/[0.05] rounded-t-sm mb-px">
         {icon}
-        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">{title}</span>
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">{title}</span>
         <div className="flex-1 h-px bg-white/[0.06]" />
         <span className={`text-[11px] font-mono font-black ${isObserved && typeof avg === 'number' ? fmStatColor(avg) : 'text-white/20'}`}>{avg}</span>
       </div>
@@ -420,10 +420,10 @@ export default function PlayerDetailModal({
         )}
         {ratingStart && ratingStart > 0 && (
           <div className="mt-4 p-3 bg-white/[0.03] border border-white/10 rounded-xl mx-4">
-            <p className="text-[9px] uppercase tracking-widest text-white/25 mb-3">Sezon Gelişimi</p>
+            <p className="text-[10px] uppercase tracking-widest text-white/25 mb-3">Sezon Gelişimi</p>
             <div className="flex items-center gap-3">
               <div className="text-center w-12 shrink-0">
-                <p className="text-[8px] text-white/30 mb-0.5">Başlangıç</p>
+                <p className="text-[10px] text-white/30 mb-0.5">Başlangıç</p>
                 <p className="text-base font-black text-white/50">{ratingStart}</p>
               </div>
               <div className="flex-1 space-y-1">
@@ -447,7 +447,7 @@ export default function PlayerDetailModal({
                 </p>
               </div>
               <div className="text-center w-12 shrink-0">
-                <p className="text-[8px] text-white/30 mb-0.5">Şimdi</p>
+                <p className="text-[10px] text-white/30 mb-0.5">Şimdi</p>
                 <p className={`text-base font-black ${ratingDiff > 0 ? 'text-emerald-400' : 'text-white'}`}>
                   {rating}
                 </p>
@@ -464,7 +464,7 @@ export default function PlayerDetailModal({
           const yearsWithUs = (player as any).seasons_with_team as number | undefined;
           return (
             <div className="mt-4 p-4 bg-gradient-to-br from-amber-500/5 to-emerald-500/5 border border-amber-500/15 rounded-xl space-y-3">
-              <p className="text-[9px] uppercase tracking-widest text-amber-400/60 font-black">
+              <p className="text-[10px] uppercase tracking-widest text-amber-400/60 font-black">
                 ⭐ Seninle Gelişimi
               </p>
               {joinOvr && yearsWithUs && (
@@ -476,7 +476,7 @@ export default function PlayerDetailModal({
               )}
               <div className="flex items-center gap-3">
                 <div className="text-center w-12">
-                  <p className="text-[8px] text-white/30">Bu sezon başı</p>
+                  <p className="text-[10px] text-white/30">Bu sezon başı</p>
                   <p className="text-lg font-black text-white/50">{startOvr}</p>
                 </div>
                 <div className="flex-1">
@@ -493,7 +493,7 @@ export default function PlayerDetailModal({
                   </p>
                 </div>
                 <div className="text-center w-12">
-                  <p className="text-[8px] text-white/30">Şimdi</p>
+                  <p className="text-[10px] text-white/30">Şimdi</p>
                   <p className={`text-lg font-black ${diff > 0 ? 'text-emerald-400' : 'text-white'}`}>{currentOvr}</p>
                 </div>
               </div>
@@ -512,21 +512,21 @@ export default function PlayerDetailModal({
           <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
             <div className="px-3 py-3 bg-white/[0.03] border border-white/[0.06] rounded-sm text-center">
               <div className="text-[22px] font-black text-white/90">{player.goals ?? 0}</div>
-              <div className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/25 mt-0.5">Gol</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/25 mt-0.5">Gol</div>
             </div>
             <div className="px-3 py-3 bg-white/[0.03] border border-white/[0.06] rounded-sm text-center">
               <div className="text-[22px] font-black text-white/90">{player.assists ?? 0}</div>
-              <div className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/25 mt-0.5">Asist</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/25 mt-0.5">Asist</div>
             </div>
             <div className="px-3 py-3 bg-white/[0.03] border border-white/[0.06] rounded-sm text-center">
               <div className="text-[22px] font-black text-amber-400">{player.last_match_rating?.toFixed(1) ?? '—'}</div>
-              <div className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/25 mt-0.5">Son Maç RT</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/25 mt-0.5">Son Maç RT</div>
             </div>
             <div className="px-3 py-3 bg-white/[0.03] border border-white/[0.06] rounded-sm text-center">
               <div className={`text-[22px] font-black ${cap99(player.form || 50) >= 70 ? 'text-emerald-400' : cap99(player.form || 50) >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
                 {cap99(player.form || 50)}%
               </div>
-              <div className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/25 mt-0.5">Form</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/25 mt-0.5">Form</div>
               {/* Mini form sparkline — last 5 match ratings */}
               {player.match_ratings && player.match_ratings.length > 0 && (
                 <div className="flex items-end justify-center gap-0.5 mt-1.5">
@@ -545,7 +545,7 @@ export default function PlayerDetailModal({
           </div>
 
           {/* All stats in bars */}
-          <div className="text-[8px] font-black uppercase tracking-[0.2em] text-white/25 mb-2">Tüm Özellikler</div>
+          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/25 mb-2">Tüm Özellikler</div>
           <div className="space-y-1">
             {[
               ...technicalStats.map(s => ({ ...s, group: 'Teknik' })),
@@ -553,7 +553,7 @@ export default function PlayerDetailModal({
               ...physicalStats.map(s => ({ ...s, group: 'Fiziksel' })),
             ].map((s, idx) => (
               <div key={`${s.group}-${s.label}`} className="flex items-center gap-3 py-[2px]">
-                <span className="w-[100px] shrink-0 text-[9px] font-medium text-white/40">{s.label}</span>
+                <span className="w-[100px] shrink-0 text-[10px] font-medium text-white/40">{s.label}</span>
                 <div className="flex-1 h-[5px] bg-white/[0.03] rounded-sm overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
@@ -605,12 +605,12 @@ export default function PlayerDetailModal({
                     <>
                       <User size={32} className="text-white/10 mb-1" />
                       <span className="text-[28px] font-display font-black italic text-amber-400 leading-none">{rating}</span>
-                      <span className="text-[8px] font-black text-amber-500/50 uppercase mt-1">GENEL</span>
+                      <span className="text-[10px] font-black text-amber-500/50 uppercase mt-1">GENEL</span>
                       {ratingDiff !== 0 && ratingStart && (
                         <motion.span
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className={`text-[9px] font-black ${ratingDiff > 0 ? 'text-emerald-400' : 'text-red-400'}`}
+                          className={`text-[10px] font-black ${ratingDiff > 0 ? 'text-emerald-400' : 'text-red-400'}`}
                         >
                           {ratingDiff > 0 ? `▲ +${ratingDiff}` : `▼ ${ratingDiff}`} bu sezon
                         </motion.span>
@@ -621,7 +621,7 @@ export default function PlayerDetailModal({
                   {/* Photo Upload Overlay */}
                   <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center cursor-pointer">
                     <Activity size={18} className="text-white mb-1" />
-                    <span className="text-[8px] font-black text-white uppercase tracking-wider">FOTOĞRAF YÜKLE</span>
+                    <span className="text-[10px] font-black text-white uppercase tracking-wider">FOTOĞRAF YÜKLE</span>
                     <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} />
                   </label>
                 </div>
@@ -639,9 +639,9 @@ export default function PlayerDetailModal({
                       const secBadge = getPosBadgeStyle(secG);
                       const secColor = secBadge.split(' ').find(c => c.startsWith('text-')) || 'text-[#9B9B9B]';
                       const secBg = secBadge.split(' ').filter(c => !c.startsWith('text-')).join(' ');
-                      return <span key={si} className={`px-1.5 py-px rounded-full border text-[8px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{sec} <span className="text-[6px] opacity-50">{localizePosFull(sec)}</span></span>;
+                      return <span key={si} className={`px-1.5 py-px rounded-full border text-[10px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{sec} <span className="text-[10px] opacity-50">{localizePosFull(sec)}</span></span>;
                     })}
-                    <span className="text-[7px] text-white/15 font-bold uppercase w-full text-center">yan mevki</span>
+                    <span className="text-[10px] text-white/15 font-bold uppercase w-full text-center">yan mevki</span>
                   </div>
                 )}
               </div>
@@ -657,7 +657,7 @@ export default function PlayerDetailModal({
           {/* Professional Styles / Traits Section */}
           <div className="px-3 py-2 border-b border-white/[0.05]">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-[8px] font-black uppercase tracking-[0.2em] text-white/25">Profesyonel Stiller & Yetenekler</div>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/25">Profesyonel Stiller & Yetenekler</div>
               {(!isScouted || (player.scouting_count || 0) < 3) && (
                 <button
                   onClick={async () => {
@@ -668,7 +668,7 @@ export default function PlayerDetailModal({
                       toastError(res.reason);
                     }
                   }}
-                  className="text-[7px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-sm border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors uppercase font-bold"
+                  className="text-[10px] bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-sm border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors uppercase font-bold min-h-[36px]"
                 >
                   {player.scouted ? 'Yeniden Gözlem (150K)' : 'Gözlemle (150K)'}
                 </button>
@@ -679,13 +679,13 @@ export default function PlayerDetailModal({
               <div className="space-y-1.5">
                 {/* Arketip */}
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] text-white/40">Arketip</span>
+                  <span className="text-[10px] text-white/40">Arketip</span>
                   {isScouted ? (
                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-purple-500/10 border-purple-500/20 text-purple-400">
                       <span className="text-[10px] font-black uppercase tracking-wider">{player.archetype || POS_LABELS[sp] || sp}</span>
                     </div>
                   ) : (
-                    <span className="text-[9px] font-bold text-white/20">???</span>
+                    <span className="text-[10px] font-bold text-white/20">???</span>
                   )}
                 </div>
 
@@ -694,12 +694,12 @@ export default function PlayerDetailModal({
                   <div className="flex items-center gap-2 px-2 py-1 bg-white/[0.03] border border-white/[0.06] rounded-sm">
                     <span className="text-[12px]">{playStyle.icon}</span>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[9px] font-bold text-white/70 truncate">{playStyle.name}</div>
-                      <div className="text-[7px] text-white/30 truncate">{playStyle.short}</div>
+                      <div className="text-[10px] font-bold text-white/70 truncate">{playStyle.name}</div>
+                      <div className="text-[10px] text-white/30 truncate">{playStyle.short}</div>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-[9px] text-white/10 italic px-2">Stil Yok</div>
+                  <div className="text-[10px] text-white/10 italic px-2">Stil Yok</div>
                 )}
 
                 {/* Traits as Capsules */}
@@ -740,7 +740,7 @@ export default function PlayerDetailModal({
                           )}
 
                           {t.counterFor && (
-                            <div className="bg-amber-500/10 text-amber-500 px-2 py-1.5 rounded border border-amber-500/20 text-[9px] font-black uppercase tracking-tighter text-center">
+                            <div className="bg-amber-500/10 text-amber-500 px-2 py-1.5 rounded border border-amber-500/20 text-[10px] font-black uppercase tracking-tighter text-center">
                               🚀 ANTİ: {t.counterFor}
                             </div>
                           )}
@@ -760,7 +760,7 @@ export default function PlayerDetailModal({
                         <span className="tracking-tight">{t.name}</span>
 
                         {/* Improved Tooltip for capsules too if needed, or just better visibility */}
-                         <div className="absolute top-full left-0 mt-3 w-48 p-2 bg-zinc-950 border border-red-500/20 rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all text-[8px] font-medium text-white/70 z-[500] pointer-events-none shadow-2xl backdrop-blur-xl">
+                         <div className="absolute top-full left-0 mt-3 w-48 p-2 bg-zinc-950 border border-red-500/20 rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all text-[10px] font-medium text-white/70 z-[500] pointer-events-none shadow-2xl backdrop-blur-xl">
                           {t.short}
                         </div>
                       </motion.div>
@@ -803,13 +803,13 @@ export default function PlayerDetailModal({
           {/* ── SAKATLIK BİLGİSİ VE FİZYOTERAPEST ── */}
           {player.is_injured && (
             <div className="px-3 py-2 border-b border-white/[0.05]">
-              <div className="text-[8px] font-black uppercase tracking-[0.2em] text-white/25 mb-2">Sakatlık Durumu</div>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/25 mb-2">Sakatlık Durumu</div>
               <div className="bg-red-500/[0.08] border border-red-500/20 rounded-sm p-2 space-y-1.5">
                 <div className="flex items-center gap-2">
                   <HeartPulse size={12} className="text-red-400 animate-pulse" />
-                  <span className="text-[9px] font-bold text-red-300 uppercase tracking-wider">Sakat</span>
+                  <span className="text-[10px] font-bold text-red-300 uppercase tracking-wider">Sakat</span>
                   {player.injury?.severity !== undefined && (
-                    <span className={`px-1.5 py-px rounded-sm text-[7px] font-black uppercase tracking-wider ${
+                    <span className={`px-1.5 py-px rounded-sm text-[10px] font-black uppercase tracking-wider ${
                       player.injury.severity <= 1 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                       : player.injury.severity <= 2 ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
                       : 'bg-red-500/20 text-red-400 border border-red-500/30'
@@ -818,7 +818,7 @@ export default function PlayerDetailModal({
                     </span>
                   )}
                   {player.injury_severity && !player.injury?.severity && (
-                    <span className={`px-1.5 py-px rounded-sm text-[7px] font-black uppercase tracking-wider ${
+                    <span className={`px-1.5 py-px rounded-sm text-[10px] font-black uppercase tracking-wider ${
                       player.injury_severity === 'light' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                       : player.injury_severity === 'medium' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
                       : 'bg-red-500/20 text-red-400 border border-red-500/30'
@@ -829,23 +829,23 @@ export default function PlayerDetailModal({
                 </div>
                 {player.injury_end_date && (
                   <div className="flex items-center justify-between">
-                    <span className="text-[8px] text-white/40">Tahmini İyileşme</span>
-                    <span className="text-[9px] font-bold text-red-300/80">
+                    <span className="text-[10px] text-white/40">Tahmini İyileşme</span>
+                    <span className="text-[10px] font-bold text-red-300/80">
                       {new Date(player.injury_end_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}
                     </span>
                   </div>
                 )}
                 {player.injury?.remaining_days !== undefined && (
                   <div className="flex items-center justify-between">
-                    <span className="text-[8px] text-white/40">Kalan Gün</span>
-                    <span className="text-[9px] font-bold text-red-300/80">{player.injury.remaining_days} gün</span>
+                    <span className="text-[10px] text-white/40">Kalan Gün</span>
+                    <span className="text-[10px] font-bold text-red-300/80">{player.injury.remaining_days} gün</span>
                   </div>
                 )}
                 {/* Fizyoterapist Tedavi Butonu */}
                 {isOwned && physioInfo && physioInfo.totalHealing > 0 && (
                   <div className="pt-1.5 border-t border-red-500/10">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[8px] text-white/30">Fizyoterapist Gücü</span>
+                      <span className="text-[10px] text-white/30">Fizyoterapist Gücü</span>
                       <div className="flex items-center gap-1">
                         {physioInfo.stars.map((s, i) => (
                           <div key={i} className="flex items-center gap-px">
@@ -854,7 +854,7 @@ export default function PlayerDetailModal({
                             ))}
                           </div>
                         ))}
-                        <span className="text-[8px] font-bold text-emerald-400 ml-1">-{physioInfo.totalHealing} gün</span>
+                        <span className="text-[10px] font-bold text-emerald-400 ml-1">-{physioInfo.totalHealing} gün</span>
                       </div>
                     </div>
                     <button
@@ -898,7 +898,7 @@ export default function PlayerDetailModal({
                         }
                       }}
                       disabled={isPhysioTreating}
-                      className="w-full py-1.5 bg-emerald-500/15 border border-emerald-500/30 rounded-sm text-[8px] font-black uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/25 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                      className="w-full py-1.5 bg-emerald-500/15 border border-emerald-500/30 rounded-sm text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/25 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                     >
                       {isPhysioTreating ? (
                         <>
@@ -916,7 +916,7 @@ export default function PlayerDetailModal({
                 )}
                 {isOwned && (!physioInfo || physioInfo.totalHealing === 0) && (
                   <div className="pt-1.5 border-t border-red-500/10">
-                    <div className="flex items-center gap-1.5 text-[7px] text-white/20 italic">
+                    <div className="flex items-center gap-1.5 text-[10px] text-white/20 italic">
                       <AlertTriangle size={8} className="text-amber-500/50" />
                       <span>Fizyoterapist yok — Personel sekmesinden işe alabilirsiniz</span>
                     </div>
@@ -967,7 +967,7 @@ export default function PlayerDetailModal({
           <div className="px-2 pb-2">
             <div className="flex items-center gap-1.5 px-2 py-1.5 bg-white/[0.03] border border-white/[0.05] rounded-t-sm mb-px">
               <Shield size={10} className="text-amber-400/70" />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">Özet</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Özet</span>
             </div>
             <div className="w-full h-[160px] bg-white/[0.02] border border-white/[0.05] rounded-b-sm p-1">
               <RadarChartErrorBoundary>
@@ -1034,7 +1034,7 @@ export default function PlayerDetailModal({
         >
           <div className="flex items-center gap-2 text-white/20">
             <div className="w-10 h-1 rounded-full bg-white/15" />
-            <span className="text-[7px] font-black uppercase tracking-[0.2em]">sürükle</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">sürükle</span>
             <div className="w-10 h-1 rounded-full bg-white/15" />
           </div>
         </div>
@@ -1053,12 +1053,12 @@ export default function PlayerDetailModal({
               {/* Takım ismi - en üstte, her zaman görünür */}
               <div className="mb-0.5">
                 {player.club || player.team_name ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-amber-500/10 border border-amber-500/20 text-[9px] font-black uppercase tracking-[0.15em] text-amber-300">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-amber-500/10 border border-amber-500/20 text-[10px] font-black uppercase tracking-[0.15em] text-amber-300">
                     <Shield size={9} className="text-amber-400" />
                     {toTitleCase(player.club || player.team_name || '')}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-white/[0.03] border border-white/10 text-[9px] font-black uppercase tracking-[0.15em] text-white/30">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-white/[0.03] border border-white/10 text-[10px] font-black uppercase tracking-[0.15em] text-white/30">
                     Serbest Oyuncu
                   </span>
                 )}
@@ -1066,21 +1066,21 @@ export default function PlayerDetailModal({
               <div className="flex items-center gap-2">
                 <h1 className="text-[15px] font-bold text-white tracking-tight leading-tight">{toTitleCase(player.name)}</h1>
                 {player.is_retiring && (
-                  <span className="px-1.5 py-0.5 rounded-sm bg-red-500/20 border border-red-500/30 text-[8px] font-bold uppercase tracking-wider text-red-400 animate-pulse">
+                  <span className="px-1.5 py-0.5 rounded-sm bg-red-500/20 border border-red-500/30 text-[10px] font-bold uppercase tracking-wider text-red-400 animate-pulse">
                     Emekli Olacak
                   </span>
                 )}
                 {onSign && (
-                   <span className="px-1.5 py-0.5 rounded-sm bg-emerald-500/20 border border-emerald-500/30 text-[8px] font-bold uppercase tracking-wider text-emerald-400">
+                   <span className="px-1.5 py-0.5 rounded-sm bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
                     Keşfedilmiş Oyuncu
                    </span>
                 )}
               </div>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                <span className={`px-1.5 py-px rounded-sm border text-[9px] font-bold uppercase tracking-wider ${posBg} ${posColor}`}>
+                <span className={`px-1.5 py-px rounded-sm border text-[10px] font-bold uppercase tracking-wider ${posBg} ${posColor}`}>
                   {sp}
                 </span>
-                <span className="text-[9px] text-white/30 font-semibold">{localizePosFull(sp)}</span>
+                <span className="text-[10px] text-white/30 font-semibold">{localizePosFull(sp)}</span>
                 {player.secondaryPositions && player.secondaryPositions.length > 0 && (
                   <div className="flex items-center gap-1">
                     {player.secondaryPositions.map((sec: string, si: number) => {
@@ -1088,9 +1088,9 @@ export default function PlayerDetailModal({
                       const secBadge = getPosBadgeStyle(secG);
                       const secColor = secBadge.split(' ').find(c => c.startsWith('text-')) || 'text-[#9B9B9B]';
                       const secBg = secBadge.split(' ').filter(c => !c.startsWith('text-')).join(' ');
-                      return <span key={si} className={`px-1 py-px rounded-sm border text-[8px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{sec} <span className="text-[7px] opacity-50">{localizePosFull(sec)}</span></span>;
+                      return <span key={si} className={`px-1 py-px rounded-sm border text-[10px] font-bold uppercase tracking-wider ${secBg} ${secColor}`}>{sec} <span className="text-[10px] opacity-50">{localizePosFull(sec)}</span></span>;
                     })}
-                    <span className="text-[7px] text-white/20 font-bold uppercase">yan</span>
+                    <span className="text-[10px] text-white/20 font-bold uppercase">yan</span>
                   </div>
                 )}
                 <span className="text-[10px] text-white/35 font-bold">{player.age || '—'} yaş</span>
@@ -1118,11 +1118,11 @@ export default function PlayerDetailModal({
           {/* Right: Key info */}
           <div className="flex items-center gap-2 md:gap-4 shrink-0">
             <div className="text-right hidden md:block">
-              <div className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/20 mb-0.5">Piyasa Değeri</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/20 mb-0.5">Piyasa Değeri</div>
               <div className="text-[13px] font-black text-amber-400">{formatCurrency(marketValue)}</div>
             </div>
               <div className="text-right hidden md:block">
-                <div className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/20 mb-0.5">Potansiyel</div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/20 mb-0.5">Potansiyel</div>
                 <div className="flex items-center gap-0.5">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star 
@@ -1134,7 +1134,7 @@ export default function PlayerDetailModal({
                 </div>
               </div>
             <div className="text-right hidden md:block">
-              <div className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/20 mb-0.5">Form</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/20 mb-0.5">Form</div>
               <div className={`text-[13px] font-black ${cap99(player.form || 50) >= 70 ? 'text-emerald-400' : cap99(player.form || 50) >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>{cap99(player.form || 50)}%</div>
               {/* Mini sparkline in header */}
               {player.match_ratings && player.match_ratings.length > 0 && (
@@ -1182,7 +1182,7 @@ export default function PlayerDetailModal({
             <div ref={actionsRef} className="relative shrink-0 pr-2 md:pr-3">
               <button
                 onClick={() => setShowActions(!showActions)}
-                className="px-3 py-1.5 bg-purple-600/80 hover:bg-purple-600 text-[9px] font-bold uppercase tracking-[0.15em] rounded-sm transition-all flex items-center gap-2"
+                className="px-3 py-1.5 bg-purple-600/80 hover:bg-purple-600 text-[10px] font-bold uppercase tracking-[0.15em] rounded-sm transition-all flex items-center gap-2"
               >
                 Eylemler <ChevronDown size={12} className={showActions ? 'rotate-180' : ''} />
               </button>
@@ -1279,26 +1279,26 @@ export default function PlayerDetailModal({
                   { label: 'Kondisyon', value: `${cap99(player.cond || 100)}%`, color: cap99(player.cond || 100) >= 70 ? 'text-emerald-400' : 'text-red-400' },
                 ].map(item => (
                   <div key={item.label} className="px-3 py-2.5 bg-white/[0.03] border border-white/[0.06] rounded-sm">
-                    <div className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/20 mb-1">{item.label}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/20 mb-1">{item.label}</div>
                     <div className={`text-[12px] font-bold ${item.color}`}>{item.value}</div>
                   </div>
                 ))}
                 {/* Form with visual match ratings graph */}
                 <div className="px-3 py-2.5 bg-white/[0.03] border border-white/[0.06] rounded-sm col-span-2">
-                  <div className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/20 mb-1.5">Form</div>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/20 mb-1.5">Form</div>
                   <div className="flex items-center gap-3">
                     <div className={`text-[18px] font-black ${cap99(player.form || 50) >= 70 ? 'text-emerald-400' : cap99(player.form || 50) >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
                       {cap99(player.form || 50)}%
                     </div>
                     {player.match_ratings && player.match_ratings.length > 0 && (
                       <div className="flex items-end gap-1 flex-1">
-                        <span className="text-[7px] font-bold text-white/15 uppercase tracking-wider mr-1">Son 5 maç</span>
+                        <span className="text-[10px] font-bold text-white/15 uppercase tracking-wider mr-1">Son 5 maç</span>
                         {player.match_ratings.slice(-5).map((rating, idx) => {
                           const barHeight = Math.max(8, (rating / 10) * 28);
                           const barColor = rating >= 7 ? 'bg-emerald-500' : rating >= 5 ? 'bg-yellow-500' : 'bg-red-500';
                           return (
                             <div key={idx} className="flex flex-col items-center gap-0.5">
-                              <span className="text-[7px] font-mono font-bold text-white/40">{rating.toFixed(1)}</span>
+                              <span className="text-[10px] font-mono font-bold text-white/40">{rating.toFixed(1)}</span>
                               <div
                                 className={`w-5 rounded-sm ${barColor} transition-all`}
                                 style={{ height: `${barHeight}px`, opacity: 0.8 }}
@@ -1419,7 +1419,7 @@ export default function PlayerDetailModal({
                       </div>
                       <div>
                         <div className="text-[11px] font-bold text-white/90">Programda Aktif</div>
-                        <div className="text-[9px] text-white/30 uppercase font-black">Genel Gelişim Sürüyor</div>
+                        <div className="text-[10px] text-white/30 uppercase font-black">Genel Gelişim Sürüyor</div>
                       </div>
                     </div>
                     <p className="text-[10px] text-white/50 leading-relaxed italic">
@@ -1439,13 +1439,13 @@ export default function PlayerDetailModal({
                 )  }
                 
                 <div className="pt-4 border-t border-white/5">
-                  <div className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-2">Gelişim Oranı</div>
+                  <div className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-2">Gelişim Oranı</div>
                   <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
                     <div className="h-full bg-emerald-500/40 w-[65%]" />
                   </div>
                   <div className="flex justify-between mt-1">
-                    <span className="text-[8px] text-white/20 font-black uppercase">Fizik: 65%</span>
-                    <span className="text-[8px] text-white/20 font-black uppercase">Zihin: 40%</span>
+                    <span className="text-[10px] text-white/20 font-black uppercase">Fizik: 65%</span>
+                    <span className="text-[10px] text-white/20 font-black uppercase">Zihin: 40%</span>
                   </div>
                 </div>
               </div>
@@ -1460,7 +1460,7 @@ export default function PlayerDetailModal({
           <div className="p-4 md:p-10 space-y-8">
             {/* TRANSFER OFFER HANDLING */}
             {player.transferOffer && (
-              <div className="max-w-xl mx-auto mb-10 p-8 bg-amber-500/10 border border-amber-500/30 rounded-[3rem] animate-pulse">
+              <div className="max-w-xl mx-auto mb-6 sm:mb-10 p-4 sm:p-8 bg-amber-500/10 border border-amber-500/30 rounded-[1.5rem] sm:rounded-[3rem] animate-pulse">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-16 h-16 bg-amber-500 rounded-[1.5rem] flex items-center justify-center shadow-lg">
                     <ShoppingCart size={32} className="text-black" />
@@ -1503,7 +1503,7 @@ export default function PlayerDetailModal({
             )}
 
             {onSign ? (
-              <div className="max-w-xl mx-auto space-y-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="max-w-xl mx-auto space-y-6 sm:space-y-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="mx-auto w-24 h-24 bg-emerald-500/10 rounded-[2rem] flex items-center justify-center border border-emerald-500/20 rotate-12 mb-6">
                    <Footprints className="text-emerald-500" size={48} />
                 </div>
@@ -1515,7 +1515,7 @@ export default function PlayerDetailModal({
                    <div className="text-4xl font-black font-mono tracking-tighter italic text-emerald-400">
                      {formatCurrency(marketValue * 0.5)}
                    </div>
-                   <p className="text-[9px] text-white/30 font-bold uppercase tracking-[0.2em] mt-4">
+                   <p className="text-[10px] text-white/30 font-bold uppercase tracking-[0.2em] mt-4">
                      Scout ekibimiz bu oyuncu ile ön görüşme yaptı ve makul bir imza parası karşılığında katılmaya hazır.
                    </p>
                 </div>
@@ -1530,7 +1530,7 @@ export default function PlayerDetailModal({
               </div>
             ) : marketListing ? (
               /* BUYING CONTEXT */
-              <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="max-w-xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="text-center space-y-4">
                   <div className={`mx-auto w-24 h-24 rounded-[2rem] flex items-center justify-center border rotate-12 mb-6 ${marketListing.is_auction ? 'bg-amber-500/10 border-amber-500/20' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
                     {marketListing.is_auction ? <Gavel className="text-amber-500" size={48} /> : <ShoppingCart className="text-emerald-500" size={48} />}
@@ -1544,12 +1544,12 @@ export default function PlayerDetailModal({
                 {/* Badges: seller / highest bidder */}
                 <div className="flex justify-center gap-3">
                   {isSeller && (
-                    <span className="px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30 text-[9px] font-black uppercase tracking-widest text-purple-300 flex items-center gap-1.5">
+                    <span className="px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30 text-[10px] font-black uppercase tracking-widest text-purple-300 flex items-center gap-1.5">
                       <User size={12} /> SENİN İLANIN
                     </span>
                   )}
                   {isHighestBidder && !isSeller && (
-                    <span className="px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-[9px] font-black uppercase tracking-widest text-emerald-300 flex items-center gap-1.5">
+                    <span className="px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-black uppercase tracking-widest text-emerald-300 flex items-center gap-1.5">
                       <Star size={12} className="fill-emerald-300" /> EN YÜKSEK TEKLİF: SEN
                     </span>
                   )}
@@ -1558,50 +1558,50 @@ export default function PlayerDetailModal({
                 {marketListing.is_auction ? (
                   /* ═══ AUCTION UI ═══ */
                   <>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                       <div className="bg-amber-500/10 p-5 rounded-[2rem] border border-amber-500/20 flex flex-col items-center gap-2">
                         <Gavel size={18} className="text-amber-500" />
-                        <div className="text-[9px] font-black uppercase text-amber-500/50 tracking-widest">En Yüksek Teklif</div>
+                        <div className="text-[10px] font-black uppercase text-amber-500/50 tracking-widest">En Yüksek Teklif</div>
                         <div className="text-2xl font-black font-mono tracking-tighter italic text-amber-400">
                           {(marketListing.current_bid ?? marketListing.price) > 0 ? formatCurrency(marketListing.current_bid ?? marketListing.price) : '—'}
                         </div>
-                        <div className="text-[8px] font-bold text-white/25 uppercase">
+                        <div className="text-[10px] font-bold text-white/25 uppercase">
                           {(marketListing.current_bid ?? 0) <= 0 ? 'Henüz teklif yok' : `Teklifçi: ${marketListing.highest_bidder_name || 'Anonim'}`}
                         </div>
                       </div>
                       <div className="bg-white/5 p-5 rounded-[2rem] border border-white/5 flex flex-col items-center gap-2">
                         <Timer size={18} className={auctionTimeLeft === 'Sona Erdi' ? 'text-red-400' : 'text-white/40'} />
-                        <div className="text-[9px] font-black uppercase text-white/20 tracking-widest">Kalan Süre</div>
+                        <div className="text-[10px] font-black uppercase text-white/20 tracking-widest">Kalan Süre</div>
                         <div className={`text-2xl font-black font-mono tracking-tighter italic ${auctionTimeLeft === 'Sona Erdi' ? 'text-red-400' : 'text-white/90'}`}>
                           {auctionTimeLeft || '—'}
                         </div>
-                        <div className="text-[8px] font-bold text-white/25 uppercase">Gerçek zamanlı</div>
+                        <div className="text-[10px] font-bold text-white/25 uppercase">Gerçek zamanlı</div>
                       </div>
                       <div className="bg-white/5 p-5 rounded-[2rem] border border-white/5 flex flex-col items-center gap-2">
                         <Activity size={18} className="text-white/40" />
-                        <div className="text-[9px] font-black uppercase text-white/20 tracking-widest">Teklif Sayısı</div>
+                        <div className="text-[10px] font-black uppercase text-white/20 tracking-widest">Teklif Sayısı</div>
                         <div className="text-2xl font-black font-mono tracking-tighter italic text-white/90">
                           {marketListing.bid_count ?? 0}
                         </div>
-                        <div className="text-[8px] font-bold text-white/25 uppercase">Kişi</div>
+                        <div className="text-[10px] font-bold text-white/25 uppercase">Kişi</div>
                       </div>
                     </div>
 
                     <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center justify-between">
                       <div>
-                        <div className="text-[8px] font-bold text-white/30 uppercase">Başlangıç Fiyatı</div>
+                        <div className="text-[10px] font-bold text-white/30 uppercase">Başlangıç Fiyatı</div>
                         <div className="text-sm font-black text-white/70 font-mono">{formatCurrency(marketListing.price)}</div>
                       </div>
                       {marketListing.max_price && (
                         <div className="text-right">
-                          <div className="text-[8px] font-bold text-white/30 uppercase">Hemen Al Bedeli</div>
+                          <div className="text-[10px] font-bold text-white/30 uppercase">Hemen Al Bedeli</div>
                           <div className="text-sm font-black text-amber-400 font-mono">{formatCurrency(marketListing.max_price)}</div>
                         </div>
                       )}
                     </div>
 
                     {/* Seller info */}
-                    <div className="text-[8px] font-bold text-white/25 uppercase tracking-widest text-center">
+                    <div className="text-[10px] font-bold text-white/25 uppercase tracking-widest text-center">
                       Satıcı: {marketListing.seller_id === 'free-agent-system' ? 'SERBEST OYUNCU' : marketListing.seller_name}
                     </div>
 
@@ -1646,7 +1646,7 @@ export default function PlayerDetailModal({
                       )}
                     </div>
 
-                    <p className="text-[9px] text-white/20 font-bold uppercase tracking-[0.2em] text-center max-w-sm mx-auto leading-relaxed">
+                    <p className="text-[10px] text-white/20 font-bold uppercase tracking-[0.2em] text-center max-w-sm mx-auto leading-relaxed">
                       Teklif verdikten sonra en yüksek teklif sahibi olarak kalırsanız, açık artırma sonunda oyuncu kadronuza eklenir.
                     </p>
                   </>
@@ -1657,22 +1657,22 @@ export default function PlayerDetailModal({
                       <div className="bg-white/5 p-6 rounded-[2rem] border border-white/5 group hover:border-white/10 transition-all">
                         <div className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-2">Satış Fiyatı</div>
                         <div className="text-3xl font-black font-mono tracking-tighter italic text-white/90">{formatCurrency(marketListing.price)}</div>
-                        <div className="text-[8px] font-bold text-white/30 uppercase mt-2">Satıcı: {marketListing.seller_id === 'free-agent-system' ? 'SERBEST OYUNCU' : marketListing.seller_name}</div>
+                        <div className="text-[10px] font-bold text-white/30 uppercase mt-2">Satıcı: {marketListing.seller_id === 'free-agent-system' ? 'SERBEST OYUNCU' : marketListing.seller_name}</div>
                       </div>
                       <div className="bg-amber-500/10 p-6 rounded-[2rem] border border-amber-500/20 group hover:border-amber-500/30 transition-all">
                         <div className="text-[10px] font-black uppercase tracking-widest text-amber-500/40 mb-2">Maksimum Limit</div>
                         <div className="text-3xl font-black font-mono tracking-tighter italic text-amber-400">{formatCurrency(marketListing.max_price || marketListing.price * 1.5)}</div>
-                        <div className="text-[8px] font-bold text-amber-500/30 uppercase mt-2">Hemen Al Bedeli</div>
+                        <div className="text-[10px] font-bold text-amber-500/30 uppercase mt-2">Hemen Al Bedeli</div>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="flex-1 bg-white/5 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center gap-2">
-                        <div className="text-[9px] font-black uppercase text-white/20 tracking-widest">Kondisyon</div>
+                        <div className="text-[10px] font-black uppercase text-white/20 tracking-widest">Kondisyon</div>
                         <div className="text-xl font-black italic">{player.cond || 100}%</div>
                       </div>
                       <div className="flex-1 bg-white/5 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center gap-2">
-                        <div className="text-[9px] font-black uppercase text-white/20 tracking-widest">Yaş</div>
+                        <div className="text-[10px] font-black uppercase text-white/20 tracking-widest">Yaş</div>
                         <div className="text-xl font-black italic">{player.age}</div>
                       </div>
                     </div>
@@ -1694,7 +1694,7 @@ export default function PlayerDetailModal({
                       </button>
                     </div>
 
-                    <p className="text-[9px] text-white/20 font-bold uppercase tracking-[0.2em] text-center max-w-sm mx-auto leading-relaxed">
+                    <p className="text-[10px] text-white/20 font-bold uppercase tracking-[0.2em] text-center max-w-sm mx-auto leading-relaxed">
                       Oyuncuyu satın aldığınızda bonservis bedeli anında hesabınızdan düşülür ve oyuncu kadronuza eklenir.
                     </p>
                   </>
@@ -1714,21 +1714,21 @@ export default function PlayerDetailModal({
                    )}
                    <div className="flex flex-wrap justify-center gap-4 max-w-2xl mx-auto">
                      <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/10">
-                       <div className="text-[8px] font-bold text-white/30 uppercase mb-1">Piyasa Değeri</div>
+                       <div className="text-[10px] font-bold text-white/30 uppercase mb-1">Piyasa Değeri</div>
                        <div className="text-sm font-black text-white/80">{formatCurrency(marketValue)}</div>
                      </div>
                      <div className="px-4 py-2 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
-                       <div className="text-[8px] font-bold text-emerald-500/50 uppercase mb-1">{isOwned ? 'Min. Satış (Baz)' : 'Önerilen Min. Teklif'}</div>
+                       <div className="text-[10px] font-bold text-emerald-500/50 uppercase mb-1">{isOwned ? 'Min. Satış (Baz)' : 'Önerilen Min. Teklif'}</div>
                        <div className="text-sm font-black text-emerald-400">{formatCurrency(corridor.min)}</div>
                      </div>
                      {!isOwned && (
                        <div className="px-4 py-2 bg-amber-500/5 rounded-xl border border-amber-500/10">
-                         <div className="text-[8px] font-bold text-amber-500/50 uppercase mb-1">Maks. Teklif</div>
+                         <div className="text-[10px] font-bold text-amber-500/50 uppercase mb-1">Maks. Teklif</div>
                          <div className="text-sm font-black text-amber-400">{formatCurrency(corridor.max)}</div>
                        </div>
                      )}
                    </div>
-                   <p className="text-[9px] text-white/30 font-bold uppercase tracking-[0.2em] max-w-md mx-auto leading-relaxed">
+                   <p className="text-[10px] text-white/30 font-bold uppercase tracking-[0.2em] max-w-md mx-auto leading-relaxed">
                       {isOwned 
                         ? 'Piyasa dengesini korumak için her oyuncunun bir "Koridor Fiyatı" vardır. Bu aralık dışındaki teklifler sistemsel olarak engellenir.'
                         : 'Kulüp yönetimine sunacağınız teklif, oyuncunun mevcut piyasa değeri ve kulübün stratejik hedefleri doğrultusunda değerlendirilecektir.'}
@@ -1739,7 +1739,7 @@ export default function PlayerDetailModal({
                    <div className="space-y-3">
                       <div className="flex justify-between items-center px-1">
                         <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{isOwned ? 'Talep Edilecek Bonservis' : 'Teklif Edilecek Tutar'}</span>
-                        <span className="text-[9px] font-mono font-bold text-white/20">ARALIK: {formatCurrency(corridor.min)} - {formatCurrency(corridor.max)}</span>
+                        <span className="text-[10px] font-mono font-bold text-white/20">ARALIK: {formatCurrency(corridor.min)} - {formatCurrency(corridor.max)}</span>
                       </div>
                       <div className="relative">
                         <input 
@@ -1750,7 +1750,7 @@ export default function PlayerDetailModal({
                           className={`w-full bg-black border ${sellPrice > corridor.max || (sellPrice > 0 && sellPrice < corridor.min) ? 'border-red-500/50' : 'border-white/10'} rounded-xl py-4 px-6 text-center font-mono text-2xl font-black text-emerald-400 focus:border-emerald-500 transition-all outline-none`}
                         />
                         {sellPrice > corridor.max && (
-                          <div className="absolute -bottom-6 left-0 right-0 text-[9px] text-red-400 font-bold uppercase tracking-wider">
+                          <div className="absolute -bottom-6 left-0 right-0 text-[10px] text-red-400 font-bold uppercase tracking-wider">
                             {isOwned ? 'MAKSİMUM FİYAT LİMİTİ AŞILDI!' : 'KULÜP BU TUTARI KABUL ETMEYECEK KADAR YÜKSEK!'}
                           </div>
                         )}
@@ -1758,8 +1758,8 @@ export default function PlayerDetailModal({
                    </div>
 
                    <div className="bg-white/[0.02] p-4 rounded-xl border border-white/[0.05] text-left space-y-2">
-                     <div className="text-[8px] font-black uppercase tracking-wider text-white/40">{isOwned ? 'AÇIK ARTIRMA ANALİZİ' : 'TEKLİF ANALİZİ'}</div>
-                     <div className="text-[9px] text-white/60 leading-relaxed italic">
+                     <div className="text-[10px] font-black uppercase tracking-wider text-white/40">{isOwned ? 'AÇIK ARTIRMA ANALİZİ' : 'TEKLİF ANALİZİ'}</div>
+                     <div className="text-[10px] text-white/60 leading-relaxed italic">
                        {isOwned 
                          ? `&quot;Bu oyuncu ${rating} KG ve ${player.traits?.length || 0} özel yeteneğe sahip. ${player.age < 23 ? 'Genç yetenek primi' : player.age >= 30 ? 'Tecrübe/Yaş dengesi' : 'Piyasa ortalaması'} dahilinde ${formatCurrency(sellPrice)} bedelle açık artırmaya çıkacak. Tahmini piyasa değeri: ${formatCurrency(marketValue)} (Koridor: ${formatCurrency(corridor.min)} – ${formatCurrency(corridor.max)}).&quot;`
                          : `&quot;${player.name} için yapacağınız ${formatCurrency(sellPrice)} tutarındaki teklif, kulübünün beklentilerini ${sellPrice > marketValue * 1.2 ? 'fazlasıyla karşılıyor' : 'karşılayabilir'}. Onaylanması durumunda oyuncu en geç 24 saat içinde kadronuza katılır.&quot;`}
@@ -1770,7 +1770,7 @@ export default function PlayerDetailModal({
                    {isOwned && (
                      <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl p-3 flex items-start gap-2">
                        <Gavel size={14} className="text-amber-500 shrink-0 mt-0.5" />
-                       <div className="text-[9px] text-amber-400/80 leading-relaxed">
+                       <div className="text-[10px] text-amber-400/80 leading-relaxed">
                          <span className="font-black uppercase tracking-wider">Açık Artırma Modu</span><br />
                          Oyuncu açık artırmaya çıkacak. 4 saat sürecektir. En yüksek teklif sahibi oyuncuyu alır.
                        </div>
@@ -1816,7 +1816,7 @@ export default function PlayerDetailModal({
                      <div className="pt-2">
                        <div className="flex items-center gap-3 mb-3">
                          <div className="flex-1 h-px bg-white/[0.06]" />
-                         <span className="text-[8px] font-black uppercase tracking-[0.3em] text-white/20">veya</span>
+                         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">veya</span>
                          <div className="flex-1 h-px bg-white/[0.06]" />
                        </div>
                        <button
@@ -1826,7 +1826,7 @@ export default function PlayerDetailModal({
                          <Globe size={16} />
                          KİRALIK LİSTESİNE GÖNDER
                        </button>
-                       <p className="text-[8px] text-cyan-400/40 font-bold uppercase tracking-wider text-center mt-2">
+                       <p className="text-[10px] text-cyan-400/40 font-bold uppercase tracking-wider text-center mt-2">
                          Oyuncuyu kiralık pazara çıkarın · 10 KR komisyon kiracıdan alınır
                        </p>
                      </div>
@@ -1841,14 +1841,14 @@ export default function PlayerDetailModal({
             FOOTER
         ══════════════════════════════════════════════ */}
         <div className="flex items-center justify-between px-4 py-1.5 bg-[#080c12] border-t border-white/[0.06]">
-          <div className="flex items-center gap-3 text-[8px] text-white/20">
+          <div className="flex items-center gap-3 text-[10px] text-white/20">
             <span><span className="text-white/40 font-bold">{player.goals ?? 0}</span> Gol</span>
             <span className="text-white/8">|</span>
             <span><span className="text-white/40 font-bold">{player.assists ?? 0}</span> Asist</span>
             <span className="text-white/8">|</span>
             <span>Son RT: <span className="text-amber-400/70 font-bold">{player.last_match_rating?.toFixed(1) ?? '—'}</span></span>
           </div>
-          <button onClick={onClose} className="px-3 py-1 bg-white/[0.03] border border-white/[0.06] rounded-sm text-[8px] font-bold uppercase tracking-[0.2em] text-white/20 hover:text-white/50 hover:bg-white/[0.05] transition-all">
+          <button onClick={onClose} className="px-3 py-1 bg-white/[0.03] border border-white/[0.06] rounded-sm text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 hover:text-white/50 hover:bg-white/[0.05] transition-all">
             Kapat
           </button>
         </div>
@@ -1861,14 +1861,14 @@ export default function PlayerDetailModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[500] flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+            className="fixed inset-0 z-[500] flex items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4"
             onClick={() => setShowLoanForm(false)}
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-[#111820] border border-cyan-500/20 rounded-2xl p-6 w-full max-w-md space-y-5 shadow-[0_0_80px_rgba(0,200,255,0.08)]"
+              className="bg-[#111820] border border-cyan-500/20 rounded-none sm:rounded-2xl p-4 sm:p-6 w-full max-w-md space-y-5 shadow-[0_0_80px_rgba(0,200,255,0.08)] max-h-[95vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
@@ -1879,7 +1879,7 @@ export default function PlayerDetailModal({
                   </div>
                   <div>
                     <h3 className="text-sm font-black uppercase tracking-widest text-cyan-400">Kiralık Pazarına Gönder</h3>
-                    <p className="text-[9px] text-white/30 font-bold uppercase tracking-wider">{toTitleCase(player.name)} • {sp} • {rating} OVR</p>
+                    <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">{toTitleCase(player.name)} • {sp} • {rating} OVR</p>
                   </div>
                 </div>
                 <button onClick={() => setShowLoanForm(false)} className="p-2 text-white/30 hover:text-white transition-colors rounded-lg hover:bg-white/5">
@@ -1901,7 +1901,7 @@ export default function PlayerDetailModal({
 
               {/* Daily Rental Fee Input (Euro) */}
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block">
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/40 block">
                   Günlük Kiralık Ücret (Euro)
                 </label>
                 <input
@@ -1919,7 +1919,7 @@ export default function PlayerDetailModal({
                       <button
                         key={pct}
                         onClick={() => setLoanFeeEuro(suggested)}
-                        className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-[8px] font-black uppercase tracking-wider rounded-lg border border-white/5 transition-all text-white/50 hover:text-white/80"
+                        className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase tracking-wider rounded-lg border border-white/5 transition-all text-white/50 hover:text-white/80"
                       >
                         %{Math.round(pct * 100)}
                       </button>
@@ -1930,7 +1930,7 @@ export default function PlayerDetailModal({
 
               {/* Duration Input (Weeks) */}
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block">
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/40 block">
                   Süre (Hafta)
                 </label>
                 <div className="flex items-center gap-3">
@@ -1954,7 +1954,7 @@ export default function PlayerDetailModal({
                       }}
                       className="w-12 bg-black/50 border border-white/10 rounded-lg p-1.5 text-center text-sm font-black text-cyan-400 focus:outline-none focus:border-cyan-500/50 transition-all"
                     />
-                    <span className="text-[9px] text-white/30 font-bold">hafta</span>
+                    <span className="text-[10px] text-white/30 font-bold">hafta</span>
                   </div>
                 </div>
               </div>
@@ -2036,14 +2036,14 @@ export default function PlayerDetailModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[500] flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+            className="fixed inset-0 z-[500] flex items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-4"
             onClick={() => setIsRenewingContract(false)}
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-[#111820] border border-emerald-500/20 rounded-2xl p-6 w-full max-w-md space-y-5 shadow-[0_0_80px_rgba(0,200,100,0.08)]"
+              className="bg-[#111820] border border-emerald-500/20 rounded-none sm:rounded-2xl p-4 sm:p-6 w-full max-w-md space-y-5 shadow-[0_0_80px_rgba(0,200,100,0.08)] max-h-[95vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
@@ -2054,7 +2054,7 @@ export default function PlayerDetailModal({
                   </div>
                   <div>
                     <h3 className="text-sm font-black uppercase tracking-widest text-emerald-400">Sözleşme Uzat</h3>
-                    <p className="text-[9px] text-white/30 font-bold uppercase tracking-wider">{toTitleCase(player.name)} • {sp} • {rating} OVR</p>
+                    <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">{toTitleCase(player.name)} • {sp} • {rating} OVR</p>
                   </div>
                 </div>
                 <button onClick={() => setIsRenewingContract(false)} className="p-2 text-white/30 hover:text-white transition-colors rounded-lg hover:bg-white/5">
@@ -2079,7 +2079,7 @@ export default function PlayerDetailModal({
 
               {/* Renewal Duration */}
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block">
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/40 block">
                   Uzatma Süresi (Hafta)
                 </label>
                 <div className="flex items-center gap-3">
@@ -2093,10 +2093,10 @@ export default function PlayerDetailModal({
                   />
                   <div className="flex items-center gap-1.5 min-w-[70px] justify-end">
                     <span className="text-sm font-black text-emerald-400" id="contract-renew-weeks-display">17</span>
-                    <span className="text-[9px] text-white/30 font-bold">hafta</span>
+                    <span className="text-[10px] text-white/30 font-bold">hafta</span>
                   </div>
                 </div>
-                <div className="flex justify-between text-[8px] text-white/20">
+                <div className="flex justify-between text-[10px] text-white/20">
                   <span>1 Hafta</span>
                   <span>17 Hafta (Yarım Sezon)</span>
                   <span>34 Hafta (Tam Sezon)</span>

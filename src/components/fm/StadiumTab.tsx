@@ -144,17 +144,17 @@ function LevelComparisonPanel({
     }`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-2.5">
-        <span className="text-[8px] font-black uppercase tracking-widest text-white/30">
+        <span className="text-[10px] font-black uppercase tracking-widest text-white/30">
           OYUN ETKİSİ
         </span>
         {isUpgrade && (
-          <span className="flex items-center gap-1 text-[7px] font-black text-amber-400 uppercase tracking-widest">
+          <span className="flex items-center gap-1 text-[10px] font-black text-amber-400 uppercase tracking-widest">
             <ArrowUpRight size={9} />
             YÜKSELTME ÖNİZLEME
           </span>
         )}
         {isDowngrade && (
-          <span className="flex items-center gap-1 text-[7px] font-black text-red-400/60 uppercase tracking-widest">
+          <span className="flex items-center gap-1 text-[10px] font-black text-red-400/60 uppercase tracking-widest">
             <ArrowDownRight size={9} />
             ÖNCEKİ SEVİYE
           </span>
@@ -171,7 +171,7 @@ function LevelComparisonPanel({
             }`}>
               <div className="flex items-center gap-2">
                 {getEffectStyle(getEffectCategory(currentEffect.key)).icon}
-                <span className="text-[8px] font-bold text-white/40 uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
                   Lv.{currentLevel} — {currentEffect.label}
                 </span>
               </div>
@@ -203,7 +203,7 @@ function LevelComparisonPanel({
           }`}>
             <div className="flex items-center gap-2">
               {getEffectStyle(getEffectCategory(targetEffect.key)).icon}
-              <span className={`text-[8px] font-bold uppercase tracking-wider ${
+              <span className={`text-[10px] font-bold uppercase tracking-wider ${
                 isUpgrade ? getEffectStyle(getEffectCategory(targetEffect.key)).text : 'text-white/40'
               }`}>
                 Lv.{targetLevel} — {targetEffect.label}
@@ -226,7 +226,7 @@ function LevelComparisonPanel({
             <div className="flex justify-center pt-1">
               <span className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
                 <ArrowUpRight size={8} className="text-emerald-400" />
-                <span className="text-[8px] font-black text-emerald-400 uppercase tracking-wider">
+                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">
                   +{((targetEffect.value - currentEffect.value) * 100).toFixed(0)}% etki artışı
                 </span>
               </span>
@@ -237,7 +237,7 @@ function LevelComparisonPanel({
 
       {/* Text benefit description */}
       <div className="mt-2.5 pt-2 border-t border-white/[0.04]">
-        <p className={`text-[9px] font-bold leading-relaxed uppercase ${
+        <p className={`text-[10px] font-bold leading-relaxed uppercase ${
           isUpgrade ? 'text-amber-300/70' : isDowngrade ? 'text-red-300/40' : 'text-white/40'
         }`}>
           {targetBenefit}
@@ -440,7 +440,7 @@ export default function StadiumTab() {
 
   const handleCancelUpgrade = async () => {
     if (!profile) return;
-    if (!confirm('İnşaatı iptal etmek istiyor musunuz? Harcanan bütçenin %50\'si iade edilir.')) return;
+    if (!window.confirm('İnşaatı iptal etmek istiyor musunuz? Harcanan bütçenin %50\'si iade edilir.')) return;
     let refundMoney = 0;
     if (profile.active_upgrade_type === 'stadium_matrix') {
       const currentLevel = stadiumUpgrades[profile.active_upgrade_id!] || 0;
@@ -489,7 +489,7 @@ export default function StadiumTab() {
       error(`Yetersiz kredi! ${speedUpCost} kredi gerekli.`);
       return;
     }
-    if (!confirm(`Geliştirme süresini yarıya indirmek için ${speedUpCost} Kredi harcanacak. Onaylıyor musun?`)) return;
+    if (!window.confirm(`Geliştirme süresini yarıya indirmek için ${speedUpCost} Kredi harcanacak. Onaylıyor musun?`)) return;
 
     // Half the remaining real-time
     let newEndAt: string | null = null;
@@ -555,7 +555,7 @@ export default function StadiumTab() {
                <RefreshCw size={22} className="text-amber-400 animate-spin" />
              </div>
              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/40">aktif yükseltme</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">aktif yükseltme</p>
                 <h4 className="text-lg font-black italic uppercase">
                   {profile.active_upgrade_type === 'academy' ? 'Yetiştirme Merkezi' : STADIUM_MATRIX.find(m => m.id === profile.active_upgrade_id)?.originalName} 
                   <span className="ml-3 text-amber-400 text-sm tracking-widest font-bold">LV. {(stadiumUpgrades[profile.active_upgrade_id!] || 0) + 1}</span>
@@ -570,7 +570,7 @@ export default function StadiumTab() {
                     return (
                       <div className={`inline-flex items-center gap-1.5 mt-1.5 px-2 py-0.5 rounded-full ${style.bg} border ${style.border}`}>
                         {style.icon}
-                        <span className={`text-[8px] font-black uppercase tracking-wider ${style.text}`}>
+                        <span className={`text-[10px] font-black uppercase tracking-wider ${style.text}`}>
                           {effect.label}: {
                             effect.key.includes('Multiplier') || effect.key.includes('Bonus') || effect.key.includes('Speed')
                               ? `×${effect.value.toFixed(2)}`
@@ -588,7 +588,7 @@ export default function StadiumTab() {
           </div>
           <div className="flex items-center gap-6">
              <div className="text-right">
-                <p className="text-[8px] font-black uppercase tracking-widest text-white/30">tamamlanmasına</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/30">tamamlanmasına</p>
                 {countdown && countdown.totalMs > 0 ? (
                   <div className="flex items-center gap-1 justify-end">
                     {countdown.days > 0 && (
@@ -626,8 +626,8 @@ export default function StadiumTab() {
                >
                  <Zap size={16} className="fill-black" />
                  <div className="flex flex-col leading-none">
-                   <span className="text-[9px] font-black uppercase tracking-wider">Hızlandır</span>
-                   <span className="text-[7px] font-bold opacity-70">5 Kredi</span>
+                   <span className="text-[10px] font-black uppercase tracking-wider">Hızlandır</span>
+                   <span className="text-[10px] font-bold opacity-70">5 Kredi</span>
                  </div>
                </button>
              )}
@@ -635,15 +635,15 @@ export default function StadiumTab() {
                <div className="flex items-center gap-2 px-4 py-3 bg-white/5 text-white/20 border border-white/10 rounded-2xl">
                  <Zap size={16} />
                  <div className="flex flex-col leading-none">
-                   <span className="text-[9px] font-black uppercase tracking-wider">Hızlandır</span>
-                   <span className="text-[7px] font-bold opacity-50">Yetersiz Kredi (5 Kredi)</span>
+                   <span className="text-[10px] font-black uppercase tracking-wider">Hızlandır</span>
+                   <span className="text-[10px] font-bold opacity-50">Yetersiz Kredi (5 Kredi)</span>
                  </div>
                </div>
              )}
              {speedUpUsed && (
                <div className="flex items-center gap-2 px-4 py-3 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl">
                  <Zap size={16} />
-                 <span className="text-[9px] font-black uppercase tracking-wider">Hızlandırıldı</span>
+                 <span className="text-[10px] font-black uppercase tracking-wider">Hızlandırıldı</span>
                </div>
              )}
              <button 
@@ -679,12 +679,12 @@ export default function StadiumTab() {
             </p>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-6">
                <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Mevcut Kapasite</span>
+                  <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Mevcut Kapasite</span>
                   <span className="text-xl font-black text-white italic">{5000 + ((stadiumUpgrades['capacity'] || 0) * 10000)} <span className="text-xs text-white/40 not-italic uppercase font-bold">KİŞİ</span></span>
                </div>
                <div className="w-px h-8 bg-white/5 hidden md:block" />
                <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Toplam Gelişim</span>
+                  <span className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Toplam Gelişim</span>
                   <span className="text-xl font-black text-amber-400 italic">{Object.values(stadiumUpgrades).reduce<number>((a, b) => a + (b as number), 0)} <span className="text-xs text-white/40 not-italic uppercase font-bold">PUAN</span></span>
                </div>
             </div>
@@ -700,7 +700,7 @@ export default function StadiumTab() {
             <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20">
               <Ticket size={28} className="text-amber-500" />
             </div>
-            <div className="text-[9px] font-black text-white/20 uppercase tracking-widest">Pricing</div>
+            <div className="text-[10px] font-black text-white/20 uppercase tracking-widest">Pricing</div>
           </div>
           <div>
             <h3 className="text-lg font-black italic uppercase tracking-tighter text-white mb-2">Bilet Fiyatı (max {maxPrice}€)</h3>
@@ -714,7 +714,7 @@ export default function StadiumTab() {
                <span className="text-xl font-bold text-white/20 mb-1">€</span>
             </div>
             <div className="flex flex-col gap-1">
-               <div className="flex justify-between text-[8px] font-bold text-white/20 uppercase">
+               <div className="flex justify-between text-[10px] font-bold text-white/20 uppercase">
                   <span>Talep Akışı</span>
                   <span>{Math.round((maxPrice - ticketPrice) / maxPrice * 100)}%</span>
                </div>
@@ -773,14 +773,14 @@ export default function StadiumTab() {
                    {canSpeedUp && (
                      <button 
                        onClick={(e) => { e.stopPropagation(); handleSpeedUpUpgrade(); }}
-                       className="mt-3 flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black rounded-xl transition-all hover:scale-105 active:scale-95 text-[8px] font-black uppercase tracking-wider"
+                       className="mt-3 flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black rounded-xl transition-all hover:scale-105 active:scale-95 text-[10px] font-black uppercase tracking-wider"
                      >
                        <Zap size={12} className="fill-black" />
                        Kredi ile Hızlandır (5 Kredi)
                      </button>
                    )}
                    {speedUpUsed && (
-                     <span className="mt-2 flex items-center gap-1 text-[8px] font-black text-emerald-400 uppercase tracking-wider">
+                     <span className="mt-2 flex items-center gap-1 text-[10px] font-black text-emerald-400 uppercase tracking-wider">
                        <Zap size={10} /> Hızlandırıldı
                      </span>
                    )}
@@ -796,7 +796,7 @@ export default function StadiumTab() {
                   <div className="flex flex-col items-end">
                     <span className="text-[10px] font-mono font-bold text-white/40">LVL {level}/{item.maxLevel}</span>
                     {meetsLevel === false && (
-                      <span className="text-[7px] font-black text-red-500 uppercase mt-1 flex items-center gap-0.5">
+                      <span className="text-[10px] font-black text-red-500 uppercase mt-1 flex items-center gap-0.5">
                         <Lock size={7} /> REQ LVL {reqLevel}
                       </span>
                     )}
@@ -805,7 +805,7 @@ export default function StadiumTab() {
 
                 {/* Facility Name */}
                 <div className="mb-2">
-                  <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-0.5">{item.name}</p>
+                  <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-0.5">{item.name}</p>
                   <h3 className="text-sm font-black italic uppercase tracking-tighter text-white group-hover:text-amber-400 transition-colors leading-tight">
                     {item.originalName}
                   </h3>
@@ -815,7 +815,7 @@ export default function StadiumTab() {
                 {currentLevelEffect && (
                   <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg mb-2.5 ${getEffectStyle(getEffectCategory(currentLevelEffect.key)).bg} border ${getEffectStyle(getEffectCategory(currentLevelEffect.key)).border}`}>
                     {getEffectStyle(getEffectCategory(currentLevelEffect.key)).icon}
-                    <span className={`text-[8px] font-black uppercase tracking-wider ${getEffectStyle(getEffectCategory(currentLevelEffect.key)).text}`}>
+                    <span className={`text-[10px] font-black uppercase tracking-wider ${getEffectStyle(getEffectCategory(currentLevelEffect.key)).text}`}>
                       {currentLevelEffect.label}: {
                         currentLevelEffect.key.includes('Multiplier') || currentLevelEffect.key.includes('Bonus') || currentLevelEffect.key.includes('Speed')
                           ? `×${currentLevelEffect.value.toFixed(2)}`
@@ -831,7 +831,7 @@ export default function StadiumTab() {
                 {nextLevelEffect && !isMax && (
                   <div className="flex items-center gap-2 mb-3 px-2 py-1.5 rounded-lg bg-amber-500/[0.04] border border-amber-500/10">
                     <ArrowUpRight size={9} className="text-amber-400 shrink-0" />
-                    <span className="text-[8px] font-bold text-amber-400/60 uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-amber-400/60 uppercase tracking-wider">
                       LV.{level + 1}: {nextLevelEffect.label} → {
                         nextLevelEffect.key.includes('Multiplier') || nextLevelEffect.key.includes('Bonus') || nextLevelEffect.key.includes('Speed')
                           ? `×${nextLevelEffect.value.toFixed(2)}`
@@ -863,7 +863,7 @@ export default function StadiumTab() {
                   className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] transition-all mb-3"
                 >
                   <Info size={9} className="text-white/20" />
-                  <span className="text-[7px] font-black text-white/25 uppercase tracking-widest">
+                  <span className="text-[10px] font-black text-white/25 uppercase tracking-widest">
                     {isExpanded ? 'DETAYLARI GİZLE' : 'TÜM SEVİYE ETKİLERİ'}
                   </span>
                 </button>
@@ -896,7 +896,7 @@ export default function StadiumTab() {
                                     : 'bg-white/[0.02]'
                               }`}
                             >
-                              <span className={`text-[9px] font-black font-mono w-5 shrink-0 text-center ${
+                              <span className={`text-[10px] font-black font-mono w-5 shrink-0 text-center ${
                                 isCurrentLevel ? 'text-amber-400' : isNextLevel ? 'text-emerald-400' : 'text-white/25'
                               }`}>
                                 {lvl}
@@ -904,14 +904,14 @@ export default function StadiumTab() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5">
                                   {lvlEffect && getEffectStyle(getEffectCategory(lvlEffect.key)).icon}
-                                  <span className={`text-[8px] font-bold leading-tight ${
+                                  <span className={`text-[10px] font-bold leading-tight ${
                                     isCurrentLevel ? 'text-amber-300' : isNextLevel ? 'text-emerald-300' : 'text-white/35'
                                   }`}>
                                     {lvlBenefit}
                                   </span>
                                 </div>
                                 {lvlEffect && (
-                                  <span className={`text-[7px] font-mono mt-0.5 block ${
+                                  <span className={`text-[10px] font-mono mt-0.5 block ${
                                     isCurrentLevel ? 'text-amber-400/50' : 'text-white/20'
                                   }`}>
                                     {lvlEffect.label}: {
@@ -925,12 +925,12 @@ export default function StadiumTab() {
                                 )}
                               </div>
                               {isCurrentLevel && (
-                                <span className="text-[6px] font-black text-amber-400 uppercase tracking-widest bg-amber-500/10 px-1.5 py-0.5 rounded shrink-0">
+                                <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest bg-amber-500/10 px-1.5 py-0.5 rounded shrink-0">
                                   AKTİF
                                 </span>
                               )}
                               {isNextLevel && (
-                                <span className="text-[6px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
+                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
                                   SONRAKİ
                                 </span>
                               )}
@@ -948,12 +948,12 @@ export default function StadiumTab() {
                   <div className="flex items-center gap-3 mb-1 px-1">
                     <div className="flex items-center gap-1">
                       <Clock size={9} className="text-white/20" />
-                      <span className="text-[8px] font-bold text-white/25">{duration} gün</span>
+                      <span className="text-[10px] font-bold text-white/25">{duration} gün</span>
                     </div>
                     <div className="w-px h-3 bg-white/5" />
                     <div className="flex items-center gap-1">
                       <Coins size={9} className="text-white/20" />
-                      <span className="text-[8px] font-bold text-white/25">{formatCurrency(cost)}</span>
+                      <span className="text-[10px] font-bold text-white/25">{formatCurrency(cost)}</span>
                     </div>
                   </div>
                   {/* ── ROI Hesabı ── */}
@@ -966,7 +966,7 @@ export default function StadiumTab() {
                     );
                     if (roi.weeklyGain <= 0) return null;
                     return (
-                      <p className="text-[9px] text-white/30 mb-3 px-1">
+                      <p className="text-[10px] text-white/30 mb-3 px-1">
                         +{roi.weeklyGain.toLocaleString('tr-TR')} €/hafta · {roi.paybackWeeks} haftada geri döner
                       </p>
                     );
@@ -1004,7 +1004,7 @@ export default function StadiumTab() {
             </div>
             <div>
               <h3 className="text-sm font-black italic uppercase tracking-tighter text-white">Stadyum İsmi</h3>
-              <p className="text-[8px] font-black text-white/30 uppercase tracking-widest">5 Kredi karşılığında değiştir</p>
+              <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">5 Kredi karşılığında değiştir</p>
             </div>
           </div>
           <div className="flex-1 flex items-center gap-3 w-full md:w-auto">
@@ -1038,7 +1038,7 @@ export default function StadiumTab() {
         </div>
         {profile?.stadium_name && (
           <div className="mt-3 pt-3 border-t border-white/5 relative z-10">
-            <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">
+            <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">
               Mevcut İsim: <span className="text-amber-400/80 normal-case tracking-normal">{profile.stadium_name}</span>
             </p>
           </div>
