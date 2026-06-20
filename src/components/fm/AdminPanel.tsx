@@ -490,8 +490,8 @@ export default function AdminPanel() {
             ) : teamPlayers.length === 0 ? (
               <div className="p-8 text-center text-zinc-500 text-xs">Oyuncu bulunamadı</div>
             ) : (
-              <div className="max-h-[500px] overflow-y-auto">
-                <table className="w-full text-xs">
+              <div className="max-h-[500px] overflow-y-auto overflow-x-auto">
+                <table className="w-full text-xs min-w-[500px]">
                   <thead className="sticky top-0 bg-zinc-900">
                     <tr className="border-b border-white/5">
                       <th className="text-left px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">Oyuncu</th>

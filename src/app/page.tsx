@@ -160,6 +160,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useConfirm } from '@/hooks/use-confirm'; // DÜZELTME 8: confirm() → AlertDialog
 import { useAuth } from '@/contexts/AuthContext';
 import { useSwipe, useHaptic } from '@/lib/hooks/useMobileGestures';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 export default function Home() {
   const { confirm, ConfirmDialog } = useConfirm(); // DÜZELTME 8
@@ -181,6 +182,9 @@ export default function Home() {
 
   // ═══ Mobil swipe ile sekmeler arası geçiş ═══
   const haptic = useHaptic();
+
+  // [BUG-26] Modal açıkken body scroll lock — state'ler aşağıda tanımlı, useEffect ile bağla
+
   const MOBILE_TAB_ORDER = ['dashboard', 'tactics', 'matchday', 'multiplayer', 'league'];
   
   const handleSwipeLeft = () => {
@@ -272,6 +276,10 @@ export default function Home() {
   const [rivalInfo, setRivalInfo] = useState<{ id: string; name: string } | null>(null);
   const [comparePlayers, setComparePlayers] = useState<[any, any] | null>(null);
   const [showMatchReport, setShowMatchReport] = useState(false);
+
+  // [BUG-26] Modal açıkken body scroll lock
+  const anyModalOpen = !!(selectedPlayer || selectedTeamProfile || showComingSoon || comparePlayers || rivalInfo);
+  useBodyScrollLock(anyModalOpen);
 
   // ─── Duygusal katman: Gol kutlama ────────────────────────────
   const { goalCelebrationTrigger, setGoalCelebrationTrigger, goalScorer, goalMinute } = useEmotionalEvents();

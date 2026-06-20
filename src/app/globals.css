@@ -428,8 +428,9 @@ body {
     font-size: 16px;
   }
   /* Ama text-[10px] vb. utility'ler kullanan inputları etkileme — explicit override */
-  input.text-xs, select.text-xs, textarea.text-xs { font-size: 12px; }
-  input.text-sm, select.text-sm, textarea.text-sm { font-size: 14px; }
+  /* [BUG-26] Override kaldırıldı — mobilde TÜM input'lar 16px olmalı (iOS zoom engeli) */
+  /* input.text-xs, select.text-xs, textarea.text-xs { font-size: 12px; } */
+  /* input.text-sm, select.text-sm, textarea.text-sm { font-size: 14px; } */
   input.text-base, select.text-base, textarea.text-base { font-size: 16px; }
   input.text-lg, select.text-lg, textarea.text-lg { font-size: 18px; }
 }
